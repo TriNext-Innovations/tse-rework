@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chmod +x C:/Users/rynobotes/WebstormProjects/tse-ui/scripts/migrate.sh)"
+    ]
+  }
+}
