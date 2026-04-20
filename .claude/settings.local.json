@@ -1,7 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(chmod +x C:/Users/rynobotes/WebstormProjects/tse-ui/scripts/migrate.sh)"
+      "Bash(chmod +x C:/Users/rynobotes/WebstormProjects/tse-ui/scripts/migrate.sh)",
+      "Read(//mnt/c/Users/rynobotes/WebstormProjects/**)",
+      "Read(//mnt/c/Users/rynobotes/WebstormProjects/tse-ui/apps/**)",
+      "Bash(python skills/ui-ux-pro-max/scripts/search.py \"ecommerce printer cartridges south africa retail trust\" --design-system -p \"TSE Online\")",
+      "Bash(python3 C:/Users/rynobotes/.claude/skills/ui-ux-pro-max/scripts/search.py \"ecommerce printer cartridges south africa retail trust\" --design-system -p \"TSE Online\")",
+      "Bash(npx tsc *)",
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/)",
+      "WebFetch(domain:www.tse.co.za)"
     ]
   }
 }
