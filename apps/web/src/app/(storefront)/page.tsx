@@ -28,6 +28,14 @@ const pocs = [
     palette: ['#111827', '#0D9488', '#2dd4bf'],
     tag: 'Dark · Search-focused',
   },
+  {
+    href: '/four',
+    label: 'POC 4',
+    title: 'Brand Theme',
+    desc: 'Full TSE static theme ported to React. Dark navy hero, Bebas Neue typography, blue accent. Faithful to the original brand identity.',
+    palette: ['#030509', '#1040b5', '#c8a422'],
+    tag: 'Dark · Brand-faithful',
+  },
 ]
 
 export default function HomePage() {
@@ -44,7 +52,7 @@ export default function HomePage() {
         <h1 className="text-3xl font-bold mt-2">Pick a concept to explore</h1>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-5xl w-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 max-w-6xl w-full">
         {pocs.map((poc) => (
           <Link key={poc.href} href={poc.href} className="group bg-white/5 hover:bg-white/8 border border-white/10 hover:border-[#0D9488]/50 rounded-2xl p-6 cursor-pointer transition-all hover:shadow-2xl hover:-translate-y-1">
             <div className="flex gap-1.5 mb-4">

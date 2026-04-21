@@ -7,6 +7,7 @@ const pocs = [
   { href: '/one', label: 'POC 1', sub: 'Clean Grid' },
   { href: '/two', label: 'POC 2', sub: 'Trust Hero' },
   { href: '/three', label: 'POC 3', sub: 'Search First' },
+  { href: '/four', label: 'POC 4', sub: 'Brand Theme' },
 ]
 
 export function MockupNav() {
