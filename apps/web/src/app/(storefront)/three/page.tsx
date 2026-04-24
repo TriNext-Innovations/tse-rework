@@ -4,21 +4,21 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = { title: 'POC 3 — Commercial' }
 
 const categories = [
-  { name: 'HP', sub: 'Ink & Toner', count: '2,400+', from: '#DBEAFE', to: '#EFF6FF', accent: '#1D4ED8', text: '#1E3A8A' },
-  { name: 'Canon', sub: 'Ink & Toner', count: '1,800+', from: '#FFE4E6', to: '#FFF1F2', accent: '#DC2626', text: '#991B1B' },
-  { name: 'Epson', sub: 'EcoTank & more', count: '1,200+', from: '#E0F2FE', to: '#F0F9FF', accent: '#0EA5E9', text: '#0369A1' },
-  { name: 'Brother', sub: 'Laser Toner', count: '900+', from: '#EDE9FE', to: '#F5F3FF', accent: '#7C3AED', text: '#5B21B6' },
+  { name: 'HP', sub: 'Ink & Toner', count: '2,400+', from: '#DBEAFE', to: '#EFF6FF', accent: '#1D4ED8', text: '#1E3A8A', logo: '/hp.png' },
+  { name: 'Canon', sub: 'Ink & Toner', count: '1,800+', from: '#FFE4E6', to: '#FFF1F2', accent: '#DC2626', text: '#991B1B', logo: '/canonlogo.png' },
+  { name: 'Epson', sub: 'EcoTank & more', count: '1,200+', from: '#E0F2FE', to: '#F0F9FF', accent: '#0EA5E9', text: '#0369A1', logo: '/Epson.png' },
+  { name: 'Brother', sub: 'Laser Toner', count: '900+', from: '#EDE9FE', to: '#F5F3FF', accent: '#7C3AED', text: '#5B21B6', logo: '/brotherlogo.png' },
 ]
 
 const featured = [
-  { name: 'HP 678 Black Ink', sku: 'CZ107AA', price: 'R 299', was: null, badge: 'Best Seller', from: '#DBEAFE', to: '#EFF6FF', dot: '#1D4ED8' },
-  { name: 'Canon 737 Black Toner', sku: 'CRG-737', price: 'R 300', was: null, badge: 'Generic', from: '#FFE4E6', to: '#FFF1F2', dot: '#DC2626' },
-  { name: 'Epson T6641 Black Bottle', sku: 'C13T664100', price: 'R 310', was: null, badge: 'Generic', from: '#E0F2FE', to: '#F0F9FF', dot: '#0EA5E9' },
-  { name: 'Brother TN-2455 Toner', sku: 'TN2455', price: 'R 330', was: null, badge: 'Generic', from: '#EDE9FE', to: '#F5F3FF', dot: '#7C3AED' },
-  { name: 'HP 106A Black Toner', sku: 'W1106A', price: 'R 330', was: null, badge: 'Generic', from: '#DCFCE7', to: '#F0FDF4', dot: '#16A34A' },
-  { name: 'Samsung MLT-D111S', sku: 'MLT-D111S', price: 'R 315', was: null, badge: 'Generic', from: '#FEF9C3', to: '#FEFCE8', dot: '#CA8A04' },
-  { name: 'Pantum PC-211EV Toner', sku: 'PC-211EV', price: 'R 305', was: null, badge: 'New', from: '#F0FDF4', to: '#DCFCE7', dot: '#059669' },
-  { name: 'Kyocera TK-1175 Toner', sku: 'TK-1175', price: 'R 320', was: null, badge: 'Generic', from: '#FDF4FF', to: '#FAE8FF', dot: '#9333EA' },
+  { name: 'HP 678 Black Ink', sku: 'CZ107AA', price: 'R 299', was: null, badge: 'Best Seller', from: '#DBEAFE', to: '#EFF6FF', dot: '#1D4ED8', image: '/HPcart.png' },
+  { name: 'Canon 737 Black Toner', sku: 'CRG-737', price: 'R 300', was: null, badge: 'Generic', from: '#FFE4E6', to: '#FFF1F2', dot: '#DC2626', image: '/Canoncart.png' },
+  { name: 'Epson T6641 Black Bottle', sku: 'C13T664100', price: 'R 310', was: null, badge: 'Generic', from: '#E0F2FE', to: '#F0F9FF', dot: '#0EA5E9', image: '/Epsonblack.png' },
+  { name: 'Brother TN-2455 Toner', sku: 'TN2455', price: 'R 330', was: null, badge: 'Generic', from: '#EDE9FE', to: '#F5F3FF', dot: '#7C3AED', image: '/BrotherTN2455.png' },
+  { name: 'HP 106A Black Toner', sku: 'W1106A', price: 'R 330', was: null, badge: 'Generic', from: '#DCFCE7', to: '#F0FDF4', dot: '#16A34A', image: '/HP106A.png' },
+  { name: 'Samsung MLT-D111S', sku: 'MLT-D111S', price: 'R 315', was: null, badge: 'Generic', from: '#FEF9C3', to: '#FEFCE8', dot: '#CA8A04', image: '/SamsungMLT.png' },
+  { name: 'Pantum PC-211EV Toner', sku: 'PC-211EV', price: 'R 305', was: null, badge: 'New', from: '#F0FDF4', to: '#DCFCE7', dot: '#059669', image: '/Pantum-PC252.png' },
+  { name: 'Kyocera TK-1175 Toner', sku: 'TK-1175', price: 'R 320', was: null, badge: 'Generic', from: '#FDF4FF', to: '#FAE8FF', dot: '#9333EA', image: '/TK-3060.png' },
 ]
 
 export default function PocThreePage() {
@@ -29,11 +29,8 @@ export default function PocThreePage() {
       <header className="bg-white border-b border-gray-100 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center gap-4 h-16">
-            <a href="/" className="flex items-center gap-2 cursor-pointer shrink-0">
-              <div className="w-8 h-8 bg-[#0D9488] rounded-lg flex items-center justify-center">
-                <span className="text-white font-black text-sm">T</span>
-              </div>
-              <span className="font-black text-gray-900 text-lg tracking-tight">TSE Online</span>
+            <a href="/" className="flex items-center cursor-pointer shrink-0">
+              <img src="/logo.png" alt="TSE Online" style={{ width: 350, height: 80, objectFit: 'contain', objectPosition: 'left center' }} />
             </a>
             <div className="flex-1 max-w-xl hidden sm:block">
               <div className="relative">
@@ -105,34 +102,35 @@ export default function PocThreePage() {
 
           {/* Hero product art */}
           <div className="flex-1 flex items-center justify-center">
-            <div className="relative w-72 h-72 sm:w-80 sm:h-80">
-              {/* Floating cartridge cluster */}
+            <style>{`
+              @keyframes float0 { 0%,100% { transform: rotate(-8deg) translateY(0px); } 50% { transform: rotate(-8deg) translateY(-12px); } }
+              @keyframes float1 { 0%,100% { transform: rotate(6deg) translateY(0px); } 50% { transform: rotate(6deg) translateY(-10px); } }
+              @keyframes float2 { 0%,100% { transform: rotate(0deg) translateY(0px); } 50% { transform: rotate(0deg) translateY(-14px); } }
+              @keyframes float3 { 0%,100% { transform: rotate(-5deg) translateY(0px); } 50% { transform: rotate(-5deg) translateY(-8px); } }
+              @keyframes float4 { 0%,100% { transform: rotate(8deg) translateY(0px); } 50% { transform: rotate(8deg) translateY(-11px); } }
+            `}</style>
+            <div className="relative w-80 h-80 sm:w-96 sm:h-96">
               {[
-                { color: '#1D4ED8', x: '15%', y: '10%', size: 52, h: 76, rot: '-8deg', z: 10 },
-                { color: '#DC2626', x: '55%', y: '5%', size: 40, h: 60, rot: '6deg', z: 9 },
-                { color: '#0D9488', x: '35%', y: '25%', size: 60, h: 88, rot: '0deg', z: 20 },
-                { color: '#7C3AED', x: '10%', y: '52%', size: 38, h: 56, rot: '-5deg', z: 8 },
-                { color: '#0EA5E9', x: '60%', y: '48%', size: 44, h: 64, rot: '8deg', z: 11 },
+                { src: '/toner.png',   x: '2%',  y: '2%',  size: 140, z: 10, delay: '0s',    dur: '3.2s' },
+                { src: '/m40.png',     x: '57%', y: '4%',  size: 135, z: 9,  delay: '0.6s',  dur: '2.8s' },
+                { src: '/Canon.png',   x: '18%', y: '18%', size: 230, z: 20, delay: '0.2s',  dur: '3.6s' },
+                { src: '/brother.png', x: '3%',  y: '57%', size: 135, z: 8,  delay: '1.0s',  dur: '3.0s' },
+                { src: '/tk52.png',    x: '57%', y: '55%', size: 140, z: 11, delay: '0.4s',  dur: '2.6s' },
               ].map((c, i) => (
-                <div
+                <img
                   key={i}
-                  className="absolute rounded-2xl shadow-2xl flex flex-col items-center justify-between py-3 px-2.5"
+                  src={c.src}
+                  alt=""
+                  className="absolute object-contain"
                   style={{
                     left: c.x, top: c.y,
-                    width: c.size, height: c.h,
-                    background: 'linear-gradient(160deg, #1a1a2e, #0a0a18)',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    transform: `rotate(${c.rot})`,
+                    width: c.size, height: c.size,
                     zIndex: c.z,
-                    boxShadow: `0 20px 60px ${c.color}30`,
+                    animation: `float${i} ${c.dur} ease-in-out ${c.delay} infinite`,
                   }}
-                >
-                  <div className="w-full h-1.5 rounded-full" style={{ backgroundColor: c.color, opacity: 0.9 }} />
-                  <div className="w-full h-1 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.05)' }} />
-                </div>
+                />
               ))}
-              {/* Glow under cluster */}
-              <div className="absolute inset-0 rounded-full opacity-30" style={{ background: 'radial-gradient(ellipse at center, #0D948870, transparent 70%)' }} />
+              <div className="absolute inset-0 rounded-full opacity-20 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, #0D948870, transparent 70%)' }} />
             </div>
           </div>
         </div>
@@ -190,14 +188,22 @@ export default function PocThreePage() {
               <div className="h-36 relative overflow-hidden">
                 <div className="absolute inset-0 opacity-20" style={{ background: `radial-gradient(circle at 60% 50%, ${cat.accent}, transparent 65%)` }} />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div
-                    className="w-14 h-20 rounded-xl shadow-xl flex flex-col items-center justify-between py-2.5 px-2 group-hover:scale-105 transition-transform duration-300"
-                    style={{ background: 'linear-gradient(180deg, #1a1a2e, #0d0d1a)', border: '1px solid rgba(255,255,255,0.1)' }}
-                  >
-                    <div className="w-full h-1.5 rounded-full" style={{ backgroundColor: cat.accent }} />
-                    <span className="text-white/30 text-[8px] font-mono uppercase tracking-widest">CART.</span>
-                    <div className="w-full h-1 rounded-full bg-white/5" />
-                  </div>
+                  {'logo' in cat && cat.logo ? (
+                    <img
+                      src={cat.logo as string}
+                      alt={cat.name}
+                      className="w-[104px] h-[104px] object-contain group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div
+                      className="w-14 h-20 rounded-xl shadow-xl flex flex-col items-center justify-between py-2.5 px-2 group-hover:scale-105 transition-transform duration-300"
+                      style={{ background: 'linear-gradient(180deg, #1a1a2e, #0d0d1a)', border: '1px solid rgba(255,255,255,0.1)' }}
+                    >
+                      <div className="w-full h-1.5 rounded-full" style={{ backgroundColor: cat.accent }} />
+                      <span className="text-white/30 text-[8px] font-mono uppercase tracking-widest">CART.</span>
+                      <div className="w-full h-1 rounded-full bg-white/5" />
+                    </div>
+                  )}
                 </div>
                 <div
                   className="absolute bottom-3 right-3 text-5xl font-black leading-none opacity-[0.08] select-none"
@@ -225,30 +231,15 @@ export default function PocThreePage() {
             <div className="w-72 h-72 sm:w-80 sm:h-80 rounded-3xl overflow-hidden shadow-2xl" style={{ background: 'linear-gradient(145deg, #DBEAFE, #EFF6FF)' }}>
               <div className="w-full h-full flex items-center justify-center relative">
                 <div className="absolute inset-0 opacity-25" style={{ background: 'radial-gradient(circle at 55% 45%, #1D4ED8, transparent 60%)' }} />
-                <div className="relative flex flex-col items-center gap-4">
-                  {/* Cartridge stack */}
-                  {[{ w: 72, h: 104, off: 0 }, { w: 60, h: 88, off: -56 }, { w: 64, h: 96, off: 52 }].map((s, i) => (
-                    <div
-                      key={i}
-                      className="absolute rounded-2xl shadow-xl flex flex-col items-center justify-between py-3 px-3"
-                      style={{
-                        width: s.w, height: s.h,
-                        left: `calc(50% + ${s.off}px - ${s.w / 2}px)`,
-                        top: `calc(50% - ${s.h / 2}px)`,
-                        background: 'linear-gradient(160deg, #1a1a2e, #0a0a18)',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        zIndex: i === 0 ? 10 : 5,
-                        boxShadow: '0 24px 48px rgba(29,78,216,0.25)',
-                      }}
-                    >
-                      <div className="w-full h-2 rounded-full" style={{ backgroundColor: '#1D4ED8', opacity: i === 0 ? 1 : 0.5 }} />
-                      <div className="text-center">
-                        <div className="text-white/20 text-[7px] font-mono uppercase tracking-widest">HP 678</div>
-                      </div>
-                      <div className="w-full h-1.5 rounded-full bg-white/5" />
-                    </div>
-                  ))}
-                </div>
+                {/* Back left — peeking */}
+                <img src="/HPcart.png" alt="" className="absolute object-contain"
+                  style={{ width: '55%', height: '55%', transform: 'translateX(-52%)', zIndex: 5, opacity: 0.7, filter: 'brightness(0.75)' }} />
+                {/* Back right — peeking */}
+                <img src="/HPcart.png" alt="" className="absolute object-contain"
+                  style={{ width: '55%', height: '55%', transform: 'translateX(52%)', zIndex: 5, opacity: 0.7, filter: 'brightness(0.75)' }} />
+                {/* Front center */}
+                <img src="/HPcart.png" alt="HP 678 Combo Pack" className="absolute object-contain drop-shadow-2xl"
+                  style={{ width: '75%', height: '75%', zIndex: 10 }} />
               </div>
             </div>
           </div>
@@ -312,13 +303,17 @@ export default function PocThreePage() {
                 )}
                 <div className="absolute inset-0 opacity-20" style={{ background: `radial-gradient(circle at 60% 40%, ${p.dot}, transparent 65%)` }} />
                 <div className="w-full h-full flex items-center justify-center">
-                  <div
-                    className="w-12 h-16 rounded-xl shadow-xl flex flex-col items-center justify-between py-2 px-2 group-hover:scale-110 transition-transform duration-300"
-                    style={{ background: 'linear-gradient(160deg, #1a1a2e, #0a0a18)', border: '1px solid rgba(255,255,255,0.1)', boxShadow: `0 16px 40px ${p.dot}35` }}
-                  >
-                    <div className="w-full h-1.5 rounded-full" style={{ backgroundColor: p.dot }} />
-                    <div className="w-full h-1 rounded-full bg-white/5" />
-                  </div>
+                  {'image' in p && p.image ? (
+                    <img src={p.image as string} alt={p.name} className="w-4/5 h-4/5 object-contain group-hover:scale-110 transition-transform duration-300 drop-shadow-lg" />
+                  ) : (
+                    <div
+                      className="w-12 h-16 rounded-xl shadow-xl flex flex-col items-center justify-between py-2 px-2 group-hover:scale-110 transition-transform duration-300"
+                      style={{ background: 'linear-gradient(160deg, #1a1a2e, #0a0a18)', border: '1px solid rgba(255,255,255,0.1)', boxShadow: `0 16px 40px ${p.dot}35` }}
+                    >
+                      <div className="w-full h-1.5 rounded-full" style={{ backgroundColor: p.dot }} />
+                      <div className="w-full h-1 rounded-full bg-white/5" />
+                    </div>
+                  )}
                 </div>
               </div>
               {/* Info */}

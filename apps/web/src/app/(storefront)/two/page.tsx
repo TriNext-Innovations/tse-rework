@@ -34,14 +34,9 @@ export default function PocTwoPage() {
 
       {/* Header */}
       <header className="flex items-center justify-between px-8 py-5 border-b border-gray-100 sticky top-0 z-40 bg-white">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-[#0D9488] rounded-lg flex items-center justify-center">
-            <span className="text-white font-black text-sm">T</span>
-          </div>
-          <div>
-            <span className="font-black text-gray-900 tracking-tight">TSE Online</span>
-            <span className="hidden sm:inline text-xs text-gray-400 ml-2">Quality Generic Cartridges · Est. 1992</span>
-          </div>
+        <div className="flex items-center gap-2">
+          <img src="/logo.png" alt="TSE Online" style={{ width: 200, height: 48, objectFit: 'contain' }} />
+          <span className="text-xs text-gray-400 font-medium tracking-wide -ml-2">Cartridges</span>
         </div>
         <nav className="hidden md:flex items-center gap-8 text-sm text-gray-500">
           {['Products', 'Brands', 'About'].map((item) => (
@@ -54,7 +49,7 @@ export default function PocTwoPage() {
       </header>
 
       {/* Hero — oversized editorial, light */}
-      <section className="pt-14 pb-0 overflow-hidden border-b border-gray-100">
+      <section className="pt-14 pb-0 overflow-hidden border-b border-gray-100" style={{ backgroundImage: "url('https://cdn.mos.cms.futurecdn.net/g3k8sf4sNtXPpTeevjoKEW.jpg')", backgroundRepeat: 'no-repeat', backgroundSize: 'cover', backgroundPosition: 'center' }}>
         <div className="px-8 mb-3">
           <span className="text-[11px] font-black text-[#0D9488] uppercase tracking-[0.3em]">
             Kya Sands, Johannesburg · Supplying South Africa since 1992
@@ -84,10 +79,10 @@ export default function PocTwoPage() {
             Every cartridge we sell is guaranteed to work as good, or better, than the original — at a fraction of the brand price.
           </p>
           <div className="flex gap-3 flex-wrap">
-            <button className="bg-[#0D9488] hover:bg-[#0f766e] text-white font-black px-7 py-4 rounded-2xl cursor-pointer transition-colors">
+            <button className="bg-[#0D9488] hover:bg-[#0f766e] text-white font-black px-7 py-4 rounded-2xl cursor-pointer transition-colors border-2 border-[#0D9488] hover:border-[#0f766e]">
               Shop All Cartridges
             </button>
-            <button className="border-2 border-gray-200 hover:border-gray-300 text-gray-700 font-bold px-7 py-4 rounded-2xl cursor-pointer transition-colors">
+            <button className="border-2 border-[#0D9488] hover:border-[#0f766e] text-[#0D9488] hover:text-[#0f766e] font-bold px-7 py-4 rounded-2xl cursor-pointer transition-colors">
               Find My Cartridge
             </button>
           </div>

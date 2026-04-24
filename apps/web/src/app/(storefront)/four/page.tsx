@@ -5,10 +5,10 @@ import { MockupNav } from '@/components/mockup-nav'
 import './tse4.css'
 
 const PRODUCTS = [
-  { id: 'hp-106a', name: 'HP 106A Black Toner', code: 'W1106A', brand: 'HP', type: 'laser', color: 'black', price: 330, compatible: ['HP Laser 107a', 'HP Laser 107w', 'HP Laser MFP 135a', 'HP Laser MFP 137fnw'], generic: true },
-  { id: 'hp-136a', name: 'HP 136A Black Toner', code: 'W1360A', brand: 'HP', type: 'laser', color: 'black', price: 575, compatible: ['HP Laser MFP 136a', 'HP Laser MFP 136w', 'HP LaserJet MFP M236d'], generic: true },
-  { id: 'hp-26a', name: 'HP 26A Black Toner', code: 'CF226A', brand: 'HP', type: 'laser', color: 'black', price: 390, compatible: ['HP LaserJet Pro M402dn', 'HP LaserJet Pro M402n', 'HP LaserJet Pro MFP M426fdw'], generic: true },
-  { id: 'hp-85a', name: 'HP 85A Black Toner', code: 'CE285A', brand: 'HP', type: 'laser', color: 'black', price: 280, compatible: ['HP LaserJet P1102', 'HP LaserJet P1102w', 'HP LaserJet Pro M1132', 'HP LaserJet Pro M1212nf'], generic: true },
+  { id: 'hp-106a', name: 'HP 106A Black Toner', code: 'W1106A', brand: 'HP', type: 'laser', color: 'black', price: 330, compatible: ['HP Laser 107a', 'HP Laser 107w', 'HP Laser MFP 135a', 'HP Laser MFP 137fnw'], generic: true, image: 'https://www.tse.co.za/wp-content/uploads/2020/11/106AW1106A_1K-EMEA.jpg' },
+  { id: 'hp-136a', name: 'HP 136A Black Toner', code: 'W1360A', brand: 'HP', type: 'laser', color: 'black', price: 575, compatible: ['HP Laser MFP 136a', 'HP Laser MFP 136w', 'HP LaserJet MFP M236d'], generic: true, image: 'https://www.tse.co.za/wp-content/uploads/2024/08/W1360A-136A-%E8%95%AD%E6%8E%A2.jpg' },
+  { id: 'hp-26a', name: 'HP 26A Black Toner', code: 'CF226A', brand: 'HP', type: 'laser', color: 'black', price: 390, compatible: ['HP LaserJet Pro M402dn', 'HP LaserJet Pro M402n', 'HP LaserJet Pro MFP M426fdw'], generic: true, image: 'https://www.tse.co.za/wp-content/uploads/2020/07/CRG-052_CF226A_3.1K-Universal.jpg' },
+  { id: 'hp-85a', name: 'HP 85A Black Toner', code: 'CE285A', brand: 'HP', type: 'laser', color: 'black', price: 280, compatible: ['HP LaserJet P1102', 'HP LaserJet P1102w', 'HP LaserJet Pro M1132', 'HP LaserJet Pro M1212nf'], generic: true, image: 'https://www.tse.co.za/wp-content/uploads/2019/04/CB435A_436A_CE285A_CRG-125_312_313_325_712_713_725_912_913_925_2K-Universal.jpg' },
   { id: 'hp-680-black', name: 'HP 680 Black Ink', code: 'F6V27AA', brand: 'HP', type: 'inkjet', color: 'black', price: 230, compatible: ['HP DeskJet 1115', 'HP DeskJet 2135', 'HP DeskJet 3635', 'HP DeskJet 3775'], generic: true },
   { id: 'hp-680-colour', name: 'HP 680 Colour Ink', code: 'F6V26AA', brand: 'HP', type: 'inkjet', color: 'colour', price: 230, compatible: ['HP DeskJet 1115', 'HP DeskJet 2135', 'HP DeskJet 3635', 'HP DeskJet 3775'], generic: true },
   { id: 'bro-tn2090', name: 'Brother TN-2090 Black Toner', code: 'TN2090', brand: 'Brother', type: 'laser', color: 'black', price: 310, compatible: ['Brother HL-2130', 'Brother HL-2132', 'Brother DCP-7055', 'Brother DCP-7057'], generic: true },
@@ -99,11 +99,11 @@ export default function PocFourPage() {
         {/* NAV */}
         <nav className={`tse4-nav${scrolled ? ' scrolled' : ''}`}>
           <div className="tse4-nav-inner">
-            <a href="#" className="tse4-logo">
-              <span className="tse4-logo-text">
-                T<span className="tse4-logo-s">S</span>E
-              </span>
-              <span className="tse4-logo-sub">Technical Systems Engineering</span>
+            <a href="#" className="tse4-logo" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="tse4-logo-badge">
+                <img src="/logo.png" alt="TSE Logo" className="tse4-logo-img" />
+              </div>
+              <span style={{ fontSize: '0.75rem', color: '#888888', fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Cartridges</span>
             </a>
             <ul className="tse4-nav-links">
               {['Home', 'Shop', 'About', 'Delivery', 'Contact'].map((l, i) => (
@@ -188,7 +188,7 @@ export default function PocFourPage() {
               {featured.map(p => (
                 <div key={p.id} className="tse4-product-card">
                   <div className="tse4-card-img-wrap">
-                    <img src={getProductImg(p)} alt={p.name} loading="lazy" />
+                    <img src={'image' in p && p.image ? p.image as string : getProductImg(p)} alt={p.name} loading="lazy" />
                     <span className="tse4-card-brand">{p.brand}</span>
                     {'badge' in p && p.badge && <span className="tse4-card-new">{p.badge as string}</span>}
                   </div>
