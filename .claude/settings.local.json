@@ -9,7 +9,21 @@
       "Bash(npx tsc *)",
       "Bash(npm run *)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/)",
-      "WebFetch(domain:www.tse.co.za)"
+      "WebFetch(domain:www.tse.co.za)",
+      "Bash(pnpm dev *)",
+      "Bash(npm --version)",
+      "Read(//c/Users/wwwja/AppData/Roaming/npm/**)",
+      "Bash(npm install *)",
+      "Bash(/c/Users/wwwja/AppData/Roaming/npm/pnpm install *)",
+      "Bash(/c/Users/wwwja/AppData/Roaming/npm/pnpm dev *)",
+      "Bash(/c/Users/wwwja/AppData/Roaming/npm/pnpm add *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(pnpm *)",
+      "Bash(powershell -Command \"Get-Content 'C:\\\\Users\\\\wwwja\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\E--tse-poc-tse-ui\\\\3fd04755-b22a-4947-823d-cb1f7254b1f1\\\\tasks\\\\bf9ocp562.output' -ErrorAction SilentlyContinue\")",
+      "Bash(powershell *)",
+      "PowerShell(Stop-Process *)"
     ]
   }
 }

@@ -113,7 +113,7 @@ export default function PocThreePage() {
               {[
                 { src: '/toner.png',   x: '2%',  y: '2%',  size: 140, z: 10, delay: '0s',    dur: '3.2s' },
                 { src: '/m40.png',     x: '57%', y: '4%',  size: 135, z: 9,  delay: '0.6s',  dur: '2.8s' },
-                { src: '/Canon.png',   x: '18%', y: '18%', size: 230, z: 20, delay: '0.2s',  dur: '3.6s' },
+                { src: '/Canon.png',   x: '2%', y: '0%', size: 330, z: 20, delay: '0.2s',  dur: '3.6s' },
                 { src: '/brother.png', x: '3%',  y: '57%', size: 135, z: 8,  delay: '1.0s',  dur: '3.0s' },
                 { src: '/tk52.png',    x: '57%', y: '55%', size: 140, z: 11, delay: '0.4s',  dur: '2.6s' },
               ].map((c, i) => (
