@@ -714,21 +714,18 @@ export default function ProposalPage() {
                 <a href="mailto:ryno@trinextinnovations.co.za?subject=TSE%20Proposal%20%E2%80%94%20Let's%20Go" className="px-8 py-4 text-sm font-semibold bg-[#0D9488] text-white hover:bg-[#0f766e] transition-colors">
                   Email TriNext to Proceed
                 </a>
-                <a href="https://wa.me/27798733558" target="_blank" rel="noopener noreferrer" className="px-8 py-4 text-sm font-semibold transition-colors" style={{ border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.8)' }}>
-                  WhatsApp Us
-                </a>
-              </div>
-              <div className="mt-8 pt-8" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                <p className="text-xs mb-4" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                  Want to see what we&apos;ve already built?
-                </p>
-                <a href="/one" className="inline-flex items-center gap-3 px-8 py-4 text-sm font-semibold transition-colors" style={{ border: '1px solid rgba(13,148,136,0.4)', color: '#0D9488' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(13,148,136,0.08)' }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'transparent' }}
-                >
-                  Have a look — tell us what you like
-                  <span>→</span>
-                </a>
+                <div>
+                  <p className="text-xs mb-4" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                    Want to see what we&apos;ve already built?
+                  </p>
+                  <a href="/one" className="inline-flex items-center gap-3 px-8 py-4 text-sm font-semibold transition-colors" style={{ border: '1px solid rgba(13,148,136,0.4)', color: '#0D9488' }}
+                     onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(13,148,136,0.08)' }}
+                     onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'transparent' }}
+                  >
+                    Have a look — tell us what you like
+                    <span>→</span>
+                  </a>
+                </div>
               </div>
             </div>
 
