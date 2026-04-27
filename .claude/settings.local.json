@@ -23,7 +23,9 @@
       "Bash(pnpm *)",
       "Bash(powershell -Command \"Get-Content 'C:\\\\Users\\\\wwwja\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\E--tse-poc-tse-ui\\\\3fd04755-b22a-4947-823d-cb1f7254b1f1\\\\tasks\\\\bf9ocp562.output' -ErrorAction SilentlyContinue\")",
       "Bash(powershell *)",
-      "PowerShell(Stop-Process *)"
+      "PowerShell(Stop-Process *)",
+      "Bash(git stash *)",
+      "Bash(python3 *)"
     ]
   }
 }
