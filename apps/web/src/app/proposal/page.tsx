@@ -557,7 +557,7 @@ export default function ProposalPage() {
             <span className="text-[10px] tracking-[0.28em] uppercase font-bold text-[#0D9488]">Packages & Pricing</span>
           </div>
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-12">
-            <h2 className="ds text-4xl lg:text-5xl text-white">Three tiers.<br />One obvious choice.</h2>
+            <h2 className="ds text-4xl lg:text-5xl text-white">Three tiers.<br />Built around where you are now.</h2>
             <p className="text-sm leading-relaxed max-w-[240px] lg:text-right" style={{ color: 'rgba(255,255,255,0.5)' }}>
               All prices exclude VAT.<br />R18,000 once-off build fee — paid<br />40% / 30% / 30% across milestones.
             </p>
