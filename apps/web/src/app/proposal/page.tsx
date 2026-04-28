@@ -464,7 +464,7 @@ export default function ProposalPage() {
                   <span className="w-2 h-2 rounded-full bg-[#0D9488]" />
                   <span className="text-[10px] uppercase tracking-[0.25em] font-bold text-[#0D9488]">Recommended</span>
                 </div>
-                <span className="text-sm font-bold text-[#0D9488]">R89 once-off</span>
+                <span className="text-sm font-bold text-[#0D9488]">R89 yearly</span>
               </div>
               <div className="font-mono leading-tight mb-8 break-all text-white" style={{ fontSize: 'clamp(1.8rem, 4vw, 3rem)' }}>
                 tse-cartridges.co.za
