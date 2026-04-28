@@ -26,8 +26,8 @@ const PROBLEMS = [
   },
   {
     num: '03',
-    title: 'Friction at Purchase',
-    body: 'Every order requires a phone call or WhatsApp. No compatibility filter. Every sale depends on a human touchpoint — a hard ceiling on revenue.',
+    title: 'Manual Post-Payment Fulfilment',
+    body: 'Customers can pay online — but every paid order then triggers a manual chain: TSE receives an email, generates an invoice by hand, sends it, then books the courier manually. Every order is staff time. It cannot scale.',
   },
   {
     num: '04',
@@ -179,7 +179,7 @@ const PACKAGES = [
 const COMPARE_ROWS = [
   { feature: 'Website Performance', current: 'Slow, poor UX', growth: 'Sub-1s Next.js (95+ PageSpeed)' },
   { feature: 'SEO Signal', current: 'Zero keyword targeting', growth: 'Domain + content + schema markup' },
-  { feature: 'Online Ordering', current: 'Call / WhatsApp only', growth: 'Full self-serve e-commerce' },
+  { feature: 'Order Fulfilment', current: 'Manual invoice + courier booking per order', growth: 'Auto-invoice on payment · Courier booked automatically' },
   { feature: 'Payment Options', current: 'Manual EFT / COD', growth: 'PayFast + Ozow Instant EFT + COD' },
   { feature: 'Product Discovery', current: 'No compatibility filter', growth: 'Compatibility wizard + Meilisearch search' },
   { feature: 'Social Media', current: '804 FB likes, manual posting', growth: 'Instagram + Facebook bot — posts automatically' },
@@ -347,7 +347,7 @@ export default function ProposalPage() {
                   { label: 'Founded', value: '1987', note: '39 years in operation' },
                   { label: 'Website', value: 'tse.co.za', note: 'Poor UX, weak SEO' },
                   { label: 'Social', value: '804 likes', note: 'Facebook only, no automation' },
-                  { label: 'Ordering', value: 'Call / WhatsApp', note: 'No self-serve channel' },
+                  { label: 'Ordering', value: 'Online payment', note: 'Manual invoice + courier per order' },
                   { label: 'Monthly spend', value: '~R12,000', note: '' },
                 ].map(({ label, value, note }) => (
                   <div key={label} className="py-3.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
@@ -464,7 +464,7 @@ export default function ProposalPage() {
                   <span className="w-2 h-2 rounded-full bg-[#0D9488]" />
                   <span className="text-[10px] uppercase tracking-[0.25em] font-bold text-[#0D9488]">Recommended</span>
                 </div>
-                <span className="text-sm font-bold text-[#0D9488]">R89 once-off</span>
+                <span className="text-sm font-bold text-[#0D9488]">R89 yearly</span>
               </div>
               <div className="font-mono leading-tight mb-8 break-all text-white" style={{ fontSize: 'clamp(1.8rem, 4vw, 3rem)' }}>
                 tse-cartridges.co.za
