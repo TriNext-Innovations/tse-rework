@@ -53,7 +53,7 @@ export default function PocTwoPage() {
         <img src="/POC2Back.png" alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover object-top pointer-events-none select-none" />
         <div className="relative z-10 px-4 sm:px-8 mb-3">
           <span className="text-[10px] sm:text-[11px] font-black text-[#0D9488] uppercase tracking-[0.2em] sm:tracking-[0.3em]">
-            Kya Sands, Johannesburg · Supplying South Africa since 1992
+            Kya Sands, Johannesburg · Supplying South Africa since 1987
           </span>
         </div>
 
@@ -106,7 +106,7 @@ export default function PocTwoPage() {
       <div className="border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 py-6 sm:py-8 grid grid-cols-2 md:grid-cols-4 gap-5 sm:gap-8">
           {[
-            { value: '1992', label: 'Year established' },
+            { value: '1987', label: 'Year established' },
             { value: '13+', label: 'Printer brands stocked' },
             { value: '100%', label: 'Generic — not OEM' },
             { value: 'Next day', label: 'JHB/PTA before noon' },
@@ -123,8 +123,8 @@ export default function PocTwoPage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-8 py-10 sm:py-16">
         <div className="flex items-baseline justify-between mb-7 sm:mb-10">
           <div>
-            <span className="text-[11px] font-black text-[#0D9488] uppercase tracking-[0.25em]">Best Sellers</span>
-            <h2 className="text-2xl sm:text-3xl font-black mt-1 tracking-tight">Popular right now</h2>
+            <span className="text-[11px] font-black text-[#0D9488] uppercase tracking-[0.25em]">Our Products</span>
+            <h2 className="text-2xl sm:text-3xl font-black mt-1 tracking-tight">Quality generics in stock</h2>
           </div>
           <a href="#" className="text-sm text-gray-400 hover:text-gray-900 transition-colors cursor-pointer shrink-0 ml-4">View all →</a>
         </div>
@@ -212,7 +212,7 @@ export default function PocTwoPage() {
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-5 sm:gap-6 text-center sm:text-left">
           <div>
             <div className="text-white font-black text-xl sm:text-2xl tracking-tight">Ready to switch to generics?</div>
-            <div className="text-gray-500 text-sm mt-1">Quality cartridges. Competitive prices. Supplying SA since 1992.</div>
+            <div className="text-gray-500 text-sm mt-1">Quality cartridges. Competitive prices. Supplying SA since 1987.</div>
           </div>
           <button className="bg-[#0D9488] hover:bg-[#0f766e] text-white font-black px-7 sm:px-8 py-3.5 sm:py-4 rounded-2xl cursor-pointer transition-colors text-sm shrink-0 w-full sm:w-auto">
             Browse All Products →

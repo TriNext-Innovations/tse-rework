@@ -36,7 +36,7 @@ type ThemeState = { tse: boolean; dark: boolean }
 const BRANDS = ['HP', 'BROTHER', 'CANON', 'EPSON', 'SAMSUNG', 'LEXMARK', 'MINOLTA', 'OLIVETTI', 'RICOH', 'PANTUM']
 const TRUST_ITEMS = ['100% Quality Guarantee', 'Next-Day Delivery Gauteng', 'Nationwide Courier', 'WhatsApp Ordering', 'Bulk Discounts']
 const WHY_ITEMS = [
-  { num: '01', heading: 'EST. 1992', body: "Over 30 years supplying South African businesses and homes. We started with ribbon re-inking machines and grew into one of SA's leading generic cartridge suppliers." },
+  { num: '01', heading: 'EST. 1987', body: "Over 39 years supplying South African businesses and homes. We started with ribbon re-inking machines and grew into one of SA's leading generic cartridge suppliers." },
   { num: '02', heading: 'IMPORTED INKS', body: 'We source only the best imported inks and toners, tested against OEM standards. Our remanufacturing specialists are trained to exacting quality benchmarks.' },
   { num: '03', heading: 'TESTED & GUARANTEED', body: 'Every cartridge is guaranteed to work as good as or better than the original. Faulty product? Bring invoice + test printout + cartridge — we replace it on the spot.' },
   { num: '04', heading: 'SA-WIDE DELIVERY', body: 'Own drivers cover Johannesburg and Pretoria with next-day delivery for orders before 12:00 noon. Nationwide courier for all other areas — payment required on order.' },
@@ -138,7 +138,7 @@ export default function PocFourPage() {
           {/* HERO */}
           <section className="tse4-hero">
             <div className="tse4-hero-left">
-              <div className="tse4-hero-label">TECHNICAL SYSTEMS ENGINEERING · KYA SANDS · EST. 1992</div>
+              <div className="tse4-hero-label">TECHNICAL SYSTEMS ENGINEERING · KYA SANDS · EST. 1987</div>
               <h1 className="tse4-hero-h1">
                 QUALITY<br />
                 <span className="accent">Cartridges.</span>
@@ -146,14 +146,14 @@ export default function PocFourPage() {
               </h1>
               <p className="tse4-hero-sub">
                 Generic and original ink and toner for HP, Brother, Canon, Epson, Samsung, Lexmark, Kyocera and more.
-                Next-day Gauteng delivery. 100% satisfaction guaranteed since 1992.
+                Next-day Gauteng delivery. 100% satisfaction guaranteed since 1987.
               </p>
               <div className="tse4-hero-cta">
                 <a href="#featured" className="tse4-btn-primary">SHOP CARTRIDGES</a>
                 <a href="#" className="tse4-btn-outline">GET A QUOTE</a>
               </div>
               <div className="tse4-hero-stats">
-                {['Since 1992', '100% Guarantee', 'Next-Day Gauteng', '11 Brands'].map(s => (
+                {['Since 1987', '100% Guarantee', 'Next-Day Gauteng', '11 Brands'].map(s => (
                   <span key={s} className="tse4-hero-stat">{s}</span>
                 ))}
               </div>
@@ -179,8 +179,8 @@ export default function PocFourPage() {
           <section className="tse4-featured" id="featured">
             <div className="tse4-section-header">
               <div>
-                <h2>BESTSELLERS</h2>
-                <p>Shop our most popular cartridges</p>
+                <h2>FEATURED PRODUCTS</h2>
+                <p>Shop our range of quality generic cartridges</p>
               </div>
               <a href="#" className="tse4-view-all-link">VIEW ALL PRODUCTS →</a>
             </div>
@@ -324,7 +324,7 @@ export default function PocFourPage() {
           <div className="tse4-footer-bottom">
             <span>© 2025 Technical Systems Engineering CC · Kya Sands, Gauteng, South Africa</span>
             <div className="tse4-footer-badges">
-              <span>Est. 1992</span>
+              <span>Est. 1987</span>
               <span>Proudly South African</span>
               <span>Eco Responsible</span>
             </div>

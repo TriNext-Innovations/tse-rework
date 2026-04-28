@@ -11,7 +11,7 @@ const categories = [
 ]
 
 const featured = [
-  { name: 'HP 678 Black Ink', sku: 'CZ107AA', price: 'R 299', was: null, badge: 'Best Seller', from: '#DBEAFE', to: '#EFF6FF', dot: '#1D4ED8', image: '/HPcart.png' },
+  { name: 'HP 678 Black Ink', sku: 'CZ107AA', price: 'R 299', was: null, badge: 'Generic', from: '#DBEAFE', to: '#EFF6FF', dot: '#1D4ED8', image: '/HPcart.png' },
   { name: 'Canon 737 Black Toner', sku: 'CRG-737', price: 'R 300', was: null, badge: 'Generic', from: '#FFE4E6', to: '#FFF1F2', dot: '#DC2626', image: '/Canoncart.png' },
   { name: 'Epson T6641 Black Bottle', sku: 'C13T664100', price: 'R 310', was: null, badge: 'Generic', from: '#E0F2FE', to: '#F0F9FF', dot: '#0EA5E9', image: '/Epsonblack.png' },
   { name: 'Brother TN-2455 Toner', sku: 'TN2455', price: 'R 330', was: null, badge: 'Generic', from: '#EDE9FE', to: '#F5F3FF', dot: '#7C3AED', image: '/BrotherTN2455.png' },
@@ -55,7 +55,7 @@ export default function PocThreePage() {
 
       {/* Promo bar */}
       <div className="bg-[#0D9488] text-white text-xs font-semibold text-center py-2.5 tracking-wide">
-        Quality generics — guaranteed as good or better than original &nbsp;·&nbsp; Order before noon → next day JHB/PTA &nbsp;·&nbsp; Est. 1992
+        Quality generics — guaranteed as good or better than original &nbsp;·&nbsp; Order before noon → next day JHB/PTA &nbsp;·&nbsp; Est. 1987
       </div>
 
       {/* Hero */}
@@ -67,7 +67,7 @@ export default function PocThreePage() {
           {/* Copy */}
           <div className="flex-1 text-center lg:text-left">
             <span className="inline-block bg-[#0D9488]/20 border border-[#0D9488]/30 text-teal-300 text-xs font-bold px-3 py-1 rounded-full mb-5 uppercase tracking-widest">
-              Quality Generics · Supplying SA since 1992
+              Quality Generics · Supplying SA since 1987
             </span>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-none tracking-tight mb-4">
               Quality generics.<br />
@@ -95,7 +95,7 @@ export default function PocThreePage() {
               </div>
               <div className="flex items-center gap-1.5 text-xs text-gray-500">
                 <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                Est. 1992
+                Est. 1987
               </div>
             </div>
           </div>
@@ -283,7 +283,7 @@ export default function PocThreePage() {
       {/* Product grid */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-14 pb-28">
         <div className="flex items-baseline justify-between mb-7">
-          <h2 className="text-2xl font-black text-gray-900 tracking-tight">Popular products</h2>
+          <h2 className="text-2xl font-black text-gray-900 tracking-tight">Our products</h2>
           <a href="#" className="text-sm text-[#0D9488] hover:text-[#0f766e] cursor-pointer font-semibold">View all →</a>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
