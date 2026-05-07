@@ -66,17 +66,41 @@ let it rot into proposal fiction.
 
 ---
 
-## 3. Target architecture (1-line summary)
+## 3. Target architecture
+
+### Chosen infrastructure stack
 
 ```
-Next.js 15 (Vercel)  ──►  Medusa v2 (Railway) ──►  Postgres (Supabase)
-                  │                  │
-                  ├──► Sanity CMS    ├──► Meilisearch (Railway)
-                  ├──► Resend        ├──► n8n (Railway)
-                  └──► PayFast/Ozow  └──► Meta Graph + Anthropic (via n8n)
+Browser
+   │
+   ▼
+Cloudflare Free  (DNS + CDN + DDoS + SSL at edge — JHB PoP)
+   │
+   ▼
+Vultr JHB VPS — 2 vCPU / 4 GB RAM / 80 GB SSD  (~R440/mo)
+   │  Coolify manages all services below via Docker
+   ├── Next.js 16  (output: standalone, port 3000)
+   ├── Medusa v2   (port 9000)
+   ├── Redis       (port 6379, internal only)
+   ├── Meilisearch (port 7700, internal only)  ← Phase 2
+   └── n8n         (port 5678, internal only)  ← Phase 5
+          │
+          ▼
+   Supabase Free   (Postgres DB — 500 MB, 1 GB storage)
+   Resend Free     (transactional email — 3K/mo)
+   Sanity Free     (CMS — 10 GB bandwidth)
+   Cloudflare R2   (media backup storage — 10 GB free)
+
+   PayFast / Ozow  (payment processors — SA-hosted, external)
+   Meta Graph API  (Instagram/Facebook — external)
+   Anthropic API   (caption generation — external, pay-per-use)
 ```
 
-For full data flow, env vars, and DB extensions see `docs/Architecture.md`.
+**All compute runs inside South Africa (Vultr JHB).** Only the Supabase
+database is cross-border (US/EU) — mitigated via POPIA s.72 consent at
+signup + signed DPA. See section 10 and 11 for full detail.
+
+For full data flow, env vars, and DB schema extensions see `docs/Architecture.md`.
 
 ---
 
@@ -88,26 +112,32 @@ something demonstrable to the client.
 ### Phase 0 — Foundations (this week, on `feature/setup`)
 
 Goal: a developer can clone the repo and have `pnpm dev` boot a working
-Medusa + Next.js + Postgres + Meilisearch stack within ten minutes — on the
-**locked-in framework versions** (see section 9).
+Medusa + Next.js + Postgres stack within ten minutes — on the **locked-in
+framework versions** (see section 9) and the **chosen infra** (see section 11).
 
-- [ ] **Framework upgrade pass** (see section 9 for the full upgrade order):
-      Next.js 15 → 16, React 18 → 19, Tailwind 3 → 4, Medusa pin to 2.14.1,
-      shadcn/ui initialised on the v4 baseline
-- [ ] **POPIA hosting decision locked** with the client (see section 10) — this
-      gates which `DATABASE_URL` we wire up
-- [ ] Add `docker-compose.yml` for local Postgres, Redis, Meilisearch, n8n
-- [ ] Wire `apps/backend` so `medusa develop` actually starts (currently `modules: []` and no `src/` entrypoint files beyond config)
-- [ ] Pick the production design POC and promote its layout into a real
-      `(storefront)/layout.tsx` with header/footer placeholders
-- [ ] Move `/one`–`/four` POC routes under `apps/web/src/app/poc/` so the
-      storefront root is free for the real homepage
+**Infra provisioning (do this first — everything else gates on it):**
+- [ ] Provision **Vultr JHB VPS** (2 vCPU / 4 GB / 80 GB SSD)
+- [ ] Install **Coolify** on the VPS (`curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash`)
+- [ ] Point `tseonline.co.za` and `api.tseonline.co.za` DNS to VPS IP via **Cloudflare** (proxied, orange cloud)
+- [ ] Set Cloudflare SSL/TLS mode to **Full (Strict)**; issue origin cert via Cloudflare or Let's Encrypt
+- [ ] Lock VPS firewall to accept HTTP/HTTPS only from **Cloudflare IP ranges** (block direct access to VPS IP)
+- [ ] Create **Supabase free project**; copy `DATABASE_URL` into Coolify env vars for Medusa
+- [ ] Add Coolify services: **Next.js**, **Medusa**, **Redis** — leave Meilisearch and n8n for Phase 2/5
+- [ ] Confirm git-push deploy works end-to-end (push → Coolify builds → live)
+
+**Framework upgrades (see section 9 for full order):**
+- [ ] Next.js 15 → 16, React 18 → 19, Tailwind 3 → 4, shadcn/ui init on v4, Medusa pin to 2.14.1, TypeScript ≥5.7
+
+**Repo setup:**
+- [ ] Add `docker-compose.yml` for **local dev** (Postgres, Redis) — Coolify handles production
+- [ ] Wire `apps/backend` so `medusa develop` starts locally (currently `modules: []`)
+- [ ] Pick the production design POC and promote its layout into a real `(storefront)/layout.tsx`
+- [ ] Move `/one`–`/four` POC routes under `apps/web/src/app/poc/`
 - [ ] Add CI workflow: `lint`, `type-check`, `build` on every PR
 - [ ] Add Husky + lint-staged + Conventional Commits enforcement
-- [ ] Confirm Supabase project is provisioned and `DATABASE_URL` works
 
-**Exit criteria:** green CI on the upgraded stack, fresh clone boots
-end-to-end, design direction locked, POPIA hosting option chosen.
+**Exit criteria:** git push deploys successfully to Vultr via Coolify, Medusa
+API responds at `api.tseonline.co.za/health`, design direction locked.
 
 ### Phase 1 — Design system & catalogue (week 2)
 
@@ -230,10 +260,10 @@ walking-skeleton implementation.
 | 7 | Courier accounts — Courier Guy and Aramex API creds | Client | Start of Phase 3 |
 | 8 | Meta Business — Page + Instagram Business linked, app reviewed | Client | Start of Phase 5 |
 | 9 | Resend sending domain — DKIM/SPF on `tseonline.co.za` | Client | Start of Phase 3 |
-| 10 | **POPIA hosting strategy** — Option A / B / C / D / E (see section 10) | Client + Dev | End of Phase 0 |
-| 11 | Approve Phase 0 framework upgrades (Next 16, React 19, Tailwind 4) | Client | End of Phase 0 |
+| 10 | ~~POPIA hosting strategy~~ **✅ DECIDED:** Vultr JHB for all compute (SA-hosted); Supabase Free for DB (cross-border, mitigated via s.72 consent + DPA — see section 10) | — | Closed |
+| 11 | ~~Approve Phase 0 framework upgrades~~ **✅ DECIDED:** Next 16, React 19, Tailwind 4 — see section 9 | — | Closed |
 | 12 | Information Officer named and registered with the Information Regulator | Client | Before launch |
-| 13 | DPAs signed with Supabase, Resend, Meta, Anthropic, Cloudflare | Client + Dev | Before launch |
+| 13 | DPAs signed with **Supabase, Resend, Meta, Anthropic, Cloudflare** (Vercel/Railway no longer used) | Client + Dev | Before launch |
 
 If any of these slip, the phase that depends on them slips with it. Do not
 silently work around missing inputs — call them out in the weekly review.
@@ -248,7 +278,8 @@ silently work around missing inputs — call them out in the weekly review.
 | Meta App review rejected (`instagram_content_publish`) | Medium | No auto-posting at launch | Submit for review in Phase 4, not Phase 5 — review can take 5–10 business days |
 | Courier API downtime at checkout | Medium | Customer cannot complete order | Flat-rate fallback table (`courier/rates.ts`) used when API errors |
 | Supabase RLS misconfigured exposes B2B prices to public | Low | Reputational | Enable RLS on every table from migration day 1; add E2E test that anonymous users only see standard pricing |
-| **POPIA cross-border transfer non-compliance (Supabase Cloud has no SA region)** | High if ignored | Information Regulator fine, reputational | Decision required in Phase 0 — see section 10 for the five options. Default recommendation: stay on Supabase + explicit consent at signup + signed DPA + privacy disclosures (POPIA s.72(1)(b)). |
+| POPIA — Supabase DB is cross-border (US/EU) | Low–Medium | Information Regulator notice | Mitigated: all compute is SA-hosted (Vultr JHB); DB cross-border covered by s.72(1)(b) consent checkbox at signup + signed Supabase DPA + privacy policy disclosure. Upgrade to RDS `af-south-1` when revenue supports it. |
+| Single VPS = single point of failure | Medium | Downtime during hardware event | Vultr SLA + UptimeRobot alerts; Coolify auto-restarts crashed containers; Supabase DB is separate (survives VPS failure). Upgrade to 2-VPS setup when traffic justifies it. |
 | Framework upgrade regressions (Next 15→16, React 18→19, Tailwind 3→4) | Medium | Build delays | Do all upgrades together in Phase 0 before any feature work — never ship features on outdated versions and upgrade later (doubles the work) |
 | 60-day Meta token expiry forgotten | Medium | Auto-posting silently breaks | Cron in n8n that refreshes the long-lived token weekly + Sentry alert on failure |
 | Product import CSV arrives malformed / late | High | Catalogue empty at launch | Build the importer in Phase 1 against synthetic data; client supplies CSV by end of Phase 4 |
@@ -260,15 +291,23 @@ silently work around missing inputs — call them out in the weekly review.
 
 Before we cut Phase 0 work into feature branches:
 
-- [ ] Decide which design POC is the production direction (decision #1 above)
-- [ ] Decide POPIA hosting option A/B/C/D/E (decision #10, section 10)
-- [ ] Sign off on the Phase 0 framework upgrade plan (decision #11, section 9)
+**Infrastructure (dev team action):**
+- [ ] Provision Vultr JHB 4 GB VPS and install Coolify
+- [ ] Create Supabase free project; save `DATABASE_URL`
+- [ ] Configure Cloudflare DNS (proxied) + Full (Strict) SSL
+- [ ] Confirm Medusa API responds at `api.tseonline.co.za/health`
+
+**Client sign-offs:**
+- [ ] Decide which design POC is the production direction (decision #1)
+- [ ] Confirm Cloudflare account and domain access is ready (decision #2)
+- [ ] WhatsApp group created with client
+
+**Dev team setup:**
 - [ ] Confirm `feature/setup` is merged or carried forward
-- [ ] Verify all dev team have access to: GitHub repo, Supabase project, Vercel project, Railway project, Sanity project
-- [ ] Provision local `.env` files from the agreed dev Supabase + dev Railway URLs
-- [ ] Confirm `pnpm install && pnpm dev` works on every developer machine
+- [ ] All dev team have access to: GitHub repo, Supabase project, Sanity project, Vultr console, Coolify dashboard
+- [ ] Provision local `.env` files from dev Supabase + Coolify service URLs
+- [ ] Confirm `pnpm install && pnpm dev` works on every developer machine (local Docker for Postgres + Redis)
 - [ ] Establish daily 15-min standup window (SAST)
-- [ ] WhatsApp group with client created (per retainer terms)
 
 When every box is ticked, we're cleared to start Phase 1.
 
@@ -332,50 +371,38 @@ National Data and Cloud Policy further tightens localisation, especially
 for government data — but for commercial e-commerce the consent /
 contract grounds remain workable.
 
-### 10.1 Where TSE Online's PII actually goes
+### 10.1 Where TSE Online's PII actually goes (chosen stack)
 
-| Service | Holds personal info? | Region today |
-|---|---|---|
-| **Supabase Cloud** (Postgres) | Yes — customers, addresses, orders, B2B accounts, quote requests | **No `af-south-1` region.** AWS US/EU only. |
-| Resend | Yes — recipient email + email body | US/EU |
-| Meilisearch (Railway) | No — products only | US/EU |
-| n8n (Railway) | Sometimes — workflows touching customer email/address | US/EU |
-| Sanity | No — marketing content only | Global CDN |
-| PayFast / Ozow | They handle card data themselves; we never touch it | South Africa |
-| Vercel | In-flight only (RSC, ISR caches) | Global Edge |
-| Cloudflare | In-flight only | Has a JHB PoP |
+| Service | Holds personal info? | Region | POPIA status |
+|---|---|---|---|
+| **Supabase Free** (Postgres) | Yes — customers, addresses, orders, B2B accounts | AWS US/EU | ⚠️ Cross-border — mitigated via s.72 consent + DPA |
+| **Vultr JHB** (Next.js, Medusa, n8n) | Compute only — no persistence | ✅ Johannesburg | ✅ SA-hosted, no s.72 trigger |
+| Resend Free | Yes — email address + email body | US/EU | ✅ s.72(1)(c) necessary for contract + DPA |
+| Meilisearch (Vultr JHB) | No — products only | ✅ Johannesburg | ✅ No PII |
+| Sanity Free | No — marketing content only | Global CDN | ✅ No PII |
+| PayFast / Ozow | Card data — handled entirely by them | South Africa | ✅ Not our processor |
+| Cloudflare | In-flight only, no persistence | JHB PoP | ✅ Transit only |
 
-The compliance gap is concentrated at **Supabase**. Supabase has
-publicly declined (as of April 2026) to add an `af-south-1` region on
-Cloud, despite repeated community requests.
+The only cross-border exposure is **Supabase DB**. Mitigated via explicit
+consent at signup + signed Supabase DPA. Upgrade path to RDS `af-south-1`
+is documented in section 11 (growth triggers).
 
-### 10.2 The five options
+### 10.2 ✅ Decision — Option A (chosen)
 
-| Option | Hosting for PII | POPIA basis | Pros | Cons |
-|---|---|---|---|---|
-| **A. Supabase Cloud + consent + DPA** *(default recommendation)* | AWS US/EU | s.72(1)(b) consent + s.72(1)(a) binding agreement | Zero infra change. Supabase publishes a POPIA-aligned DPA on request. Standard pattern for SA SaaS. | Consent must be **explicit and granular** at signup — not buried in T&Cs. Locks us in if client later demands local-only. |
-| **B. Self-host Supabase on AWS `af-south-1`** | Cape Town | Local hosting, no s.72 trigger | Strongest POPIA story. Same Supabase API surface. Sub-30ms latency for SA customers. | We become the DBA team — backups, upgrades, RLS, replicas, security patches are now ours. ~R3,000–5,000/mo extra infra plus retainer hours. |
-| **C. Managed Postgres in `af-south-1` (RDS / Neon)** | Cape Town | Local hosting | Local hosting without operating Supabase ourselves. RDS has POPIA-aligned addendum. | Lose Supabase Storage / Auth / Realtime — we'd rebuild those (S3 + Medusa auth + websockets or skip). Adds ~1–2 weeks to build. |
-| **D. Hybrid: PII on `af-south-1` RDS, non-PII on Supabase** | Split | Local for PII | PII never crosses borders. | Two databases to operate. More complex backups and joins. Worth it only if RDS is mandatory but we want Supabase Storage for product images. |
-| **E. Supabase Cloud + pseudonymise PII at app layer** | US/EU | Tokenisation | Keeps cloud convenience. | Fragile. Tokenised PII is **still PII** under POPIA — this is not a real exemption, only a defence-in-depth measure. Don't rely on this alone. |
+**Vultr JHB for all compute + Supabase Free for DB + s.72 consent at signup.**
 
-### 10.3 Recommendation
+All compute (Next.js rendering, Medusa API processing, n8n workflows) runs
+in Johannesburg — no s.72 trigger for processing. The database crosses
+borders but is covered by:
+- Explicit granular consent checkbox at signup (not buried in T&Cs)
+- Signed Supabase DPA (available on request from Supabase)
+- Privacy Policy disclosing Supabase and its US/EU hosting region
 
-**Option A for v1**, with Option B or C as a documented upgrade path if the
-client's risk tolerance changes post-launch.
+**Upgrade trigger:** when monthly revenue exceeds ~R15,000, migrate DB to
+RDS Postgres `af-south-1` (~R450/mo). The migration is a single
+`DATABASE_URL` swap — no application code changes.
 
-Why: SA-based fintech and e-commerce operators routinely run on AWS / GCP
-regions outside ZA under POPIA s.72(1)(b) — explicit signup consent plus a
-processor DPA. AWS publishes a POPIA-aligned addendum; Supabase signs a
-DPA on request. Going Option B/C costs us 1–2 weeks and a recurring
-operational burden that the retainer scope doesn't cover today. The
-migration path from A → B/C is contained to the data layer (Medusa keeps
-the same connection string).
-
-The client gets the call. We surface it as decision #10 at Monday kickoff
-and walk them through the trade-offs.
-
-### 10.4 What we owe POPIA regardless of the option
+### 10.3 What we owe POPIA regardless of hosting
 
 These are required even if we pick Option B (local hosting) — they are
 about *processing*, not just *location*:
@@ -389,8 +416,7 @@ about *processing*, not just *location*:
 - 36-hour breach notification process — Information Regulator + affected subjects.
 - Information Officer named and registered with the Information Regulator
   (this is the client's MD by default — confirm and register before launch).
-- Signed DPAs with Supabase, Resend, Meta, Anthropic, Cloudflare, Vercel,
-  Railway before go-live (decision #13).
+- Signed DPAs with Supabase, Resend, Meta, Anthropic, Cloudflare before go-live (decision #13).
 - Retention schedule documented — orders kept 5 years (tax/SARS), marketing
   consent re-confirmed annually, abandoned-cart data purged after 90 days.
 
@@ -403,3 +429,79 @@ Sources used to verify the above:
 - [Michalsons: cross-border transfers under POPIA](https://www.michalsons.com/blog/guidance-note-on-cross-border-transfers-to-from-south-africa/77246)
 - [VDT Attorneys: cloud regulation and POPIA](https://vdt.co.za/data-protection/south-africa-cloud-regulation-and-popia-what-remote-computing-services-need-to-know/)
 - [AWS South Africa data privacy](https://aws.amazon.com/compliance/south-africa-data-privacy/)
+
+---
+
+## 11. Infrastructure costs
+
+### 11.1 Monthly recurring
+
+| Service | Plan | Cost (ZAR) | Notes |
+|---|---|---|---|
+| **Vultr Cloud Compute JHB** | 2 vCPU / 4 GB / 80 GB SSD | **~R440** | The only real bill. Hosts everything. |
+| Vultr automated backups | 20% of VPS | ~R88 | Recommended. Or DIY to Cloudflare R2 (free). |
+| **Total recurring** | | **~R440–528** | |
+
+### 11.2 Free-tier services (R0/mo at launch)
+
+| Service | What it provides | Free limit | Notes |
+|---|---|---|---|
+| Coolify | PaaS UI, git-push deploys, env vars, logs, auto-SSL | Unlimited (open source, runs on VPS) | Free forever |
+| Cloudflare Free | DNS, CDN, DDoS, SSL at JHB edge | Unlimited bandwidth | Free forever |
+| Supabase Free | Postgres DB + 1 GB storage | 500 MB DB | Sufficient for 6–12 months |
+| Resend Free | Transactional email | 3,000/mo, 100/day | Free forever at this volume |
+| Sanity Free | CMS — hero, banners, blog | 10 GB bandwidth, 3 users | Free forever at this size |
+| Sentry Free | Error tracking | 5,000 events/mo | Free forever at this volume |
+| UptimeRobot Free | Uptime monitoring, 5-min checks | 50 monitors | Free forever |
+| Cloudflare R2 | Backup / media storage | 10 GB free | Free forever at this size |
+| Let's Encrypt | Origin SSL certificates | Unlimited | Managed by Coolify |
+
+### 11.3 Variable / usage-based
+
+| Item | Model | Est. at launch |
+|---|---|---|
+| Anthropic API | Per token | ~R30–80/mo at low post volume |
+| PayFast | 3.5% + R2 per transaction | Only charged on real sales |
+| Ozow | ~1.5% per transaction | Only charged on real sales |
+| WhatsApp Business | Free first 1,000 conversations/mo | R0 at startup |
+| Courier Guy / Aramex | Per shipment | Only on real shipments |
+
+### 11.4 Annual
+
+| Item | Cost | Notes |
+|---|---|---|
+| `.co.za` domain | ~R100/yr (~R9/mo amortised) | Client likely owns already |
+
+### 11.5 All-in launch cost
+
+```
+Vultr 4 GB JHB VPS         R440/mo
+Vultr automated backups     R88/mo   (optional)
+Domain (amortised)          R9/mo
+Anthropic API               ~R50/mo  (rough average)
+─────────────────────────────────────
+TOTAL                       ~R587/mo
+Without backups option      ~R499/mo
+```
+
+### 11.6 Comparison to original plan
+
+| Stack | Monthly | Annual | POPIA compute |
+|---|---|---|---|
+| Vultr JHB + Coolify *(chosen)* | **~R500** | **~R6,000** | ✅ SA-hosted |
+| Vercel Pro + Railway + Supabase | ~R1,300 | ~R15,600 | ❌ All cross-border |
+| All-AWS `af-south-1` | ~R3,500–5,000 | ~R42,000–60,000 | ✅ SA-hosted |
+
+**Annual saving vs Vercel + Railway route: ~R9,600/year.**
+
+### 11.7 Growth-triggered upgrades
+
+| Trigger | Upgrade | Cost delta |
+|---|---|---|
+| Supabase free DB fills up (500 MB) | Move to RDS Postgres `af-south-1` | +~R450/mo |
+| VPS memory consistently >75% | Resize Vultr → 8 GB plan | +~R440/mo (440 → 880) |
+| Media storage > 1 GB | Cloudflare R2 paid tier | +~R10/mo per 10 GB |
+| >100 orders/mo | Add Redis persistence + upgrade Railway workers → already on Coolify, just resize | +R0 (already on VPS) |
+| >5,000 visits/mo | Add 2nd Vultr VPS, split app + DB tiers | +~R440/mo |
+
+None of these trigger at launch. Re-evaluate at 6-month mark.
