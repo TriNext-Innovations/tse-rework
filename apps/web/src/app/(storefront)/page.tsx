@@ -36,6 +36,14 @@ const pocs = [
     palette: ['#030509', '#1040b5', '#c8a422'],
     tag: 'Dark · Brand-faithful',
   },
+  {
+    href: '/five',
+    label: 'POC 5',
+    title: 'Ink Editorial',
+    desc: 'Premium magazine-meets-storefront. Bento grid, Fraunces serif, CMYK magenta accent on warm paper. Cursor spotlight, animated marquee, scroll-reveal — built to WOW.',
+    palette: ['#F5F4F0', '#0A0A0A', '#E50571'],
+    tag: 'Editorial · Premium',
+  },
 ]
 
 export default function HomePage() {
