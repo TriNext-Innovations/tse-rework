@@ -8,6 +8,7 @@ const pocs = [
   { href: '/two', label: 'POC 2', sub: 'Trust Hero' },
   { href: '/three', label: 'POC 3', sub: 'Search First' },
   { href: '/four', label: 'POC 4', sub: 'Brand Theme' },
+  { href: '/five', label: 'POC 5', sub: 'Ink Editorial' },
 ]
 
 export function MockupNav() {

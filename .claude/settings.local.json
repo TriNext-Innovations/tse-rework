@@ -25,7 +25,8 @@
       "Bash(powershell *)",
       "PowerShell(Stop-Process *)",
       "Bash(git stash *)",
-      "Bash(python3 *)"
+      "Bash(python3 *)",
+      "Bash(python *)"
     ]
   }
 }
