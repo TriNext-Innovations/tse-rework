@@ -22,12 +22,12 @@ const PROBLEMS = [
   {
     num: '02',
     title: 'Weak Social Presence',
-    body: '804 Facebook likes in 34 years. No automation, no Instagram, no content pipeline. Invisible to the next generation of procurement buyers.',
+    body: '804 Facebook likes in 39 years. No automation, no Instagram, no content pipeline. Invisible to the next generation of procurement buyers.',
   },
   {
     num: '03',
-    title: 'Friction at Purchase',
-    body: 'Every order requires a phone call or WhatsApp. No compatibility filter. Every sale depends on a human touchpoint — a hard ceiling on revenue.',
+    title: 'Manual Post-Payment Fulfilment',
+    body: 'Customers can pay online — but every paid order then triggers a manual chain: TSE receives an email, generates an invoice by hand, sends it, then books the courier manually. Every order is staff time. It cannot scale.',
   },
   {
     num: '04',
@@ -151,7 +151,7 @@ const PACKAGES = [
     ],
     cta: 'Choose Growth',
     recommended: true,
-    badge: 'Most Popular',
+    badge: 'Recommended',
     savings: 'Saves ~R3,500/mo vs current spend',
   },
   {
@@ -179,7 +179,7 @@ const PACKAGES = [
 const COMPARE_ROWS = [
   { feature: 'Website Performance', current: 'Slow, poor UX', growth: 'Sub-1s Next.js (95+ PageSpeed)' },
   { feature: 'SEO Signal', current: 'Zero keyword targeting', growth: 'Domain + content + schema markup' },
-  { feature: 'Online Ordering', current: 'Call / WhatsApp only', growth: 'Full self-serve e-commerce' },
+  { feature: 'Order Fulfilment', current: 'Manual invoice + courier booking per order', growth: 'Auto-invoice on payment · Courier booked automatically' },
   { feature: 'Payment Options', current: 'Manual EFT / COD', growth: 'PayFast + Ozow Instant EFT + COD' },
   { feature: 'Product Discovery', current: 'No compatibility filter', growth: 'Compatibility wizard + Meilisearch search' },
   { feature: 'Social Media', current: '804 FB likes, manual posting', growth: 'Instagram + Facebook bot — posts automatically' },
@@ -306,7 +306,7 @@ export default function ProposalPage() {
       <section id="situation" className="relative min-h-screen flex flex-col justify-center px-8 lg:px-16 pt-28 pb-20 overflow-hidden">
         {/* Decorative background year */}
         <div className="ds absolute right-0 top-1/2 -translate-y-[45%] leading-none select-none pointer-events-none" style={{ fontSize: 'clamp(8rem, 22vw, 22rem)', fontWeight: 700, color: 'rgba(255,255,255,0.018)' }}>
-          1992
+          1987
         </div>
         <div className="absolute left-8 lg:left-16 top-0 bottom-0 w-px" style={{ background: 'rgba(255,255,255,0.05)' }} />
 
@@ -325,7 +325,7 @@ export default function ProposalPage() {
                 <br />to unstoppable.
               </h1>
               <p className="text-lg leading-relaxed max-w-[500px] mb-10" style={{ color: 'rgba(255,255,255,0.72)' }}>
-                TSE has built a 34-year reputation supplying quality generic cartridges across South Africa.
+                TSE has built a 39-year reputation supplying quality generic cartridges across South Africa.
                 TriNext builds the digital engine that puts that reputation in front of every buyer searching online.
               </p>
               <div className="flex flex-wrap gap-2">
@@ -344,10 +344,10 @@ export default function ProposalPage() {
               </p>
               <div>
                 {[
-                  { label: 'Founded', value: '1992', note: '34 years in operation' },
+                  { label: 'Founded', value: '1987', note: '39 years in operation' },
                   { label: 'Website', value: 'tse.co.za', note: 'Poor UX, weak SEO' },
                   { label: 'Social', value: '804 likes', note: 'Facebook only, no automation' },
-                  { label: 'Ordering', value: 'Call / WhatsApp', note: 'No self-serve channel' },
+                  { label: 'Ordering', value: 'Online payment', note: 'Manual invoice + courier per order' },
                   { label: 'Monthly spend', value: '~R12,000', note: '' },
                 ].map(({ label, value, note }) => (
                   <div key={label} className="py-3.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
@@ -385,7 +385,7 @@ export default function ProposalPage() {
                 The six problems holding TSE back
               </h2>
               <p className="text-sm leading-relaxed" style={{ color: '#64748B' }}>
-                A 34-year business with the stock, the reputation, and the reach — missing a digital foundation.
+                A 39-year business with the stock, the reputation, and the reach — missing a digital foundation.
               </p>
             </div>
 
@@ -408,7 +408,7 @@ export default function ProposalPage() {
             <div>
               <h3 className="ds text-2xl mb-3" style={{ color: '#0D9488' }}>The Opportunity</h3>
               <p className="text-sm leading-relaxed max-w-2xl" style={{ color: 'rgba(255,255,255,0.75)' }}>
-                TSE has a 34-year reputation, a broad product range, a physical distribution advantage in JHB/PTA,
+                TSE has a 39-year reputation, a broad product range, a physical distribution advantage in JHB/PTA,
                 and a guarantee that outperforms OEM:{' '}
                 <em style={{ color: '#fff' }}>&ldquo;Works as good, or even better than the original.&rdquo;</em>{' '}
                 It just needs a digital engine to match.
@@ -464,7 +464,7 @@ export default function ProposalPage() {
                   <span className="w-2 h-2 rounded-full bg-[#0D9488]" />
                   <span className="text-[10px] uppercase tracking-[0.25em] font-bold text-[#0D9488]">Recommended</span>
                 </div>
-                <span className="text-sm font-bold text-[#0D9488]">R89 once-off</span>
+                <span className="text-sm font-bold text-[#0D9488]">R89 yearly</span>
               </div>
               <div className="font-mono leading-tight mb-8 break-all text-white" style={{ fontSize: 'clamp(1.8rem, 4vw, 3rem)' }}>
                 tse-cartridges.co.za
@@ -557,7 +557,7 @@ export default function ProposalPage() {
             <span className="text-[10px] tracking-[0.28em] uppercase font-bold text-[#0D9488]">Packages & Pricing</span>
           </div>
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-12">
-            <h2 className="ds text-4xl lg:text-5xl text-white">Three tiers.<br />One obvious choice.</h2>
+            <h2 className="ds text-4xl lg:text-5xl text-white">Three tiers.<br />Built around where you are now.</h2>
             <p className="text-sm leading-relaxed max-w-[240px] lg:text-right" style={{ color: 'rgba(255,255,255,0.5)' }}>
               All prices exclude VAT.<br />R18,000 once-off build fee — paid<br />40% / 30% / 30% across milestones.
             </p>
@@ -708,7 +708,7 @@ export default function ProposalPage() {
                 Ready to move<br />forward?
               </h2>
               <p className="text-lg leading-relaxed max-w-md mb-10" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                Let&apos;s turn TSE&apos;s 34-year reputation into South Africa&apos;s best-known cartridge brand online.
+                Let&apos;s turn TSE&apos;s 39-year reputation into South Africa&apos;s best-known cartridge brand online.
               </p>
               <div className="flex flex-wrap gap-4">
                 <a href="mailto:ryno@trinextinnovations.co.za?subject=TSE%20Proposal%20%E2%80%94%20Let's%20Go" className="px-8 py-4 text-sm font-semibold bg-[#0D9488] text-white hover:bg-[#0f766e] transition-colors">

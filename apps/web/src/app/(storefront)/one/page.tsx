@@ -44,7 +44,7 @@ export default function PocOnePage() {
           </div>
           <div>
             <div className="text-white font-black text-2xl leading-none tracking-tight">TSE</div>
-            <div className="text-teal-200 text-xs font-medium mt-0.5">Est. 1992</div>
+            <div className="text-teal-200 text-xs font-medium mt-0.5">Est. 1987</div>
           </div>
         </div>
 
@@ -114,7 +114,7 @@ export default function PocOnePage() {
             {[
               { icon: '↩', label: 'Replacement warranty on all products' },
               { icon: '✓', label: 'Quality-tested imported inks' },
-              { icon: '◎', label: 'Supplying South Africa since 1992' },
+              { icon: '◎', label: 'Supplying South Africa since 1987' },
             ].map((t) => (
               <div key={t.label} className="flex items-center gap-3">
                 <span className="w-8 h-8 rounded-xl bg-[#0D9488]/10 border border-[#0D9488]/20 text-[#0D9488] text-sm flex items-center justify-center shrink-0 font-bold">{t.icon}</span>
