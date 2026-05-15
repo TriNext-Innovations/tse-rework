@@ -257,6 +257,7 @@ walking-skeleton implementation.
 | 4 | Reseller / wholesale discount %s (currently assumed 15% / 25%) | Client | Start of Phase 4 |
 | 5 | Final product CSV (SKU, title, price, stock, OEM flag, images) | Client | End of Phase 4 |
 | 6 | Compatibility CSV (printer brand → model → SKU) | Client | End of Phase 2 |
+| 14 | **SKU master list — BLOCKER.** WC audit (2026-05-14) found all 560 products have no SKU. Medusa seed and compatibility finder both gate on this. Provide supplier SKU CSV or add SKUs in WooCommerce before Phase 1 seed. See `migration/MIGRATION-LOG.md`. | Client | Before Phase 1 seed |
 | 7 | Courier accounts — Courier Guy and Aramex API creds | Client | Start of Phase 3 |
 | 8 | Meta Business — Page + Instagram Business linked, app reviewed | Client | Start of Phase 5 |
 | 9 | Resend sending domain — DKIM/SPF on `tseonline.co.za` | Client | Start of Phase 3 |

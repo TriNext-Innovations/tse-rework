@@ -13,10 +13,12 @@
     "lint": "turbo lint",
     "type-check": "turbo type-check",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "clean": "turbo clean"
+    "clean": "turbo clean",
+    "migration:generate-skus": "tsx scripts/generate-skus.ts"
   },
   "devDependencies": {
     "prettier": "^3.2.5",
+    "tsx": "^4.19.2",
     "turbo": "^2.0.0",
     "typescript": "^5.4.5"
   },
