@@ -91,12 +91,14 @@ CREATE INDEX idx_compat_printer_model ON cartridge_compatibility(printer_model_i
 ## Entity Relationships
 
 ```
-printer_brand ──< printer_model >──< cartridge_compatibility >── medusa_product
+printer_brand ──< printer_model ──< cartridge_compatibility ──< medusa_product
 ```
 
-`printer_brand` has exactly one 1:N relationship (to `printer_model`). There is
-no direct path from `printer_brand` to `cartridge_compatibility`, so no fan trap
-is possible. Brand is always reached through the single model hop.
+Each arrow is a FK on the right-hand table pointing left. `cartridge_compatibility`
+is a pure junction table — one row per (printer_model, product) pair. A product
+can have many compat rows (many models it fits); a model can have many compat rows
+(many cartridges that fit it). No entity fans out through two independent 1:N
+paths, so no fan trap is possible.
 
 ---
 
