@@ -61,12 +61,20 @@ CREATE INDEX idx_printer_model_name  ON printer_model USING gin(to_tsvector('eng
 
 ### `cartridge_compatibility`
 
-Junction table: many-to-many between Medusa products and printer models.
+Bridge table between `printer_model` and Medusa products. `brand_id` is carried
+directly here — **not derived through `printer_model`** — to avoid a fan trap.
+
+Without `brand_id` on this table, a query for "all HP-compatible cartridges" must
+traverse `printer_brand → printer_model → cartridge_compatibility`, chaining two
+1:N hops. Any aggregation (COUNT, GROUP BY) on that path double-counts products
+that appear under more than one HP model. Carrying `brand_id` directly collapses
+the fan: both brand and model are independent FKs on the same row.
 
 ```sql
 CREATE TABLE cartridge_compatibility (
   id               SERIAL PRIMARY KEY,
   product_id       VARCHAR(255) NOT NULL,    -- Medusa product.id (e.g. "prod_01JXXXXX")
+  brand_id         INTEGER NOT NULL REFERENCES printer_brand(id) ON DELETE RESTRICT,
   printer_model_id INTEGER NOT NULL REFERENCES printer_model(id) ON DELETE CASCADE,
   source           VARCHAR(50) NOT NULL DEFAULT 'parsed',
                    -- 'parsed'   = extracted from description text
@@ -75,40 +83,66 @@ CREATE TABLE cartridge_compatibility (
   created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-  UNIQUE (product_id, printer_model_id)
+  UNIQUE (product_id, printer_model_id),
+  -- brand_id must agree with printer_model.brand_id — enforce at app layer on insert
+  CONSTRAINT fk_compat_brand_model CHECK (brand_id IS NOT NULL)
 );
 
 CREATE INDEX idx_compat_product       ON cartridge_compatibility(product_id);
+CREATE INDEX idx_compat_brand         ON cartridge_compatibility(brand_id);
 CREATE INDEX idx_compat_printer_model ON cartridge_compatibility(printer_model_id);
+CREATE INDEX idx_compat_brand_product ON cartridge_compatibility(brand_id, product_id);
 ```
+
+> **Note:** `brand_id` is intentionally denormalised. It is always set to
+> `printer_model.brand_id` on insert and must never differ. This is a deliberate
+> trade-off: one redundant column prevents a structural fan trap on every
+> brand-level query.
 
 ---
 
 ## Entity Relationships
 
 ```
-printer_brand ──< printer_model ──< cartridge_compatibility >── medusa_product
+printer_brand ──< printer_model
+printer_brand ──< cartridge_compatibility >── medusa_product
+printer_model ──< cartridge_compatibility
 ```
 
-- One brand has many models
-- One model is compatible with many cartridge products
-- One cartridge product is compatible with many printer models
+`cartridge_compatibility` is the bridge table. It holds direct FKs to both
+`printer_brand` and `printer_model` so either dimension can be queried without
+traversing the other.
 
 ---
 
-## Query: Find cartridges for a printer model
+## Query: Find cartridges for a specific printer model
 
 ```sql
 SELECT p.id, p.title, p.handle
 FROM   product p
 JOIN   cartridge_compatibility cc ON cc.product_id = p.id
-JOIN   printer_model pm           ON pm.id = cc.printer_model_id
-WHERE  pm.slug = 'laserjet-pro-m404n'
-  AND  pm.brand_id = (SELECT id FROM printer_brand WHERE slug = 'hp')
+WHERE  cc.printer_model_id = (
+  SELECT pm.id FROM printer_model pm
+  JOIN   printer_brand pb ON pb.id = pm.brand_id
+  WHERE  pb.slug = 'hp' AND pm.slug = 'laserjet-pro-m404n'
+)
 ORDER  BY p.title;
 ```
 
-For the storefront wizard (`/find-your-cartridge`), this query runs server-side via a Medusa custom API route: `GET /store/compatibility?brand=hp&model=laserjet-pro-m404n`.
+## Query: Find all cartridges for a brand (no fan trap)
+
+```sql
+-- Correct: brand_id is a direct FK — no model hop, no double-counting
+SELECT DISTINCT p.id, p.title, p.handle
+FROM   product p
+JOIN   cartridge_compatibility cc ON cc.product_id = p.id
+JOIN   printer_brand pb           ON pb.id = cc.brand_id
+WHERE  pb.slug = 'hp'
+ORDER  BY p.title;
+```
+
+For the storefront wizard (`/find-your-cartridge`), both queries run server-side
+via a Medusa custom API route: `GET /store/compatibility?brand=hp&model=laserjet-pro-m404n`.
 
 ---
 
