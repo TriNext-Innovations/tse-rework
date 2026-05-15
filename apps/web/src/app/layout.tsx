@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   },
   description:
     "South Africa's trusted supplier of printer cartridges. OEM & compatible options for HP, Canon, Epson, Samsung, Brother, Lexmark and Xerox.",
-  metadataBase: new URL('https://tse.co.za'),
+  metadataBase: new URL('https://tse-cartridges.co.za'),
   icons: {
     icon: '/icon.png',
     apple: '/apple-icon.png',

@@ -12,7 +12,7 @@ Update the status column as items are resolved.
 | 5 | **Favicon & app icons** | Depends on clean logo source (#2 above). Cannot finalise until vector file is received. | ⏳ Blocked on #2 | #3.5 |
 | 6 | **PayFast credentials** | Merchant ID + passphrase required to configure the PayFast Medusa payment plugin. Nothing can go live without this. | ⏳ Awaiting credentials | #5.1 |
 | 7 | **Compatibility gaps CSV** (`compat-gaps.csv`) | 91 products have no printer model compatibility data. Client must fill in the model column and return the file before migration can complete. | ⏳ Awaiting return | #20 |
-| 8 | **Domain strategy: `tse-cartridges.co.za` vs `tse.co.za`** | `tse-cartridges.co.za` purchased 2026-05-15. Need to confirm: (a) is `tse-cartridges.co.za` the primary domain for the new store, (b) does `tse.co.za` redirect to it, or (c) do both point to the new store? This affects `metadataBase`, nginx config, SSL cert setup, and SEO canonical URLs. | ⏳ Awaiting decision | — |
+| 8 | **`tse.co.za` → `tse-cartridges.co.za` redirect** (post-launch) | `tse-cartridges.co.za` is the confirmed primary domain. `tse.co.za` will redirect to it but only AFTER WooCommerce is decommissioned. DNS and nginx 301 redirect config to be set up at that time. | 🔜 Post-launch | — |
 | 9 | **Vultr VM provisioning** | We need SSH access to the Johannesburg VM to complete the deployment chain (#4.2–#4.10). Nothing goes live without this. | ⏳ Awaiting VM | #4.1 |
 | 10 | **Resend API key + sending domain** | Required for transactional email (order confirmations, password resets). Domain DNS records will need to be updated. | ⏳ Awaiting setup | #5.4 |
 
