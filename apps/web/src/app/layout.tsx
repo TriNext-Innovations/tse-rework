@@ -1,12 +1,21 @@
 import type { Metadata } from 'next'
-import { Inter, Fraunces, Geist } from 'next/font/google'
+import { Inter, Fraunces } from 'next/font/google'
 import './globals.css'
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils'
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  display: 'swap',
+})
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
-const fraunces = Fraunces({ weight: ['300', '400', '500', '600', '700', '900'], style: ['normal', 'italic'], subsets: ['latin'], variable: '--font-fraunces' })
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  variable: '--font-display',
+  style: ['normal', 'italic'],
+  weight: ['300', '400', '500', '700'],
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: {
@@ -18,14 +27,10 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://tse.co.za'),
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={cn("font-sans", geist.variable)}>
-      <body className={`${inter.className} ${fraunces.variable}`}>{children}</body>
+    <html lang="en" className={cn(inter.variable, fraunces.variable)}>
+      <body>{children}</body>
     </html>
   )
 }
