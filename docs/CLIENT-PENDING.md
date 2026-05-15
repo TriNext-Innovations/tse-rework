@@ -24,6 +24,7 @@ Update the status column as items are resolved.
 | R1 | **POPIA consent — customer & order data export** | 2026-05-15 | Written confirmation received. `customers.json` and `orders.json` remain gitignored, SA infrastructure only. |
 | R2 | **Brand colour hex codes** | 2026-05-15 | Primary `#dfe344` (lime), Secondary `#41e0f5` (cyan), Accent `#ee75e9` (pink). Confirmed via issue #23. |
 | R3 | **Product photography for launch** | 2026-05-15 | Existing WooCommerce image library is sufficient for relaunch. Photo updates deferred to post-launch. See issue #25. |
+| R4 | **Brand guidelines document** | 2026-05-15 | Client had none. Created `docs/brand.md` from confirmed assets (colours, logo, voice, typography). See issue #27. |
 
 ---
 
