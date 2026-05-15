@@ -1,29 +1,30 @@
 import type { Config } from 'tailwindcss'
 
+/*
+ * Brand colour utilities are driven entirely by CSS variables defined in
+ * globals.css. This file never needs changing for a rebrand — edit globals.css.
+ *
+ * Usage:  bg-brand-primary, text-brand-text, border-brand-border
+ * With opacity modifiers: bg-brand-primary/50, text-brand-text-muted/75
+ */
 const config: Partial<Config> = {
   content: [],
   theme: {
     extend: {
       colors: {
-        primary: {
-          DEFAULT: '#0D9488',
-          50: '#f0fdfa',
-          100: '#ccfbf1',
-          200: '#99f6e4',
-          300: '#5eead4',
-          400: '#2dd4bf',
-          500: '#14b8a6',
-          600: '#0D9488',
-          700: '#0f766e',
-          800: '#115e59',
-          900: '#134e4a',
-          950: '#042f2e',
-        },
-        charcoal: {
-          DEFAULT: '#111827',
-        },
-        'body-text': {
-          DEFAULT: '#374151',
+        brand: {
+          primary:    'hsl(var(--brand-primary) / <alpha-value>)',
+          'primary-foreground': 'hsl(var(--brand-primary-foreground) / <alpha-value>)',
+          secondary:  'hsl(var(--brand-secondary) / <alpha-value>)',
+          'secondary-foreground': 'hsl(var(--brand-secondary-foreground) / <alpha-value>)',
+          accent:     'hsl(var(--brand-accent) / <alpha-value>)',
+          'accent-foreground': 'hsl(var(--brand-accent-foreground) / <alpha-value>)',
+          bg:         'hsl(var(--brand-bg) / <alpha-value>)',
+          surface:    'hsl(var(--brand-surface) / <alpha-value>)',
+          border:     'hsl(var(--brand-border) / <alpha-value>)',
+          text:       'hsl(var(--brand-text) / <alpha-value>)',
+          'text-muted': 'hsl(var(--brand-text-muted) / <alpha-value>)',
+          destructive: 'hsl(var(--brand-destructive) / <alpha-value>)',
         },
       },
       fontFamily: {

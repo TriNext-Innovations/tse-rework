@@ -4,80 +4,103 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * ─── BRAND TOKENS ────────────────────────────────────────────────────────────
+ *
+ * THIS is the single source of truth for TSE colours.
+ * To rebrand: update the HSL values in this block only — nothing else needs
+ * changing. Format: H S% L%  (no hsl() wrapper — required so Tailwind opacity
+ * modifiers like bg-brand-primary/50 work correctly).
+ *
+ * Current values are placeholders from the existing WooCommerce site.
+ * Update once client confirms brand colours (issue §3.2).
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+:root {
+  /* Core brand */
+  --brand-primary:              173 85% 32%;  /* #0D9488 — TSE teal (placeholder) */
+  --brand-primary-foreground:   0 0% 100%;    /* white */
+  --brand-secondary:            222 47% 11%;  /* #111827 — charcoal */
+  --brand-secondary-foreground: 0 0% 100%;    /* white */
+  --brand-accent:               175 79% 40%;  /* #14b8a6 — lighter teal, hover/active */
+  --brand-accent-foreground:    222 47% 11%;  /* charcoal */
+
+  /* Semantic surface tokens */
+  --brand-bg:                   0 0% 100%;    /* page background */
+  --brand-surface:              210 40% 98%;  /* card / panel background */
+  --brand-border:               220 13% 91%;  /* borders and dividers */
+  --brand-text:                 220 13% 26%;  /* #374151 — body text */
+  --brand-text-muted:           220 9% 46%;   /* #6B7280 — secondary / muted text */
+
+  /* Status colours */
+  --brand-destructive:          0 84% 60%;
+  --brand-destructive-foreground: 0 0% 100%;
+
+  /* Charts */
+  --chart-1: 173 85% 32%;
+  --chart-2: 175 79% 40%;
+  --chart-3: 222 47% 40%;
+  --chart-4: 220 13% 60%;
+  --chart-5: 220 9% 80%;
+}
+
+/*
+ * ─── SHADCN VARIABLE MAPPING ─────────────────────────────────────────────────
+ * Maps shadcn's semantic tokens onto the brand tokens above.
+ * Do NOT set colour values here — change them in Brand Tokens above.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
 @layer base {
   :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    /* TSE brand teal — update to confirmed hex once §3.2 is done */
-    --primary: oklch(0.6 0.118 184);
-    --primary-foreground: oklch(1 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --border: oklch(0.922 0 0);
-    --radius: 0.5rem;
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.6 0.118 184);
-    --sidebar-primary-foreground: oklch(1 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
+    --background:              hsl(var(--brand-bg));
+    --foreground:              hsl(var(--brand-text));
+    --primary:                 hsl(var(--brand-primary));
+    --primary-foreground:      hsl(var(--brand-primary-foreground));
+    --secondary:               hsl(var(--brand-surface));
+    --secondary-foreground:    hsl(var(--brand-secondary));
+    --accent:                  hsl(var(--brand-accent));
+    --accent-foreground:       hsl(var(--brand-accent-foreground));
+    --muted:                   hsl(var(--brand-surface));
+    --muted-foreground:        hsl(var(--brand-text-muted));
+    --card:                    hsl(var(--brand-bg));
+    --card-foreground:         hsl(var(--brand-text));
+    --popover:                 hsl(var(--brand-bg));
+    --popover-foreground:      hsl(var(--brand-text));
+    --border:                  hsl(var(--brand-border));
+    --input:                   hsl(var(--brand-border));
+    --ring:                    hsl(var(--brand-primary));
+    --destructive:             hsl(var(--brand-destructive));
+    --destructive-foreground:  hsl(var(--brand-destructive-foreground));
+    --sidebar:                 hsl(var(--brand-surface));
+    --sidebar-foreground:      hsl(var(--brand-text));
+    --sidebar-primary:         hsl(var(--brand-primary));
+    --sidebar-primary-foreground: hsl(var(--brand-primary-foreground));
+    --sidebar-accent:          hsl(var(--brand-accent));
+    --sidebar-accent-foreground: hsl(var(--brand-accent-foreground));
+    --sidebar-border:          hsl(var(--brand-border));
+    --sidebar-ring:            hsl(var(--brand-primary));
+    --radius:                  0.5rem;
   }
 
   .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --primary: oklch(0.7 0.118 184);
-    --primary-foreground: oklch(0.145 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
+    /* Override only brand tokens — shadcn mapping above stays unchanged */
+    --brand-primary:              175 79% 48%;
+    --brand-primary-foreground:   222 47% 11%;
+    --brand-accent:               175 79% 55%;
+    --brand-accent-foreground:    222 47% 11%;
+    --brand-bg:                   222 47% 7%;
+    --brand-surface:              222 47% 11%;
+    --brand-border:               220 13% 18%;
+    --brand-text:                 210 40% 96%;
+    --brand-text-muted:           220 9% 60%;
+    --brand-destructive:          0 63% 55%;
   }
+
   .theme {
     --font-heading: var(--font-sans);
     --font-sans: var(--font-sans);
   }
+
   * {
     @apply border-border outline-ring/50;
   }
@@ -87,13 +110,4 @@
   html {
     @apply font-sans;
   }
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
 }
