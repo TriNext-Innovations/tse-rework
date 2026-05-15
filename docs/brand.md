@@ -123,7 +123,7 @@ Both loaded via `next/font/google` in `apps/web/src/app/layout.tsx`. CSS variabl
 `OEM` · `Genuine` · `Authentic` · `Original` (when describing TSE products) · `Cheap` (implies low quality — say "fraction of the price" or "cost-effective" instead)
 
 ### Founding Year
-Always **1987** — not 1987.
+Always **1987**
 
 ---
 
@@ -173,12 +173,12 @@ Placeholder cards use dark gradient fills with the TSE wordmark until real produ
 
 ## 10. Do / Don't Summary
 
-| Do | Don't |
-|----|-------|
-| Call products "generic" or "compatible" | Call them "OEM", "genuine", or "authentic" |
-| Use `#111827` for body text on white | Use lime or cyan as text colour on white |
-| Use the white pill wrapper on dark backgrounds | Place the colour logo directly on dark fills |
+| Do | Don't                                         |
+|----|-----------------------------------------------|
+| Call products "generic" or "compatible" | Call them "OEM", "genuine", or "authentic"    |
+| Use `#111827` for body text on white | Use lime or cyan as text colour on white      |
+| Use the white pill wrapper on dark backgrounds | Place the colour logo directly on dark fills  |
 | Dark text (`#111827`) on lime/pink button backgrounds | White text on lime or pink (contrast too low) |
-| Reference founding year as 1987 | Use 1987 anywhere |
-| SVG icons from Lucide / Heroicons | Emoji as UI icons |
-| `transform`/`opacity` for animations | `width`/`height`/`margin` animations |
+| Reference founding year as 1987 | Use 1992 anywhere                             |
+| SVG icons from Lucide / Heroicons | Emoji as UI icons                             |
+| `transform`/`opacity` for animations | `width`/`height`/`margin` animations          |
