@@ -11,7 +11,7 @@ export function Footer() {
             {/* White pill keeps the colourful logo visible on the dark footer */}
             <Logo width={100} variant="dark-bg" linked={false} />
             <p className="text-sm text-white/60 leading-relaxed">
-              South Africa&apos;s trusted supplier of printer cartridges since 1992.
+              South Africa&apos;s trusted supplier of printer cartridges since 1987.
               OEM &amp; compatible options for all major brands.
             </p>
           </div>

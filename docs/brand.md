@@ -8,7 +8,7 @@
 
 ## 1. Brand Story
 
-**Technical Systems Engineering (TSE)** has been South Africa's printer-cartridge specialist since 1992, operating out of Unit 34, A.P.D. Industrial Park, Kya Sands, Johannesburg.
+**Technical Systems Engineering (TSE)** has been South Africa's printer-cartridge specialist since 1987, operating out of Unit 34, A.P.D. Industrial Park, Kya Sands, Johannesburg.
 
 TSE sells **only quality generic/compatible cartridges** — never OEM originals. The entire value proposition is delivering the same print quality as the original at a fraction of the price, backed by a no-fuss replacement guarantee.
 
@@ -114,7 +114,7 @@ Both loaded via `next/font/google` in `apps/web/src/app/layout.tsx`. CSS variabl
 - *"Generic. Not generic."* — the hero headline that captures the paradox
 - *"Works as good, or even better than the original."* — the guarantee line; this is the client's own wording
 - *"Order before noon, on your desk tomorrow."* — delivery promise (JHB/PTA)
-- *"South Africa's printer-cartridge specialist since 1992."* — trust anchor
+- *"South Africa's printer-cartridge specialist since 1987."* — trust anchor
 
 ### Words to Use
 `Compatible` · `Generic` · `Quality generic` · `Specialist` · `Guaranteed` · `Engineered` · `Reliable`
@@ -123,7 +123,7 @@ Both loaded via `next/font/google` in `apps/web/src/app/layout.tsx`. CSS variabl
 `OEM` · `Genuine` · `Authentic` · `Original` (when describing TSE products) · `Cheap` (implies low quality — say "fraction of the price" or "cost-effective" instead)
 
 ### Founding Year
-Always **1992** — not 1987.
+Always **1987** — not 1987.
 
 ---
 
@@ -179,6 +179,6 @@ Placeholder cards use dark gradient fills with the TSE wordmark until real produ
 | Use `#111827` for body text on white | Use lime or cyan as text colour on white |
 | Use the white pill wrapper on dark backgrounds | Place the colour logo directly on dark fills |
 | Dark text (`#111827`) on lime/pink button backgrounds | White text on lime or pink (contrast too low) |
-| Reference founding year as 1992 | Use 1987 anywhere |
+| Reference founding year as 1987 | Use 1987 anywhere |
 | SVG icons from Lucide / Heroicons | Emoji as UI icons |
 | `transform`/`opacity` for animations | `width`/`height`/`margin` animations |
