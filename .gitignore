@@ -34,8 +34,9 @@ Thumbs.db
 uploads/
 .cache/
 
-# Migration — sensitive data (POPIA)
+# Migration — sensitive data (POPIA — never commit)
 migration/raw/customers.json
+migration/raw/orders.json
 migration/images/
 
 # Logs

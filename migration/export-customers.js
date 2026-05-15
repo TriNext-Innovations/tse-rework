@@ -16,7 +16,7 @@ const fs   = require('fs')
 const path = require('path')
 const https = require('https')
 
-const BASE_URL   = 'https://www.tse.co.za/wp-json/wc/v3/customers'
+const BASE_URL   = 'https://www.tse.co.za/wp-json/wc/v3/customers?role=all'
 const KEY        = process.env.WC_KEY
 const SECRET     = process.env.WC_SECRET
 const PER_PAGE   = 100
@@ -57,7 +57,7 @@ async function exportCustomers() {
   console.log('Exporting customers from tse.co.za...')
 
   while (true) {
-    const url = `${BASE_URL}?per_page=${PER_PAGE}&page=${page}&orderby=registered_date&order=asc`
+    const url = `${BASE_URL}&per_page=${PER_PAGE}&page=${page}&orderby=registered_date&order=asc`
     process.stdout.write(`  Page ${page}${totalPages ? `/${totalPages}` : ''}... `)
 
     const { data, headers } = await get(url)
