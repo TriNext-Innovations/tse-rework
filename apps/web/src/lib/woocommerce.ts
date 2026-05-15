@@ -91,7 +91,7 @@ export async function fetchAllProducts(): Promise<ProductExport> {
     const results = await Promise.all(
       batch.map((p) => wcFetch<WCVariation[]>(`/products/${p.id}/variations`, { per_page: 100 }))
     )
-    batch.forEach((p, idx) => variationMap.set(p.id, results[idx].data))
+    batch.forEach((p, idx) => variationMap.set(p.id, results[idx]!.data))
   }
 
   const enriched = products.map((p) => ({
