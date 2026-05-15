@@ -61,20 +61,16 @@ CREATE INDEX idx_printer_model_name  ON printer_model USING gin(to_tsvector('eng
 
 ### `cartridge_compatibility`
 
-Bridge table between `printer_model` and Medusa products. `brand_id` is carried
-directly here — **not derived through `printer_model`** — to avoid a fan trap.
-
-Without `brand_id` on this table, a query for "all HP-compatible cartridges" must
-traverse `printer_brand → printer_model → cartridge_compatibility`, chaining two
-1:N hops. Any aggregation (COUNT, GROUP BY) on that path double-counts products
-that appear under more than one HP model. Carrying `brand_id` directly collapses
-the fan: both brand and model are independent FKs on the same row.
+Bridge table between `printer_model` and Medusa products. Only two FKs: the
+model and the product. Brand is always reached **through** `printer_model` —
+never as a direct FK on this table. Adding `brand_id` here would give
+`printer_brand` two independent 1:N paths (to `printer_model` AND to this
+table), which is the fan trap.
 
 ```sql
 CREATE TABLE cartridge_compatibility (
   id               SERIAL PRIMARY KEY,
   product_id       VARCHAR(255) NOT NULL,    -- Medusa product.id (e.g. "prod_01JXXXXX")
-  brand_id         INTEGER NOT NULL REFERENCES printer_brand(id) ON DELETE RESTRICT,
   printer_model_id INTEGER NOT NULL REFERENCES printer_model(id) ON DELETE CASCADE,
   source           VARCHAR(50) NOT NULL DEFAULT 'parsed',
                    -- 'parsed'   = extracted from description text
@@ -83,35 +79,24 @@ CREATE TABLE cartridge_compatibility (
   created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-  UNIQUE (product_id, printer_model_id),
-  -- brand_id must agree with printer_model.brand_id — enforce at app layer on insert
-  CONSTRAINT fk_compat_brand_model CHECK (brand_id IS NOT NULL)
+  UNIQUE (product_id, printer_model_id)
 );
 
 CREATE INDEX idx_compat_product       ON cartridge_compatibility(product_id);
-CREATE INDEX idx_compat_brand         ON cartridge_compatibility(brand_id);
 CREATE INDEX idx_compat_printer_model ON cartridge_compatibility(printer_model_id);
-CREATE INDEX idx_compat_brand_product ON cartridge_compatibility(brand_id, product_id);
 ```
-
-> **Note:** `brand_id` is intentionally denormalised. It is always set to
-> `printer_model.brand_id` on insert and must never differ. This is a deliberate
-> trade-off: one redundant column prevents a structural fan trap on every
-> brand-level query.
 
 ---
 
 ## Entity Relationships
 
 ```
-printer_brand ──< printer_model
-printer_brand ──< cartridge_compatibility >── medusa_product
-printer_model ──< cartridge_compatibility
+printer_brand ──< printer_model >──< cartridge_compatibility >── medusa_product
 ```
 
-`cartridge_compatibility` is the bridge table. It holds direct FKs to both
-`printer_brand` and `printer_model` so either dimension can be queried without
-traversing the other.
+`printer_brand` has exactly one 1:N relationship (to `printer_model`). There is
+no direct path from `printer_brand` to `cartridge_compatibility`, so no fan trap
+is possible. Brand is always reached through the single model hop.
 
 ---
 
@@ -129,14 +114,15 @@ WHERE  cc.printer_model_id = (
 ORDER  BY p.title;
 ```
 
-## Query: Find all cartridges for a brand (no fan trap)
+## Query: Find all cartridges for a brand
 
 ```sql
--- Correct: brand_id is a direct FK — no model hop, no double-counting
+-- Single traversal path: brand → model → compatibility → product. No fan.
 SELECT DISTINCT p.id, p.title, p.handle
 FROM   product p
 JOIN   cartridge_compatibility cc ON cc.product_id = p.id
-JOIN   printer_brand pb           ON pb.id = cc.brand_id
+JOIN   printer_model pm           ON pm.id = cc.printer_model_id
+JOIN   printer_brand pb           ON pb.id = pm.brand_id
 WHERE  pb.slug = 'hp'
 ORDER  BY p.title;
 ```
