@@ -1,0 +1,71 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false   # never cancel a running deploy — wait for it
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: ${{ secrets.VM_PORT || 22 }}
+          script: |
+            set -e
+
+            cd /opt/tse-ui
+
+            echo "▶ Pulling latest code"
+            git pull origin main
+
+            echo "▶ Building and starting containers"
+            docker compose pull --quiet
+            docker compose up --build -d --remove-orphans
+
+            echo "▶ Waiting for services to stabilise (30s)"
+            sleep 30
+
+            echo "▶ Health check — Medusa"
+            curl -sf http://localhost:9000/health || { echo "✗ Medusa health check failed"; exit 1; }
+
+            echo "▶ Health check — Next.js"
+            curl -sf http://localhost:3000/api/health || { echo "✗ Next.js health check failed"; exit 1; }
+
+            echo "✓ Deploy complete"
+
+      - name: Notify on failure (rollback prompt)
+        if: failure()
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: ${{ secrets.VM_PORT || 22 }}
+          script: |
+            set -e
+
+            cd /opt/tse-ui
+
+            echo "▶ Deploy failed — rolling back to previous images"
+            # Re-start whatever was running before the failed build
+            docker compose up -d
+
+            echo "▶ Post-rollback health checks"
+            sleep 15
+            curl -sf http://localhost:9000/health || echo "⚠ Medusa still unhealthy after rollback"
+            curl -sf http://localhost:3000/api/health || echo "⚠ Next.js still unhealthy after rollback"
