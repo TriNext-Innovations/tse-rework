@@ -1,7 +1,7 @@
 /**
  * Generates SKUs for WooCommerce products that have none.
- * Reads:  migration/raw/products.json
- * Writes: migration/raw/products-with-sku.json
+ * Reads:  migration/raw/products-without_sku.json
+ * Writes: migration/raw/products.json
  *         migration/raw/sku-report.json
  *
  * Run: npx tsx scripts/generate-skus.ts
@@ -116,8 +116,8 @@ function generateSku(name: string, id: number): string {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 const root = join(__dirname, '..')
-const inputPath = join(root, 'migration', 'raw', 'products.json')
-const outputPath = join(root, 'migration', 'raw', 'products-with-sku.json')
+const inputPath = join(root, 'migration', 'raw', 'products-without_sku.json')
+const outputPath = join(root, 'migration', 'raw', 'products.json')
 const reportPath = join(root, 'migration', 'raw', 'sku-report.json')
 
 const raw = JSON.parse(readFileSync(inputPath, 'utf-8'))

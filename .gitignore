@@ -34,6 +34,10 @@ Thumbs.db
 uploads/
 .cache/
 
+# Migration — sensitive data (POPIA)
+migration/raw/customers.json
+migration/images/
+
 # Logs
 *.log
 npm-debug.log*
