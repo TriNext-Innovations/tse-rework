@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { Logo } from '@/components/layout'
 
 type Theme = 'editorial' | 'brand'
 
@@ -18,7 +19,7 @@ const trending = [
 const faqs = [
   { q: 'Will a generic cartridge work in my printer?', a: 'Yes. Our compatibles are engineered to spec for each printer model and meet or exceed OEM page yield. If it doesn\'t print as well as the original — we replace it.' },
   { q: 'How does delivery work?', a: 'Order before noon and we deliver next day in Johannesburg and Pretoria via our own drivers (COD available). Nationwide courier ships same day on prepayment.' },
-  { q: 'What if a cartridge is faulty?', a: 'Every cartridge is covered by our guarantee. Faulty unit? We replace it, no fuss. That\'s the deal we\'ve held since 1987.' },
+  { q: 'What if a cartridge is faulty?', a: 'Every cartridge is covered by our guarantee. Faulty unit? We replace it, no fuss. That\'s the deal we\'ve held since 1992.' },
   { q: 'Do you do bulk / business pricing?', a: 'Yes. Offices, schools, print shops — call 011 708 2304 or email sales@tse.co.za for a quote.' },
 ]
 
@@ -67,11 +68,11 @@ export default function StorefrontPage() {
         .storefront[data-theme="editorial"] {
           --paper: #F5F4F0;
           --paper-2: #EDEAE2;
-          --ink: #0A0A0A;
-          --ink-2: #2A2A2A;
-          --magenta: #E50571;
-          --magenta-soft: #FFE3F0;
-          --cyan: #00AEEF;
+          --ink: #111827;
+          --ink-2: #374151;
+          --magenta: #E91E8C;
+          --magenta-soft: #FFE3F2;
+          --cyan: #00B4B8;
           --muted: #6B6B66;
           --on-accent: #F5F4F0;
           --grain-blend: multiply;
@@ -125,9 +126,8 @@ export default function StorefrontPage() {
       {/* ─────────────── FLOATING NAV ─────────────── */}
       <header className="fixed top-4 left-4 right-4 z-40 flex items-center justify-between px-3 sm:px-5 py-2.5 bg-[var(--paper)]/85 backdrop-blur-xl border border-[var(--ink)]/10 rounded-full shadow-[0_8px_30px_-12px_rgba(10,10,10,0.18)] transition-colors duration-500">
         <a href="#top" className="flex items-center gap-2 pl-2 cursor-pointer">
-          <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[var(--ink)] text-[var(--paper)] font-display font-bold text-sm leading-none">T</span>
-          <span className="font-display text-lg font-semibold tracking-tight hidden sm:inline">TSE<span className="text-[var(--magenta)]">.</span></span>
-          <span className="hidden md:inline text-[10px] uppercase tracking-[0.18em] text-[var(--muted)] ml-1">Est. 1987</span>
+          <Logo width={80} variant="color" linked={false} />
+          <span className="hidden md:inline text-[10px] uppercase tracking-[0.18em] text-[var(--muted)] ml-1">Est. 1992</span>
         </a>
         <nav className="hidden md:flex items-center gap-1 text-sm font-medium text-[var(--ink-2)]">
           <a href="#shop" className="pill-nav-item px-3 py-1.5 cursor-pointer">Shop</a>
@@ -155,8 +155,8 @@ export default function StorefrontPage() {
             >
               <span className="flex gap-[3px]">
                 <span className="w-2 h-2 rounded-full bg-[#F5F4F0] border border-black/10" />
-                <span className="w-2 h-2 rounded-full bg-[#0A0A0A]" />
-                <span className="w-2 h-2 rounded-full bg-[#E50571]" />
+                <span className="w-2 h-2 rounded-full bg-[#111827]" />
+                <span className="w-2 h-2 rounded-full bg-[#E91E8C]" />
               </span>
               <span className={`hidden md:inline transition-colors duration-300 ${theme === 'editorial' ? 'text-[var(--paper)]' : 'text-[var(--muted)]'}`}>Editorial</span>
             </button>
@@ -206,7 +206,7 @@ export default function StorefrontPage() {
           <div className="lg:col-span-7" data-reveal>
             <div className="flex items-center gap-3 mb-6">
               <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[var(--muted)] font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--magenta)]" /> Issue №38 · South Africa
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--magenta)]" /> Est. 1992 · South Africa
               </span>
             </div>
             <h1 className="font-display font-light text-[15vw] sm:text-[12vw] lg:text-[9.5vw] leading-[0.88] tracking-[-0.04em] text-[var(--ink)]">
@@ -218,7 +218,7 @@ export default function StorefrontPage() {
               </span>
             </h1>
             <p className="mt-8 max-w-xl text-[15px] sm:text-base text-[var(--ink-2)] leading-relaxed">
-              South Africa's printer-cartridge specialist since 1987. We make compatibles that print as well as the
+              South Africa's printer-cartridge specialist since 1992. We make compatibles that print as well as the
               original — sometimes better — at a fraction of the price. Order before noon, on your desk tomorrow.
             </p>
 
@@ -236,8 +236,8 @@ export default function StorefrontPage() {
 
             <div className="mt-12 grid grid-cols-3 gap-4 max-w-md">
               <div data-reveal>
-                <div className="font-display text-3xl sm:text-4xl font-light leading-none">38<span className="text-[var(--magenta)]">.</span></div>
-                <div className="text-[11px] uppercase tracking-widest text-[var(--muted)] mt-2">Years</div>
+                <div className="font-display text-3xl sm:text-4xl font-light leading-none">33<span className="text-[var(--magenta)]">.</span></div>
+                <div className="text-[11px] uppercase tracking-widest text-[var(--muted)] mt-2">Yrs in business</div>
               </div>
               <div data-reveal>
                 <div className="font-display text-3xl sm:text-4xl font-light leading-none">13</div>
@@ -257,7 +257,7 @@ export default function StorefrontPage() {
                   <defs>
                     <path id="hero-ring" d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0" />
                   </defs>
-                  <text fontSize="14" fontFamily="var(--font-fraunces), serif" letterSpacing="6" fill="#0A0A0A">
+                  <text fontSize="14" fontFamily="var(--font-fraunces), serif" letterSpacing="6" fill="var(--ink)">
                     <textPath href="#hero-ring">GENERIC · GUARANTEED · GENERIC · GUARANTEED · </textPath>
                   </text>
                 </svg>
@@ -338,7 +338,7 @@ export default function StorefrontPage() {
               </h2>
             </div>
             <p className="max-w-sm text-[var(--ink-2)] text-[15px] leading-relaxed">
-              Thirty-eight years engineering compatibles that hold up under real office use. If a cartridge fails, we replace it — that's the deal.
+              Over thirty years engineering compatibles that hold up under real office use. If a cartridge fails, we replace it — that's the deal.
             </p>
           </div>
 
@@ -368,11 +368,11 @@ export default function StorefrontPage() {
             <article data-reveal className="bento-card sm:col-span-3 bg-[var(--paper-2)] rounded-[24px] p-7 relative overflow-hidden min-h-[180px]">
               <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] mb-2">Est.</div>
               <div className="flex items-baseline gap-3">
-                <div className="font-display font-light text-7xl sm:text-8xl leading-none tracking-[-0.04em]">1987</div>
+                <div className="font-display font-light text-7xl sm:text-8xl leading-none tracking-[-0.04em]">1992</div>
                 <div className="font-display-italic text-[var(--magenta)] text-2xl">.</div>
               </div>
               <p className="mt-3 text-sm text-[var(--ink-2)] max-w-sm">
-                Family-run from Unit 34, Kya Sands Industrial — supplying offices, schools and print shops since the fax-machine era.
+                Family-run from Unit 34, Kya Sands Industrial — supplying offices, schools and print shops since 1992.
               </p>
             </article>
 
@@ -515,7 +515,7 @@ export default function StorefrontPage() {
                   <div className="product-img relative">
                     <div className={`w-20 h-28 sm:w-24 sm:h-32 rounded-[8px] shadow-[0_18px_30px_-15px_rgba(10,10,10,0.4)] relative overflow-hidden ${
                       i % 3 === 0 ? 'bg-gradient-to-br from-[#0A0A0A] to-[#2A2A2A]' :
-                      i % 3 === 1 ? 'bg-gradient-to-br from-[#E50571] to-[#9c0349]' :
+                      i % 3 === 1 ? 'bg-gradient-to-br from-[#E91E8C] to-[#9c0349]' :
                       'bg-gradient-to-br from-[#1a1a2e] to-[#3a3a5c]'
                     }`}>
                       <div className="absolute top-0 left-0 right-0 h-2 bg-[var(--paper)]/30" />
@@ -577,7 +577,7 @@ export default function StorefrontPage() {
               </p>
             </div>
             <div className="border-t border-[var(--ink)]/15 pt-5">
-              <div className="font-display font-light text-5xl sm:text-6xl leading-none tracking-tight">1987</div>
+              <div className="font-display font-light text-5xl sm:text-6xl leading-none tracking-tight">1992</div>
               <p className="mt-3 text-sm text-[var(--ink-2)]">
                 The year TSE started servicing offices out of Kya Sands. We've been refining the recipe ever since.
               </p>
@@ -663,9 +663,8 @@ export default function StorefrontPage() {
           <div className="border-t border-[var(--ink)]/10 pt-10">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-6">
               <div className="lg:col-span-2">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[var(--ink)] text-[var(--paper)] font-display font-bold text-sm leading-none">T</span>
-                  <span className="font-display text-xl font-semibold tracking-tight">TSE<span className="text-[var(--magenta)]">.</span></span>
+                <div className="mb-4">
+                  <Logo width={90} variant="mono-dark" linked={false} />
                 </div>
                 <p className="text-sm text-[var(--ink-2)] max-w-sm leading-relaxed">
                   Technical Systems Engineering — South Africa's quality-generic printer-cartridge specialist.

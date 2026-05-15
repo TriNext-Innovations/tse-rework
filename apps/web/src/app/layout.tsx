@@ -2,8 +2,6 @@ import type { Metadata } from 'next'
 import { Inter, Fraunces } from 'next/font/google'
 import './globals.css'
 import { cn } from '@/lib/utils'
-import { Header } from '@/components/layout'
-import { Footer } from '@/components/layout'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -32,11 +30,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={cn(inter.variable, fraunces.variable)}>
-      <body>
-        <Header />
-        <main>{children}</main>
-        <Footer />
-      </body>
+      <body>{children}</body>
     </html>
   )
 }
