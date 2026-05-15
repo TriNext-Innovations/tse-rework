@@ -80,15 +80,15 @@ export default function StorefrontPage() {
           --grain-opacity: 0.06;
         }
         .storefront[data-theme="brand"] {
-          --paper: #04060b;
-          --paper-2: #0c1626;
+          --paper: #374151;
+          --paper-2: #4b5563;
           --ink: #f3f0e8;
-          --ink-2: #c8d4e8;
+          --ink-2: #e5e7eb;
           --magenta: #dfe344;
-          --magenta-soft: #1e200a;
+          --magenta-soft: #2a2d12;
           --cyan: #41e0f5;
           --lime: #dfe344;
-          --muted: #5a7aaa;
+          --muted: #9ca3af;
           --on-accent: #111827;
           --grain-blend: screen;
           --grain-opacity: 0.08;
