@@ -115,9 +115,37 @@ Full report: `migration/raw/attribute-audit.md`
 
 ---
 
-## Phase 2 — Variations & Compatibility (Pending)
+## Phase 2 — Variations & Compatibility (In Progress)
 
-**Status:** Not started
+**Status:** Extraction complete — awaiting client validation
 
-- Build `migration/raw/compatibility.csv` (printer model → SKU mapping)
-- Seed `modules/compatibility/` in Medusa backend
+### Extraction — `migration/extract-compatibility.js`
+
+| Metric | Value |
+|---|---|
+| Products with compat data | 249 / 340 (73.2%) |
+| Products with no compat data | 91 / 340 (26.8%) |
+| Unique printer models extracted | 512 |
+| Printer brands | 12 |
+
+**Brand breakdown (by product count):** HP 116, Canon 40, Brother 27, Samsung 21, Pantum 12, Kyocera 11, Ricoh 8, Xerox 5, Konica Minolta 3, Lexmark 3, Epson 2, OKI 1.
+
+### Client review files
+
+| File | Purpose |
+|---|---|
+| `migration/raw/printer-brands.json` | 12 brands — issue #2.2 ✅ |
+| `migration/raw/printer-models.json` | 512 models grouped by brand — issue #2.3 ✅ |
+| `migration/raw/compat-map-draft.csv` | 249 rows parsed — client to validate (issue #2.4) |
+| `migration/raw/compat-gaps.csv` | 91 rows with no data — client to fill (issue #2.5) |
+
+**Next:** Share both CSVs with TSE. Set deadline for return before Milestone 2 kick-off.
+
+### Compatibility data model — `docs/data-model.md`
+
+Three-table schema designed (issue #2.6 ✅):
+- `printer_brand` — 12 rows, seeded from product categories
+- `printer_model` — one row per model, `validated` flag for client sign-off
+- `cartridge_compatibility` — SKU × model junction, `source` column tracks provenance
+
+Custom API route planned: `GET /store/compatibility?brand=hp&model=laserjet-pro-m404n`
