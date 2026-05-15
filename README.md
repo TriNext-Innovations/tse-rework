@@ -1,27 +1,29 @@
 # TSE Online
 
-South Africa's trusted printer cartridge e-commerce platform.
+South Africa's trusted printer cartridge e-commerce platform — migrating from WooCommerce to a Medusa v2 + Next.js 15 monorepo.
 
 ## Tech Stack
 
-| Layer              | Technology              | Hosted On      |
-|--------------------|-------------------------|----------------|
-| Frontend           | Next.js 15 (App Router) | Vercel Pro     |
-| Commerce backend   | Medusa.js v2            | Railway        |
-| Database           | PostgreSQL (Supabase)   | Supabase       |
-| Search             | Meilisearch             | Railway        |
-| Email              | Resend + React Email    | Resend         |
-| Payments           | PayFast + Ozow          | External       |
-| Automation         | n8n                     | Railway        |
+| Layer | Technology | Hosted On |
+|---|---|---|
+| Storefront | Next.js 15 (App Router) | Vultr JHB (Docker) |
+| Commerce backend | Medusa v2 | Vultr JHB (Docker) |
+| Database | PostgreSQL 16 | Vultr JHB (Docker volume) |
+| Cache / queues | Redis 7 | Vultr JHB (Docker volume) |
+| CMS | Sanity Studio v3 | sanity.io hosting |
+| Email | Resend | resend.com |
+| Payments | PayFast + Ozow | External |
+| Shipping | The Courier Guy + Aramex | External |
+| Reverse proxy | Nginx (Alpine) | Vultr JHB (Docker) |
+| Automation | n8n | Vultr JHB n8n VM |
 
 ## Prerequisites
 
 - Node 20+
 - pnpm 9+
-- PostgreSQL database (local or Supabase)
-- Redis (for Medusa workers)
+- Docker + Docker Compose (for local full-stack run)
 
-## Setup
+## Local development
 
 ### 1. Install dependencies
 
@@ -32,77 +34,82 @@ pnpm install
 ### 2. Configure environment variables
 
 ```bash
-cp .env.example .env
-# Edit .env with your values
-cp .env.example apps/web/.env.local
-# Edit apps/web/.env.local with frontend-specific values
+cp apps/backend/.env.example apps/backend/.env
+cp apps/web/.env.example     apps/web/.env.local
+cp apps/studio/.env.example  apps/studio/.env.local
+# Fill in secrets — see each .env.example for documentation
 ```
 
-### 3. Run database migrations
+### 3. Start with Docker Compose (recommended)
 
 ```bash
-./scripts/migrate.sh up
+docker compose up --build
 ```
 
-### 4. Start the development servers
+- `http://localhost:3000` — Next.js storefront
+- `http://localhost:9000` — Medusa backend + admin (`/app`)
+- `http://localhost:9000/health` — Medusa health check
+
+### 4. Or start apps individually (no Docker)
+
+Requires local PostgreSQL and Redis.
 
 ```bash
 pnpm dev
 ```
 
-This starts:
-- `http://localhost:3000` — Next.js frontend
-- `http://localhost:9000` — Medusa backend + admin
-
-## Repository Structure
+## Repository structure
 
 ```
-tse-online/
+tse-ui/
 ├── apps/
-│   ├── web/              # Next.js 15 frontend
-│   └── backend/          # Medusa.js v2 backend
+│   ├── web/          # Next.js 15 storefront (@tse/web)
+│   ├── backend/      # Medusa v2 backend (@tse/backend)
+│   └── studio/       # Sanity Studio v3 (@tse/studio)
 ├── packages/
-│   ├── ui/               # Shared shadcn/ui component library
-│   ├── config/           # Shared Tailwind, ESLint, TS configs
-│   └── types/            # Shared TypeScript interfaces
-├── automation/
-│   └── n8n/              # n8n workflow JSONs
-├── docs/                 # Architecture & developer guides
-└── scripts/              # DB helpers
+│   ├── ui/           # Shared shadcn/ui components (@tse/ui)
+│   ├── config/       # Tailwind, ESLint, TS configs (@tse/config)
+│   └── types/        # Shared TypeScript interfaces (@tse/types)
+├── infrastructure/
+│   └── nginx/        # Nginx reverse proxy config
+├── migration/        # WooCommerce → Medusa migration scripts & data
+├── docs/             # Architecture, data model, design tokens
+└── .github/
+    └── workflows/    # CI/CD — deploy.yml triggers on push to main
 ```
 
-## Common Commands
+## Common commands
 
-| Command             | Description                        |
-|---------------------|------------------------------------|
-| `pnpm dev`          | Start all apps in dev mode         |
-| `pnpm build`        | Build all apps and packages        |
-| `pnpm lint`         | Lint all workspaces                |
-| `pnpm type-check`   | Run TypeScript checks everywhere   |
+| Command | Description |
+|---|---|
+| `pnpm dev` | Start all apps in dev mode |
+| `pnpm build` | Build all apps and packages |
+| `pnpm lint` | Lint all workspaces |
+| `pnpm type-check` | TypeScript checks across all workspaces |
+| `docker compose up --build` | Full local stack via Docker |
 
-### Adding a shadcn/ui component
+### Add a shadcn/ui component
 
 ```bash
 pnpm --filter @tse/web exec shadcn add button
 ```
 
-### Running migrations
+## Branching strategy
 
-```bash
-./scripts/migrate.sh up      # apply pending migrations
-./scripts/migrate.sh down    # revert last migration
-./scripts/migrate.sh status  # show migration status
-```
+| Branch | Purpose |
+|---|---|
+| `main` | Production — protected, requires PR review |
+| `develop` | Default — active development target |
+| `feature/*` | Feature branches, PRs into develop |
+| `initial/Phase-0` | Phase 0 migration & scaffold work |
 
 ## Deployment
 
-See [docs/Architecture.md](docs/Architecture.md) for full deployment instructions.
+Push to `main` triggers `.github/workflows/deploy.yml` — SSH deploy to the Vultr JHB VM, rebuilds Docker containers, health-checks Medusa and Next.js, rolls back on failure.
 
-- **Frontend**: Push to `main` → auto-deploys to Vercel
-- **Backend**: Push to `main` → auto-deploys to Railway
-- **Migrations**: `./scripts/migrate.sh up` after each deploy
+See `docs/Architecture.md` for full infrastructure details.
 
-## Commit Convention
+## Commit convention
 
 ```
 feat:     new feature
