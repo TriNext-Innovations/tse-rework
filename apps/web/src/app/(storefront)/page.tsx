@@ -74,6 +74,7 @@ export default function StorefrontPage() {
           --magenta-soft: #d9f8fc;
           --cyan: #41e0f5;
           --lime: #dfe344;
+          --glow: #ee75e9;
           --muted: #6B6B66;
           --on-accent: #111827;
           --grain-blend: multiply;
@@ -88,6 +89,7 @@ export default function StorefrontPage() {
           --magenta-soft: #2a2d12;
           --cyan: #41e0f5;
           --lime: #dfe344;
+          --glow: #dfe344;
           --muted: #9ca3af;
           --on-accent: #111827;
           --grain-blend: screen;
@@ -198,7 +200,7 @@ export default function StorefrontPage() {
         <div
           className="pointer-events-none absolute inset-0 transition-opacity duration-500"
           style={{
-            background: `radial-gradient(420px circle at ${mouse.x}px ${mouse.y}px, rgba(65,224,245,0.12), transparent 60%)`,
+            background: `radial-gradient(420px circle at ${mouse.x}px ${mouse.y}px, rgba(238,117,233,0.12), transparent 60%)`,
           }}
           aria-hidden
         />
@@ -269,7 +271,7 @@ export default function StorefrontPage() {
               </div>
 
               <div className="relative bg-[var(--ink)] text-[var(--paper)] rounded-[28px] p-6 sm:p-8 overflow-hidden">
-                <div className="absolute -bottom-12 -right-12 w-64 h-64 rounded-full bg-[var(--magenta)] opacity-30 blur-3xl" />
+                <div className="absolute -bottom-12 -right-12 w-64 h-64 rounded-full bg-[var(--glow)] opacity-30 blur-3xl" />
                 <div className="relative flex items-start justify-between mb-8">
                   <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-[var(--paper)]/70">
                     <span className="w-1 h-1 rounded-full bg-[var(--magenta)] animate-pulse" /> Bestseller
@@ -346,7 +348,7 @@ export default function StorefrontPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-6 grid-rows-[auto] gap-3 sm:gap-4 auto-rows-[minmax(140px,_auto)]">
             <article data-reveal className="bento-card sm:col-span-3 sm:row-span-2 bg-[var(--ink)] text-[var(--paper)] rounded-[24px] p-7 sm:p-10 relative overflow-hidden flex flex-col justify-between min-h-[360px]">
-              <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[var(--magenta)] opacity-30 blur-3xl" />
+              <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[var(--glow)] opacity-30 blur-3xl" />
               <div className="absolute top-7 right-7 text-[10px] uppercase tracking-[0.22em] text-[var(--paper)]/50">The Guarantee</div>
               <div className="relative">
                 <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--magenta)] mb-4">01</div>
@@ -433,7 +435,7 @@ export default function StorefrontPage() {
       {/* ─────────────── COMPATIBILITY FINDER ─────────────── */}
       <section id="finder" className="relative px-4 sm:px-8 lg:px-12 py-16 sm:py-24">
         <div className="mx-auto max-w-7xl bg-[var(--ink)] text-[var(--paper)] rounded-[32px] p-8 sm:p-14 relative overflow-hidden" data-reveal>
-          <div className="absolute -top-20 -left-20 w-80 h-80 rounded-full bg-[var(--magenta)]/30 blur-3xl" />
+          <div className="absolute -top-20 -left-20 w-80 h-80 rounded-full bg-[var(--glow)]/30 blur-3xl" />
           <div className="absolute -bottom-32 -right-20 w-96 h-96 rounded-full bg-[var(--cyan)]/15 blur-3xl" />
 
           <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
