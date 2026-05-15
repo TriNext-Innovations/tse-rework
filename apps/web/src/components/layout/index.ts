@@ -1,2 +1,3 @@
-export { Logo } from './Logo'
-// Header, Footer, Nav, Breadcrumb, PageWrapper — add exports here as components are built
+export { Logo }   from './Logo'
+export { Header } from './Header'
+export { Footer } from './Footer'

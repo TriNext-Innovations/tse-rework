@@ -10,23 +10,34 @@
  * changing. Format: H S% L%  (no hsl() wrapper — required so Tailwind opacity
  * modifiers like bg-brand-primary/50 work correctly).
  *
- * Current values are placeholders from the existing WooCommerce site.
- * Update once client confirms brand colours (issue §3.2).
+ * Colours extracted from the TSE logo (halftone CMYK dot gradient):
+ *   Cyan/teal  #00B4B8 → primary
+ *   Lime/green #B5CC28 → logo-lime  (CMYK yellow+cyan mix)
+ *   Magenta    #E91E8C → logo-magenta (CMYK magenta)
+ *   Black      #111827 → secondary / letterforms
+ *
+ * Awaiting official hex confirmation from client (issue #3.2).
  * ─────────────────────────────────────────────────────────────────────────────
  */
 :root {
-  /* Core brand */
-  --brand-primary:              173 85% 32%;  /* #0D9488 — TSE teal (placeholder) */
+  /* Core brand — derived from logo */
+  --brand-primary:              181 100% 36%; /* #00B4B8 — TSE cyan/teal (logo centre) */
   --brand-primary-foreground:   0 0% 100%;    /* white */
-  --brand-secondary:            222 47% 11%;  /* #111827 — charcoal */
+  --brand-secondary:            221 39% 11%;  /* #111827 — logo letterform black */
   --brand-secondary-foreground: 0 0% 100%;    /* white */
-  --brand-accent:               175 79% 40%;  /* #14b8a6 — lighter teal, hover/active */
-  --brand-accent-foreground:    222 47% 11%;  /* charcoal */
+  --brand-accent:               68 67% 48%;   /* #B5CC28 — logo lime (CMYK yellow+cyan) */
+  --brand-accent-foreground:    221 39% 11%;  /* dark */
+
+  /* CMYK logo palette — available as brand-cmyk-* utilities */
+  --brand-cmyk-cyan:            181 100% 36%; /* #00B4B8 */
+  --brand-cmyk-lime:            68 67% 48%;   /* #B5CC28 */
+  --brand-cmyk-magenta:         327 82% 52%;  /* #E91E8C */
+  --brand-cmyk-black:           221 39% 11%;  /* #111827 */
 
   /* Semantic surface tokens */
   --brand-bg:                   0 0% 100%;    /* page background */
-  --brand-surface:              210 40% 98%;  /* card / panel background */
-  --brand-border:               220 13% 91%;  /* borders and dividers */
+  --brand-surface:              185 33% 97%;  /* card / panel — tinted with brand cyan */
+  --brand-border:               185 20% 90%;  /* borders and dividers */
   --brand-text:                 220 13% 26%;  /* #374151 — body text */
   --brand-text-muted:           220 9% 46%;   /* #6B7280 — secondary / muted text */
 
@@ -34,12 +45,12 @@
   --brand-destructive:          0 84% 60%;
   --brand-destructive-foreground: 0 0% 100%;
 
-  /* Charts */
-  --chart-1: 173 85% 32%;
-  --chart-2: 175 79% 40%;
-  --chart-3: 222 47% 40%;
-  --chart-4: 220 13% 60%;
-  --chart-5: 220 9% 80%;
+  /* Charts — CMYK logo gradient */
+  --chart-1: 68 67% 48%;   /* lime */
+  --chart-2: 181 100% 36%; /* cyan */
+  --chart-3: 265 60% 45%;  /* blue-violet (logo mid gradient) */
+  --chart-4: 327 82% 52%;  /* magenta */
+  --chart-5: 221 39% 11%;  /* black */
 }
 
 /*
@@ -82,13 +93,13 @@
 
   .dark {
     /* Override only brand tokens — shadcn mapping above stays unchanged */
-    --brand-primary:              175 79% 48%;
-    --brand-primary-foreground:   222 47% 11%;
-    --brand-accent:               175 79% 55%;
-    --brand-accent-foreground:    222 47% 11%;
-    --brand-bg:                   222 47% 7%;
-    --brand-surface:              222 47% 11%;
-    --brand-border:               220 13% 18%;
+    --brand-primary:              181 90% 48%;  /* brighter cyan for dark bg */
+    --brand-primary-foreground:   221 39% 11%;
+    --brand-accent:               68 67% 58%;   /* brighter lime for dark bg */
+    --brand-accent-foreground:    221 39% 11%;
+    --brand-bg:                   221 39% 7%;
+    --brand-surface:              221 35% 12%;
+    --brand-border:               221 25% 20%;
     --brand-text:                 210 40% 96%;
     --brand-text-muted:           220 9% 60%;
     --brand-destructive:          0 63% 55%;

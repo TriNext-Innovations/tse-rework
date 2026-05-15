@@ -61,6 +61,13 @@ const config: Partial<Config> = {
           text:                 'hsl(var(--brand-text) / <alpha-value>)',
           'text-muted':         'hsl(var(--brand-text-muted) / <alpha-value>)',
           destructive:          'hsl(var(--brand-destructive) / <alpha-value>)',
+          /* CMYK logo palette — bg-brand-cmyk-cyan, text-brand-cmyk-magenta etc. */
+          cmyk: {
+            cyan:    'hsl(var(--brand-cmyk-cyan) / <alpha-value>)',
+            lime:    'hsl(var(--brand-cmyk-lime) / <alpha-value>)',
+            magenta: 'hsl(var(--brand-cmyk-magenta) / <alpha-value>)',
+            black:   'hsl(var(--brand-cmyk-black) / <alpha-value>)',
+          },
         },
       },
       borderRadius: {
