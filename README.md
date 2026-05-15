@@ -1,29 +1,59 @@
 # TSE Online
 
-South Africa's trusted printer cartridge e-commerce platform — migrating from WooCommerce to a Medusa v2 + Next.js 15 monorepo.
+Headless e-commerce platform for TSE Online — South Africa's printer cartridge supplier. Migrating from WooCommerce to a Medusa v2 + Next.js 15 monorepo, self-hosted on Vultr Johannesburg.
 
-## Tech Stack
+**Current phase:** Phase 0 — Pre-Build (audit, scaffold, infrastructure config)  
+**Go-live target:** June 2026
 
-| Layer | Technology | Hosted On |
+---
+
+## Tech stack
+
+| Layer | Technology | Version |
 |---|---|---|
-| Storefront | Next.js 15 (App Router) | Vultr JHB (Docker) |
-| Commerce backend | Medusa v2 | Vultr JHB (Docker) |
-| Database | PostgreSQL 16 | Vultr JHB (Docker volume) |
-| Cache / queues | Redis 7 | Vultr JHB (Docker volume) |
-| CMS | Sanity Studio v3 | sanity.io hosting |
-| Email | Resend | resend.com |
-| Payments | PayFast + Ozow | External |
-| Shipping | The Courier Guy + Aramex | External |
-| Reverse proxy | Nginx (Alpine) | Vultr JHB (Docker) |
-| Automation | n8n | Vultr JHB n8n VM |
+| Storefront | Next.js (App Router) | 15 |
+| Commerce backend | Medusa | v2 |
+| Database | PostgreSQL | 16 |
+| Cache / queues | Redis | 7 |
+| CMS | Sanity Studio | v3 |
+| Shared UI | shadcn/ui (new-york) + Tailwind CSS | 3.4 |
+| Email | Resend | — |
+| Payments | PayFast + Ozow | — |
+| Shipping | The Courier Guy + Aramex | — |
+| Reverse proxy | Nginx (Alpine) | — |
+| CI/CD | GitHub Actions → SSH deploy | — |
+| Hosting | Vultr JHB (4 GB main VM + 1 GB n8n VM) | — |
 
-## Prerequisites
+---
 
-- Node 20+
-- pnpm 9+
-- Docker + Docker Compose (for local full-stack run)
+## Repository structure
+
+```
+tse-ui/
+├── apps/
+│   ├── web/              Next.js 15 storefront        (@tse/web)
+│   ├── backend/          Medusa v2 API + admin        (@tse/backend)
+│   └── studio/           Sanity Studio v3 CMS         (@tse/studio)
+├── packages/
+│   ├── ui/               Shared shadcn/ui components  (@tse/ui)
+│   ├── config/           Tailwind / ESLint / TS base  (@tse/config)
+│   └── types/            Shared TypeScript types      (@tse/types)
+├── infrastructure/
+│   └── nginx/            Nginx reverse proxy config
+├── migration/            WooCommerce → Medusa scripts & audit data
+├── docs/                 Architecture, data model, design tokens
+├── docker-compose.yml    Full local stack
+└── .github/workflows/    deploy.yml — push to main triggers SSH deploy
+```
+
+---
 
 ## Local development
+
+### Prerequisites
+
+- Node 20+, pnpm 9+
+- Docker + Docker Compose
 
 ### 1. Install dependencies
 
@@ -37,85 +67,166 @@ pnpm install
 cp apps/backend/.env.example apps/backend/.env
 cp apps/web/.env.example     apps/web/.env.local
 cp apps/studio/.env.example  apps/studio/.env.local
-# Fill in secrets — see each .env.example for documentation
 ```
 
-### 3. Start with Docker Compose (recommended)
+See each `.env.example` for field documentation.
+
+### 3. Run the full stack
 
 ```bash
 docker compose up --build
 ```
 
-- `http://localhost:3000` — Next.js storefront
-- `http://localhost:9000` — Medusa backend + admin (`/app`)
-- `http://localhost:9000/health` — Medusa health check
+| URL | Service |
+|---|---|
+| http://localhost:3000 | Next.js storefront |
+| http://localhost:9000 | Medusa API |
+| http://localhost:9000/app | Medusa admin |
+| http://localhost:9000/health | Medusa health check |
 
-### 4. Or start apps individually (no Docker)
-
-Requires local PostgreSQL and Redis.
+### 4. Run apps without Docker (needs local Postgres + Redis)
 
 ```bash
 pnpm dev
 ```
 
-## Repository structure
-
-```
-tse-ui/
-├── apps/
-│   ├── web/          # Next.js 15 storefront (@tse/web)
-│   ├── backend/      # Medusa v2 backend (@tse/backend)
-│   └── studio/       # Sanity Studio v3 (@tse/studio)
-├── packages/
-│   ├── ui/           # Shared shadcn/ui components (@tse/ui)
-│   ├── config/       # Tailwind, ESLint, TS configs (@tse/config)
-│   └── types/        # Shared TypeScript interfaces (@tse/types)
-├── infrastructure/
-│   └── nginx/        # Nginx reverse proxy config
-├── migration/        # WooCommerce → Medusa migration scripts & data
-├── docs/             # Architecture, data model, design tokens
-└── .github/
-    └── workflows/    # CI/CD — deploy.yml triggers on push to main
-```
+---
 
 ## Common commands
 
 | Command | Description |
 |---|---|
 | `pnpm dev` | Start all apps in dev mode |
-| `pnpm build` | Build all apps and packages |
+| `pnpm build` | Build all workspaces |
 | `pnpm lint` | Lint all workspaces |
 | `pnpm type-check` | TypeScript checks across all workspaces |
-| `docker compose up --build` | Full local stack via Docker |
+| `docker compose up --build` | Full stack via Docker |
+| `pnpm --filter @tse/web exec shadcn add <component>` | Add a shadcn component |
 
-### Add a shadcn/ui component
-
-```bash
-pnpm --filter @tse/web exec shadcn add button
-```
+---
 
 ## Branching strategy
 
 | Branch | Purpose |
 |---|---|
-| `main` | Production — protected, requires PR review |
-| `develop` | Default — active development target |
-| `feature/*` | Feature branches, PRs into develop |
+| `main` | Production — protected, requires 1 PR review |
+| `develop` | Default branch — active development target |
+| `feature/*` | Feature branches, PR into develop |
 | `initial/Phase-0` | Phase 0 migration & scaffold work |
+
+---
 
 ## Deployment
 
-Push to `main` triggers `.github/workflows/deploy.yml` — SSH deploy to the Vultr JHB VM, rebuilds Docker containers, health-checks Medusa and Next.js, rolls back on failure.
+Push to `main` → `.github/workflows/deploy.yml` SSHes into the Vultr VM, runs `git pull` + `docker compose up --build -d`, health-checks Medusa and Next.js, rolls back on failure.
 
-See `docs/Architecture.md` for full infrastructure details.
+Required GitHub secrets: `VM_HOST`, `VM_USER`, `VM_SSH_KEY`, `VM_PORT` (optional, default 22).
+
+---
+
+## Phase 0 — What's done
+
+### ✅ §1 WooCommerce Audit
+- Product export (560 products), transform to variable/simple (340 total)
+- Attribute, category, image, compatibility, plugin audits complete
+- Customer/order export pending client POPIA consent
+
+### ✅ §2 Compatibility Data (partial)
+- 12 printer brands, 512 unique models extracted from product descriptions
+- `migration/raw/compat-map-draft.csv` — 249 products mapped (73.2%)
+- `migration/raw/compat-gaps.csv` — 91 products with no data, for client to fill
+- Compatibility data model designed (`docs/data-model.md`)
+- **Blocked:** SKU→model mapping (#2.4) needs client CSV validation
+
+### ✅ §6 Monorepo Scaffold
+- Next.js 15 + Medusa v2 + Sanity Studio workspaces initialised
+- shadcn/ui (new-york), Tailwind v3, Inter + Fraunces fonts
+- Component directory structure, barrel exports
+- `.env.example` files for all three apps
+
+### ✅ §7 Design System
+- Single-source-of-truth colour token system in `globals.css`
+- `brand.*` Tailwind utilities + shadcn semantic token mapping
+- Dark mode support
+- Documented in `docs/design-tokens.md`
+- **Blocked:** final brand colours pending client (#3.2)
+
+### ✅ Infrastructure config (files written, not yet live)
+- `docker-compose.yml` — all 5 services, memory limits, health checks
+- `infrastructure/nginx/` — gzip, proxy headers, dev subdomains
+- `.github/workflows/deploy.yml` — SSH deploy, health check, rollback
+
+---
+
+## Phase 0 — What's still open
+
+### Blocked on Vultr VM provisioning (#4.1 — critical path)
+- [ ] #4.1 Provision main VM (4 GB, Vultr JHB) ← **start here**
+- [ ] #4.2 Provision n8n VM (1 GB, Vultr JHB)
+- [ ] #4.3 Harden both VMs
+- [ ] #4.4 Install Docker + Docker Compose
+- [ ] #4.5 Configure 4 GB swap on main VM
+- [ ] #4.6 Set up Cloudflare + transfer DNS
+- [ ] #4.7 Create dev.tse.co.za subdomain
+- [ ] #4.8 Configure Cloudflare SSL/TLS (Full Strict)
+- [ ] #4.10 Configure GitHub Actions deployment secrets
+- [ ] #6.2 Initialise Medusa v2 backend (verify on server)
+- [ ] #6.8 Confirm skeleton running on dev URL
+
+### Blocked on client (#3 Client Assets — critical path for design)
+- [ ] #3.1 Obtain logo in SVG format
+- [ ] #3.2 Obtain brand colour codes ← needed to finalise design tokens
+- [ ] #3.3 Confirm typography
+- [ ] #3.4 Collect product photography
+- [ ] #3.5 Create favicon & app icons (TriNext, after #3.1)
+- [ ] #3.6 Request existing brand guidelines
+
+### Blocked on client (#5 Third-Party Credentials)
+- [ ] #5.1 PayFast merchant credentials ← critical path
+- [ ] #5.2 Ozow credentials
+- [ ] #5.3 Meta Business access
+
+### Blocked on client decision
+- [ ] #1.6 Export customer data (POPIA written consent required first)
+- [ ] #1.7 Export order history (client to decide scope)
+- [ ] #2.4 Map cartridge SKUs to printer models (client to fill compat-gaps.csv)
+
+### Pending client CSV return (#2.4)
+- [ ] #2.5 Document compatibility data gaps (follows from #2.4)
+- [ ] #2.3 Finalise printer model list (client review)
+- [ ] #2.2 Confirm printer brand list (client review)
+
+### Joint / governance
+- [ ] #5.4 Resend transactional email setup
+- [ ] #5.6 Aramex shipping API registration
+- [ ] #5.7 The Courier Guy API registration
+- [ ] #8.1 Confirm client communication channel
+- [ ] #8.2 Confirm asset delivery deadline in writing
+- [ ] #8.3 Schedule Milestone 1 kickoff call
+- [ ] #8.4 Set up shared project tracker
+- [ ] #8.5 Confirm PayFast sandbox access before Milestone 2
+
+---
+
+## Docs
+
+| Document | Contents |
+|---|---|
+| [docs/data-model.md](docs/data-model.md) | PostgreSQL compatibility schema (printer_brand → printer_model → cartridge_compatibility) |
+| [docs/design-tokens.md](docs/design-tokens.md) | Brand tokens, Tailwind utilities, shadcn mapping, typography |
+| [docs/Architecture.md](docs/Architecture.md) | System architecture, data flow, infrastructure |
+| [docs/DEVELOPER-GUIDE.md](docs/DEVELOPER-GUIDE.md) | Git workflow, testing, migrations |
+| [docs/BUILD-PLAN.md](docs/BUILD-PLAN.md) | Milestone breakdown and delivery plan |
+
+---
 
 ## Commit convention
 
 ```
-feat:     new feature
-fix:      bug fix
-chore:    tooling, deps, config
-docs:     documentation only
-refactor: no behaviour change
-test:     test additions/changes
+feat:      new feature
+fix:       bug fix
+chore:     tooling, deps, config
+docs:      documentation only
+refactor:  no behaviour change
+test:      tests
 ```
