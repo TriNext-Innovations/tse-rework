@@ -70,8 +70,8 @@ export default function StorefrontPage() {
           --paper-2: #EDEAE2;
           --ink: #111827;
           --ink-2: #374151;
-          --magenta: #ee75e9;
-          --magenta-soft: #fce8fc;
+          --magenta: #41e0f5;
+          --magenta-soft: #d9f8fc;
           --cyan: #41e0f5;
           --lime: #dfe344;
           --muted: #6B6B66;
@@ -156,9 +156,9 @@ export default function StorefrontPage() {
               className="relative z-10 inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 cursor-pointer transition-colors duration-300"
             >
               <span className="flex gap-[3px]">
-                <span className="w-2 h-2 rounded-full bg-[#dfe344]" />
+                <span className="w-2 h-2 rounded-full bg-[#F5F4F0] border border-black/10" />
+                <span className="w-2 h-2 rounded-full bg-[#111827]" />
                 <span className="w-2 h-2 rounded-full bg-[#41e0f5]" />
-                <span className="w-2 h-2 rounded-full bg-[#ee75e9]" />
               </span>
               <span className={`hidden md:inline transition-colors duration-300 ${theme === 'editorial' ? 'text-[var(--paper)]' : 'text-[var(--muted)]'}`}>Editorial</span>
             </button>
@@ -181,7 +181,7 @@ export default function StorefrontPage() {
           <button aria-label="Search" className="hidden sm:inline-flex items-center justify-center w-9 h-9 rounded-full hover:bg-[var(--ink)]/5 transition-colors cursor-pointer">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           </button>
-          <button className="inline-flex items-center gap-1.5 bg-[var(--magenta)] text-[var(--on-accent)] hover:opacity-90 transition-opacity duration-200 rounded-full px-4 py-2 text-sm font-medium cursor-pointer shadow-[0_4px_16px_-4px_rgba(238,117,233,0.5)]">
+          <button className="inline-flex items-center gap-1.5 bg-[var(--magenta)] text-[var(--on-accent)] hover:opacity-90 transition-opacity duration-200 rounded-full px-4 py-2 text-sm font-medium cursor-pointer shadow-[0_4px_16px_-4px_rgba(65,224,245,0.5)]">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>
             <span>Cart</span>
             <span className="bg-black/20 text-[var(--on-accent)] rounded-full text-[10px] font-bold w-4 h-4 inline-flex items-center justify-center">0</span>
@@ -198,7 +198,7 @@ export default function StorefrontPage() {
         <div
           className="pointer-events-none absolute inset-0 transition-opacity duration-500"
           style={{
-            background: `radial-gradient(420px circle at ${mouse.x}px ${mouse.y}px, rgba(238,117,233,0.12), transparent 60%)`,
+            background: `radial-gradient(420px circle at ${mouse.x}px ${mouse.y}px, rgba(65,224,245,0.12), transparent 60%)`,
           }}
           aria-hidden
         />
@@ -225,7 +225,7 @@ export default function StorefrontPage() {
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <a href="#shop" className="group inline-flex items-center gap-2 bg-[var(--magenta)] text-[var(--on-accent)] hover:opacity-90 transition-opacity duration-200 rounded-full pl-6 pr-2 py-2.5 text-sm font-semibold cursor-pointer shadow-[0_8px_24px_-8px_rgba(238,117,233,0.55)]">
+              <a href="#shop" className="group inline-flex items-center gap-2 bg-[var(--magenta)] text-[var(--on-accent)] hover:opacity-90 transition-opacity duration-200 rounded-full pl-6 pr-2 py-2.5 text-sm font-semibold cursor-pointer shadow-[0_8px_24px_-8px_rgba(65,224,245,0.55)]">
                 Shop cartridges
                 <span className="inline-flex items-center justify-center w-9 h-9 bg-white/20 text-white rounded-full group-hover:rotate-45 transition-transform duration-300">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>
@@ -279,7 +279,7 @@ export default function StorefrontPage() {
 
                 <div className="relative flex justify-center py-6">
                   <div className="animate-float relative">
-                    <div className="w-40 h-56 sm:w-48 sm:h-64 rounded-[14px] bg-gradient-to-br from-[#1a1a1a] via-[#2a2a2a] to-[#0A0A0A] shadow-[0_30px_60px_-20px_rgba(238,117,233,0.45)] relative overflow-hidden">
+                    <div className="w-40 h-56 sm:w-48 sm:h-64 rounded-[14px] bg-gradient-to-br from-[#1a1a1a] via-[#2a2a2a] to-[#0A0A0A] shadow-[0_30px_60px_-20px_rgba(65,224,245,0.45)] relative overflow-hidden">
                       <div className="absolute top-0 left-0 right-0 h-3 bg-[var(--magenta)]" />
                       <div className="absolute top-6 left-4 right-4 text-[9px] uppercase tracking-[0.2em] text-[var(--paper)]/60">TSE Compatible</div>
                       <div className="absolute top-12 left-4 font-display text-[var(--paper)] text-2xl leading-none">Canon</div>
@@ -517,7 +517,7 @@ export default function StorefrontPage() {
                   <div className="product-img relative">
                     <div className={`w-20 h-28 sm:w-24 sm:h-32 rounded-[8px] shadow-[0_18px_30px_-15px_rgba(10,10,10,0.4)] relative overflow-hidden ${
                       i % 3 === 0 ? 'bg-gradient-to-br from-[#0A0A0A] to-[#2A2A2A]' :
-                      i % 3 === 1 ? 'bg-gradient-to-br from-[#ee75e9] to-[#b83fbf]' :
+                      i % 3 === 1 ? 'bg-gradient-to-br from-[#41e0f5] to-[#0fb8d4]' :
                       'bg-gradient-to-br from-[#1a1a2e] to-[#3a3a5c]'
                     }`}>
                       <div className="absolute top-0 left-0 right-0 h-2 bg-[var(--paper)]/30" />
