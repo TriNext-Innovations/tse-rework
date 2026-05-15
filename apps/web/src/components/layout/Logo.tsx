@@ -18,7 +18,7 @@ interface LogoProps {
 }
 
 const variantStyles: Record<LogoVariant, string> = {
-  'color':      '',
+  'color':      '[mix-blend-mode:multiply]',
   'dark-bg':    'bg-white rounded-lg px-2 py-1',
   'mono-white': '[filter:brightness(0)_invert(1)]',
   'mono-dark':  '[filter:brightness(0)]',
