@@ -56,7 +56,6 @@ let it rot into proposal fiction.
 - No payment flows wired up (PayFast ITN, Ozow webhook)
 - No transactional emails (Resend + React Email templates)
 - No search (Meilisearch index + sync + UI)
-- No CMS (Sanity studio + schemas + revalidation webhook)
 - No POPIA layer (cookie banner, privacy/cookies pages, data-requests endpoint)
 - No courier integration (Courier Guy / Aramex)
 - No admin extensions (compatibility widget, B2B tier widget, social posts widget, quotes route)
@@ -86,9 +85,9 @@ Vultr JHB VPS — 2 vCPU / 4 GB RAM / 80 GB SSD  (~R440/mo)
    └── n8n         (port 5678, internal only)  ← Phase 5
           │
           ▼
-   Supabase Free   (Postgres DB — 500 MB, 1 GB storage)
+   PostgreSQL 16   (Docker container, named volume — Vultr main VM)
+   Vultr Object Storage  (product images — S3-compatible, JHB1)
    Resend Free     (transactional email — 3K/mo)
-   Sanity Free     (CMS — 10 GB bandwidth)
    Cloudflare R2   (media backup storage — 10 GB free)
 
    PayFast / Ozow  (payment processors — SA-hosted, external)
@@ -187,20 +186,17 @@ work first.
 **Exit criteria:** test order placed end-to-end against PayFast sandbox,
 confirmation email received, courier rate displayed at checkout.
 
-### Phase 4 — B2B, accounts & CMS (week 5)
+### Phase 4 — B2B & accounts (week 5)
 
-Maps to AI prompts 5 and 11, plus Sanity setup.
+Maps to AI prompts 5 and 11.
 
 - [ ] `modules/b2b/` with `pricing_tier` + auto-applied price lists
 - [ ] `(storefront)/account/*` (orders, addresses, password reset)
 - [ ] `(storefront)/b2b/login`, `b2b/dashboard`, `b2b/quote`
 - [ ] `quote_request` table + `POST /store/b2b/quote` + admin email via Resend
 - [ ] Admin widgets: compatibility, B2B tier, social posts, quotes route
-- [ ] Sanity studio with schemas: `homepageHero`, `promoBanner`, `aboutPage`, `blogPost`
-- [ ] `/api/revalidate` route for Sanity webhook → on-demand ISR
 
-**Exit criteria:** client can log in as a reseller and see reseller pricing;
-client can publish a homepage banner from Sanity and see it live within seconds.
+**Exit criteria:** client can log in as a reseller and see reseller pricing.
 
 ### Phase 5 — Automation, POPIA & launch hardening (week 6)
 
@@ -238,7 +234,6 @@ products/seed ──┤                         ├── compatibility wizard �
                                               order-placed subscriber ──► Resend (email)
                                                                           n8n  (social)
    b2b module ──► customer groups + price lists ──► auto-applied at checkout
-   sanity     ──► revalidate webhook            ──► Next.js on-demand ISR
 ```
 
 Anything on the right depends on everything on the left in the same row.
@@ -305,8 +300,8 @@ Before we cut Phase 0 work into feature branches:
 
 **Dev team setup:**
 - [ ] Confirm `feature/setup` is merged or carried forward
-- [ ] All dev team have access to: GitHub repo, Supabase project, Sanity project, Vultr console, Coolify dashboard
-- [ ] Provision local `.env` files from dev Supabase + Coolify service URLs
+- [ ] All dev team have access to: GitHub repo, Vultr console, Cloudflare account
+- [ ] Provision local `.env` files (copy from `.env.example`, start local Docker stack)
 - [ ] Confirm `pnpm install && pnpm dev` works on every developer machine (local Docker for Postgres + Redis)
 - [ ] Establish daily 15-min standup window (SAST)
 
@@ -376,17 +371,16 @@ contract grounds remain workable.
 
 | Service | Holds personal info? | Region | POPIA status |
 |---|---|---|---|
-| **Supabase Free** (Postgres) | Yes — customers, addresses, orders, B2B accounts | AWS US/EU | ⚠️ Cross-border — mitigated via s.72 consent + DPA |
-| **Vultr JHB** (Next.js, Medusa, n8n) | Compute only — no persistence | ✅ Johannesburg | ✅ SA-hosted, no s.72 trigger |
+| **Vultr JHB** PostgreSQL (Docker) | Yes — customers, addresses, orders, B2B accounts | ✅ Johannesburg | ✅ SA-hosted, no s.72 trigger |
+| **Vultr JHB** Next.js + Medusa | Compute only — no persistence | ✅ Johannesburg | ✅ SA-hosted, no s.72 trigger |
+| Vultr Object Storage (JHB1) | No — product images only | ✅ Johannesburg | ✅ No PII |
 | Resend Free | Yes — email address + email body | US/EU | ✅ s.72(1)(c) necessary for contract + DPA |
 | Meilisearch (Vultr JHB) | No — products only | ✅ Johannesburg | ✅ No PII |
-| Sanity Free | No — marketing content only | Global CDN | ✅ No PII |
 | PayFast / Ozow | Card data — handled entirely by them | South Africa | ✅ Not our processor |
 | Cloudflare | In-flight only, no persistence | JHB PoP | ✅ Transit only |
 
-The only cross-border exposure is **Supabase DB**. Mitigated via explicit
-consent at signup + signed Supabase DPA. Upgrade path to RDS `af-south-1`
-is documented in section 11 (growth triggers).
+All personal data stays in South Africa (Vultr JHB). Only Resend is cross-border,
+mitigated via s.72(1)(c) (necessary for contract performance) + signed DPA.
 
 ### 10.2 ✅ Decision — Option A (chosen)
 
@@ -447,15 +441,9 @@ Sources used to verify the above:
 
 | Service | What it provides | Free limit | Notes |
 |---|---|---|---|
-| Coolify | PaaS UI, git-push deploys, env vars, logs, auto-SSL | Unlimited (open source, runs on VPS) | Free forever |
 | Cloudflare Free | DNS, CDN, DDoS, SSL at JHB edge | Unlimited bandwidth | Free forever |
-| Supabase Free | Postgres DB + 1 GB storage | 500 MB DB | Sufficient for 6–12 months |
 | Resend Free | Transactional email | 3,000/mo, 100/day | Free forever at this volume |
-| Sanity Free | CMS — hero, banners, blog | 10 GB bandwidth, 3 users | Free forever at this size |
-| Sentry Free | Error tracking | 5,000 events/mo | Free forever at this volume |
 | UptimeRobot Free | Uptime monitoring, 5-min checks | 50 monitors | Free forever |
-| Cloudflare R2 | Backup / media storage | 10 GB free | Free forever at this size |
-| Let's Encrypt | Origin SSL certificates | Unlimited | Managed by Coolify |
 
 ### 11.3 Variable / usage-based
 

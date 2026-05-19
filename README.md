@@ -15,7 +15,6 @@ Headless e-commerce platform for TSE Online — South Africa's printer cartridge
 | Commerce backend | Medusa | v2 |
 | Database | PostgreSQL | 16 |
 | Cache / queues | Redis | 7 |
-| CMS | Sanity Studio | v3 |
 | Shared UI | shadcn/ui (new-york) + Tailwind CSS | 3.4 |
 | Email | Resend | — |
 | Payments | PayFast + Ozow | — |
@@ -32,8 +31,7 @@ Headless e-commerce platform for TSE Online — South Africa's printer cartridge
 tse-ui/
 ├── apps/
 │   ├── web/              Next.js 15 storefront        (@tse/web)
-│   ├── backend/          Medusa v2 API + admin        (@tse/backend)
-│   └── studio/           Sanity Studio v3 CMS         (@tse/studio)
+│   └── backend/          Medusa v2 API + admin        (@tse/backend)
 ├── packages/
 │   ├── ui/               Shared shadcn/ui components  (@tse/ui)
 │   ├── config/           Tailwind / ESLint / TS base  (@tse/config)
@@ -66,7 +64,6 @@ pnpm install
 ```bash
 cp apps/backend/.env.example apps/backend/.env
 cp apps/web/.env.example     apps/web/.env.local
-cp apps/studio/.env.example  apps/studio/.env.local
 ```
 
 See each `.env.example` for field documentation.
@@ -139,10 +136,10 @@ Required GitHub secrets: `VM_HOST`, `VM_USER`, `VM_SSH_KEY`, `VM_PORT` (optional
 - **Blocked:** SKU→model mapping (#2.4) needs client CSV validation
 
 ### ✅ §6 Monorepo Scaffold
-- Next.js 15 + Medusa v2 + Sanity Studio workspaces initialised
+- Next.js 15 + Medusa v2 workspaces initialised
 - shadcn/ui (new-york), Tailwind v3, Inter + Fraunces fonts
 - Component directory structure, barrel exports
-- `.env.example` files for all three apps
+- `.env.example` files for both apps
 
 ### ✅ §7 Design System
 - Single-source-of-truth colour token system in `globals.css`

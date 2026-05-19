@@ -12,22 +12,21 @@ and **Retained Development**.
 
 ### What's included
 
-| Service          | Purpose                              | Approx Cost |
-|------------------|--------------------------------------|-------------|
-| Vercel Pro       | Frontend hosting + CDN               | ~R400       |
-| Railway (Starter)| Medusa + n8n + Meilisearch hosting   | ~R350       |
-| Supabase Pro     | Managed PostgreSQL + storage         | ~R350       |
-| Resend           | Transactional email (50k emails/mo)  | ~R100       |
-| Cloudflare Free  | CDN + DDoS + DNS                     | R0          |
-| Sentry (free)    | Error monitoring                     | R0          |
-| UptimeRobot      | Uptime checks + alerting             | R0          |
+| Service                  | Purpose                                        | Approx Cost |
+|--------------------------|------------------------------------------------|-------------|
+| Vultr JHB Main VM (4GB)  | Web + backend + db + search (Docker Compose)   | ~R440       |
+| Vultr JHB n8n VM (1GB)   | n8n automation engine                          | ~R110       |
+| Vultr Object Storage     | Product images (S3-compatible)                 | ~R50        |
+| Resend                   | Transactional email (50k emails/mo)            | ~R100       |
+| Cloudflare Free          | CDN + DDoS + DNS                               | R0          |
+| UptimeRobot              | Uptime checks + alerting                       | R0          |
 
 ### What we do
 
-- Monitor uptime and performance daily
-- Apply security patches and dependency updates weekly
-- Manage database backups (Supabase daily snapshots + weekly manual exports)
-- Review Vercel deployment logs and Railway container health
+- Monitor uptime and VM resource usage (CPU, RAM, disk) daily
+- Apply OS security patches and Docker image updates weekly
+- Manage database backups (daily pg_dump to Vultr Object Storage)
+- Tail Docker Compose logs for errors and container restarts
 - Keep all API integrations (PayFast, Ozow, Meta) functional as their APIs evolve
 
 ---
@@ -90,11 +89,9 @@ Hours in excess of 8 are billed at **R450/hour** (agreed in advance).
 
 At all times, TSE Online has full ownership of:
 - The GitHub repository (we invite them as an owner)
-- The Supabase project (they are the owner, we are admins)
-- The Vercel project (they are the owner)
-- The Railway project (they are the owner)
+- The Vultr account and both VMs (they are the account holder)
+- The Vultr Object Storage bucket
 - The domain and DNS (their Cloudflare account)
-- The Sanity project (they are the owner)
 - All Meta Business assets (Facebook Page, Instagram account)
 
 If the retainer is cancelled, we hand over all credentials and documentation

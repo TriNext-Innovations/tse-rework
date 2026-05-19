@@ -93,7 +93,7 @@ apps/web/src/app/
 │       ├── dashboard/page.tsx
 │       └── quote/page.tsx
 ├── api/
-│   ├── revalidate/route.ts     # Sanity webhook revalidation
+│   ├── revalidate/route.ts     # Medusa webhook → on-demand ISR revalidation
 │   └── webhooks/
 │       ├── payfast/route.ts
 │       └── medusa/route.ts

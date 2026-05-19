@@ -25,7 +25,6 @@ Reference documents for the TSE Online build. The root [README.md](../README.md)
 |---|---|---|---|
 | `apps/web` | `@tse/web` | 3000 | `src/app/layout.tsx` |
 | `apps/backend` | `@tse/backend` | 9000 | Medusa v2 |
-| `apps/studio` | `@tse/studio` | 3333 | `sanity.config.ts` |
 
 ### Shared packages
 
