@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import { Logo } from '@/components/layout'
 import { ProductFilters } from './ProductFilters'
+import { AddToCartButton } from './AddToCartButton'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
@@ -27,26 +28,6 @@ async function getCategories() {
   return (d.product_categories ?? []) as any[]
 }
 
-async function getProducts(regionId: string, categoryId: string, page: number) {
-  const offset = (page - 1) * PAGE_SIZE
-  const params = new URLSearchParams({
-    limit: String(PAGE_SIZE),
-    offset: String(offset),
-    region_id: regionId,
-  })
-
-  if (categoryId && categoryId !== 'inkjet' && categoryId !== 'laser') {
-    params.append('category_id[]', categoryId)
-  } else if (categoryId === 'inkjet' || categoryId === 'laser') {
-    // Resolved in component after we have categories
-  }
-
-  const res = await fetch(`${BACKEND}/store/products?${params}`, {
-    headers: { 'x-publishable-api-key': PUB_KEY },
-    next: { revalidate: 60 },
-  })
-  return res.json()
-}
 
 export default async function ProductsPage({ searchParams }: { searchParams: SearchParams }) {
   const { category = '', page: pageParam = '1' } = await searchParams
@@ -54,21 +35,14 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
 
   const [regionId, allCategories] = await Promise.all([getRegionId(), getCategories()])
 
-  // Resolve inkjet/laser shorthand to actual category IDs
-  let resolvedCategoryId = category
-  if (category === 'inkjet' || category === 'laser') {
-    const typeName = category === 'inkjet' ? 'Inkjet Cartridges' : 'Laser Cartridges'
-    const typeCategory = allCategories.find((c: any) => c.name === typeName && !c.parent_category)
-    resolvedCategoryId = typeCategory?.id ?? ''
-  }
-
   const offset = (page - 1) * PAGE_SIZE
   const params = new URLSearchParams({
     limit: String(PAGE_SIZE),
     offset: String(offset),
     region_id: regionId,
   })
-  if (resolvedCategoryId) params.append('category_id[]', resolvedCategoryId)
+  // category param is always a real category ID from the URL
+  if (category) params.append('category_id[]', category)
 
   const data = await fetch(`${BACKEND}/store/products?${params}`, {
     headers: { 'x-publishable-api-key': PUB_KEY },
@@ -80,8 +54,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
   const activeCategoryName = category
-    ? allCategories.find((c: any) => c.id === category)?.name ??
-      (category === 'inkjet' ? 'Inkjet Cartridges' : category === 'laser' ? 'Laser Cartridges' : '')
+    ? (allCategories.find((c: any) => c.id === category)?.name ?? '')
     : ''
 
   return (
@@ -179,14 +152,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
                         <div className="font-display text-lg">
                           {priceZar ? `R${priceZar}` : <span className="text-[#9ca3af] text-sm">POA</span>}
                         </div>
-                        <button
-                          aria-label={`Add ${p.title} to cart`}
-                          className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#111827] text-white group-hover:bg-[#41e0f5] group-hover:text-[#111827] transition-colors duration-200"
-                        >
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M12 5v14M5 12h14"/>
-                          </svg>
-                        </button>
+                        <AddToCartButton id={p.id} title={p.title} sku={sku} price={priceZar} />
                       </div>
                     </article>
                   )

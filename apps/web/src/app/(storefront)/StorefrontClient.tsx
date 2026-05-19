@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Logo } from '@/components/layout'
+import { useCart } from '@/contexts/CartContext'
 
 type Theme = 'editorial' | 'brand'
 
@@ -22,11 +24,29 @@ const faqs = [
   { q: 'Do you do bulk / business pricing?', a: 'Yes. Offices, schools, print shops — call 011 708 2304 or email sales@tse.co.za for a quote.' },
 ]
 
+const popularSearches = [
+  { label: 'HP LaserJet M404', brand: 'HP', model: 'LaserJet M404' },
+  { label: 'Canon MF273dw', brand: 'Canon', model: 'MF273dw' },
+  { label: 'Brother HL-L2375DW', brand: 'Brother', model: 'HL-L2375DW' },
+  { label: 'Epson L3250', brand: 'Epson', model: 'L3250' },
+]
+
 export default function StorefrontClient({ trendingProducts }: { trendingProducts: TrendingProduct[] }) {
   const [openFaq, setOpenFaq] = useState<number | null>(0)
   const [mouse, setMouse] = useState({ x: -1000, y: -1000 })
   const [theme, setTheme] = useState<Theme>('editorial')
+  const [finderBrand, setFinderBrand] = useState('HP')
+  const [finderModel, setFinderModel] = useState('')
   const heroRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
+  const { count, addItem, openCart } = useCart()
+
+  function runFinder() {
+    const params = new URLSearchParams()
+    if (finderBrand) params.set('brand', finderBrand)
+    if (finderModel) params.set('model', finderModel)
+    router.push(`/products?${params.toString()}`)
+  }
 
   useEffect(() => {
     const el = heroRef.current
@@ -120,6 +140,37 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
         .pill-nav-item { position: relative; }
         .pill-nav-item::after { content:''; position:absolute; left: 12px; right: 12px; bottom: 4px; height: 2px; background: var(--magenta); transform: scaleX(0); transform-origin: left; transition: transform .35s cubic-bezier(.22,1,.36,1); }
         .pill-nav-item:hover::after { transform: scaleX(1); }
+        .glass-nav {
+          background: rgba(255, 255, 255, 0.19);
+          backdrop-filter: blur(7px);
+          -webkit-backdrop-filter: blur(7px);
+          border-radius: 9999px;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          box-shadow:
+            0 8px 32px rgba(0, 0, 0, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.5),
+            inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+            inset 0 0 0px 0px rgba(255, 255, 255, 0);
+          overflow: hidden;
+        }
+        .glass-nav::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+        }
+        .glass-nav::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 1px;
+          height: 100%;
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.8), transparent, rgba(255, 255, 255, 0.3));
+        }
         @media (prefers-reduced-motion: reduce) {
           .animate-ticker, .animate-float, .animate-spin-slow { animation: none; }
           [data-reveal] { opacity: 1; transform: none; transition: none; }
@@ -127,7 +178,7 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
       `}</style>
 
       {/* ─────────────── FLOATING NAV ─────────────── */}
-      <header className="fixed top-4 left-4 right-4 z-40 flex items-center justify-between px-3 sm:px-5 py-2.5 bg-[var(--paper)]/85 backdrop-blur-xl border border-[var(--ink)]/10 rounded-full shadow-[0_8px_30px_-12px_rgba(10,10,10,0.18)] transition-colors duration-500">
+      <header className="glass-nav fixed top-4 left-4 right-4 z-40 flex items-center justify-between px-3 sm:px-5 py-2.5">
         <a href="#top" className="flex items-center gap-2 pl-2 cursor-pointer">
           <Logo width={80} variant="color" linked={false} />
           <span className="hidden md:inline text-[10px] uppercase tracking-[0.18em] text-[var(--muted)] ml-1">Est. 1987</span>
@@ -179,13 +230,20 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
             </button>
           </div>
 
-          <button aria-label="Search" className="hidden sm:inline-flex items-center justify-center w-9 h-9 rounded-full hover:bg-[var(--ink)]/5 transition-colors cursor-pointer">
+          <button
+            aria-label="Search"
+            onClick={() => router.push('/products')}
+            className="hidden sm:inline-flex items-center justify-center w-9 h-9 rounded-full hover:bg-[var(--ink)]/5 transition-colors cursor-pointer"
+          >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           </button>
-          <button className="inline-flex items-center gap-1.5 bg-[var(--magenta)] text-[var(--on-accent)] hover:opacity-90 transition-opacity duration-200 rounded-full px-4 py-2 text-sm font-medium cursor-pointer shadow-[0_4px_16px_-4px_rgba(238,117,233,0.5)]">
+          <button
+            onClick={openCart}
+            className="inline-flex items-center gap-1.5 bg-[var(--magenta)] text-[var(--on-accent)] hover:opacity-90 transition-opacity duration-200 rounded-full px-4 py-2 text-sm font-medium cursor-pointer shadow-[0_4px_16px_-4px_rgba(238,117,233,0.5)]"
+          >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>
             <span>Cart</span>
-            <span className="bg-black/20 text-[var(--on-accent)] rounded-full text-[10px] font-bold w-4 h-4 inline-flex items-center justify-center">0</span>
+            <span className="bg-black/20 text-[var(--on-accent)] rounded-full text-[10px] font-bold w-4 h-4 inline-flex items-center justify-center">{count}</span>
           </button>
         </div>
       </header>
@@ -298,7 +356,10 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
                   </div>
                 </div>
 
-                <button className="relative mt-6 w-full bg-[var(--paper)] hover:bg-[var(--magenta)] text-[var(--ink)] hover:text-[var(--on-accent)] rounded-full py-3 text-sm font-medium transition-colors duration-300 cursor-pointer">
+                <button
+                  onClick={() => addItem({ id: 'canon-crg-737', title: 'Canon 737 Black Toner', sku: 'CRG-737', price: 300 })}
+                  className="relative mt-6 w-full bg-[var(--paper)] hover:bg-[var(--magenta)] text-[var(--ink)] hover:text-[var(--on-accent)] rounded-full py-3 text-sm font-medium transition-colors duration-300 cursor-pointer"
+                >
                   Add to cart — R300
                 </button>
               </div>
@@ -371,7 +432,7 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
               </p>
             </article>
 
-            <article data-reveal className="bento-card sm:col-span-2 bg-[var(--magenta)] text-[var(--on-accent)] rounded-[24px] p-6 relative overflow-hidden min-h-[180px] flex flex-col justify-between cursor-pointer">
+            <article data-reveal onClick={() => router.push('/products')} className="bento-card sm:col-span-2 bg-[var(--magenta)] text-[var(--on-accent)] rounded-[24px] p-6 relative overflow-hidden min-h-[180px] flex flex-col justify-between cursor-pointer">
               <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--on-accent)]/70">Category</div>
               <div>
                 <div className="font-display font-light text-4xl sm:text-5xl leading-none">Inkjet</div>
@@ -385,7 +446,7 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
               </div>
             </article>
 
-            <article data-reveal className="bento-card sm:col-span-1 bg-[var(--ink-2)] text-[var(--paper)] rounded-[24px] p-5 relative overflow-hidden min-h-[180px] flex flex-col justify-between cursor-pointer">
+            <article data-reveal onClick={() => router.push('/products')} className="bento-card sm:col-span-1 bg-[var(--ink-2)] text-[var(--paper)] rounded-[24px] p-5 relative overflow-hidden min-h-[180px] flex flex-col justify-between cursor-pointer">
               <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--paper)]/60">Category</div>
               <div className="font-display font-light text-3xl leading-none">Laser</div>
               <div className="text-[10px] text-[var(--paper)]/70">200+ SKUs</div>
@@ -410,9 +471,13 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
               <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] mb-3">Compatible with</div>
               <div className="flex flex-wrap gap-1.5">
                 {brands.map((b) => (
-                  <span key={b} className="text-[11px] font-medium px-2.5 py-1 border border-[var(--ink)]/10 hover:border-[var(--magenta)] hover:text-[var(--magenta)] rounded-full transition-colors cursor-pointer">
+                  <button
+                    key={b}
+                    onClick={() => router.push('/products')}
+                    className="text-[11px] font-medium px-2.5 py-1 border border-[var(--ink)]/10 hover:border-[var(--magenta)] hover:text-[var(--magenta)] rounded-full transition-colors cursor-pointer"
+                  >
                     {b}
-                  </span>
+                  </button>
                 ))}
               </div>
               <div className="mt-5 font-display text-2xl">
@@ -445,7 +510,11 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
               <div className="bg-[var(--paper)] text-[var(--ink)] rounded-2xl p-2 sm:p-3 grid grid-cols-1 sm:grid-cols-12 gap-2">
                 <div className="sm:col-span-4 relative">
                   <label className="block text-[9px] uppercase tracking-[0.2em] text-[var(--muted)] px-3 pt-3">Brand</label>
-                  <select className="w-full bg-transparent pl-3 pr-8 pb-3 text-sm font-medium focus:outline-none appearance-none cursor-pointer">
+                  <select
+                    value={finderBrand}
+                    onChange={(e) => setFinderBrand(e.target.value)}
+                    className="w-full bg-transparent pl-3 pr-8 pb-3 text-sm font-medium focus:outline-none appearance-none cursor-pointer"
+                  >
                     {brands.map((b) => <option key={b}>{b}</option>)}
                   </select>
                   <svg className="absolute right-3 bottom-4 pointer-events-none" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m6 9 6 6 6-6"/></svg>
@@ -455,10 +524,16 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
                   <input
                     type="text"
                     placeholder="e.g. LaserJet Pro M404dn"
+                    value={finderModel}
+                    onChange={(e) => setFinderModel(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && runFinder()}
                     className="w-full bg-transparent px-3 pb-3 text-sm font-medium focus:outline-none placeholder:text-[var(--muted)]"
                   />
                 </div>
-                <button className="sm:col-span-3 bg-[var(--ink)] hover:bg-[var(--magenta)] transition-colors duration-300 text-[var(--paper)] hover:text-[var(--on-accent)] rounded-xl px-4 py-3 text-sm font-medium cursor-pointer inline-flex items-center justify-center gap-2">
+                <button
+                  onClick={runFinder}
+                  className="sm:col-span-3 bg-[var(--ink)] hover:bg-[var(--magenta)] transition-colors duration-300 text-[var(--paper)] hover:text-[var(--on-accent)] rounded-xl px-4 py-3 text-sm font-medium cursor-pointer inline-flex items-center justify-center gap-2"
+                >
                   Find cartridges
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </button>
@@ -466,9 +541,17 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
 
               <div className="mt-4 flex flex-wrap items-center gap-2">
                 <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--paper)]/50 mr-1">Popular:</span>
-                {['HP LaserJet M404', 'Canon MF273dw', 'Brother HL-L2375DW', 'Epson L3250'].map((q) => (
-                  <button key={q} className="text-xs px-3 py-1.5 border border-[var(--paper)]/15 rounded-full hover:border-[var(--magenta)] hover:text-[var(--magenta)] transition-colors cursor-pointer">
-                    {q}
+                {popularSearches.map(({ label, brand, model }) => (
+                  <button
+                    key={label}
+                    onClick={() => {
+                      setFinderBrand(brand)
+                      setFinderModel(model)
+                      router.push(`/products?brand=${encodeURIComponent(brand)}&model=${encodeURIComponent(model)}`)
+                    }}
+                    className="text-xs px-3 py-1.5 border border-[var(--paper)]/15 rounded-full hover:border-[var(--magenta)] hover:text-[var(--magenta)] transition-colors cursor-pointer"
+                  >
+                    {label}
                   </button>
                 ))}
               </div>
@@ -503,7 +586,7 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
               const type = categoryName.toLowerCase().includes('inkjet') ? 'Inkjet' : 'Laser'
 
               return (
-                <article key={p.id} data-reveal className="product-card group relative bg-[var(--paper-2)] rounded-[20px] p-5 sm:p-6 overflow-hidden cursor-pointer">
+                <article key={p.id} data-reveal onClick={() => router.push('/products')} className="product-card group relative bg-[var(--paper-2)] rounded-[20px] p-5 sm:p-6 overflow-hidden cursor-pointer">
                   <div className="flex items-start justify-between mb-4">
                     <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--muted)]">{type}</span>
                   </div>
@@ -534,6 +617,10 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
                     </div>
                     <button
                       aria-label={`Add ${p.title} to cart`}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        addItem({ id: p.id, title: p.title, sku, price: priceZar ? Number(priceZar) : null })
+                      }}
                       className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[var(--ink)] text-[var(--paper)] group-hover:bg-[var(--magenta)] group-hover:text-[var(--on-accent)] transition-colors duration-300 cursor-pointer"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -641,8 +728,8 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
               <div>
                 <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] mb-4">Shop</div>
                 <ul className="space-y-2 text-sm">
-                  <li><a href="/products?category=inkjet" className="hover:text-[var(--magenta)] cursor-pointer transition-colors">Inkjet cartridges</a></li>
-                  <li><a href="/products?category=laser" className="hover:text-[var(--magenta)] cursor-pointer transition-colors">Laser toner</a></li>
+                  <li><a href="/products" className="hover:text-[var(--magenta)] cursor-pointer transition-colors">Inkjet cartridges</a></li>
+                  <li><a href="/products" className="hover:text-[var(--magenta)] cursor-pointer transition-colors">Laser toner</a></li>
                   <li><a href="/products" className="hover:text-[var(--magenta)] cursor-pointer transition-colors">All cartridges</a></li>
                   <li><a href="mailto:sales@tse.co.za" className="hover:text-[var(--magenta)] cursor-pointer transition-colors">Bulk &amp; business</a></li>
                 </ul>
