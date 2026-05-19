@@ -29,7 +29,7 @@ tse-online/
 | Frontend           | Next.js 15 (App Router) | Vultr JHB VM (Docker + nginx)      |
 | Commerce backend   | Medusa.js v2            | Vultr JHB VM (Docker)              |
 | Database           | PostgreSQL 16           | Vultr JHB VM (Docker, named vol)   |
-| File storage       | S3-compatible           | Vultr Object Storage               |
+| File storage       | Cloudflare R2           | Cloudflare (S3-compatible, free tier) |
 | Search             | Meilisearch             | Vultr JHB VM (Docker)              |
 | Automation engine  | n8n                     | Vultr JHB n8n VM (Docker)          |
 | CDN / DNS          | Cloudflare              | Cloudflare                         |
@@ -252,9 +252,12 @@ All services run via Docker Compose. The `docker-compose.yml` at repo root defin
 - Docker Compose with single `n8n` service
 - Same GitHub Actions SSH deploy pattern
 
-### Vultr Object Storage
-- Bucket: `tse-product-images` (JHB1 region, public-read)
-- Connected to Medusa via `@medusajs/file-s3` plugin (S3-compatible endpoint)
+### Cloudflare R2 (file storage)
+- Bucket: `tse-product-images` (public-read)
+- Free tier: 10GB storage + 1M operations/month — more than sufficient for product images
+- Zero egress fees when served through Cloudflare CDN
+- Connected to Medusa via `@medusajs/file-s3` plugin (R2 is S3-compatible)
+- R2 endpoint: `https://<account-id>.r2.cloudflarestorage.com`
 
 ### Cloudflare
 - DNS: A records `@`, `www`, `api` → Vultr main VM public IP (Proxied)
