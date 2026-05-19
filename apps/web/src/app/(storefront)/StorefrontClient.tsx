@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Logo } from '@/components/layout'
 import { useCart } from '@/contexts/CartContext'
+import { CartButton } from '@/components/CartButton'
 
 type Theme = 'editorial' | 'brand'
 
@@ -39,7 +40,7 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
   const [finderModel, setFinderModel] = useState('')
   const heroRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
-  const { count, addItem, openCart } = useCart()
+  const { addItem } = useCart()
 
   function runFinder() {
     const params = new URLSearchParams()
@@ -237,14 +238,7 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           </button>
-          <button
-            onClick={openCart}
-            className="inline-flex items-center gap-1.5 bg-[var(--magenta)] text-[var(--on-accent)] hover:opacity-90 transition-opacity duration-200 rounded-full px-4 py-2 text-sm font-medium cursor-pointer shadow-[0_4px_16px_-4px_rgba(238,117,233,0.5)]"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>
-            <span>Cart</span>
-            <span className="bg-black/20 text-[var(--on-accent)] rounded-full text-[10px] font-bold w-4 h-4 inline-flex items-center justify-center">{count}</span>
-          </button>
+          <CartButton />
         </div>
       </header>
 
