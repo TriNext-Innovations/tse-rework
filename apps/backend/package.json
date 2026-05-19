@@ -8,24 +8,24 @@
     "start": "medusa start",
     "lint": "eslint src --ext .ts",
     "type-check": "tsc --noEmit",
-    "migrate": "medusa db:migrate"
+    "migrate": "medusa migrations run"
   },
   "dependencies": {
-    "@medusajs/admin-sdk": "^2.13.6",
-    "@medusajs/dashboard": "^2.13.6",
-    "@medusajs/draft-order": "^2.13.6",
-    "@medusajs/framework": "^2.13.6",
-    "@medusajs/medusa": "^2.13.6",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "@tse/types": "workspace:*"
+    "@medusajs/admin-sdk": "^2.15.2",
+    "@medusajs/dashboard": "^2.15.2",
+    "@medusajs/draft-order": "^2.15.2",
+    "@medusajs/framework": "^2.15.2",
+    "@medusajs/medusa": "^2.15.2",
+    "@tse/types": "workspace:*",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
   },
   "devDependencies": {
     "@tse/config": "workspace:*",
-    "@types/node": "^20.12.7",
-    "@types/react": "^18.3.7",
-    "@types/react-dom": "^18.3.7",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "ts-node": "^10.9.2",
-    "typescript": "^5.4.5"
+    "typescript": "^6.0.3"
   }
 }
