@@ -16,7 +16,7 @@ RUN pnpm install --frozen-lockfile
 COPY packages/ ./packages/
 COPY apps/backend/ ./apps/backend/
 
-# medusa build outputs to apps/backend/.medusa/server/
+# medusa build outputs to apps/backend/dist/
 WORKDIR /app/apps/backend
 ENV NODE_OPTIONS="--max-old-space-size=3072"
 RUN /app/node_modules/.bin/medusa build
@@ -32,10 +32,10 @@ ENV NODE_OPTIONS="--max-old-space-size=1536"
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
 
-# Medusa server bundle
-COPY --from=builder /app/apps/backend/.medusa ./apps/backend/.medusa
+# Compiled backend (dist/) and admin dashboard
+COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
 
-# medusa-config.ts is loaded by the migration CLI at startup
+# Config and manifest files needed by medusa start and db:migrate
 COPY --from=builder /app/apps/backend/medusa-config.ts ./apps/backend/medusa-config.ts
 COPY --from=builder /app/apps/backend/tsconfig.json ./apps/backend/tsconfig.json
 COPY --from=builder /app/apps/backend/package.json ./apps/backend/package.json
