@@ -38,12 +38,36 @@ services:
       timeout: 5s
       retries: 5
 
+  medusa-migrate:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/tse_medusa
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+      COOKIE_SECRET: ${COOKIE_SECRET}
+      NODE_OPTIONS: "--max-old-space-size=1536"
+    entrypoint: ["/app/node_modules/.bin/medusa", "db:migrate"]
+    deploy:
+      resources:
+        limits:
+          memory: 1536m
+
   medusa:
     build:
       context: .
       dockerfile: apps/backend/Dockerfile
     restart: unless-stopped
     depends_on:
+      medusa-migrate:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
