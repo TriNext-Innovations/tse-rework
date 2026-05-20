@@ -1,0 +1,243 @@
+# TSE Online — Production Deploy Runbook
+
+Captures the actual sequence used to bring `dev.tse-cartridges.co.za` live on the Vultr JHB VPS on **2026-05-20**, and the gotchas that cost time on the way. Use this for any future production-class deploy of this stack (staging, prod cutover, disaster-recovery rebuild).
+
+Companion to `BUILD-PLAN.md` (the *plan*); this is the *runbook*.
+
+---
+
+## 1. Prerequisites
+
+Before touching the server, confirm all of these. Skipping any one of them turns into a multi-hour debug session.
+
+| # | Requirement | How to verify |
+|---|---|---|
+| 1 | Linux VPS reachable, Docker + Docker Compose installed | `ssh linuxuser@<host>` then `docker --version && docker compose version` |
+| 2 | Project cloned at `/opt/tse-ui` on the box, git remote pointing at GitHub | `cd /opt/tse-ui && git remote -v` |
+| 3 | `.env` populated on the server (POSTGRES_PASSWORD, JWT_SECRET, COOKIE_SECRET, MEDUSA_ADMIN_*, OZOW/PayFast/Resend/Aramex/TCG keys for the env) | `grep -c "=" .env` should match the count in `.env.example` |
+| 4 | Both DNS records resolve to the server's public IP | `for h in dev.tse-cartridges.co.za api.dev.tse-cartridges.co.za; do echo "$h -> $(dig +short $h \| tail -1)"; done` |
+| 5 | Firewall allows inbound 80 and 443 from `0.0.0.0/0` (certbot validates over plaintext HTTP) | `curl -I http://<server-ip>` from outside the VPS — should reach nginx, not time out |
+| 6 | No other process on the host is bound to 80 / 443 / 5432 / 6379 / 9000 / 3000 | `sudo ss -tlnp \| grep -E ':(80\|443\|5432\|6379\|9000\|3000)\s'` |
+
+`POSTGRES_PASSWORD` is what backs `DATABASE_URL` for both Medusa services; don't ad-hoc rotate it without recreating the postgres volume.
+
+---
+
+## 2. First-run deploy sequence
+
+The dependency chain is `postgres → redis → medusa-migrate → medusa → web → nginx`. Compose handles most of this via `depends_on: condition: service_healthy`, but **nginx has a chicken-and-egg with TLS certs** — it won't start without certs, and certbot needs port 80, which nginx normally owns. The sequence below sidesteps that.
+
+```bash
+# All commands run from /opt/tse-ui on the VPS
+cd /opt/tse-ui
+git pull origin main
+
+# 1. Bring up data services + run migrations. medusa-migrate exits 0 when done.
+docker compose up -d postgres redis
+docker compose up medusa-migrate            # foreground — watch it run all 25 modules
+
+# 2. Bring up the Medusa server. Health check has start_period=300s; first
+#    boot takes ~30-90s. nginx is intentionally NOT started yet.
+docker compose up -d medusa
+
+# Wait until 'docker compose ps medusa' shows '(healthy)' before continuing.
+
+# 3. Bring up the storefront. Depends on medusa being healthy.
+docker compose up -d web
+
+# 4. Issue TLS certs via certbot --standalone (nginx not running yet, so :80 is free).
+#    Single command issues a SAN cert covering BOTH domains, stored under live/dev.tse-cartridges.co.za/.
+docker run --rm -p 80:80 \
+  -v tse-ui_certbot_certs:/etc/letsencrypt \
+  -v tse-ui_certbot_www:/var/www/certbot \
+  certbot/certbot certonly --standalone \
+    --non-interactive --agree-tos --no-eff-email \
+    --email ryno@trinextinnovations.co.za \
+    -d dev.tse-cartridges.co.za \
+    -d api.dev.tse-cartridges.co.za
+
+# Verify the cert covers both names (SAN must list both DNS entries)
+sudo openssl x509 \
+  -in /var/lib/docker/volumes/tse-ui_certbot_certs/_data/live/dev.tse-cartridges.co.za/cert.pem \
+  -noout -text | grep -A1 "Subject Alternative Name"
+
+# 5. Bring up nginx. It now finds the cert and stays running.
+docker compose up -d nginx
+
+# 6. Final health check — all services Up, medusa healthy, nginx not restarting.
+docker compose ps
+```
+
+Open `https://dev.tse-cartridges.co.za` and `https://api.dev.tse-cartridges.co.za/health` in a browser. Storefront → Next.js page; API health → `OK`.
+
+---
+
+## 3. Gotchas we hit (and you will too)
+
+These are the issues that cost real time on 2026-05-20. Each one is in the code now — but the **why** is worth keeping so the next person doesn't think the fix is wrong and undo it.
+
+### 3.1 `medusa db:migrate` hangs 25 minutes against a Docker-networked Postgres
+
+**Symptom:** `Running migrations...` then 25 minutes of silence, then 25× `KnexTimeoutError: Knex: Timeout acquiring a connection`.
+
+**Cause:** Medusa 2.15.2's `lockKnex` (the connection pool used for the per-module advisory lock during migration) goes through `loadDatabaseConfig` → `getDefaultDriverOptions(clientUrl)`, which infers SSL from the URL hostname:
+
+```js
+return clientUrl.match(/localhost|127\.0\.0\.1|ssl_mode=(disable|false)|sslmode=(disable)/i)
+  ? localOptions   // ssl: false
+  : remoteOptions; // ssl: { rejectUnauthorized: false }
+```
+
+A Docker service hostname (`postgres`) doesn't match the regex, so SSL gets forced **on**. The bare `postgres:16-alpine` image doesn't support SSL, so the handshake fails. Knex's `propagateCreateError: false` silences the real error; you only see the timeout. The *main* pg connection uses a different code path and defaults to `ssl: false`, which is why `ensureDbExists` and `ensureMigrationsTable` work fine — making it look like a JS-side hang.
+
+**Fix already in this repo:** `docker-compose.yml` appends `?sslmode=disable` to `DATABASE_URL` for both `medusa-migrate` and `medusa`.
+
+If you ever switch to a managed Postgres (Supabase, RDS, Vultr Managed PG), **remove `?sslmode=disable`** — those providers require TLS. Either set `databaseDriverOptions: { connection: { ssl: { rejectUnauthorized: false } } }` in `apps/backend/medusa-config.ts`, or use `sslmode=require` in the URL.
+
+### 3.2 `medusa start` fails with "Could not find index.html in the admin build directory"
+
+**Symptom:** `medusa` container starts, logs `Error starting server` → `Could not find index.html in the admin build directory. Make sure to run 'medusa build' before starting the server.` `medusa build` *did* run during the Docker build — the file just isn't where the runtime looks for it.
+
+**Cause:** `apps/backend/tsconfig.json` overrides `outDir` to `./dist`. Medusa's build tool honours that override and writes the admin bundle to `dist/public/admin/`. But the admin loader (`@medusajs/medusa/dist/loaders/admin.js:31`) hard-codes its lookup to `${process.cwd()}/public/admin/index.html`. Path mismatch.
+
+**Fix already in this repo:** the Dockerfile lifts the admin output up one level:
+
+```dockerfile
+COPY --from=builder /app/apps/backend/dist/public ./apps/backend/public
+```
+
+The Medusa-native pattern is `outDir: ".medusa/server"` and running the server from inside that directory. We didn't do that here — the `dist` + admin-copy hack is the pragmatic version. Don't change `tsconfig.outDir` without also undoing the COPY line.
+
+### 3.3 Postgres `max_connections=200` from compose isn't actually applied
+
+**Symptom:** `command: postgres -c max_connections=200` is in `docker-compose.yml` but `SHOW max_connections;` returns `100`.
+
+**Cause:** The postgres container was created before the `command:` was added, and `docker compose up -d` doesn't recreate a container that's already running — even if the config changed. `docker compose restart` doesn't reapply config either.
+
+**Fix:** `docker compose up -d --force-recreate postgres`. The named volume is preserved, so no data loss.
+
+This will bite you again any time you change `command:` or `environment:` on an already-running service. When in doubt, `--force-recreate`.
+
+### 3.4 nginx certs chicken-and-egg
+
+**Symptom:** nginx restarts forever with `cannot load certificate ".../fullchain.pem": no such file or directory`.
+
+**Cause:** Nginx config references `/etc/letsencrypt/live/<domain>/fullchain.pem`. Those files don't exist on a fresh server. You can't run certbot through nginx (webroot mode) because nginx won't start. You can run certbot in `--standalone` mode, but it needs port 80, which nginx normally binds.
+
+**Fix:** Stop nginx → run certbot standalone → start nginx. Covered in step 4 of section 2 above. Don't try to start nginx first.
+
+### 3.5 SAN cert vs separate-cert paths in nginx
+
+**Symptom:** After certbot succeeds, nginx still fails — `cannot load certificate ".../api.dev.tse-cartridges.co.za/fullchain.pem"`.
+
+**Cause:** `certbot certonly -d X -d Y` issues **one** SAN certificate, stored under `live/<first-domain>/` only. There's no `live/<second-domain>/` directory. The nginx config originally had separate `ssl_certificate` paths for each `server` block.
+
+**Fix already in this repo:** both nginx `server` blocks in `infrastructure/nginx/conf.d/tse.conf` point at the same SAN cert under `live/dev.tse-cartridges.co.za/`. If you ever split the domains onto separate certs, update both `server` blocks.
+
+### 3.6 `web` is "unhealthy" but actually working
+
+**Symptom:** `docker compose ps` shows `web (unhealthy)` but the storefront serves correctly through nginx.
+
+**Cause:** The healthcheck is `wget -qO- http://localhost:3000/api/health || exit 1`. `apps/web` doesn't have an `/api/health` route. The badge is wrong; the app is fine.
+
+**Fix (not blocking):** add `apps/web/src/app/api/health/route.ts` returning `Response.json({ ok: true })`, or change the healthcheck in `docker-compose.yml` to hit `/`. Left as a follow-up.
+
+---
+
+## 4. Cert renewal
+
+The Let's Encrypt cert issued on 2026-05-20 **expires 2026-08-18** (90-day lifetime).
+
+### 4.1 Manual renewal (works today)
+
+```bash
+cd /opt/tse-ui
+docker compose stop nginx
+docker run --rm -p 80:80 \
+  -v tse-ui_certbot_certs:/etc/letsencrypt \
+  -v tse-ui_certbot_www:/var/www/certbot \
+  certbot/certbot renew
+docker compose up -d nginx
+```
+
+Run on or before **2026-08-04** to leave headroom. Certs are valid 30 days past renewal, so the worst-case downtime if you forget is ~2 weeks of warning emails from Let's Encrypt before they expire.
+
+### 4.2 Automate it
+
+Add a host cron on the VPS that does the above on the first of every odd month:
+
+```bash
+sudo crontab -e
+```
+
+```
+0 3 1 */2 * cd /opt/tse-ui && docker compose stop nginx && docker run --rm -p 80:80 -v tse-ui_certbot_certs:/etc/letsencrypt -v tse-ui_certbot_www:/var/www/certbot certbot/certbot renew --quiet && docker compose up -d nginx >> /var/log/cert-renew.log 2>&1
+```
+
+A cleaner long-term solution is a dedicated `certbot` service in compose with the `--webroot` mode (no nginx stop needed) — left for a follow-up PR.
+
+---
+
+## 5. Service map (what runs where)
+
+| Service | Container | Image | Internal port | Exposed port | Health URL |
+|---|---|---|---|---|---|
+| Postgres | `tse-ui-postgres-1` | `postgres:16-alpine` | 5432 | 5432 | `pg_isready` |
+| Redis | `tse-ui-redis-1` | `redis:7-alpine` | 6379 | 6379 | `redis-cli ping` |
+| Medusa migrate | `tse-ui-medusa-migrate-1` | built locally | — | — | exit 0 |
+| Medusa API + admin | `tse-ui-medusa-1` | built locally | 9000 | 9000 | `GET /health` |
+| Next.js storefront | `tse-ui-web-1` | built locally | 3000 | 3000 | `GET /api/health` (todo, see 3.6) |
+| nginx reverse proxy | `tse-ui-nginx-1` | `nginx:alpine` | 80 / 443 | 80 / 443 | — |
+
+External routing:
+
+- `https://dev.tse-cartridges.co.za` → nginx → `web:3000` (storefront)
+- `https://api.dev.tse-cartridges.co.za` → nginx → `medusa:9000` (REST API + `/app` admin dashboard)
+
+---
+
+## 6. Updating the deployment
+
+For a code-only change (no infra):
+
+```bash
+cd /opt/tse-ui
+git pull origin main
+docker compose build medusa web                 # only rebuild what changed
+docker compose up -d medusa-migrate            # foreground — wait for exit 0 if migrations changed
+docker compose up -d medusa web
+```
+
+If `Dockerfile`, `docker-compose.yml`, `medusa-config.ts`, or any nginx config changed, also `--force-recreate` the affected services so config is reapplied (see 3.3).
+
+If schema-impacting migrations were added, **always** run `medusa-migrate` to exit 0 before bringing the live `medusa` container back up. The compose `depends_on: service_completed_successfully` enforces this when starting from scratch but doesn't help on a rolling update.
+
+---
+
+## 7. Disaster recovery
+
+The two stateful pieces are:
+
+1. **`postgres_data` volume** — all customer / order / catalogue data. Back up with:
+   ```bash
+   docker compose exec -T postgres pg_dump -U postgres -d tse_medusa --no-owner --clean | gzip > tse_medusa_$(date +%F).sql.gz
+   ```
+   Schedule this nightly off-server (Vultr Object Storage, Cloudflare R2, off-box `rsync`).
+
+2. **`certbot_certs` volume** — TLS certs. Can be reissued from scratch on a new host as long as DNS still resolves (see section 2 step 4); not strictly backup-critical.
+
+Redis and Next.js / Medusa containers are stateless: rebuild from git + image and the data volumes are enough to restore.
+
+---
+
+## 8. Reference — service environment
+
+Each service's required env vars (already in `.env.example`):
+
+| Service | Required env |
+|---|---|
+| `medusa-migrate`, `medusa` | `DATABASE_URL` (with `?sslmode=disable`), `REDIS_URL`, `JWT_SECRET`, `COOKIE_SECRET` |
+| `medusa` only | `MEDUSA_ADMIN_EMAIL`, `MEDUSA_ADMIN_PASSWORD`, `MEDUSA_BACKEND_URL`, CORS triplet, `RESEND_*`, `PAYFAST_*`, `OZOW_*`, `TCG_API_KEY`, `ARAMEX_*` |
+| `web` | `NEXT_PUBLIC_MEDUSA_URL`, `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY`, `NEXT_PUBLIC_SANITY_*`, `NEXT_PUBLIC_SITE_URL` |
+
+`STORE_CORS` / `ADMIN_CORS` / `AUTH_CORS` must include `https://dev.tse-cartridges.co.za` (and the admin URL, which is `https://api.dev.tse-cartridges.co.za/app`) — wrong CORS shows as silent auth failures in the admin login.

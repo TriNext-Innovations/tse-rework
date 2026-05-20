@@ -13,6 +13,7 @@ Reference documents for the TSE Online build. The root [README.md](../README.md)
 | [Architecture.md](Architecture.md) | System architecture, data flow, infrastructure decisions. |
 | [DEVELOPER-GUIDE.md](DEVELOPER-GUIDE.md) | Local setup, git workflow, testing, migrations, go-live checklist. |
 | [BUILD-PLAN.md](BUILD-PLAN.md) | Milestone breakdown and delivery timeline. |
+| [PROD-DEPLOY.md](PROD-DEPLOY.md) | Production deploy runbook — first-run sequence, certbot bootstrap, gotchas from the 2026-05-20 dev cutover, cert renewal, DR. |
 | [RETAINER-SCOPE.md](RETAINER-SCOPE.md) | Monthly retainer services, SLAs, and handover terms. |
 
 ---
@@ -61,10 +62,11 @@ Reference documents for the TSE Online build. The root [README.md](../README.md)
 
 | Component | Config file | Status |
 |---|---|---|
-| Docker Compose | `docker-compose.yml` | Written — not yet live |
-| Nginx | `infrastructure/nginx/` | Written — not yet live |
+| Docker Compose | `docker-compose.yml` | Live on Vultr JHB (dev env, 2026-05-20) |
+| Nginx | `infrastructure/nginx/` | Live, TLS via Let's Encrypt SAN cert (expires 2026-08-18) |
 | CI/CD | `.github/workflows/deploy.yml` | Written — not yet live |
-| Hosting | Vultr JHB 4 GB main + 1 GB n8n | Not yet provisioned (#4.1) |
+| Hosting | Vultr JHB VPS | Provisioned at `/opt/tse-ui` (`tse-prod-jnb`) |
+| URLs | — | `https://dev.tse-cartridges.co.za`, `https://api.dev.tse-cartridges.co.za` |
 
 ### Migration data (in `migration/raw/`)
 
