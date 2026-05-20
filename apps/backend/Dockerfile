@@ -17,8 +17,7 @@ COPY packages/ ./packages/
 COPY apps/backend/ ./apps/backend/
 
 # medusa build outputs to apps/backend/.medusa/server/
-RUN find /app -name "medusa" -type f 2>/dev/null | head -10
-RUN pnpm --filter @tse/backend exec medusa build
+RUN /app/node_modules/.pnpm/node_modules/.bin/medusa build --root /app/apps/backend
 
 # ---- Runner ----
 FROM node:20-alpine AS runner
