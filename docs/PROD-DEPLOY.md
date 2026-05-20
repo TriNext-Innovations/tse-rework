@@ -4,6 +4,8 @@ Captures the actual sequence used to bring `dev.tse-cartridges.co.za` live on th
 
 Companion to `BUILD-PLAN.md` (the *plan*); this is the *runbook*.
 
+**Quick reference:** once the server is running, use `make help` from `/opt/tse-ui` to list all ops commands (`make deploy`, `make logs s=medusa`, `make backup`, `make cert-renew`, etc.).
+
 ---
 
 ## 1. Prerequisites
@@ -134,13 +136,13 @@ This will bite you again any time you change `command:` or `environment:` on an 
 
 **Fix already in this repo:** both nginx `server` blocks in `infrastructure/nginx/conf.d/tse.conf` point at the same SAN cert under `live/dev.tse-cartridges.co.za/`. If you ever split the domains onto separate certs, update both `server` blocks.
 
-### 3.6 `web` is "unhealthy" but actually working
+### 3.6 `web` was "unhealthy" but actually working
 
 **Symptom:** `docker compose ps` shows `web (unhealthy)` but the storefront serves correctly through nginx.
 
-**Cause:** The healthcheck is `wget -qO- http://localhost:3000/api/health || exit 1`. `apps/web` doesn't have an `/api/health` route. The badge is wrong; the app is fine.
+**Cause:** The healthcheck is `wget -qO- http://localhost:3000/api/health || exit 1`. `apps/web` didn't have an `/api/health` route. The badge was wrong; the app was fine.
 
-**Fix (not blocking):** add `apps/web/src/app/api/health/route.ts` returning `Response.json({ ok: true })`, or change the healthcheck in `docker-compose.yml` to hit `/`. Left as a follow-up.
+**Fix already in this repo:** `apps/web/src/app/api/health/route.ts` returns `{ ok: true }`, making the healthcheck pass correctly.
 
 ---
 
@@ -152,6 +154,12 @@ The Let's Encrypt cert issued on 2026-05-20 **expires 2026-08-18** (90-day lifet
 
 ```bash
 cd /opt/tse-ui
+make cert-renew
+```
+
+Or without make:
+
+```bash
 docker compose stop nginx
 docker run --rm -p 80:80 \
   -v tse-ui_certbot_certs:/etc/letsencrypt \
