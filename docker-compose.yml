@@ -1,0 +1,139 @@
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tse_medusa
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          memory: 400m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d tse_medusa"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    deploy:
+      resources:
+        limits:
+          memory: 100m
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  medusa:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/tse_medusa
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+      COOKIE_SECRET: ${COOKIE_SECRET}
+      MEDUSA_ADMIN_EMAIL: ${MEDUSA_ADMIN_EMAIL}
+      MEDUSA_ADMIN_PASSWORD: ${MEDUSA_ADMIN_PASSWORD}
+      MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL}
+      STOREFRONT_URL: ${STOREFRONT_URL}
+      STORE_CORS: ${STORE_CORS}
+      ADMIN_CORS: ${ADMIN_CORS}
+      AUTH_CORS: ${AUTH_CORS}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL}
+      PAYFAST_MERCHANT_ID: ${PAYFAST_MERCHANT_ID}
+      PAYFAST_MERCHANT_KEY: ${PAYFAST_MERCHANT_KEY}
+      PAYFAST_PASSPHRASE: ${PAYFAST_PASSPHRASE}
+      PAYFAST_LIVE: ${PAYFAST_LIVE:-false}
+      OZOW_SITE_CODE: ${OZOW_SITE_CODE}
+      OZOW_PRIVATE_KEY: ${OZOW_PRIVATE_KEY}
+      OZOW_API_KEY: ${OZOW_API_KEY}
+      TCG_API_KEY: ${TCG_API_KEY}
+      ARAMEX_ACCOUNT_NUMBER: ${ARAMEX_ACCOUNT_NUMBER}
+      ARAMEX_USERNAME: ${ARAMEX_USERNAME}
+      ARAMEX_PASSWORD: ${ARAMEX_PASSWORD}
+    ports:
+      - "9000:9000"
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      medusa:
+        condition: service_healthy
+    environment:
+      NEXT_PUBLIC_MEDUSA_URL: ${NEXT_PUBLIC_MEDUSA_URL:-http://medusa:9000}
+      NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: ${NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY}
+      NEXT_PUBLIC_SANITY_PROJECT_ID: ${NEXT_PUBLIC_SANITY_PROJECT_ID}
+      NEXT_PUBLIC_SANITY_DATASET: ${NEXT_PUBLIC_SANITY_DATASET:-production}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+    ports:
+      - "3000:3000"
+    deploy:
+      resources:
+        limits:
+          memory: 350m
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    depends_on:
+      - web
+      - medusa
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infrastructure/nginx/conf.d:/etc/nginx/conf.d:ro
+      - certbot_www:/var/www/certbot:ro
+      - certbot_certs:/etc/letsencrypt:ro
+    deploy:
+      resources:
+        limits:
+          memory: 50m
+
+volumes:
+  postgres_data:
+  redis_data:
+  certbot_www:
+  certbot_certs:

@@ -1,0 +1,3387 @@
+{
+  "generated": "2026-05-15T09:10:32.184Z",
+  "note": "Draft only — send to TSE for validation before importing. See issue #2.4.",
+  "stats": {
+    "productsWithCompat": 249,
+    "productsWithoutCompat": 91,
+    "totalProducts": 340,
+    "coveragePct": "73.2%"
+  },
+  "entries": [
+    {
+      "skus": [
+        "CAN-T10-K",
+        "CAN-T10-C",
+        "CAN-T10-M",
+        "CAN-T10-Y"
+      ],
+      "name": "Canon T10",
+      "printerBrand": "Canon",
+      "models": [
+        "Image Class XMF1538",
+        "LBP1538 Image Runner C1533",
+        "C1538"
+      ],
+      "rawLine": "Image Class XMF1538/LBP1538 Image Runner C1533/C1538"
+    },
+    {
+      "skus": [
+        "BRO-TN279XL-K",
+        "BRO-TN279XL-C",
+        "BRO-TN279XL-M",
+        "BRO-TN279XL-Y"
+      ],
+      "name": "Brother TN 279XL",
+      "printerBrand": "Brother",
+      "models": [
+        "HL-L3280CDW",
+        "DCP-L3520cdw",
+        "MFC-L3720cdw",
+        "L8390CDW"
+      ],
+      "rawLine": "HL-L3280CDW/DCP-L3520cdw/MFC-L3720cdw/L8390CDW"
+    },
+    {
+      "skus": [
+        "CAN-064H-K",
+        "CAN-064H-C",
+        "CAN-064H-M",
+        "CAN-064H-Y"
+      ],
+      "name": "Canon 064H",
+      "printerBrand": "Canon",
+      "models": [
+        "MF735cx",
+        "MF832Cdw",
+        "LBP722Cdw"
+      ],
+      "rawLine": "MF735cx/MF832Cdw/LBP722Cdw"
+    },
+    {
+      "skus": [
+        "CAN-067H-K",
+        "CAN-067H-C",
+        "CAN-067H-M",
+        "CAN-067H-Y"
+      ],
+      "name": "Canon 067H",
+      "printerBrand": "Canon",
+      "models": [
+        "MF654",
+        "MF651",
+        "MF655cdw",
+        "656cdw",
+        "657cdw"
+      ],
+      "rawLine": "MF654/MF651/MF655cdw/656cdw/657cdw"
+    },
+    {
+      "skus": [
+        "CAN-069H-K",
+        "CAN-069H-C",
+        "CAN-069H-M",
+        "CAN-069H-Y"
+      ],
+      "name": "Canon 069H",
+      "printerBrand": "Canon",
+      "models": [
+        "673Cdw",
+        "674Cx",
+        "752Cd",
+        "756Cx"
+      ],
+      "rawLine": "673Cdw/674Cx/752Cd/756Cx"
+    },
+    {
+      "skus": [
+        "HP-222A-K",
+        "HP-222A-C",
+        "HP-222A-M",
+        "HP-222A-Y"
+      ],
+      "name": "HP 222A",
+      "printerBrand": "HP",
+      "models": [
+        "Pro 3288dw",
+        "3388sdw",
+        "3388fdn",
+        "3388fdw"
+      ],
+      "rawLine": "Pro 3288dw/3388sdw/3388fdn/3388fdw"
+    },
+    {
+      "skus": [
+        "PAN-CTL2000H-K",
+        "PAN-CTL2000H-C",
+        "PAN-CTL2000H-M",
+        "PAN-CTL2000H-Y"
+      ],
+      "name": "Pantum CTL 2000H",
+      "printerBrand": "Pantum",
+      "models": [
+        "CP1100",
+        "CM1100"
+      ],
+      "rawLine": "CP1100/CM1100"
+    },
+    {
+      "skus": [
+        "BRO-TN279-K",
+        "BRO-TN279-C",
+        "BRO-TN279-M",
+        "BRO-TN279-Y"
+      ],
+      "name": "Brother TN 279",
+      "printerBrand": "Brother",
+      "models": [
+        "HL-L3280CDW",
+        "DCP-L3520cdw",
+        "MFC-L3720cdw"
+      ],
+      "rawLine": "HL-L3280CDW/DCP-L3520cdw/MFC-L3720cdw"
+    },
+    {
+      "skus": [
+        "HP-655A-K",
+        "HP-655A-C",
+        "HP-655A-M",
+        "HP-655A-Y"
+      ],
+      "name": "HP 655A",
+      "printerBrand": "HP",
+      "models": [
+        "Laserjet Enterprise MMG652dn",
+        "MMG653",
+        "MMG681"
+      ],
+      "rawLine": "Laserjet Enterprise MMG652dn/MMG653/MMG681"
+    },
+    {
+      "skus": [
+        "HP-230A-K",
+        "HP-230A-C",
+        "HP-230A-M",
+        "HP-230A-Y"
+      ],
+      "name": "HP 230A",
+      "printerBrand": "HP",
+      "models": [
+        "Pro MFP 4203dn",
+        "MFP 4303dn"
+      ],
+      "rawLine": "Pro MFP 4203dn/MFP 4303dn"
+    },
+    {
+      "skus": [
+        "HP-216A-K",
+        "HP-216A-C",
+        "HP-216A-M",
+        "HP-216A-Y"
+      ],
+      "name": "HP 216A",
+      "printerBrand": "HP",
+      "models": [
+        "Pro MFP M182",
+        "183",
+        "M155"
+      ],
+      "rawLine": "Pro MFP M182/183/M155"
+    },
+    {
+      "skus": [
+        "GI-4-K",
+        "GI-4-C",
+        "GI-4-M",
+        "GI-4-Y"
+      ],
+      "name": "GI-46",
+      "printerBrand": "Canon",
+      "models": [
+        "MAXIFY GX7040",
+        "6040"
+      ],
+      "rawLine": "MAXIFY GX7040/6040"
+    },
+    {
+      "skus": [
+        "HP-728-K",
+        "HP-728-C",
+        "HP-728-M",
+        "HP-728-Y"
+      ],
+      "name": "HP 728",
+      "printerBrand": "HP",
+      "models": [
+        "T730 & T830"
+      ],
+      "rawLine": "T730 & T830"
+    },
+    {
+      "skus": [
+        "HP-653A-C",
+        "HP-653A-M",
+        "HP-653A-Y"
+      ],
+      "name": "HP 653A",
+      "printerBrand": "HP",
+      "models": [
+        "Enterprise M651",
+        "M680"
+      ],
+      "rawLine": "Enterprise M651/M680"
+    },
+    {
+      "skus": [
+        "HP-212A-K",
+        "HP-212A-C",
+        "HP-212A-M",
+        "HP-212A-Y"
+      ],
+      "name": "HP 212A",
+      "printerBrand": "HP",
+      "models": [
+        "Enterprise M555dn",
+        "M554",
+        "M578"
+      ],
+      "rawLine": "Enterprise M555dn/M554/M578"
+    },
+    {
+      "skus": [
+        "HP-305XL-K",
+        "HP-305XL-CLR"
+      ],
+      "name": "HP 305 XL",
+      "printerBrand": "HP",
+      "models": [
+        "HP"
+      ],
+      "rawLine": "HP"
+    },
+    {
+      "skus": [
+        "CAN-067-K",
+        "CAN-067-C",
+        "CAN-067-M",
+        "CAN-067-Y"
+      ],
+      "name": "Canon 067",
+      "printerBrand": "Canon",
+      "models": [
+        "MF654",
+        "MF651",
+        "MF655cdw",
+        "656cdw",
+        "657cdw"
+      ],
+      "rawLine": "MF654/MF651/MF655cdw/656cdw/657cdw"
+    },
+    {
+      "skus": [
+        "EPS-103-K",
+        "EPS-103-C",
+        "EPS-103-M",
+        "EPS-103-Y"
+      ],
+      "name": "Epson 103",
+      "printerBrand": "Epson",
+      "models": [
+        "Eco Tank L1110",
+        "3150",
+        "3110"
+      ],
+      "rawLine": "Eco Tank L1110/3150/3110"
+    },
+    {
+      "skus": [
+        "EPS-101-K",
+        "EPS-101-C",
+        "EPS-101-M",
+        "EPS-101-Y"
+      ],
+      "name": "Epson 101",
+      "printerBrand": "Epson",
+      "models": [
+        "Eco Tank L6160",
+        "6190",
+        "4260",
+        "6260",
+        "14150"
+      ],
+      "rawLine": "Eco Tank L6160/6190/4260/6260/14150"
+    },
+    {
+      "skus": [
+        "CAN-069-K",
+        "CAN-069-C",
+        "CAN-069-M",
+        "CAN-069-Y"
+      ],
+      "name": "Canon 069",
+      "printerBrand": "Canon",
+      "models": [
+        "LBP674",
+        "MF751",
+        "MF753CDW"
+      ],
+      "rawLine": "LBP674/MF751/MF753CDW"
+    },
+    {
+      "skus": [
+        "CAN-055-K",
+        "CAN-055-C",
+        "CAN-055-M",
+        "CAN-055-Y"
+      ],
+      "name": "Canon 055",
+      "printerBrand": "Canon",
+      "models": [
+        "MF742",
+        "744",
+        "746"
+      ],
+      "rawLine": "MF742/744/746"
+    },
+    {
+      "skus": [
+        "RIC-SPC430-K",
+        "RIC-SPC430-C",
+        "RIC-SPC430-M",
+        "RIC-SPC430-Y"
+      ],
+      "name": "Ricoh SP C430",
+      "printerBrand": "Ricoh",
+      "models": [
+        "SP C430",
+        "SP C431"
+      ],
+      "rawLine": "SP C430, SP C431"
+    },
+    {
+      "skus": [
+        "RIC-MPC2003-K",
+        "RIC-MPC2003-C",
+        "RIC-MPC2003-M",
+        "RIC-MPC2003-Y"
+      ],
+      "name": "Ricoh MP C2003",
+      "printerBrand": "Ricoh",
+      "models": [
+        "MP C2003",
+        "MP C2011",
+        "MP C2503"
+      ],
+      "rawLine": "MP C2003, MP C2011, MP C2503"
+    },
+    {
+      "skus": [
+        "RIC-MPC2503-K",
+        "RIC-MPC2503-C",
+        "RIC-MPC2503-M",
+        "RIC-MPC2503-Y"
+      ],
+      "name": "Ricoh MP C2503",
+      "printerBrand": "Ricoh",
+      "models": [
+        "MP C2003",
+        "MP C2011",
+        "MP C2503"
+      ],
+      "rawLine": "MP C2003, MP C2011, MP C2503"
+    },
+    {
+      "skus": [
+        "BRO-TN469-K",
+        "BRO-TN469-C",
+        "BRO-TN469-M",
+        "BRO-TN469-Y"
+      ],
+      "name": "Brother TN 469",
+      "printerBrand": "Brother",
+      "models": [
+        "Brother HL-8360CDW",
+        "MFC-8690CDW",
+        "MFC-9570CDW"
+      ],
+      "rawLine": "Brother HL-8360CDW, MFC-8690CDW, and MFC-9570CDW"
+    },
+    {
+      "skus": [
+        "KYO-TK5270-K",
+        "KYO-TK5270-C",
+        "KYO-TK5270-M",
+        "KYO-TK5270-Y"
+      ],
+      "name": "Kyocera TK 5270",
+      "printerBrand": "Kyocera",
+      "models": [
+        "Ecosys M6230",
+        "M6630",
+        "P6230"
+      ],
+      "rawLine": "Ecosys M6230/M6630/P6230"
+    },
+    {
+      "skus": [
+        "PAN-CTL1100-K",
+        "PAN-CTL1100-C",
+        "PAN-CTL1100-M",
+        "PAN-CTL1100-Y"
+      ],
+      "name": "Pantum CTL 1100",
+      "printerBrand": "Pantum",
+      "models": [
+        "CP1100",
+        "CM1100"
+      ],
+      "rawLine": "CP1100/CM1100"
+    },
+    {
+      "skus": [
+        "CAN-EXV49-K",
+        "CAN-EXV49-C",
+        "CAN-EXV49-M",
+        "CAN-EXV49-Y"
+      ],
+      "name": "Canon EXV 49",
+      "printerBrand": "Canon",
+      "models": [
+        "C3325",
+        "C3320",
+        "C3330",
+        "C3520",
+        "C3525"
+      ],
+      "rawLine": "C3325, C3320, C3330, C3520, C3525"
+    },
+    {
+      "skus": [
+        "RIC-MPC2011-K",
+        "RIC-MPC2011-C",
+        "RIC-MPC2011-M",
+        "RIC-MPC2011-Y"
+      ],
+      "name": "Ricoh MP C2011",
+      "printerBrand": "Ricoh",
+      "models": [
+        "MP C2003",
+        "MP C2011",
+        "MP C2503"
+      ],
+      "rawLine": "MP C2003, MP C2011, MP C2503"
+    },
+    {
+      "skus": [
+        "RIC-MP306-K",
+        "RIC-MP306-C",
+        "RIC-MP306-M",
+        "RIC-MP306-Y"
+      ],
+      "name": "Ricoh MP 306",
+      "printerBrand": "Ricoh",
+      "models": [
+        "MP C306",
+        "MP C406",
+        "MP C307",
+        "MP C407"
+      ],
+      "rawLine": "MP C306, MP C406, MP C307, MP C407"
+    },
+    {
+      "skus": [
+        "KM-TN321-K",
+        "KM-TN321-C",
+        "KM-TN321-M",
+        "KM-TN321-Y"
+      ],
+      "name": "Konica Minolta TN 321",
+      "printerBrand": "Konica Minolta",
+      "models": [
+        "Bizhub C224",
+        "C224e",
+        "C284",
+        "C284e",
+        "C364",
+        "C364e",
+        "C227",
+        "C287"
+      ],
+      "rawLine": "Bizhub C224, C224e, C284, C284e, C364, C364e, C227, C287"
+    },
+    {
+      "skus": [
+        "KM-TN512-K",
+        "KM-TN512-C",
+        "KM-TN512-M",
+        "KM-TN512-Y"
+      ],
+      "name": "Konica Minolta TN 512",
+      "printerBrand": "Konica Minolta",
+      "models": [
+        "454 E",
+        "554 E",
+        "C 258",
+        "C 308",
+        "C 368",
+        "C 454",
+        "bizhub C454",
+        "C454e",
+        "C554",
+        "C554e"
+      ],
+      "rawLine": "454 E, 554 E, C 258, C 308,  C 368, C 454, bizhub C454, C454e, C554, C554e"
+    },
+    {
+      "skus": [
+        "KM-TN328-K",
+        "KM-TN328-C",
+        "KM-TN328-M",
+        "KM-TN328-Y"
+      ],
+      "name": "Konica Minolta TN 328",
+      "printerBrand": "Konica Minolta",
+      "models": [
+        "Bizhub C224",
+        "C284",
+        "C364",
+        "C364E",
+        "C224E",
+        "C284E",
+        "MF222",
+        "MF282",
+        "MF362"
+      ],
+      "rawLine": "Bizhub C224/C284/C364/C364E/C224E/C284E/MF222/MF282/MF362"
+    },
+    {
+      "skus": [
+        "HP-415A-K",
+        "HP-415A-C",
+        "HP-415A-M",
+        "HP-415A-Y"
+      ],
+      "name": "HP 415A",
+      "printerBrand": "HP",
+      "models": [
+        "HP Colour LaserJet Enterprise M455dn",
+        "HP Colour LaserJet Pro M454dn",
+        "HP Colour LaserJet Pro M454dw"
+      ],
+      "rawLine": "HP Colour LaserJet Enterprise M455dn, HP Colour LaserJet Pro M454dn, HP Colour LaserJet Pro M454dw"
+    },
+    {
+      "skus": [
+        "HP-117A-K",
+        "HP-117A-C",
+        "HP-117A-M",
+        "HP-117A-Y"
+      ],
+      "name": "HP 117A",
+      "printerBrand": "HP",
+      "models": [
+        "HP Color Laser MFP 179fnw",
+        "178nw",
+        "HP Color LAzer 150a150w"
+      ],
+      "rawLine": "HP Color Laser MFP 179fnw/178nw/ HP Color LAzer 150a150w"
+    },
+    {
+      "skus": [
+        "BRO-TN277-K",
+        "BRO-TN277-C",
+        "BRO-TN277-M",
+        "BRO-TN277-Y"
+      ],
+      "name": "Brother TN 277",
+      "printerBrand": "Brother",
+      "models": [
+        "MFC-L3750CDW",
+        "DCP-L3551CDW",
+        "HL-3210CW"
+      ],
+      "rawLine": "MFC-L3750CDW/DCP-L3551CDW/HL-3210CW"
+    },
+    {
+      "skus": [
+        "KYO-TK5240-K",
+        "KYO-TK5240-C",
+        "KYO-TK5240-M",
+        "KYO-TK5240-Y"
+      ],
+      "name": "Kyocera TK 5240",
+      "printerBrand": "Kyocera",
+      "models": [
+        "Ecosys M5526cdw",
+        "P5026cdw",
+        "Ecosys M5526cdn",
+        "P5026cdn"
+      ],
+      "rawLine": "Ecosys M5526cdw|P5026cdw|Ecosys M5526cdn, P5026cdn"
+    },
+    {
+      "skus": [
+        "CAN-054-K",
+        "CAN-054-C",
+        "CAN-054-M",
+        "CAN-054-Y"
+      ],
+      "name": "Canon 054",
+      "printerBrand": "Canon",
+      "models": [
+        "MF645CX"
+      ],
+      "rawLine": "MF645CX"
+    },
+    {
+      "skus": [
+        "HP-953XL-K",
+        "HP-953XL-C",
+        "HP-953XL-M",
+        "HP-953XL-Y"
+      ],
+      "name": "HP 953 XL",
+      "printerBrand": "HP",
+      "models": [
+        "HP Officejet 8200",
+        "8700 Series"
+      ],
+      "rawLine": "HP Officejet 8200/8700 Series"
+    },
+    {
+      "skus": [
+        "HP-652XL-K",
+        "HP-652XL-CLR"
+      ],
+      "name": "HP 652 XL",
+      "printerBrand": "HP",
+      "models": [
+        "HP Ink Advantage 3635",
+        "3835",
+        "4535"
+      ],
+      "rawLine": "HP Ink Advantage 3635/3835/4535"
+    },
+    {
+      "skus": [
+        "HP-123XL-K",
+        "HP-123XL-CLR"
+      ],
+      "name": "HP 123 XL",
+      "printerBrand": "HP",
+      "models": [
+        "HP 2130",
+        "2131"
+      ],
+      "rawLine": "HP 2130/2131"
+    },
+    {
+      "skus": [
+        "SAM-CLT506L-K",
+        "SAM-CLT506L-C",
+        "SAM-CLT506L-M",
+        "SAM-CLT506L-Y"
+      ],
+      "name": "Samsung CLT-506L",
+      "printerBrand": "Samsung",
+      "models": [
+        "CLP 680",
+        "CLX 6260"
+      ],
+      "rawLine": "CLP 680/CLX 6260"
+    },
+    {
+      "skus": [
+        "SAM-CLT504-K",
+        "SAM-CLT504-C",
+        "SAM-CLT504-M",
+        "SAM-CLT504-Y"
+      ],
+      "name": "Samsung CLT-504",
+      "printerBrand": "Samsung",
+      "models": [
+        "CLP415",
+        "CLX4195",
+        "C1860"
+      ],
+      "rawLine": "CLP415/CLX4195/C1860"
+    },
+    {
+      "skus": [
+        "SAM-CLT409-K",
+        "SAM-CLT409-C",
+        "SAM-CLT409-M",
+        "SAM-CLT409-Y"
+      ],
+      "name": "Samsung CLT-409",
+      "printerBrand": "Samsung",
+      "models": [
+        "CLP310",
+        "315"
+      ],
+      "rawLine": "CLP310/315"
+    },
+    {
+      "skus": [
+        "SAM-CLT407-K",
+        "SAM-CLT407-C",
+        "SAM-CLT407-M",
+        "SAM-CLT407-Y"
+      ],
+      "name": "Samsung CLT-407",
+      "printerBrand": "Samsung",
+      "models": [
+        "CLP320",
+        "325",
+        "CLX3185"
+      ],
+      "rawLine": "CLP320/325/CLX3185"
+    },
+    {
+      "skus": [
+        "SAM-CLT406-K",
+        "SAM-CLT406-C",
+        "SAM-CLT406-M",
+        "SAM-CLT406-Y"
+      ],
+      "name": "Samsung CLT-406",
+      "printerBrand": "Samsung",
+      "models": [
+        "CLP365",
+        "CLX3305",
+        "C410",
+        "C460"
+      ],
+      "rawLine": "CLP365/CLX3305/C410/C460"
+    },
+    {
+      "skus": [
+        "SAM-CLT404-K",
+        "SAM-CLT404-C",
+        "SAM-CLT404-M",
+        "SAM-CLT404-Y"
+      ],
+      "name": "Samsung CLT-404",
+      "printerBrand": "Samsung",
+      "models": [
+        "C430",
+        "C480"
+      ],
+      "rawLine": "C430/C480"
+    },
+    {
+      "skus": [
+        "CAN-045-K",
+        "CAN-045-C",
+        "CAN-045-M",
+        "CAN-045-Y"
+      ],
+      "name": "Canon 045",
+      "printerBrand": "Canon",
+      "models": [
+        "MF632",
+        "634",
+        "635",
+        "LBP611",
+        "613"
+      ],
+      "rawLine": "MF632/634/635/LBP611/613"
+    },
+    {
+      "skus": [
+        "CAN-731-K",
+        "CAN-731-C",
+        "CAN-731-M",
+        "CAN-731-Y"
+      ],
+      "name": "Canon 731",
+      "printerBrand": "Canon",
+      "models": [
+        "MF628",
+        "8280",
+        "LBP7100"
+      ],
+      "rawLine": "MF628/8280/LBP7100"
+    },
+    {
+      "skus": [
+        "CAN-729-K",
+        "CAN-729-C",
+        "CAN-729-M",
+        "CAN-729-Y"
+      ],
+      "name": "Canon 729",
+      "printerBrand": "Canon",
+      "models": [
+        "LBP 7000 Series"
+      ],
+      "rawLine": "LBP 7000 Series"
+    },
+    {
+      "skus": [
+        "CAN-718-K",
+        "CAN-718-C",
+        "CAN-718-M",
+        "CAN-718-Y"
+      ],
+      "name": "Canon 718",
+      "printerBrand": "Canon",
+      "models": [
+        "MF8300 Series",
+        "LBP7200",
+        "7600"
+      ],
+      "rawLine": "MF8300 Series/LBP7200/7600"
+    },
+    {
+      "skus": [
+        "CAN-716-K",
+        "CAN-716-C",
+        "CAN-716-M",
+        "CAN-716-Y"
+      ],
+      "name": "Canon 716",
+      "printerBrand": "Canon",
+      "models": [
+        "LBP5050",
+        "MF8030",
+        "8040",
+        "8050",
+        "8080"
+      ],
+      "rawLine": "LBP5050/MF8030/8040/8050/8080"
+    },
+    {
+      "skus": [
+        "BRO-TN369-K",
+        "BRO-TN369-C",
+        "BRO-TN369-M",
+        "BRO-TN369-Y"
+      ],
+      "name": "Brother TN369",
+      "printerBrand": "Brother",
+      "models": [
+        "HL L8350",
+        "MFC L8600",
+        "L8850"
+      ],
+      "rawLine": "HL L8350/MFC L8600/L8850"
+    },
+    {
+      "skus": [
+        "BRO-TN265-C",
+        "BRO-TN265-M",
+        "BRO-TN265-Y"
+      ],
+      "name": "Generic Brother TN265",
+      "printerBrand": "Brother",
+      "models": [
+        "HL3150",
+        "3170",
+        "MFC9140",
+        "9330"
+      ],
+      "rawLine": "HL3150/3170/MFC9140/9330"
+    },
+    {
+      "skus": [
+        "BRO-TN348-K",
+        "BRO-TN348-C",
+        "BRO-TN348-M",
+        "BRO-TN348-Y"
+      ],
+      "name": "Generic Brother TN348",
+      "printerBrand": "Brother",
+      "models": [
+        "MFC9460",
+        "9970",
+        "HL4150"
+      ],
+      "rawLine": "MFC9460/9970/HL4150"
+    },
+    {
+      "skus": [
+        "BRO-TN240-K",
+        "BRO-TN240-C",
+        "BRO-TN240-M",
+        "BRO-TN240-Y"
+      ],
+      "name": "Generic Brother TN240",
+      "printerBrand": "Brother",
+      "models": [
+        "MFC9120",
+        "9320",
+        "HL3040"
+      ],
+      "rawLine": "MFC9120/9320/HL3040"
+    },
+    {
+      "skus": [
+        "BRO-TN2500XL"
+      ],
+      "name": "Brother TN 2500XL",
+      "printerBrand": "Brother",
+      "models": [
+        "MFC-L2800DW",
+        "L2827DWXL",
+        "L2860DWE",
+        "DCP-L2660",
+        "L2627DWE"
+      ],
+      "rawLine": "MFC-L2800DW/L2827DWXL/L2860DWE/DCP-L2660/L2627DWE"
+    },
+    {
+      "skus": [
+        "HP-136X"
+      ],
+      "name": "HP 136X",
+      "printerBrand": "HP",
+      "models": [
+        "M211d",
+        "M236d",
+        "M236sdw"
+      ],
+      "rawLine": "M211d/M236d/M236sdw"
+    },
+    {
+      "skus": [
+        "BRO-TN3607XXL"
+      ],
+      "name": "Brother TN 3607XXL",
+      "printerBrand": "Brother",
+      "models": [
+        "MFC-L5710",
+        "HL-L5210",
+        "6210",
+        "5510",
+        "6710",
+        "6910"
+      ],
+      "rawLine": "MFC-L5710/HL-L5210/6210/5510/6710/6910"
+    },
+    {
+      "skus": [
+        "HP-CF289X"
+      ],
+      "name": "HP CF289X",
+      "printerBrand": "HP",
+      "models": [
+        "Enterprise M507",
+        "528"
+      ],
+      "rawLine": "Enterprise M507/528"
+    },
+    {
+      "skus": [
+        "HP-120ADRUMUNIT"
+      ],
+      "name": "HP 120A Drum Unit",
+      "printerBrand": "HP",
+      "models": [
+        "150",
+        "MFP178",
+        "MFP179"
+      ],
+      "rawLine": "150/MFP178/MFP179"
+    },
+    {
+      "skus": [
+        "OKI-B432"
+      ],
+      "name": "OKI B432",
+      "printerBrand": "OKI",
+      "models": [
+        "B412dn",
+        "B432dn",
+        "B512dn",
+        "MB492",
+        "MB472"
+      ],
+      "rawLine": "B412dn/B432dn/B512dn/MB492/MB472"
+    },
+    {
+      "skus": [
+        "CAN-056"
+      ],
+      "name": "Canon 056",
+      "printerBrand": "Canon",
+      "models": [
+        "LBP320",
+        "325",
+        "MF540 Series",
+        "M542",
+        "MF543",
+        "MF441",
+        "443",
+        "449dw"
+      ],
+      "rawLine": "LBP320/325/MF540 Series/M542/MF543/MF441/443/449dw"
+    },
+    {
+      "skus": [
+        "CAN-056H"
+      ],
+      "name": "Canon 056H",
+      "printerBrand": "Canon",
+      "models": [
+        "LBP320",
+        "325",
+        "MF540 Series",
+        "M542",
+        "MF543",
+        "MF441",
+        "443",
+        "449"
+      ],
+      "rawLine": "LBP320/325/MF540 Series/M542/MF543/MF441/443/449"
+    },
+    {
+      "skus": [
+        "HP-CF289A"
+      ],
+      "name": "HP CF289A",
+      "printerBrand": "HP",
+      "models": [
+        "Enterprise M507",
+        "528"
+      ],
+      "rawLine": "Enterprise M507/528"
+    },
+    {
+      "skus": [
+        "HP-145A"
+      ],
+      "name": "HP 145A",
+      "printerBrand": "HP",
+      "models": [
+        "Pro 3003",
+        "MFP3103"
+      ],
+      "rawLine": "Pro 3003/MFP3103"
+    },
+    {
+      "skus": [
+        "HP-105A"
+      ],
+      "name": "HP 105A",
+      "printerBrand": "HP",
+      "models": [
+        "107a",
+        "107r",
+        "107w",
+        "135a",
+        "137fnw"
+      ],
+      "rawLine": "107a/107r/107w/135a/137fnw"
+    },
+    {
+      "skus": [
+        "CAN-070H"
+      ],
+      "name": "Canon 070H",
+      "printerBrand": "Canon",
+      "models": [
+        "LBP243",
+        "246",
+        "244",
+        "241 MF461",
+        "463",
+        "465",
+        "467"
+      ],
+      "rawLine": "LBP243/246/244/241 MF461/463/465/467"
+    },
+    {
+      "skus": [
+        "CAN-T06"
+      ],
+      "name": "Canon T06",
+      "printerBrand": "Canon",
+      "models": [
+        "iR1643i & iR1643iF"
+      ],
+      "rawLine": "iR1643i & iR1643iF"
+    },
+    {
+      "skus": [
+        "HP-150A"
+      ],
+      "name": "HP 150A",
+      "printerBrand": "HP",
+      "models": [
+        "M111a",
+        "141a",
+        "140a",
+        "139(150A)"
+      ],
+      "rawLine": "M111a/141a/140a/139(150A)"
+    },
+    {
+      "skus": [
+        "HP-147A"
+      ],
+      "name": "HP 147A",
+      "printerBrand": "HP",
+      "models": [
+        "Enterprise M610",
+        "M611",
+        "M634",
+        "M635",
+        "M636"
+      ],
+      "rawLine": "Enterprise M610/M611/M634/M635/M636"
+    },
+    {
+      "skus": [
+        "PAN-TL5120H"
+      ],
+      "name": "Pantum TL5120H",
+      "printerBrand": "Pantum",
+      "models": [
+        "BP5100"
+      ],
+      "rawLine": "BP5100"
+    },
+    {
+      "skus": [
+        "PAN-DL5120"
+      ],
+      "name": "Pantum DL-5120",
+      "printerBrand": "Pantum",
+      "models": [
+        "BP5100",
+        "P3300",
+        "BM5100"
+      ],
+      "rawLine": "BP5100/P3300/BM5100"
+    },
+    {
+      "skus": [
+        "BRO-DR3405"
+      ],
+      "name": "Brother DR3405",
+      "printerBrand": "Brother",
+      "models": [
+        "HL-L5200",
+        "6200",
+        "MFC L5700DN"
+      ],
+      "rawLine": "HL-L5200/6200/MFC L5700DN"
+    },
+    {
+      "skus": [
+        "BRO-DR3607"
+      ],
+      "name": "Brother DR 3607",
+      "printerBrand": "Brother",
+      "models": [
+        "HL-L5210",
+        "6210",
+        "MFC L6710"
+      ],
+      "rawLine": "HL-L5210/6210/MFC L6710"
+    },
+    {
+      "skus": [
+        "BRO-TN3607"
+      ],
+      "name": "Brother TN 3607",
+      "printerBrand": "Brother",
+      "models": [
+        "MFC-L5710",
+        "HL-L5210",
+        "6210"
+      ],
+      "rawLine": "MFC-L5710/HL-L5210/6210"
+    },
+    {
+      "skus": [
+        "HP-CF325X"
+      ],
+      "name": "HP CF325X",
+      "printerBrand": "HP",
+      "models": [
+        "M806",
+        "M830"
+      ],
+      "rawLine": "M806/M830"
+    },
+    {
+      "skus": [
+        "HP-CF259X"
+      ],
+      "name": "HP CF259X",
+      "printerBrand": "HP",
+      "models": [
+        "M304",
+        "404",
+        "428",
+        "430"
+      ],
+      "rawLine": "M304/404/428/430"
+    },
+    {
+      "skus": [
+        "CAN-057H"
+      ],
+      "name": "Canon 057H",
+      "printerBrand": "Canon",
+      "models": [
+        "LBP226DW",
+        "223DW",
+        "MF443DW"
+      ],
+      "rawLine": "LBP226DW/223DW/MF443DW"
+    },
+    {
+      "skus": [
+        "CAN-071H"
+      ],
+      "name": "Canon 071H",
+      "printerBrand": "Canon",
+      "models": [
+        "LBP120dw",
+        "122dw",
+        "MF272",
+        "MF275"
+      ],
+      "rawLine": "LBP120dw/122dw/MF272/MF275"
+    },
+    {
+      "skus": [
+        "HP-136A"
+      ],
+      "name": "HP 136A",
+      "printerBrand": "HP",
+      "models": [
+        "M209",
+        "M211dw",
+        "M233",
+        "M234",
+        "M236"
+      ],
+      "rawLine": "M209/M211dw/M233/M234/M236"
+    },
+    {
+      "skus": [
+        "HP-151X"
+      ],
+      "name": "HP 151X",
+      "printerBrand": "HP",
+      "models": [
+        "Pro MFP 4103fdw",
+        "Pro 4003dw"
+      ],
+      "rawLine": "Pro MFP 4103fdw/Pro 4003dw"
+    },
+    {
+      "skus": [
+        "HP-151A"
+      ],
+      "name": "HP 151A",
+      "printerBrand": "HP",
+      "models": [
+        "Pro MFP 4103dw",
+        "Pro 4003dn"
+      ],
+      "rawLine": "Pro MFP 4103dw/Pro 4003dn"
+    },
+    {
+      "skus": [
+        "KYO-TK1140"
+      ],
+      "name": "Kyocera TK 1140",
+      "printerBrand": "Kyocera",
+      "models": [
+        "ECOSYS FS1035",
+        "1135",
+        "M2035",
+        "M2535"
+      ],
+      "rawLine": "ECOSYS FS1035/1135/M2035/M2535"
+    },
+    {
+      "skus": [
+        "KYO-TK6305"
+      ],
+      "name": "Kyocera TK 6305",
+      "printerBrand": "Kyocera",
+      "models": [
+        "Ecosys 3500"
+      ],
+      "rawLine": "Ecosys 3500"
+    },
+    {
+      "skus": [
+        "PAN-TL5120"
+      ],
+      "name": "Pantum TL5120",
+      "printerBrand": "Pantum",
+      "models": [
+        "BP5100"
+      ],
+      "rawLine": "BP5100"
+    },
+    {
+      "skus": [
+        "RIC-1270D"
+      ],
+      "name": "Ricoh 1270D",
+      "printerBrand": "Ricoh",
+      "models": [
+        "MP 201",
+        "MP 161",
+        "MP 171"
+      ],
+      "rawLine": "MP 201/MP 161/MP 171"
+    },
+    {
+      "skus": [
+        "KYO-TK7125"
+      ],
+      "name": "Kyocera TK 7125",
+      "printerBrand": "Kyocera",
+      "models": [
+        "Taskalfa 3212"
+      ],
+      "rawLine": "Taskalfa 3212"
+    },
+    {
+      "skus": [
+        "HP-CF287A"
+      ],
+      "name": "HP CF287A",
+      "printerBrand": "HP",
+      "models": [
+        "Laserjet Pro M501",
+        "Enterprise M527"
+      ],
+      "rawLine": "Laserjet Pro M501/Enterprise M527"
+    },
+    {
+      "skus": [
+        "HP-CF237A"
+      ],
+      "name": "HP CF237A",
+      "printerBrand": "HP",
+      "models": [
+        "Enterprise M607",
+        "M608"
+      ],
+      "rawLine": "Enterprise M607/M608"
+    },
+    {
+      "skus": [
+        "HP-CE390A"
+      ],
+      "name": "HP CE390A",
+      "printerBrand": "HP",
+      "models": [
+        "Enterprise M4555f",
+        "Enterprise 600 Series"
+      ],
+      "rawLine": "Enterprise M4555f/ Enterprise 600 Series"
+    },
+    {
+      "skus": [
+        "HP-Q5949X"
+      ],
+      "name": "HP Q5949X",
+      "printerBrand": "HP",
+      "models": [
+        "1320"
+      ],
+      "rawLine": "1320"
+    },
+    {
+      "skus": [
+        "CAN-049"
+      ],
+      "name": "Canon 049",
+      "printerBrand": "Canon",
+      "models": [
+        "MF112",
+        "MF113",
+        "LBP113w"
+      ],
+      "rawLine": "MF112/MF113/LBP113w"
+    },
+    {
+      "skus": [
+        "CAN-047"
+      ],
+      "name": "Canon 047",
+      "printerBrand": "Canon",
+      "models": [
+        "MF112",
+        "MF113",
+        "LBP113w"
+      ],
+      "rawLine": "MF112/MF113/LBP113w"
+    },
+    {
+      "skus": [
+        "HP-CE314ADRUM"
+      ],
+      "name": "HP CE314A Drum",
+      "printerBrand": "HP",
+      "models": [
+        "Pro 100 M175",
+        "M275",
+        "CP1025"
+      ],
+      "rawLine": "Pro 100 M175/M275/CP1025"
+    },
+    {
+      "skus": [
+        "HP-CF232ADRUMUNIT"
+      ],
+      "name": "HP CF232A Drum Unit",
+      "printerBrand": "HP",
+      "models": [
+        "M203",
+        "M227"
+      ],
+      "rawLine": "M203/M227"
+    },
+    {
+      "skus": [
+        "HP-207AYELLOWW2212"
+      ],
+      "name": "HP 207A Yellow W2212",
+      "printerBrand": "HP",
+      "models": [
+        "M255DW",
+        "M282NW",
+        "M283FDN"
+      ],
+      "rawLine": "M255DW/M282NW/M283FDN"
+    },
+    {
+      "skus": [
+        "HP-207AMAGENTAW2213"
+      ],
+      "name": "HP 207A Magenta W2213",
+      "printerBrand": "HP",
+      "models": [
+        "M255DW",
+        "M282NW",
+        "M283FDN"
+      ],
+      "rawLine": "M255DW/M282NW/M283FDN"
+    },
+    {
+      "skus": [
+        "HP-207ACYANW2211"
+      ],
+      "name": "HP 207A Cyan W2211",
+      "printerBrand": "HP",
+      "models": [
+        "M255DW",
+        "M282NW",
+        "M283FDN"
+      ],
+      "rawLine": "M255DW/M282NW/M283FDN"
+    },
+    {
+      "skus": [
+        "HP-Q5949A"
+      ],
+      "name": "HP Q5949A",
+      "printerBrand": "HP",
+      "models": [
+        "1160",
+        "1320",
+        "P2014",
+        "P2015",
+        "M2727"
+      ],
+      "rawLine": "1160/1320/P2014/P2015/M2727"
+    },
+    {
+      "skus": [
+        "PAN-PC252H"
+      ],
+      "name": "Pantum PC252H",
+      "printerBrand": "Pantum",
+      "models": [
+        "P2512"
+      ],
+      "rawLine": "P2512"
+    },
+    {
+      "skus": [
+        "PAN-DL425X"
+      ],
+      "name": "Pantum DL425X",
+      "printerBrand": "Pantum",
+      "models": [
+        "M7105",
+        "P3305"
+      ],
+      "rawLine": "M7105/P3305"
+    },
+    {
+      "skus": [
+        "PAN-DL410"
+      ],
+      "name": "Pantum DL410",
+      "printerBrand": "Pantum",
+      "models": [
+        "P3010",
+        "P3300",
+        "M6700",
+        "M7100"
+      ],
+      "rawLine": "P3010/P3300/M6700/M7100"
+    },
+    {
+      "skus": [
+        "PAN-TL425X"
+      ],
+      "name": "Pantum TL425X",
+      "printerBrand": "Pantum",
+      "models": [
+        "M7105",
+        "P3305"
+      ],
+      "rawLine": "M7105/P3305"
+    },
+    {
+      "skus": [
+        "CAN-071"
+      ],
+      "name": "Canon 071",
+      "printerBrand": "Canon",
+      "models": [
+        "LBP122",
+        "MF272",
+        "MF275"
+      ],
+      "rawLine": "LBP122/MF272/MF275"
+    },
+    {
+      "skus": [
+        "KYO-TK3060"
+      ],
+      "name": "Kyocera TK 3060",
+      "printerBrand": "Kyocera",
+      "models": [
+        "Ecosys M3145",
+        "3645"
+      ],
+      "rawLine": "Ecosys M3145 / 3645"
+    },
+    {
+      "skus": [
+        "KYO-TK6115"
+      ],
+      "name": "Kyocera TK 6115",
+      "printerBrand": "Kyocera",
+      "models": [
+        "Ecosys M4125",
+        "M4132"
+      ],
+      "rawLine": "Ecosys M4125 / M4132"
+    },
+    {
+      "skus": [
+        "HP-207ABLACKW2210"
+      ],
+      "name": "HP 207A Black W2210",
+      "printerBrand": "HP",
+      "models": [
+        "M255DW",
+        "M282NW",
+        "M283FDN"
+      ],
+      "rawLine": "M255DW/M282NW/M283FDN"
+    },
+    {
+      "skus": [
+        "CAN-057"
+      ],
+      "name": "Canon 057",
+      "printerBrand": "Canon",
+      "models": [
+        "LBP226DW",
+        "223DW",
+        "MF443DW"
+      ],
+      "rawLine": "LBP226DW/223DW/MF443DW"
+    },
+    {
+      "skus": [
+        "KYO-TK3130"
+      ],
+      "name": "Kyocera TK 3130",
+      "printerBrand": "Kyocera",
+      "models": [
+        "Kyocera Mita FS-4200DN",
+        "FS-4300DN",
+        "Ecosys M3550idn",
+        "M3560idn"
+      ],
+      "rawLine": "Kyocera Mita FS-4200DN, FS-4300DN, Ecosys M3550idn, M3560idn"
+    },
+    {
+      "skus": [
+        "RIC-SP311"
+      ],
+      "name": "Ricoh SP 311",
+      "printerBrand": "Ricoh",
+      "models": [
+        "SP 311HE SP 311SFN",
+        "SP 311SFNw",
+        "325"
+      ],
+      "rawLine": "SP 311HE SP 311SFN | SP 311SFNw | 325"
+    },
+    {
+      "skus": [
+        "KYO-TK4105"
+      ],
+      "name": "Kyocera TK 4105",
+      "printerBrand": "Kyocera",
+      "models": [
+        "TASKalfa 1800",
+        "TASKalfa 2200",
+        "TASKalfa 1801",
+        "TASKalfa 2201"
+      ],
+      "rawLine": "TASKalfa 1800|TASKalfa 2200|TASKalfa 1801|TASKalfa 2201"
+    },
+    {
+      "skus": [
+        "KYO-TK3100"
+      ],
+      "name": "Kyocera TK 3100",
+      "printerBrand": "Kyocera",
+      "models": [
+        "Kyocera Mita FS-2100DN",
+        "FS-2100D",
+        "ECOSYS M3040dn",
+        "ECOSYS M3540dn"
+      ],
+      "rawLine": "Kyocera Mita FS-2100DN, FS-2100D, ECOSYS M3040dn, ECOSYS M3540dn"
+    },
+    {
+      "skus": [
+        "KYO-TK1170"
+      ],
+      "name": "Kyocera TK 1170",
+      "printerBrand": "Kyocera",
+      "models": [
+        "ECOSYS M2040dn",
+        "M2540dn",
+        "M2640idw"
+      ],
+      "rawLine": "ECOSYS M2040dn|M2540dn|M2640idw"
+    },
+    {
+      "skus": [
+        "RIC-MP301"
+      ],
+      "name": "Ricoh MP 301",
+      "printerBrand": "Ricoh",
+      "models": [
+        "MP 301SP",
+        "MP 301SPF",
+        "Ricoh MP301SP",
+        "MP301SPF"
+      ],
+      "rawLine": "MP 301SP, MP 301SPF, Ricoh MP301SP, MP301SPF"
+    },
+    {
+      "skus": [
+        "PAN-PC310H"
+      ],
+      "name": "Pantum PC310H",
+      "printerBrand": "Pantum",
+      "models": [
+        "P3100DL",
+        "3255DN"
+      ],
+      "rawLine": "P3100DL/3255DN"
+    },
+    {
+      "skus": [
+        "PAN-PC210H"
+      ],
+      "name": "Pantum PC210H",
+      "printerBrand": "Pantum",
+      "models": [
+        "P2200",
+        "P2500",
+        "M6500",
+        "M6600"
+      ],
+      "rawLine": "P2200/P2500/M6500/M6600"
+    },
+    {
+      "skus": [
+        "PAN-TL410X"
+      ],
+      "name": "Pantum TL410X",
+      "printerBrand": "Pantum",
+      "models": [
+        "P3300",
+        "M7100",
+        "M7200 Series"
+      ],
+      "rawLine": "P3300/M7100/M7200 Series"
+    },
+    {
+      "skus": [
+        "HP-CE255X"
+      ],
+      "name": "HP CE255X",
+      "printerBrand": "HP",
+      "models": [
+        "P3010",
+        "3015"
+      ],
+      "rawLine": "P3010/3015"
+    },
+    {
+      "skus": [
+        "HP-CF259A"
+      ],
+      "name": "HP CF259A",
+      "printerBrand": "HP",
+      "models": [
+        "M304",
+        "404"
+      ],
+      "rawLine": "M304/404"
+    },
+    {
+      "skus": [
+        "HP-106A"
+      ],
+      "name": "HP 106A",
+      "printerBrand": "HP",
+      "models": [
+        "107A",
+        "135A",
+        "137A"
+      ],
+      "rawLine": "107A/135A/137A"
+    },
+    {
+      "skus": [
+        "HP-106X"
+      ],
+      "name": "HP 106X",
+      "printerBrand": "HP",
+      "models": [
+        "107A",
+        "135A",
+        "137A"
+      ],
+      "rawLine": "107A/135A/137A"
+    },
+    {
+      "skus": [
+        "CAN-052BLACKHIGHCAPACITY"
+      ],
+      "name": "Canon 052 Black High Capacity",
+      "printerBrand": "Canon",
+      "models": [
+        "MF424",
+        "426",
+        "429",
+        "LBP214",
+        "215"
+      ],
+      "rawLine": "MF424/426/429/LBP214/215"
+    },
+    {
+      "skus": [
+        "BRO-TN1000"
+      ],
+      "name": "Brother TN 1000",
+      "printerBrand": "Brother",
+      "models": [
+        "HL-1210",
+        "DCP-1610",
+        "MFC 1910"
+      ],
+      "rawLine": "HL-1210/DCP-1610/MFC 1910"
+    },
+    {
+      "skus": [
+        "BRO-DR1000"
+      ],
+      "name": "Brother DR 1000",
+      "printerBrand": "Brother",
+      "models": [
+        "HL-1210",
+        "DCP-1610",
+        "MFC 1910"
+      ],
+      "rawLine": "HL-1210/DCP-1610/MFC 1910"
+    },
+    {
+      "skus": [
+        "BRO-TN2355"
+      ],
+      "name": "Brother TN 2355",
+      "printerBrand": "Brother",
+      "models": [
+        "HL-L2365",
+        "MFC L2740"
+      ],
+      "rawLine": "HL-L2365/MFC L2740"
+    },
+    {
+      "skus": [
+        "BRO-DR2305"
+      ],
+      "name": "Brother DR 2305",
+      "printerBrand": "Brother",
+      "models": [
+        "HL-L2365",
+        "MFC L2740"
+      ],
+      "rawLine": "HL-L2365/MFC L2740"
+    },
+    {
+      "skus": [
+        "BRO-TN2060"
+      ],
+      "name": "Brother TN 2060",
+      "printerBrand": "Brother",
+      "models": [
+        "HL-2130",
+        "DCP-7055"
+      ],
+      "rawLine": "HL-2130/DCP-7055"
+    },
+    {
+      "skus": [
+        "BRO-DR2255"
+      ],
+      "name": "Generic Brother DR-2255",
+      "printerBrand": "Brother",
+      "models": [
+        "HL-2130",
+        "2270",
+        "MFC 7360",
+        "7860"
+      ],
+      "rawLine": "HL-2130/2270/MFC 7360/7860"
+    },
+    {
+      "skus": [
+        "BRO-TN2280"
+      ],
+      "name": "Brother TN 2280",
+      "printerBrand": "Brother",
+      "models": [
+        "MFC 7360",
+        "MFC 7860",
+        "HL 2270"
+      ],
+      "rawLine": "MFC 7360/MFC 7860/HL 2270"
+    },
+    {
+      "skus": [
+        "BRO-TN3467"
+      ],
+      "name": "Brother TN 3467",
+      "printerBrand": "Brother",
+      "models": [
+        "HL-L5700",
+        "5900"
+      ],
+      "rawLine": "HL-L5700/5900"
+    },
+    {
+      "skus": [
+        "BRO-TN3185"
+      ],
+      "name": "Generic Brother TN-3185",
+      "printerBrand": "Brother",
+      "models": [
+        "HL-5240",
+        "5250",
+        "5270",
+        "MFC8460",
+        "8860"
+      ],
+      "rawLine": "HL-5240/5250/5270/MFC8460/8860"
+    },
+    {
+      "skus": [
+        "BRO-TN2150"
+      ],
+      "name": "Generic Brother TN-2150",
+      "printerBrand": "Brother",
+      "models": [
+        "DCP7030",
+        "MFC7320",
+        "7440",
+        "HL 2140",
+        "2150"
+      ],
+      "rawLine": "DCP7030/MFC7320/7440/HL 2140/2150"
+    },
+    {
+      "skus": [
+        "BRO-TN3290"
+      ],
+      "name": "Brother TN 3290",
+      "printerBrand": "Brother",
+      "models": [
+        "HL-5340",
+        "5350",
+        "5380",
+        "MFC8370",
+        "8380"
+      ],
+      "rawLine": "HL-5340/5350/5380/MFC8370/8380"
+    },
+    {
+      "skus": [
+        "BRO-TN3350"
+      ],
+      "name": "Generic Brother TN-3350",
+      "printerBrand": "Brother",
+      "models": [
+        "DCP8100",
+        "8200 Series",
+        "HL 5400 Series"
+      ],
+      "rawLine": "DCP8100/8200 Series/HL 5400 Series"
+    },
+    {
+      "skus": [
+        "SAM-MLT111L"
+      ],
+      "name": "Samsung MLT 111L",
+      "printerBrand": "Samsung",
+      "models": [
+        "M2020",
+        "2070"
+      ],
+      "rawLine": "M2020/2070"
+    },
+    {
+      "skus": [
+        "SAM-MLTD101S"
+      ],
+      "name": "Samsung MLT-D101S",
+      "printerBrand": "Samsung",
+      "models": [
+        "ML2160",
+        "SCX3405"
+      ],
+      "rawLine": "ML2160/SCX3405"
+    },
+    {
+      "skus": [
+        "SAM-MLTD104S"
+      ],
+      "name": "Samsung MLT-D104S",
+      "printerBrand": "Samsung",
+      "models": [
+        "ML 1660",
+        "1670",
+        "1860",
+        "SCX 3200"
+      ],
+      "rawLine": "ML 1660/1670/1860/SCX 3200"
+    },
+    {
+      "skus": [
+        "SAM-MLTD105L"
+      ],
+      "name": "Samsung MLT-D105L",
+      "printerBrand": "Samsung",
+      "models": [
+        "ML1910",
+        "ML2525",
+        "SCX4623"
+      ],
+      "rawLine": "ML1910/ML2525/SCX4623"
+    },
+    {
+      "skus": [
+        "SAM-MLTD116L"
+      ],
+      "name": "Samsung MLT-D116L",
+      "printerBrand": "Samsung",
+      "models": [
+        "M2675",
+        "2825",
+        "2875"
+      ],
+      "rawLine": "M2675/2825/2875"
+    },
+    {
+      "skus": [
+        "SAM-R116DRUMUNIT"
+      ],
+      "name": "Samsung R116 Drum Unit",
+      "printerBrand": "Samsung",
+      "models": [
+        "M2675",
+        "2825",
+        "2875"
+      ],
+      "rawLine": "M2675/2825/2875"
+    },
+    {
+      "skus": [
+        "SAM-MLTD117S"
+      ],
+      "name": "Samsung MLT-D117S",
+      "printerBrand": "Samsung",
+      "models": [
+        "SCX 4650",
+        "4655",
+        "4656"
+      ],
+      "rawLine": "SCX 4650/4655/4656"
+    },
+    {
+      "skus": [
+        "SAM-MLT119"
+      ],
+      "name": "Samsung MLT 119",
+      "printerBrand": "Samsung",
+      "models": [
+        "SCX4521",
+        "ML1610",
+        "ML2010"
+      ],
+      "rawLine": "SCX4521/ML1610/ML2010"
+    },
+    {
+      "skus": [
+        "SAM-MLTD203L"
+      ],
+      "name": "Samsung MLT-D203L",
+      "printerBrand": "Samsung",
+      "models": [
+        "Pro Express M3320",
+        "3370",
+        "4020",
+        "4070"
+      ],
+      "rawLine": "Pro Express M3320/3370/4020/4070"
+    },
+    {
+      "skus": [
+        "SAM-MLTD205L"
+      ],
+      "name": "Samsung MLT-D205L",
+      "printerBrand": "Samsung",
+      "models": [
+        "ML3310",
+        "3710",
+        "SCX4833"
+      ],
+      "rawLine": "ML3310/3710/SCX4833"
+    },
+    {
+      "skus": [
+        "SAM-MLTD208L"
+      ],
+      "name": "Samsung MLT-D208L",
+      "printerBrand": "Samsung",
+      "models": [
+        "SCX 5835",
+        "5635"
+      ],
+      "rawLine": "SCX 5835/5635"
+    },
+    {
+      "skus": [
+        "SAM-MLTD209L"
+      ],
+      "name": "Samsung MLT-D209L",
+      "printerBrand": "Samsung",
+      "models": [
+        "ML2855",
+        "SCX4824",
+        "4828"
+      ],
+      "rawLine": "ML2855/SCX4824/4828"
+    },
+    {
+      "skus": [
+        "HP-CE285A"
+      ],
+      "name": "HP CE285A",
+      "printerBrand": "HP",
+      "models": [
+        "P1102",
+        "M1212",
+        "1217",
+        "P1005",
+        "1006",
+        "M1120",
+        "1522"
+      ],
+      "rawLine": "P1102/M1212/1217/P1005/1006/M1120/1522"
+    },
+    {
+      "skus": [
+        "HP-CF217A"
+      ],
+      "name": "HP CF217A",
+      "printerBrand": "HP",
+      "models": [
+        "M102",
+        "M130"
+      ],
+      "rawLine": "M102/M130"
+    },
+    {
+      "skus": [
+        "HP-CF226X"
+      ],
+      "name": "HP CF226X",
+      "printerBrand": "HP",
+      "models": [
+        "M402",
+        "M426"
+      ],
+      "rawLine": "M402/M426"
+    },
+    {
+      "skus": [
+        "HP-CF226A"
+      ],
+      "name": "HP CF226A",
+      "printerBrand": "HP",
+      "models": [
+        "M402",
+        "M426"
+      ],
+      "rawLine": "M402/M426"
+    },
+    {
+      "skus": [
+        "HP-CF283X"
+      ],
+      "name": "HP CF283X",
+      "printerBrand": "HP",
+      "models": [
+        "M225"
+      ],
+      "rawLine": "M225"
+    },
+    {
+      "skus": [
+        "HP-CF283A"
+      ],
+      "name": "HP CF283A",
+      "printerBrand": "HP",
+      "models": [
+        "M127",
+        "M225"
+      ],
+      "rawLine": "M127/M225"
+    },
+    {
+      "skus": [
+        "HP-CF280X"
+      ],
+      "name": "HP CF280X",
+      "printerBrand": "HP",
+      "models": [
+        "Pro 400 M401",
+        "M425"
+      ],
+      "rawLine": "Pro 400 M401/M425"
+    },
+    {
+      "skus": [
+        "HP-CF280A"
+      ],
+      "name": "HP CF280A",
+      "printerBrand": "HP",
+      "models": [
+        "Pro 400 M401",
+        "M425"
+      ],
+      "rawLine": "Pro 400 M401/M425"
+    },
+    {
+      "skus": [
+        "HP-CE278A"
+      ],
+      "name": "HP CE278A",
+      "printerBrand": "HP",
+      "models": [
+        "Pro M1536",
+        "P1566"
+      ],
+      "rawLine": "Pro M1536/P1566"
+    },
+    {
+      "skus": [
+        "HP-Q2612A"
+      ],
+      "name": "HP Q2612A",
+      "printerBrand": "HP",
+      "models": [
+        "1018",
+        "1020"
+      ],
+      "rawLine": "1018/1020"
+    },
+    {
+      "skus": [
+        "HP-CF230X"
+      ],
+      "name": "HP CF230X",
+      "printerBrand": "HP",
+      "models": [
+        "M203"
+      ],
+      "rawLine": "M203"
+    },
+    {
+      "skus": [
+        "HP-CF219ADRUMUNIT"
+      ],
+      "name": "HP CF219A Drum Unit",
+      "printerBrand": "HP",
+      "models": [
+        "M102",
+        "M130"
+      ],
+      "rawLine": "M102/M130"
+    },
+    {
+      "skus": [
+        "HP-CF214X"
+      ],
+      "name": "HP CF214X",
+      "printerBrand": "HP",
+      "models": [
+        "Enterprise 700 M712",
+        "M725"
+      ],
+      "rawLine": "Enterprise 700 M712/M725"
+    },
+    {
+      "skus": [
+        "HP-CF281A"
+      ],
+      "name": "HP CF281A",
+      "printerBrand": "HP",
+      "models": [
+        "Enterprise M604",
+        "M605"
+      ],
+      "rawLine": "Enterprise M604/M605"
+    },
+    {
+      "skus": [
+        "HP-CE505X"
+      ],
+      "name": "HP CE505X",
+      "printerBrand": "HP",
+      "models": [
+        "P2055"
+      ],
+      "rawLine": "P2055"
+    },
+    {
+      "skus": [
+        "HP-CE505A"
+      ],
+      "name": "HP CE505A",
+      "printerBrand": "HP",
+      "models": [
+        "P2035",
+        "2055"
+      ],
+      "rawLine": "P2035/2055"
+    },
+    {
+      "skus": [
+        "HP-CE255A"
+      ],
+      "name": "HP CE255A",
+      "printerBrand": "HP",
+      "models": [
+        "P3015"
+      ],
+      "rawLine": "P3015"
+    },
+    {
+      "skus": [
+        "HP-Q7551A"
+      ],
+      "name": "HP Q7551A",
+      "printerBrand": "HP",
+      "models": [
+        "P3005",
+        "M3027",
+        "M3035"
+      ],
+      "rawLine": "P3005/M3027/M3035"
+    },
+    {
+      "skus": [
+        "HP-Q7553X"
+      ],
+      "name": "HP Q7553X",
+      "printerBrand": "HP",
+      "models": [
+        "P2015",
+        "M2727"
+      ],
+      "rawLine": "P2015/M2727"
+    },
+    {
+      "skus": [
+        "HP-Q7553A"
+      ],
+      "name": "HP Q7553A",
+      "printerBrand": "HP",
+      "models": [
+        "1160",
+        "1320",
+        "P2014",
+        "P2015",
+        "M2727"
+      ],
+      "rawLine": "1160/1320/P2014/P2015/M2727"
+    },
+    {
+      "skus": [
+        "HP-C151324A"
+      ],
+      "name": "HP C 15/13/24A",
+      "printerBrand": "HP",
+      "models": [
+        "1000",
+        "1200",
+        "1300",
+        "1150",
+        "q2613a"
+      ],
+      "rawLine": "1000/1200/1300/1150/q2613a"
+    },
+    {
+      "skus": [
+        "SAM-MLTD109S"
+      ],
+      "name": "Samsung MLT-D109S",
+      "printerBrand": "Samsung",
+      "models": [
+        "SCX4300"
+      ],
+      "rawLine": "SCX4300"
+    },
+    {
+      "skus": [
+        "SAM-MLTD108S"
+      ],
+      "name": "Samsung MLT-D108S",
+      "printerBrand": "Samsung",
+      "models": [
+        "ML1640"
+      ],
+      "rawLine": "ML1640"
+    },
+    {
+      "skus": [
+        "SAM-MLTD103L"
+      ],
+      "name": "Samsung MLT-D103L",
+      "printerBrand": "Samsung",
+      "models": [
+        "ML2955",
+        "SCX4726",
+        "4729"
+      ],
+      "rawLine": "ML2955/SCX4726/4729"
+    },
+    {
+      "skus": [
+        "CAN-728"
+      ],
+      "name": "Canon 728",
+      "printerBrand": "Canon",
+      "models": [
+        "MF4410",
+        "4430",
+        "4450",
+        "4730",
+        "4750"
+      ],
+      "rawLine": "MF4410/4430/4450/4730/4750"
+    },
+    {
+      "skus": [
+        "CAN-737"
+      ],
+      "name": "Canon 737",
+      "printerBrand": "Canon",
+      "models": [
+        "MF211",
+        "212",
+        "216",
+        "217",
+        "237",
+        "226"
+      ],
+      "rawLine": "MF211/212/216/217/237/226"
+    },
+    {
+      "skus": [
+        "CAN-725"
+      ],
+      "name": "Canon 725",
+      "printerBrand": "Canon",
+      "models": [
+        "LBP6000",
+        "6020",
+        "6030",
+        "MF3010"
+      ],
+      "rawLine": "LBP6000/6020/6030/MF3010"
+    },
+    {
+      "skus": [
+        "CAN-726"
+      ],
+      "name": "Canon 726",
+      "printerBrand": "Canon",
+      "models": [
+        "MF4410",
+        "4412",
+        "4420",
+        "4450",
+        "4550"
+      ],
+      "rawLine": "MF4410/4412/4420/4450/4550"
+    },
+    {
+      "skus": [
+        "CAN-713"
+      ],
+      "name": "Canon 713",
+      "printerBrand": "Canon",
+      "models": [
+        "LBP3250"
+      ],
+      "rawLine": "LBP3250"
+    },
+    {
+      "skus": [
+        "CAN-712"
+      ],
+      "name": "Canon 712",
+      "printerBrand": "Canon",
+      "models": [
+        "LBP3010",
+        "3100"
+      ],
+      "rawLine": "LBP3010/3100"
+    },
+    {
+      "skus": [
+        "CAN-EP27"
+      ],
+      "name": "Canon EP-27",
+      "printerBrand": "Canon",
+      "models": [
+        "MF3110",
+        "3220",
+        "5770",
+        "LBP3200"
+      ],
+      "rawLine": "MF3110/3220/5770/LBP3200"
+    },
+    {
+      "skus": [
+        "CAN-703"
+      ],
+      "name": "Canon 703",
+      "printerBrand": "Canon",
+      "models": [
+        "LBP2900",
+        "3000"
+      ],
+      "rawLine": "LBP2900/3000"
+    },
+    {
+      "skus": [
+        "CAN-FX10"
+      ],
+      "name": "Canon FX-10",
+      "printerBrand": "Canon",
+      "models": [
+        "L95",
+        "L100",
+        "L120"
+      ],
+      "rawLine": "L95/L100/L120"
+    },
+    {
+      "skus": [
+        "XER-3117"
+      ],
+      "name": "Xerox 3117",
+      "printerBrand": "Xerox",
+      "models": [
+        "Phaser 3117",
+        "3122",
+        "3124",
+        "3125"
+      ],
+      "rawLine": "Phaser 3117/3122/3124/3125"
+    },
+    {
+      "skus": [
+        "XER-301030403045"
+      ],
+      "name": "Xerox 3010/3040/3045",
+      "printerBrand": "Xerox",
+      "models": [
+        "Phaser 3010",
+        "3040",
+        "WorkCentre 3045"
+      ],
+      "rawLine": "Phaser 3010/3040/ WorkCentre 3045"
+    },
+    {
+      "skus": [
+        "XER-3100"
+      ],
+      "name": "Xerox 3100",
+      "printerBrand": "Xerox",
+      "models": [
+        "Phaser 3100"
+      ],
+      "rawLine": "Phaser 3100"
+    },
+    {
+      "skus": [
+        "XER-3140"
+      ],
+      "name": "Xerox 3140",
+      "printerBrand": "Xerox",
+      "models": [
+        "Phaser 3140",
+        "3155",
+        "3160"
+      ],
+      "rawLine": "Phaser 3140/3155/3160"
+    },
+    {
+      "skus": [
+        "XER-3200"
+      ],
+      "name": "Xerox 3200",
+      "printerBrand": "Xerox",
+      "models": [
+        "Phaser 3200"
+      ],
+      "rawLine": "Phaser 3200"
+    },
+    {
+      "skus": [
+        "LEX-E250"
+      ],
+      "name": "Lexmark E250",
+      "printerBrand": "Lexmark",
+      "models": [
+        "E250"
+      ],
+      "rawLine": "E250"
+    },
+    {
+      "skus": [
+        "LEX-E260"
+      ],
+      "name": "Lexmark E260",
+      "printerBrand": "Lexmark",
+      "models": [
+        "E260"
+      ],
+      "rawLine": "E260"
+    },
+    {
+      "skus": [
+        "LEX-E120"
+      ],
+      "name": "Lexmark E120",
+      "printerBrand": "Lexmark",
+      "models": [
+        "E120"
+      ],
+      "rawLine": "E120"
+    },
+    {
+      "skus": [
+        "BRO-TN2025"
+      ],
+      "name": "Generic Brother TN-2025",
+      "printerBrand": "Brother",
+      "models": [
+        "Fax2820",
+        "2920",
+        "HL2030",
+        "2040",
+        "2070"
+      ],
+      "rawLine": "Fax2820/2920/HL2030/2040/2070"
+    },
+    {
+      "skus": [
+        "HP-652A-K"
+      ],
+      "name": "HP 652A Black",
+      "printerBrand": "HP",
+      "models": [
+        "Enterprise M651",
+        "M680"
+      ],
+      "rawLine": "Enterprise M651/M680"
+    },
+    {
+      "skus": [
+        "CAN-052-K"
+      ],
+      "name": "Canon 052 Black",
+      "printerBrand": "Canon",
+      "models": [
+        "MF424",
+        "426",
+        "429",
+        "LBP214",
+        "215"
+      ],
+      "rawLine": "MF424/426/429/LBP214/215"
+    },
+    {
+      "skus": [
+        "HP-CF543A-M"
+      ],
+      "name": "HP CF543A Magenta",
+      "printerBrand": "HP",
+      "models": [
+        "Pro M254"
+      ],
+      "rawLine": "Pro M254"
+    },
+    {
+      "skus": [
+        "HP-CF542A-Y"
+      ],
+      "name": "HP CF542A Yellow",
+      "printerBrand": "HP",
+      "models": [
+        "Pro M254"
+      ],
+      "rawLine": "Pro M254"
+    },
+    {
+      "skus": [
+        "HP-CF541A-C"
+      ],
+      "name": "HP CF541A Cyan",
+      "printerBrand": "HP",
+      "models": [
+        "Pro M254"
+      ],
+      "rawLine": "Pro M254"
+    },
+    {
+      "skus": [
+        "HP-CF540A-K"
+      ],
+      "name": "HP CF540A Black",
+      "printerBrand": "HP",
+      "models": [
+        "Pro M254"
+      ],
+      "rawLine": "Pro M254"
+    },
+    {
+      "skus": [
+        "HP-CF533A-M"
+      ],
+      "name": "HP CF533A Magenta",
+      "printerBrand": "HP",
+      "models": [
+        "Pro M154",
+        "M180"
+      ],
+      "rawLine": "Pro M154/M180"
+    },
+    {
+      "skus": [
+        "HP-CF532A-Y"
+      ],
+      "name": "HP CF532A Yellow",
+      "printerBrand": "HP",
+      "models": [
+        "Pro M154",
+        "M180"
+      ],
+      "rawLine": "Pro M154/M180"
+    },
+    {
+      "skus": [
+        "HP-CF531A-C"
+      ],
+      "name": "HP CF531A Cyan",
+      "printerBrand": "HP",
+      "models": [
+        "Pro M154",
+        "M180"
+      ],
+      "rawLine": "Pro M154/M180"
+    },
+    {
+      "skus": [
+        "HP-CF530A-K"
+      ],
+      "name": "HP CF530A Black",
+      "printerBrand": "HP",
+      "models": [
+        "Pro M154",
+        "M180"
+      ],
+      "rawLine": "Pro M154/M180"
+    },
+    {
+      "skus": [
+        "HP-CF413A-M"
+      ],
+      "name": "HP CF413A Magenta",
+      "printerBrand": "HP",
+      "models": [
+        "Pro M452",
+        "M377",
+        "M477"
+      ],
+      "rawLine": "Pro M452/M377/M477"
+    },
+    {
+      "skus": [
+        "HP-CF412A-Y"
+      ],
+      "name": "HP CF412A Yellow",
+      "printerBrand": "HP",
+      "models": [
+        "Pro M452",
+        "M377",
+        "M477"
+      ],
+      "rawLine": "Pro M452/M377/M477"
+    },
+    {
+      "skus": [
+        "HP-CF411A-C"
+      ],
+      "name": "HP CF411A Cyan",
+      "printerBrand": "HP",
+      "models": [
+        "Pro M452",
+        "M377",
+        "M477"
+      ],
+      "rawLine": "Pro M452/M377/M477"
+    },
+    {
+      "skus": [
+        "HP-CF410A-K"
+      ],
+      "name": "HP CF410A Black",
+      "printerBrand": "HP",
+      "models": [
+        "Pro M452",
+        "M377",
+        "M477"
+      ],
+      "rawLine": "Pro M452/M377/M477"
+    },
+    {
+      "skus": [
+        "HP-CF403A-M"
+      ],
+      "name": "HP CF403A Magenta",
+      "printerBrand": "HP",
+      "models": [
+        "M252",
+        "M277"
+      ],
+      "rawLine": "M252/M277"
+    },
+    {
+      "skus": [
+        "HP-CF402A-Y"
+      ],
+      "name": "HP CF402A Yellow",
+      "printerBrand": "HP",
+      "models": [
+        "M252",
+        "M277"
+      ],
+      "rawLine": "M252/M277"
+    },
+    {
+      "skus": [
+        "HP-CF401A-C"
+      ],
+      "name": "HP CF401A Cyan",
+      "printerBrand": "HP",
+      "models": [
+        "M252",
+        "M277"
+      ],
+      "rawLine": "M252/M277"
+    },
+    {
+      "skus": [
+        "HP-CF400A-K"
+      ],
+      "name": "HP CF400A Black",
+      "printerBrand": "HP",
+      "models": [
+        "M252",
+        "M277"
+      ],
+      "rawLine": "M252/M277"
+    },
+    {
+      "skus": [
+        "HP-CE253A-M"
+      ],
+      "name": "HP CE253A Magenta",
+      "printerBrand": "HP",
+      "models": [
+        "CP3520",
+        "3525",
+        "3530"
+      ],
+      "rawLine": "CP3520/3525/3530"
+    },
+    {
+      "skus": [
+        "HP-CE252A-Y"
+      ],
+      "name": "HP CE252A Yellow",
+      "printerBrand": "HP",
+      "models": [
+        "CP3520",
+        "3525",
+        "3530"
+      ],
+      "rawLine": "CP3520/3525/3530"
+    },
+    {
+      "skus": [
+        "HP-CE251A-C"
+      ],
+      "name": "HP CE251A Cyan",
+      "printerBrand": "HP",
+      "models": [
+        "CP3520",
+        "3525",
+        "3530"
+      ],
+      "rawLine": "CP3520/3525/3530"
+    },
+    {
+      "skus": [
+        "HP-CE250A-K"
+      ],
+      "name": "HP CE250A Black",
+      "printerBrand": "HP",
+      "models": [
+        "CP3520",
+        "3525",
+        "3530"
+      ],
+      "rawLine": "CP3520/3525/3530"
+    },
+    {
+      "skus": [
+        "HP-CE403A-M"
+      ],
+      "name": "HP CE403A Magenta",
+      "printerBrand": "HP",
+      "models": [
+        "Enterprise 500 M575",
+        "M551"
+      ],
+      "rawLine": "Enterprise 500 M575/M551"
+    },
+    {
+      "skus": [
+        "HP-CE402A-Y"
+      ],
+      "name": "HP CE402A Yellow",
+      "printerBrand": "HP",
+      "models": [
+        "Enterprise 500 M575",
+        "M551"
+      ],
+      "rawLine": "Enterprise 500 M575/M551"
+    },
+    {
+      "skus": [
+        "HP-CE401A-C"
+      ],
+      "name": "HP CE401A Cyan",
+      "printerBrand": "HP",
+      "models": [
+        "Enterprise 500 M575",
+        "M551"
+      ],
+      "rawLine": "Enterprise 500 M575/M551"
+    },
+    {
+      "skus": [
+        "HP-CE400A-K"
+      ],
+      "name": "HP CE400A Black",
+      "printerBrand": "HP",
+      "models": [
+        "Enterprise 500 M575",
+        "M551"
+      ],
+      "rawLine": "Enterprise 500 M575/M551"
+    },
+    {
+      "skus": [
+        "HP-CF353A-M"
+      ],
+      "name": "HP CF353A Magenta",
+      "printerBrand": "HP",
+      "models": [
+        "Pro M176",
+        "M177"
+      ],
+      "rawLine": "Pro M176/M177"
+    },
+    {
+      "skus": [
+        "HP-CF352A-Y"
+      ],
+      "name": "HP CF352A Yellow",
+      "printerBrand": "HP",
+      "models": [
+        "Pro M176",
+        "M177"
+      ],
+      "rawLine": "Pro M176/M177"
+    },
+    {
+      "skus": [
+        "HP-CF351A-C"
+      ],
+      "name": "HP CF351A Cyan",
+      "printerBrand": "HP",
+      "models": [
+        "Pro M176",
+        "M177"
+      ],
+      "rawLine": "Pro M176/M177"
+    },
+    {
+      "skus": [
+        "HP-CF350A-K"
+      ],
+      "name": "HP CF350A Black",
+      "printerBrand": "HP",
+      "models": [
+        "Pro M176",
+        "M177"
+      ],
+      "rawLine": "Pro M176/M177"
+    },
+    {
+      "skus": [
+        "HP-CE313A-M"
+      ],
+      "name": "HP CE313A Magenta",
+      "printerBrand": "HP",
+      "models": [
+        "Pro 100 M175",
+        "M275",
+        "CP1025"
+      ],
+      "rawLine": "Pro 100 M175/M275/CP1025"
+    },
+    {
+      "skus": [
+        "HP-CE312A-Y"
+      ],
+      "name": "HP CE312A Yellow",
+      "printerBrand": "HP",
+      "models": [
+        "Pro 100 M175",
+        "M275",
+        "CP1025"
+      ],
+      "rawLine": "Pro 100 M175/M275/CP1025"
+    },
+    {
+      "skus": [
+        "HP-CE311A-C"
+      ],
+      "name": "HP CE311A Cyan",
+      "printerBrand": "HP",
+      "models": [
+        "Pro 100 M175",
+        "M275",
+        "CP1025"
+      ],
+      "rawLine": "Pro 100 M175/M275/CP1025"
+    },
+    {
+      "skus": [
+        "HP-CE310A-K"
+      ],
+      "name": "HP CE310A Black",
+      "printerBrand": "HP",
+      "models": [
+        "Pro 100 M175",
+        "M275",
+        "CP1025"
+      ],
+      "rawLine": "Pro 100 M175/M275/CP1025"
+    },
+    {
+      "skus": [
+        "HP-CE413A-M"
+      ],
+      "name": "HP CE413A Magenta",
+      "printerBrand": "HP",
+      "models": [
+        "Pro M351",
+        "375",
+        "451"
+      ],
+      "rawLine": "Pro M351/375/451"
+    },
+    {
+      "skus": [
+        "HP-CE412A-Y"
+      ],
+      "name": "HP CE412A Yellow",
+      "printerBrand": "HP",
+      "models": [
+        "Pro M351",
+        "375",
+        "451"
+      ],
+      "rawLine": "Pro M351/375/451"
+    },
+    {
+      "skus": [
+        "HP-CE411A-C"
+      ],
+      "name": "HP CE411A Cyan",
+      "printerBrand": "HP",
+      "models": [
+        "Pro M351",
+        "375",
+        "451"
+      ],
+      "rawLine": "Pro M351/375/451"
+    },
+    {
+      "skus": [
+        "HP-CE410A-K"
+      ],
+      "name": "HP CE410A Black",
+      "printerBrand": "HP",
+      "models": [
+        "Pro M351",
+        "375",
+        "451"
+      ],
+      "rawLine": "Pro M351/375/451"
+    },
+    {
+      "skus": [
+        "HP-CC533A-M"
+      ],
+      "name": "HP CC533A Magenta",
+      "printerBrand": "HP",
+      "models": [
+        "CM2025",
+        "CM2320"
+      ],
+      "rawLine": "CM2025/CM2320"
+    },
+    {
+      "skus": [
+        "HP-CC532A-Y"
+      ],
+      "name": "HP CC532A Yellow",
+      "printerBrand": "HP",
+      "models": [
+        "CM2025",
+        "CM2320"
+      ],
+      "rawLine": "CM2025/CM2320"
+    },
+    {
+      "skus": [
+        "HP-CC531A-C"
+      ],
+      "name": "HP CC531A Cyan",
+      "printerBrand": "HP",
+      "models": [
+        "CM2025",
+        "CM2320"
+      ],
+      "rawLine": "CM2025/CM2320"
+    },
+    {
+      "skus": [
+        "HP-CC530A-K"
+      ],
+      "name": "HP CC530A Black",
+      "printerBrand": "HP",
+      "models": [
+        "CM2025",
+        "CM2320"
+      ],
+      "rawLine": "CM2025/CM2320"
+    },
+    {
+      "skus": [
+        "HP-CF210X-K"
+      ],
+      "name": "HP CF210X Black",
+      "printerBrand": "HP",
+      "models": [
+        "Pro 200 M251",
+        "M276"
+      ],
+      "rawLine": "Pro 200 M251/M276"
+    },
+    {
+      "skus": [
+        "HP-CF213A-M"
+      ],
+      "name": "HP CF213A Magenta",
+      "printerBrand": "HP",
+      "models": [
+        "Pro 200 M251",
+        "M276"
+      ],
+      "rawLine": "Pro 200 M251/M276"
+    },
+    {
+      "skus": [
+        "HP-CF212A-Y"
+      ],
+      "name": "HP CF212A Yellow",
+      "printerBrand": "HP",
+      "models": [
+        "Pro 200 M251",
+        "M276"
+      ],
+      "rawLine": "Pro 200 M251/M276"
+    },
+    {
+      "skus": [
+        "HP-CF211A-C"
+      ],
+      "name": "HP CF211A Cyan",
+      "printerBrand": "HP",
+      "models": [
+        "Pro 200 M251",
+        "M276"
+      ],
+      "rawLine": "Pro 200 M251/M276"
+    },
+    {
+      "skus": [
+        "HP-CF210A-K"
+      ],
+      "name": "HP CF210A Black",
+      "printerBrand": "HP",
+      "models": [
+        "Pro 200 M251",
+        "M276"
+      ],
+      "rawLine": "Pro 200 M251/M276"
+    },
+    {
+      "skus": [
+        "HP-CE323A-M"
+      ],
+      "name": "HP CE323A Magenta",
+      "printerBrand": "HP",
+      "models": [
+        "Pro CP1525",
+        "CM1415"
+      ],
+      "rawLine": "Pro CP1525/CM1415"
+    },
+    {
+      "skus": [
+        "HP-CE322A-Y"
+      ],
+      "name": "HP CE322A Yellow",
+      "printerBrand": "HP",
+      "models": [
+        "Pro CP1525",
+        "CM1415"
+      ],
+      "rawLine": "Pro CP1525/CM1415"
+    },
+    {
+      "skus": [
+        "HP-CE321A-C"
+      ],
+      "name": "HP CE321A Cyan",
+      "printerBrand": "HP",
+      "models": [
+        "Pro CP1525",
+        "CM1415"
+      ],
+      "rawLine": "Pro CP1525/CM1415"
+    },
+    {
+      "skus": [
+        "HP-CE320A-K"
+      ],
+      "name": "HP CE320A Black",
+      "printerBrand": "HP",
+      "models": [
+        "Pro CP1525",
+        "CM1415"
+      ],
+      "rawLine": "Pro CP1525/CM1415"
+    },
+    {
+      "skus": [
+        "HP-CB543A-M"
+      ],
+      "name": "HP CB543A Magenta",
+      "printerBrand": "HP",
+      "models": [
+        "CP1215",
+        "1515",
+        "1518",
+        "CM1312"
+      ],
+      "rawLine": "CP1215/1515/1518/CM1312"
+    },
+    {
+      "skus": [
+        "HP-CB542A-Y"
+      ],
+      "name": "HP CB542A Yellow",
+      "printerBrand": "HP",
+      "models": [
+        "CP1215",
+        "1515",
+        "1518",
+        "CM1312"
+      ],
+      "rawLine": "CP1215/1515/1518/CM1312"
+    },
+    {
+      "skus": [
+        "HP-CB541A-C"
+      ],
+      "name": "HP CB541A Cyan",
+      "printerBrand": "HP",
+      "models": [
+        "CP1215",
+        "1515",
+        "1518",
+        "CM1312"
+      ],
+      "rawLine": "CP1215/1515/1518/CM1312"
+    },
+    {
+      "skus": [
+        "HP-CB540A-K"
+      ],
+      "name": "HP CB540A Black",
+      "printerBrand": "HP",
+      "models": [
+        "CP1215",
+        "1515",
+        "1518",
+        "CM1312"
+      ],
+      "rawLine": "CP1215/1515/1518/CM1312"
+    },
+    {
+      "skus": [
+        "CAN-CL446XL-CLR"
+      ],
+      "name": "Canon CL 446 XL Colour",
+      "printerBrand": "Canon",
+      "models": [
+        "MG 2440",
+        "MX 494"
+      ],
+      "rawLine": "MG 2440/MX 494"
+    },
+    {
+      "skus": [
+        "CAN-PG445XL-K"
+      ],
+      "name": "Canon PG 445 XL Black",
+      "printerBrand": "Canon",
+      "models": [
+        "MG 2440",
+        "MX 494"
+      ],
+      "rawLine": "MG 2440/MX 494"
+    },
+    {
+      "skus": [
+        "CAN-731HIGHYIELD-K"
+      ],
+      "name": "Canon 731 High Yield Black",
+      "printerBrand": "Canon",
+      "models": [
+        "MF628",
+        "8280",
+        "LBP7100"
+      ],
+      "rawLine": "MF628/8280/LBP7100"
+    },
+    {
+      "skus": [
+        "CAN-719-K"
+      ],
+      "name": "Canon 719 Black",
+      "printerBrand": "Canon",
+      "models": [
+        "LBP6300",
+        "MF5840",
+        "5880"
+      ],
+      "rawLine": "LBP6300/MF5840/5880"
+    },
+    {
+      "skus": [
+        "BRO-TN261-K"
+      ],
+      "name": "Generic Brother TN261 Black",
+      "printerBrand": "Brother",
+      "models": [
+        "HL3150",
+        "3170",
+        "MFC9140",
+        "9330"
+      ],
+      "rawLine": "HL3150/3170/MFC9140/9330"
+    }
+  ]
+}

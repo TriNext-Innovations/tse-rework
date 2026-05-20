@@ -1,0 +1,192 @@
+import { Suspense } from 'react'
+import Link from 'next/link'
+import { Logo } from '@/components/layout'
+import { ProductFilters } from './ProductFilters'
+import { AddToCartButton } from './AddToCartButton'
+
+const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
+const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
+const PAGE_SIZE = 24
+
+type SearchParams = Promise<{ category?: string; page?: string }>
+
+async function getRegionId(): Promise<string> {
+  const res = await fetch(`${BACKEND}/store/regions?limit=1`, {
+    headers: { 'x-publishable-api-key': PUB_KEY },
+    next: { revalidate: 3600 },
+  })
+  const d = await res.json()
+  return d.regions?.[0]?.id ?? ''
+}
+
+async function getCategories() {
+  const res = await fetch(`${BACKEND}/store/product-categories?limit=50&include_descendants_tree=true`, {
+    headers: { 'x-publishable-api-key': PUB_KEY },
+    next: { revalidate: 3600 },
+  })
+  const d = await res.json()
+  return (d.product_categories ?? []) as any[]
+}
+
+
+export default async function ProductsPage({ searchParams }: { searchParams: SearchParams }) {
+  const { category = '', page: pageParam = '1' } = await searchParams
+  const page = Math.max(1, parseInt(pageParam, 10) || 1)
+
+  const [regionId, allCategories] = await Promise.all([getRegionId(), getCategories()])
+
+  const offset = (page - 1) * PAGE_SIZE
+  const params = new URLSearchParams({
+    limit: String(PAGE_SIZE),
+    offset: String(offset),
+  })
+  if (regionId) params.append('region_id', regionId)
+  // category param is always a real category ID from the URL
+  if (category) params.append('category_id[]', category)
+
+  params.append('fields', '+metadata,+categories.id,+categories.name,+categories.handle')
+  const data = await fetch(`${BACKEND}/store/products?${params}`, {
+    headers: { 'x-publishable-api-key': PUB_KEY },
+    next: { revalidate: 60 },
+  }).then((r) => r.json())
+
+  const products: any[] = data.products ?? []
+  const total: number = data.count ?? 0
+  const totalPages = Math.ceil(total / PAGE_SIZE)
+
+  const activeCategoryName = category
+    ? (allCategories.find((c: any) => c.id === category)?.name ?? '')
+    : ''
+
+  return (
+    <div className="min-h-screen bg-[#F5F4F0] text-[#111827] font-[var(--font-inter)]">
+      <style>{`
+        .font-display { font-family: var(--font-fraunces), Georgia, serif; font-optical-sizing: auto; }
+        .font-display-italic { font-family: var(--font-fraunces), Georgia, serif; font-style: italic; }
+      `}</style>
+
+      {/* Nav */}
+      <header className="sticky top-0 z-40 bg-[#F5F4F0]/90 backdrop-blur-xl border-b border-black/8 px-4 sm:px-8 lg:px-12">
+        <div className="mx-auto max-w-7xl flex items-center justify-between h-14">
+          <Link href="/" className="flex items-center gap-2">
+            <Logo width={72} variant="color" linked={false} />
+          </Link>
+          <nav className="hidden md:flex items-center gap-5 text-sm text-[#374151]">
+            <Link href="/products" className="font-medium text-[#111827]">Shop</Link>
+            <a href="/#finder" className="hover:text-[#111827] transition-colors">Find by printer</a>
+            <a href="/#delivery" className="hover:text-[#111827] transition-colors">Delivery</a>
+          </nav>
+          <Link
+            href="/"
+            className="text-sm font-medium text-[#374151] hover:text-[#111827] transition-colors"
+          >
+            ← Home
+          </Link>
+        </div>
+      </header>
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 py-10">
+        {/* Page heading */}
+        <div className="mb-8">
+          <h1 className="font-display font-light text-4xl sm:text-5xl tracking-tight leading-[0.95]">
+            {activeCategoryName ? (
+              <>
+                <span className="font-display-italic">{activeCategoryName}</span>
+              </>
+            ) : (
+              <>All <span className="font-display-italic">cartridges</span></>
+            )}
+          </h1>
+          <p className="mt-2 text-sm text-[#6B6B66]">{total} products</p>
+        </div>
+
+        <div className="flex gap-8 lg:gap-12">
+          {/* Sidebar */}
+          <div className="hidden md:block w-44 flex-shrink-0">
+            <Suspense fallback={null}>
+              <ProductFilters categories={allCategories} />
+            </Suspense>
+          </div>
+
+          {/* Grid */}
+          <div className="flex-1 min-w-0">
+            {products.length === 0 ? (
+              <div className="text-center py-24 text-[#6B6B66]">No products found.</div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                {products.map((p: any, i: number) => {
+                  const variant = p.variants?.[0]
+                  const sku = variant?.sku ?? '—'
+                  const amount = variant?.calculated_price?.calculated_amount
+                  const priceZar = amount ? Math.round(amount / 100) : null
+                  const type = p.metadata?.cartridge_type === 'inkjet' ? 'Inkjet' : 'Laser'
+
+                  return (
+                    <article
+                      key={p.id}
+                      className="group relative bg-white rounded-[16px] p-4 overflow-hidden cursor-pointer hover:-translate-y-1 transition-transform duration-300"
+                    >
+                      {/* Card illustration */}
+                      <div className="relative h-28 flex items-end justify-center mb-3">
+                        <div
+                          className={`w-16 h-24 rounded-[6px] shadow-[0_12px_24px_-12px_rgba(10,10,10,0.35)] relative overflow-hidden ${
+                            i % 4 === 0 ? 'bg-gradient-to-br from-[#0A0A0A] to-[#2A2A2A]' :
+                            i % 4 === 1 ? 'bg-gradient-to-br from-[#41e0f5] to-[#0fb8d4]' :
+                            i % 4 === 2 ? 'bg-gradient-to-br from-[#1a1a2e] to-[#3a3a5c]' :
+                            'bg-gradient-to-br from-[#2d1a0e] to-[#5a3520]'
+                          }`}
+                        >
+                          <div className="absolute top-0 left-0 right-0 h-1.5 bg-white/25" />
+                          <div className="absolute bottom-2 left-2 right-2 flex items-end justify-between">
+                            <span className="font-display text-white text-[9px] leading-none">TSE</span>
+                            <span className="w-2 h-2 rounded-full border border-white/40" />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="text-[9px] uppercase tracking-[0.16em] text-[#6B6B66] mb-1">{type}</div>
+                      <h2 className="font-display text-sm leading-tight tracking-tight line-clamp-2 mb-1">{p.title}</h2>
+                      <div className="text-[10px] text-[#9ca3af] mb-3">SKU {sku}</div>
+
+                      <div className="flex items-end justify-between">
+                        <div className="font-display text-lg">
+                          {priceZar ? `R${priceZar}` : <span className="text-[#9ca3af] text-sm">POA</span>}
+                        </div>
+                        <AddToCartButton id={p.id} title={p.title} sku={sku} price={priceZar} />
+                      </div>
+                    </article>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-10 flex items-center justify-center gap-2">
+                {page > 1 && (
+                  <Link
+                    href={`/products?${new URLSearchParams({ ...(category ? { category } : {}), page: String(page - 1) })}`}
+                    className="px-4 py-2 rounded-full border border-black/15 text-sm hover:border-black/40 transition-colors"
+                  >
+                    ← Prev
+                  </Link>
+                )}
+                <span className="text-sm text-[#6B6B66] px-2">
+                  Page {page} of {totalPages}
+                </span>
+                {page < totalPages && (
+                  <Link
+                    href={`/products?${new URLSearchParams({ ...(category ? { category } : {}), page: String(page + 1) })}`}
+                    className="px-4 py-2 rounded-full border border-black/15 text-sm hover:border-black/40 transition-colors"
+                  >
+                    Next →
+                  </Link>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

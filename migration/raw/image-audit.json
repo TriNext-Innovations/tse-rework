@@ -1,0 +1,97 @@
+{
+  "generated": "2026-05-15T07:33:59.044Z",
+  "summary": {
+    "total_unique_images": 309,
+    "downloaded": 309,
+    "failed": 0,
+    "below_threshold": 11,
+    "unknown_size": 0,
+    "products_no_image": 4,
+    "products_placeholder_only": 18
+  },
+  "below_threshold_images": [
+    {
+      "src": "https://www.tse.co.za/wp-content/uploads/2019/04/Tse.jpg",
+      "max_width": 500,
+      "product": "Generic Brother LC-472 XL Yellow"
+    },
+    {
+      "src": "https://www.tse.co.za/wp-content/uploads/2024/02/CF226X.jpg",
+      "max_width": 600,
+      "product": "HP CF226X"
+    },
+    {
+      "src": "https://www.tse.co.za/wp-content/uploads/2019/04/NO.35.jpg",
+      "max_width": 400,
+      "product": "Lexmark Nr.35 Colour"
+    },
+    {
+      "src": "https://www.tse.co.za/wp-content/uploads/2019/04/34.jpg",
+      "max_width": 400,
+      "product": "Lexmark Nr. 34 Black"
+    },
+    {
+      "src": "https://www.tse.co.za/wp-content/uploads/2019/04/37.jpg",
+      "max_width": 400,
+      "product": "Lexmark Nr.37 XL Colour"
+    },
+    {
+      "src": "https://www.tse.co.za/wp-content/uploads/2019/04/36-1.jpg",
+      "max_width": 400,
+      "product": "Lexmark Nr.36 XL Black"
+    },
+    {
+      "src": "https://www.tse.co.za/wp-content/uploads/2019/04/26.jpg",
+      "max_width": 400,
+      "product": "Lexmark Nr.26 Colour"
+    },
+    {
+      "src": "https://www.tse.co.za/wp-content/uploads/2019/04/16.jpg",
+      "max_width": 400,
+      "product": "Lexmark Nr.16 Black"
+    },
+    {
+      "src": "https://www.tse.co.za/wp-content/uploads/2019/04/15-1.jpg",
+      "max_width": 400,
+      "product": "Lexmark Nr.15 Colour"
+    },
+    {
+      "src": "https://www.tse.co.za/wp-content/uploads/2019/04/14-1.jpg",
+      "max_width": 400,
+      "product": "Lexmark Nr. 14 Black"
+    },
+    {
+      "src": "https://www.tse.co.za/wp-content/uploads/2019/04/TN2000-2025-2035.png",
+      "max_width": 508,
+      "product": "Generic Brother TN-2025"
+    }
+  ],
+  "unknown_size_images": [],
+  "products_no_image": [
+    "HP 230A Yellow",
+    "HP 230A Magenta",
+    "HP 230A Cyan",
+    "HP - 123 Toets"
+  ],
+  "products_placeholder_only": [
+    "Generic Brother LC-472 XL Yellow",
+    "Generic Brother LC-472 XL Magenta",
+    "Generic Brother LC-472 XL Cyan",
+    "Generic Brother LC-472 XL Black",
+    "HP 305 XL Colour",
+    "HP 305 XL Black",
+    "Ricoh SP C430 Black",
+    "Ricoh SP C430 Cyan",
+    "Ricoh SP C430 Magenta",
+    "Ricoh SP C430 Yellow",
+    "Kyocera TK 1140",
+    "Kyocera TK 6305",
+    "Ricoh 1270D",
+    "Kyocera TK 5270 Yellow",
+    "Kyocera TK 5270 Magenta",
+    "Kyocera TK 5270 Cyan",
+    "Kyocera TK 5270 Black",
+    "Kyocera TK 7125"
+  ],
+  "failed_downloads": []
+}

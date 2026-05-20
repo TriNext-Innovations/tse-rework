@@ -24,20 +24,21 @@ tse-online/
 
 ## Stack at a Glance
 
-| Layer              | Technology              | Hosted On         |
-|--------------------|-------------------------|-------------------|
-| Frontend           | Next.js 15 (App Router) | Vercel Pro        |
-| Commerce backend   | Medusa.js v2            | Railway           |
-| Database           | PostgreSQL (Supabase)   | Supabase          |
-| File storage       | Supabase Storage        | Supabase          |
-| Search             | Meilisearch             | Railway           |
-| CMS                | Sanity                  | Sanity Cloud      |
-| Automation engine  | n8n                     | Railway           |
-| CDN / DNS          | Cloudflare              | Cloudflare        |
-| Transactional mail | Resend                  | Resend            |
-| Payments           | PayFast + Ozow          | External          |
-| Social API         | Meta Graph API          | External          |
-| AI (captions)      | Anthropic Claude API    | External          |
+| Layer              | Technology              | Hosted On                          |
+|--------------------|-------------------------|------------------------------------|
+| Frontend           | Next.js 15 (App Router) | Vultr JHB VM (Docker + nginx)      |
+| Commerce backend   | Medusa.js v2            | Vultr JHB VM (Docker)              |
+| Database           | PostgreSQL 16           | Vultr JHB VM (Docker, named vol)   |
+| File storage       | Cloudflare R2           | Cloudflare (S3-compatible, free tier) |
+| Search             | Meilisearch             | Vultr JHB VM (Docker)              |
+| Automation engine  | n8n                     | Vultr JHB n8n VM (Docker)          |
+| CDN / DNS          | Cloudflare              | Cloudflare                         |
+| Transactional mail | Resend                  | Resend                             |
+| Payments           | PayFast + Ozow          | External                           |
+| Social API         | Meta Graph API          | External                           |
+| AI (captions)      | Anthropic Claude API    | External                           |
+
+> **Two VMs on Vultr JHB:** main VM (4GB RAM, 2 vCPU, 80GB NVMe) runs web + backend + db + meilisearch via Docker Compose. n8n VM (1GB RAM) runs n8n separately to isolate automation workloads.
 
 ---
 
@@ -49,22 +50,20 @@ Browser / Mobile
       ▼
 Cloudflare CDN (JHB PoP)
       │
-      ├─── Static assets, ISR pages ──► Vercel Edge
-      │
-      └─── API routes / RSC ──────────► Vercel Serverless
+      └─── All traffic ────────────────► Vultr JHB Main VM
                                               │
-                                    Next.js App Router
-                                    (Server Components)
-                                              │
-                              ┌───────────────┴────────────────┐
-                              │                                 │
-                       Medusa.js API                       Sanity CMS
-                    (REST + custom routes)              (marketing content)
-                              │
-                    ┌─────────┴──────────┐
-                    │                    │
-               Supabase DB          Meilisearch
-            (PostgreSQL + RLS)     (product search)
+                                         nginx (reverse proxy)
+                                         ┌────┴────┐
+                                         │         │
+                                    :3000          :9000
+                                 Next.js         Medusa.js API
+                               (App Router)   (REST + custom routes)
+                                     │               │
+                              Server Components   PostgreSQL 16
+                              fetch Medusa SDK    (Docker container)
+                                                       │
+                                              Meilisearch
+                                            (Docker container)
 ```
 
 ---
@@ -94,7 +93,7 @@ apps/web/src/app/
 │       ├── dashboard/page.tsx
 │       └── quote/page.tsx
 ├── api/
-│   ├── revalidate/route.ts     # Sanity webhook revalidation
+│   ├── revalidate/route.ts     # Medusa webhook → on-demand ISR revalidation
 │   └── webhooks/
 │       ├── payfast/route.ts
 │       └── medusa/route.ts
@@ -107,7 +106,7 @@ apps/web/src/app/
 
 - **Server Components by default** — fetch data directly from Medusa SDK on the server, no client-side waterfalls
 - **Client Components only for interactivity** — cart drawer, quantity selectors, wizard steps
-- **ISR for product pages** — `revalidate: 3600` (1 hour), on-demand revalidation via Medusa webhooks
+- **Full SSR / ISR** — Next.js runs as a Node.js server in Docker; ISR via `revalidate: 3600` and on-demand via Medusa webhook calls to `/api/revalidate`
 - **Optimistic updates** — cart actions use React `useOptimistic` for instant UI feedback
 
 ---
@@ -184,13 +183,15 @@ See `.env.example` for the full list. Critical vars:
 
 ```bash
 # Medusa
-DATABASE_URL=postgresql://...
-MEDUSA_BACKEND_URL=https://api.tseonline.co.za
+DATABASE_URL=postgresql://medusa:password@db:5432/tse   # internal Docker network
+MEDUSA_BACKEND_URL=https://api.tse-cartridges.co.za
 
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
+# Vultr Object Storage (S3-compatible)
+S3_ENDPOINT=https://jhb1.vultrobjects.com
+S3_BUCKET=tse-product-images
+S3_ACCESS_KEY=
+S3_SECRET_KEY=
+S3_REGION=jhb1
 
 # PayFast
 PAYFAST_MERCHANT_ID=
@@ -214,7 +215,7 @@ MEILISEARCH_API_KEY=
 
 # Resend
 RESEND_API_KEY=
-RESEND_FROM_EMAIL=orders@tseonline.co.za
+RESEND_FROM_EMAIL=orders@tse-cartridges.co.za
 
 # Anthropic (caption generation)
 ANTHROPIC_API_KEY=
@@ -232,25 +233,34 @@ N8N_WEBHOOK_SECRET=
 
 ## Deployment
 
-### Vercel (frontend)
-- Connect GitHub repo → Vercel project
-- Set `apps/web` as root directory
-- All env vars set in Vercel dashboard
-- Preview deployments on every PR
+### Vultr JHB Main VM (web + backend + db + search)
+All services run via Docker Compose. The `docker-compose.yml` at repo root defines:
 
-### Railway (Medusa backend + n8n + Meilisearch)
-- Three Railway services in one project
-- Medusa: Dockerfile in `apps/backend/`
-- n8n: official Railway template
-- Meilisearch: official Railway template
-- All share a private Railway network — Medusa calls Meilisearch internally
+| Service       | Image                        | Internal port | External access via nginx |
+|---------------|------------------------------|---------------|---------------------------|
+| `web`         | Built from `apps/web/`       | 3000          | tse-cartridges.co.za      |
+| `backend`     | Built from `apps/backend/`   | 9000          | api.tse-cartridges.co.za  |
+| `db`          | `postgres:16`                | 5432          | Internal only             |
+| `meilisearch` | `meilisearch/meilisearch`    | 7700          | Internal only             |
 
-### Supabase
-- One project, `production` environment
-- Row Level Security (RLS) enabled on all tables
-- Migrations managed via `scripts/migrate.sh`
+**Deploy flow:** push to `main` → GitHub Actions → SSH into VM → `git pull && docker compose up --build -d` → health check → rollback if failed.
+
+**nginx** acts as reverse proxy: routes requests by subdomain to the correct container port. SSL terminated at Cloudflare (Full Strict mode).
+
+### Vultr JHB n8n VM (automation)
+- Separate 1GB VM to isolate automation workloads from the main server
+- Docker Compose with single `n8n` service
+- Same GitHub Actions SSH deploy pattern
+
+### Cloudflare R2 (file storage)
+- Bucket: `tse-product-images` (public-read)
+- Free tier: 10GB storage + 1M operations/month — more than sufficient for product images
+- Zero egress fees when served through Cloudflare CDN
+- Connected to Medusa via `@medusajs/file-s3` plugin (R2 is S3-compatible)
+- R2 endpoint: `https://<account-id>.r2.cloudflarestorage.com`
 
 ### Cloudflare
-- DNS: point `tseonline.co.za` → Vercel, `api.tseonline.co.za` → Railway
-- Enable "Proxied" on both A records for CDN + DDoS protection
-- Page rule: cache static assets aggressively, bypass cache on `/api/*`
+- DNS: A records `@`, `www`, `api` → Vultr main VM public IP (Proxied)
+- SSL/TLS: Full (Strict) — Cloudflare terminates SSL, forwards HTTPS to nginx
+- Page rule: bypass cache on `api.tse-cartridges.co.za/*`
+- DDoS protection active on all proxied records

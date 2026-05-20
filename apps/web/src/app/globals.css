@@ -1,32 +1,168 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
+@theme {
+  /* shadcn semantic tokens */
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  /* TSE brand colors */
+  --color-brand-primary: hsl(var(--brand-primary));
+  --color-brand-primary-foreground: hsl(var(--brand-primary-foreground));
+  --color-brand-secondary: hsl(var(--brand-secondary));
+  --color-brand-secondary-foreground: hsl(var(--brand-secondary-foreground));
+  --color-brand-accent: hsl(var(--brand-accent));
+  --color-brand-accent-foreground: hsl(var(--brand-accent-foreground));
+  --color-brand-bg: hsl(var(--brand-bg));
+  --color-brand-surface: hsl(var(--brand-surface));
+  --color-brand-border: hsl(var(--brand-border));
+  --color-brand-text: hsl(var(--brand-text));
+  --color-brand-text-muted: hsl(var(--brand-text-muted));
+  --color-brand-destructive: hsl(var(--brand-destructive));
+  --color-brand-cmyk-cyan: hsl(var(--brand-cmyk-cyan));
+  --color-brand-cmyk-lime: hsl(var(--brand-cmyk-lime));
+  --color-brand-cmyk-magenta: hsl(var(--brand-cmyk-magenta));
+  --color-brand-cmyk-black: hsl(var(--brand-cmyk-black));
+
+  /* Typography */
+  --font-sans: var(--font-sans-var, Inter, ui-sans-serif, system-ui);
+  --font-display: var(--font-display-var, Georgia, serif);
+
+  /* Border radius */
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+
+/*
+ * ─── BRAND TOKENS ────────────────────────────────────────────────────────────
+ *
+ * THIS is the single source of truth for TSE colours.
+ * To rebrand: update the HSL values in this block only — nothing else needs
+ * changing. Format: H S% L%  (no hsl() wrapper — required so Tailwind opacity
+ * modifiers like bg-brand-primary/50 work correctly).
+ *
+ * Official hex codes confirmed by client (issue #23):
+ *   Primary  #dfe344 — lime/chartreuse   (CMYK yellow+cyan)
+ *   Secondary #41e0f5 — light cyan        (CMYK cyan)
+ *   Accent   #ee75e9 — soft pink/magenta  (CMYK magenta)
+ *   Dark     #111827 — letterform black   (CMYK key/black) — footer, dark surfaces
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+:root {
+  /* Core brand — official client hex codes */
+  --brand-primary:              62 74% 58%;   /* #dfe344 — lime (client Primary) */
+  --brand-primary-foreground:   221 39% 11%;  /* dark text on lime bg */
+  --brand-secondary:            221 39% 11%;  /* #111827 — dark nav/footer bg */
+  --brand-secondary-foreground: 0 0% 100%;    /* white */
+  --brand-accent:               303 78% 70%;  /* #ee75e9 — soft pink/magenta (client Accent) */
+  --brand-accent-foreground:    221 39% 11%;  /* dark text on pink bg */
+
+  /* CMYK logo palette — available as brand-cmyk-* utilities */
+  --brand-cmyk-cyan:            187 90% 61%;  /* #41e0f5 — client Secondary */
+  --brand-cmyk-lime:            62 74% 58%;   /* #dfe344 — same as primary */
+  --brand-cmyk-magenta:         303 78% 70%;  /* #ee75e9 — same as accent */
+  --brand-cmyk-black:           221 39% 11%;  /* #111827 */
+
+  /* Semantic surface tokens */
+  --brand-bg:                   0 0% 100%;    /* page background */
+  --brand-surface:              62 30% 97%;   /* card / panel — faint lime tint */
+  --brand-border:               62 15% 90%;   /* borders and dividers */
+  --brand-text:                 220 13% 26%;  /* #374151 — body text */
+  --brand-text-muted:           220 9% 46%;   /* #6B7280 — secondary / muted text */
+
+  /* Status colours */
+  --brand-destructive:          0 84% 60%;
+  --brand-destructive-foreground: 0 0% 100%;
+
+  /* Charts — CMYK logo gradient */
+  --chart-1: 62 74% 58%;   /* lime */
+  --chart-2: 187 90% 61%;  /* cyan */
+  --chart-3: 265 60% 45%;  /* blue-violet (logo mid gradient) */
+  --chart-4: 303 78% 70%;  /* magenta/pink */
+  --chart-5: 221 39% 11%;  /* black */
+}
+
+/*
+ * ─── SHADCN VARIABLE MAPPING ─────────────────────────────────────────────────
+ * Maps shadcn's semantic tokens onto the brand tokens above.
+ * Do NOT set colour values here — change them in Brand Tokens above.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --primary: 173 85% 32%;
-    --primary-foreground: 0 0% 100%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --border: 214.3 31.8% 91.4%;
-    --radius: 0.5rem;
+    --background:              hsl(var(--brand-bg));
+    --foreground:              hsl(var(--brand-text));
+    --primary:                 hsl(var(--brand-primary));
+    --primary-foreground:      hsl(var(--brand-primary-foreground));
+    --secondary:               hsl(var(--brand-surface));
+    --secondary-foreground:    hsl(var(--brand-secondary));
+    --accent:                  hsl(var(--brand-accent));
+    --accent-foreground:       hsl(var(--brand-accent-foreground));
+    --muted:                   hsl(var(--brand-surface));
+    --muted-foreground:        hsl(var(--brand-text-muted));
+    --card:                    hsl(var(--brand-bg));
+    --card-foreground:         hsl(var(--brand-text));
+    --popover:                 hsl(var(--brand-bg));
+    --popover-foreground:      hsl(var(--brand-text));
+    --border:                  hsl(var(--brand-border));
+    --input:                   hsl(var(--brand-border));
+    --ring:                    hsl(var(--brand-primary));
+    --destructive:             hsl(var(--brand-destructive));
+    --destructive-foreground:  hsl(var(--brand-destructive-foreground));
+    --sidebar:                 hsl(var(--brand-surface));
+    --sidebar-foreground:      hsl(var(--brand-text));
+    --sidebar-primary:         hsl(var(--brand-primary));
+    --sidebar-primary-foreground: hsl(var(--brand-primary-foreground));
+    --sidebar-accent:          hsl(var(--brand-accent));
+    --sidebar-accent-foreground: hsl(var(--brand-accent-foreground));
+    --sidebar-border:          hsl(var(--brand-border));
+    --sidebar-ring:            hsl(var(--brand-primary));
+    --radius:                  0.5rem;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --primary: 173 85% 32%;
-    --primary-foreground: 0 0% 100%;
+    /* Override only brand tokens — shadcn mapping above stays unchanged */
+    --brand-primary:              62 80% 65%;   /* brighter lime on dark bg */
+    --brand-primary-foreground:   221 39% 11%;
+    --brand-accent:               303 80% 75%;  /* brighter pink on dark bg */
+    --brand-accent-foreground:    221 39% 11%;
+    --brand-bg:                   221 39% 7%;
+    --brand-surface:              221 35% 12%;
+    --brand-border:               221 25% 20%;
+    --brand-text:                 210 40% 96%;
+    --brand-text-muted:           220 9% 60%;
+    --brand-destructive:          0 63% 55%;
   }
-}
 
-* {
-  box-sizing: border-box;
-}
+  .theme {
+    --font-heading: var(--font-sans);
+    --font-sans: var(--font-sans);
+  }
 
-body {
-  margin: 0;
-  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
 }

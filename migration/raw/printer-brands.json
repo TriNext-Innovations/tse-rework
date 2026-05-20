@@ -1,0 +1,54 @@
+{
+  "generated": "2026-05-15T09:10:32.182Z",
+  "totalBrands": 12,
+  "brands": [
+    {
+      "name": "HP",
+      "productCount": 116
+    },
+    {
+      "name": "Canon",
+      "productCount": 40
+    },
+    {
+      "name": "Brother",
+      "productCount": 27
+    },
+    {
+      "name": "Samsung",
+      "productCount": 21
+    },
+    {
+      "name": "Pantum",
+      "productCount": 12
+    },
+    {
+      "name": "Kyocera",
+      "productCount": 11
+    },
+    {
+      "name": "Ricoh",
+      "productCount": 8
+    },
+    {
+      "name": "Xerox",
+      "productCount": 5
+    },
+    {
+      "name": "Konica Minolta",
+      "productCount": 3
+    },
+    {
+      "name": "Lexmark",
+      "productCount": 3
+    },
+    {
+      "name": "Epson",
+      "productCount": 2
+    },
+    {
+      "name": "OKI",
+      "productCount": 1
+    }
+  ]
+}
