@@ -35,6 +35,11 @@ COPY --from=builder /app/package.json ./
 # Compiled backend (dist/) and admin dashboard
 COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
 
+# Lift admin build out to where the runtime looks for it.
+# tsconfig.outDir="./dist" cascades to medusa-build, so admin lands in
+# dist/public/admin/, but adminLoader expects ${cwd}/public/admin/index.html.
+COPY --from=builder /app/apps/backend/dist/public ./apps/backend/public
+
 # Config and manifest files needed by medusa start and db:migrate
 COPY --from=builder /app/apps/backend/medusa-config.ts ./apps/backend/medusa-config.ts
 COPY --from=builder /app/apps/backend/tsconfig.json ./apps/backend/tsconfig.json
