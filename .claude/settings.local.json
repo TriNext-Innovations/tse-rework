@@ -26,7 +26,13 @@
       "PowerShell(Stop-Process *)",
       "Bash(git stash *)",
       "Bash(python *)",
-      "Bash(pip install *)"
+      "Bash(pip install *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\rynobotes\\\\WebstormProjects\\\\tse-ui\" -Recurse -Directory -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Sort-Object)",
+      "Bash(node *)",
+      "Bash(npx medusa *)",
+      "Bash(Remove-Item -Recurse -Force \"C:/Users/rynobotes/WebstormProjects/tse-ui/apps/web/.next\" -ErrorAction SilentlyContinue)"
     ]
   }
 }

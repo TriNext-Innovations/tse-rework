@@ -1,6 +1,8 @@
+import path from 'path'
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   typescript: {
     // UI components in /components/ui use uninstalled packages (base-ui, cva, lucide)
     // that aren't used by storefront pages. Skip type errors until those are cleaned up.
@@ -15,8 +17,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Output standalone for Railway deployment if needed
-  // output: 'standalone',
+  outputFileTracingRoot: path.join(__dirname, '../../'),
+  outputFileTracingExcludes: {
+    '*': ['**/node_modules/**'],
+  },
 }
 
 export default nextConfig
