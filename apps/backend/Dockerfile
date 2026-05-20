@@ -18,6 +18,7 @@ COPY apps/backend/ ./apps/backend/
 
 # medusa build outputs to apps/backend/.medusa/server/
 WORKDIR /app/apps/backend
+ENV NODE_OPTIONS="--max-old-space-size=3072"
 RUN /app/node_modules/.pnpm/node_modules/.bin/medusa build
 
 # ---- Runner ----
