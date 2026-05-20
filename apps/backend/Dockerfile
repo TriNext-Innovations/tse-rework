@@ -12,6 +12,8 @@ COPY packages/types/package.json ./packages/types/
 
 RUN pnpm install --frozen-lockfile
 
+ENV PATH="/app/node_modules/.bin:$PATH"
+
 # Copy source
 COPY packages/ ./packages/
 COPY apps/backend/ ./apps/backend/
