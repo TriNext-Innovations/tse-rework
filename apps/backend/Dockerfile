@@ -17,7 +17,8 @@ COPY packages/ ./packages/
 COPY apps/backend/ ./apps/backend/
 
 # medusa build outputs to apps/backend/.medusa/server/
-RUN /app/node_modules/.pnpm/node_modules/.bin/medusa build --root /app/apps/backend
+WORKDIR /app/apps/backend
+RUN /app/node_modules/.pnpm/node_modules/.bin/medusa build
 
 # ---- Runner ----
 FROM node:20-alpine AS runner
