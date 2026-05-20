@@ -2,7 +2,7 @@
 set -e
 
 echo "[medusa] Running database migrations..."
-/app/node_modules/.bin/medusa migrations run
+/app/node_modules/.bin/medusa db:migrate
 
 echo "[medusa] Starting server..."
 exec node .medusa/server/index.js
