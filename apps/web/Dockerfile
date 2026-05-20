@@ -5,7 +5,7 @@ WORKDIR /app
 RUN npm install -g pnpm@9
 
 # Manifests first for layer caching
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json ./
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json .npmrc ./
 COPY apps/web/package.json ./apps/web/
 COPY packages/config/package.json ./packages/config/
 COPY packages/types/package.json ./packages/types/

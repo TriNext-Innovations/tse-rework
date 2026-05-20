@@ -5,7 +5,7 @@ WORKDIR /app
 RUN npm install -g pnpm@9
 
 # Manifests first for layer caching
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json ./
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json .npmrc ./
 COPY apps/backend/package.json ./apps/backend/
 COPY packages/config/package.json ./packages/config/
 COPY packages/types/package.json ./packages/types/
@@ -19,7 +19,7 @@ COPY apps/backend/ ./apps/backend/
 # medusa build outputs to apps/backend/.medusa/server/
 WORKDIR /app/apps/backend
 ENV NODE_OPTIONS="--max-old-space-size=3072"
-RUN /app/node_modules/.pnpm/node_modules/.bin/medusa build
+RUN /app/node_modules/.bin/medusa build
 
 # ---- Runner ----
 FROM node:20-alpine AS runner
