@@ -55,6 +55,8 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       COOKIE_SECRET: ${COOKIE_SECRET}
       NODE_OPTIONS: "--max-old-space-size=1536"
+      MEDUSA_WORKER_MODE: "server"
+      MEDUSA_DISABLE_TELEMETRY: "1"
     entrypoint: ["/app/node_modules/.bin/medusa", "db:migrate"]
     deploy:
       resources:
