@@ -26,7 +26,7 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV NODE_OPTIONS="--max-old-space-size=512"
+ENV NODE_OPTIONS="--max-old-space-size=1536"
 
 # Root node_modules contains the medusa CLI binary and all runtime deps
 COPY --from=builder /app/node_modules ./node_modules
