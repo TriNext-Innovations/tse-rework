@@ -39,11 +39,12 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
   const params = new URLSearchParams({
     limit: String(PAGE_SIZE),
     offset: String(offset),
-    region_id: regionId,
   })
+  if (regionId) params.append('region_id', regionId)
   // category param is always a real category ID from the URL
   if (category) params.append('category_id[]', category)
 
+  params.append('fields', '+metadata,+categories.id,+categories.name,+categories.handle')
   const data = await fetch(`${BACKEND}/store/products?${params}`, {
     headers: { 'x-publishable-api-key': PUB_KEY },
     next: { revalidate: 60 },
@@ -118,8 +119,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
                   const sku = variant?.sku ?? '—'
                   const amount = variant?.calculated_price?.calculated_amount
                   const priceZar = amount ? Math.round(amount / 100) : null
-                  const categoryName = p.categories?.[0]?.name ?? ''
-                  const type = categoryName.toLowerCase().includes('inkjet') ? 'Inkjet' : 'Laser'
+                  const type = p.metadata?.cartridge_type === 'inkjet' ? 'Inkjet' : 'Laser'
 
                   return (
                     <article

@@ -576,8 +576,7 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
               const priceZar = variant?.calculated_price?.calculated_amount
                 ? (variant.calculated_price.calculated_amount / 100).toFixed(0)
                 : null
-              const categoryName = p.categories?.[0]?.name ?? ''
-              const type = categoryName.toLowerCase().includes('inkjet') ? 'Inkjet' : 'Laser'
+              const type = p.metadata?.cartridge_type === 'inkjet' ? 'Inkjet' : 'Laser'
 
               return (
                 <article key={p.id} data-reveal onClick={() => router.push('/products')} className="product-card group relative bg-[var(--paper-2)] rounded-[20px] p-5 sm:p-6 overflow-hidden cursor-pointer">
