@@ -39,7 +39,6 @@
       "Bash(dir /b \"C:\\\\Users\\\\rynobotes\\\\WebstormProjects\\\\tse-ui\\\\apps\")",
       "Bash(nslookup dev.tse-cartridges.co.za)",
       "Bash(nslookup api.dev.tse-cartridges.co.za)"
-      "Bash(pip install *)"
     ]
   }
 }

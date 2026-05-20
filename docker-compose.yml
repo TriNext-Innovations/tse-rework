@@ -12,10 +12,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    deploy:
-      resources:
-        limits:
-          memory: 400m
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d tse_medusa"]
       interval: 10s
