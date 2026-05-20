@@ -1,12 +1,22 @@
 import type { Metadata } from 'next'
-import { Inter, Bebas_Neue, DM_Serif_Display, DM_Sans, Fraunces } from 'next/font/google'
+import { Inter, Fraunces } from 'next/font/google'
 import './globals.css'
+import { cn } from '@/lib/utils'
+import { CartProvider } from '@/contexts/CartContext'
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
-const bebasNeue = Bebas_Neue({ weight: '400', subsets: ['latin'], variable: '--font-bebas-neue' })
-const dmSerif = DM_Serif_Display({ weight: '400', style: ['normal', 'italic'], subsets: ['latin'], variable: '--font-dm-serif' })
-const dmSans = DM_Sans({ weight: ['300', '400', '500', '600'], subsets: ['latin'], variable: '--font-dm-sans' })
-const fraunces = Fraunces({ weight: ['300', '400', '500', '600', '700', '900'], style: ['normal', 'italic'], subsets: ['latin'], variable: '--font-fraunces' })
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  display: 'swap',
+})
+
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  variable: '--font-display',
+  style: ['normal', 'italic'],
+  weight: ['300', '400', '500', '700'],
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: {
@@ -15,17 +25,19 @@ export const metadata: Metadata = {
   },
   description:
     "South Africa's trusted supplier of printer cartridges. OEM & compatible options for HP, Canon, Epson, Samsung, Brother, Lexmark and Xerox.",
-  metadataBase: new URL('https://tseonline.co.za'),
+  metadataBase: new URL('https://tse-cartridges.co.za'),
+  icons: {
+    icon: '/icon.png',
+    apple: '/apple-icon.png',
+  },
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className={`${inter.className} ${bebasNeue.variable} ${dmSerif.variable} ${dmSans.variable} ${fraunces.variable}`}>{children}</body>
+    <html lang="en" className={cn(inter.variable, fraunces.variable)}>
+      <body>
+        <CartProvider>{children}</CartProvider>
+      </body>
     </html>
   )
 }

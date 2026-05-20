@@ -1,257 +1,305 @@
 # TSE Online — Developer Guide
 
+## Stack
+
+| Layer | Technology |
+|---|---|
+| Storefront | Next.js 15 (App Router, React 19) |
+| Commerce engine | Medusa v2 (self-hosted) |
+| Database | PostgreSQL 16 |
+| Cache / queues | Redis 7 |
+| Package manager | pnpm 9 (workspace monorepo) |
+| Local infra | Docker Desktop (Postgres + Redis only) |
+| Production hosting | Vultr JHB (planned — Milestone 3) |
+
+---
+
 ## Prerequisites
 
 - Node.js 20+
 - pnpm 9+
-- Docker Desktop (for local Postgres + Meilisearch)
-- A Supabase account (free tier fine for dev)
-- A Vercel account
-- A Railway account
+- Docker Desktop (running)
+- Git
 
 ---
 
-## Local Setup
+## First-time local setup
+
+### 1. Clone and install
 
 ```bash
-# 1. Clone the repo
-git clone https://github.com/your-org/tse-online.git
-cd tse-online
-
-# 2. Install dependencies
+git clone <repo-url>
+cd tse-ui
 pnpm install
-
-# 3. Copy env files
-cp .env.example apps/web/.env.local
-cp .env.example apps/backend/.env
-
-# 4. Start local services (Postgres + Meilisearch + n8n)
-docker-compose up -d
-
-# 5. Run Medusa migrations
-pnpm --filter backend medusa db:migrate
-
-# 6. Seed the database
-pnpm --filter backend seed
-
-# 7. Start all apps in dev mode
-pnpm dev
 ```
 
-- Frontend: http://localhost:3000
-- Medusa admin: http://localhost:9000/app
-- Medusa API: http://localhost:9000
-- n8n: http://localhost:5678
-- Meilisearch: http://localhost:7700
+> **Note:** A `.npmrc` at the repo root hoists `@medusajs/*`, `react`, and `react-dom` so
+> Vite (Medusa admin bundler) can find them. Do not delete it.
+
+### 2. Start Docker services
+
+```bash
+docker-compose up -d
+```
+
+This starts **Postgres on :5432** and **Redis on :6379**. Medusa runs locally (not in Docker).
+
+### 3. Create backend env file
+
+Copy and edit:
+
+```bash
+cp apps/backend/.env.example apps/backend/.env   # if example exists
+```
+
+Minimum contents for `apps/backend/.env`:
+
+```env
+DATABASE_URL=postgresql://postgres:tse_local_dev@localhost:5432/tse_medusa
+REDIS_URL=redis://localhost:6379
+JWT_SECRET=local-dev-jwt-secret-tse
+COOKIE_SECRET=local-dev-cookie-secret-tse
+MEDUSA_BACKEND_URL=http://localhost:9000
+MEDUSA_WORKER_MODE=shared
+DISABLE_MEDUSA_ADMIN=false
+STORE_CORS=http://localhost:3000,http://localhost:3001
+ADMIN_CORS=http://localhost:9000
+AUTH_CORS=http://localhost:9000,http://localhost:3000,http://localhost:3001
+MEDUSA_ADMIN_EMAIL=admin@tse.co.za
+MEDUSA_ADMIN_PASSWORD=TseAdmin2026!
+STOREFRONT_URL=http://localhost:3001
+```
+
+### 4. Run Medusa migrations
+
+```bash
+pnpm --filter @tse/backend migrate
+```
+
+### 5. Start Medusa
+
+```bash
+pnpm --filter @tse/backend dev
+```
+
+Admin dashboard: http://localhost:9000/app  
+API: http://localhost:9000
+
+### 6. Seed the database
+
+Requires Medusa running. From the repo root:
+
+```bash
+pnpm tsx scripts/seed.ts
+```
+
+This seeds (idempotent — safe to run again):
+- South Africa region (ZAR)
+- TSE Online Storefront sales channel
+- Category hierarchy: Inkjet Cartridges → brands, Laser Cartridges → brands
+- All 559 products from `migration/raw/products.json`
+- Links all products to the sales channel
+
+### 7. Create a publishable API key
+
+After seeding, create the storefront API key via the Medusa Admin API (one-time per environment):
+
+```bash
+# Authenticate
+TOKEN=$(curl -s -X POST http://localhost:9000/auth/user/emailpass \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@tse.co.za","password":"TseAdmin2026!"}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])")
+
+# Create key
+KEY_ID=$(curl -s -X POST http://localhost:9000/admin/api-keys \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"title":"TSE Online Storefront","type":"publishable"}' \
+  | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['api_key']['id'])")
+
+TOKEN_VALUE=$(curl -s http://localhost:9000/admin/api-keys/$KEY_ID \
+  -H "Authorization: Bearer $TOKEN" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['api_key']['token'])")
+
+# Link to sales channel (get channel ID from seed output or admin UI)
+CHANNEL_ID=<paste sc_... id from seed output>
+
+curl -s -X POST "http://localhost:9000/admin/api-keys/$KEY_ID/sales-channels" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{\"add\":[\"$CHANNEL_ID\"]}"
+
+echo "Add to apps/web/.env.local:"
+echo "NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=$TOKEN_VALUE"
+```
+
+Or do it through the admin UI: **Settings → API Keys → Create → link to TSE Online Storefront channel**.
+
+### 8. Create web env file
+
+`apps/web/.env.local`:
+
+```env
+NEXT_PUBLIC_MEDUSA_BACKEND_URL=http://localhost:9000
+NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=pk_<your-key>
+```
+
+### 9. Start the storefront
+
+```bash
+pnpm --filter @tse/web dev
+```
+
+Storefront: http://localhost:3001
 
 ---
 
-## Git Workflow
+## Daily dev workflow
+
+```bash
+# Terminal 1 — infrastructure
+docker-compose up -d
+
+# Terminal 2 — Medusa backend
+pnpm --filter @tse/backend dev
+
+# Terminal 3 — Next.js storefront
+pnpm --filter @tse/web dev
+```
+
+---
+
+## Known gotchas and fixes
+
+### esbuild version conflict
+pnpm overrides in root `package.json` pin esbuild to `0.25.6`. If you see
+`Expected X but got Y` on install, the override is missing or was removed.
+
+### Medusa admin blank screen
+Requires `@medusajs/dashboard`, `react`, and `react-dom` as explicit deps in
+`apps/backend/package.json`, plus `.npmrc` hoisting. Both are committed.
+
+### `Cannot find module '@medusajs/admin-sdk'`
+`@medusajs/draft-order` requires `@medusajs/admin-sdk@2.13.6` exactly.
+Pinned via pnpm override in root `package.json`.
+
+### `Cannot find module '@medusajs/framework/utils'`
+`apps/backend/tsconfig.json` must use `moduleResolution: "bundler"` (not `"node"`)
+to resolve package.json `exports` subpath entries.
+
+### `ts-node` missing
+Medusa CLI needs ts-node to load `medusa-config.ts`. It must be in
+`apps/backend/package.json` devDependencies. The tsconfig includes a
+`ts-node: { transpileOnly: true }` block to bypass type errors at runtime.
+
+### CORS errors in storefront
+`STORE_CORS` in `apps/backend/.env` must include the storefront origin.
+Default is `:3000` but `pnpm dev` may allocate `:3001` if `:3000` is taken.
+Set both: `STORE_CORS=http://localhost:3000,http://localhost:3001`.
+
+### Store API returns 0 products
+Two things must be true:
+1. Products must be linked to a sales channel that the publishable key is also linked to.
+2. A `region_id` must be passed to get `calculated_price` on variants.
+
+### Shipping option creation fails: "Providers are not allowed"
+The fulfillment provider (`manual_manual`) must be associated with the stock location via
+`POST /admin/stock-locations/:id/fulfillment-providers` before shipping options can be created.
+The seed script handles this automatically.
+
+### `GET /admin/fulfillment-sets/:id` returns HTML
+This endpoint does not exist in Medusa v2. Retrieve fulfillment sets and service zones via
+`GET /admin/stock-locations/:id?fields=*fulfillment_sets,*fulfillment_sets.service_zones`.
+
+---
+
+## Project structure
 
 ```
-main          ← production (auto-deploys to Vercel + Railway)
-staging       ← pre-production testing
-dev           ← integration branch
-feature/*     ← your feature branches
-fix/*         ← bug fix branches
+tse-ui/
+├── apps/
+│   ├── backend/          Medusa v2 backend
+│   │   ├── src/
+│   │   │   └── admin/    Custom admin widgets & routes
+│   │   ├── medusa-config.ts
+│   │   └── .env          Local env (not committed)
+│   └── web/              Next.js 15 storefront
+│       ├── src/
+│       │   ├── app/
+│       │   │   ├── (storefront)/   Public-facing pages
+│       │   │   └── (main)/         Other routes
+│       │   ├── components/
+│       │   └── lib/
+│       │       └── medusa.ts       SDK client
+│       └── .env.local    Local env (not committed)
+├── scripts/
+│   └── seed.ts           Database seed script
+├── migration/
+│   └── raw/
+│       └── products.json WooCommerce export (559 products)
+├── docker-compose.yml    Postgres + Redis
+├── .npmrc               pnpm hoisting config
+└── package.json         Root — pnpm overrides live here
 ```
 
-**Branch naming:** `feature/compatibility-wizard`, `fix/payfast-signature`, `chore/update-deps`
+---
+
+## Git workflow
+
+```
+main          ← production
+initial/      ← Phase-0 build branch (current)
+feature/*     ← feature branches off initial/ or main
+fix/*         ← bug fixes
+```
 
 **Commit format (Conventional Commits):**
 ```
-feat(wizard): add step 3 results grid
-fix(payfast): correct MD5 signature field order
-chore(deps): upgrade medusa to 2.1.4
-docs(arch): update deployment section
-```
-
-**PR process:**
-1. Branch off `dev`
-2. Open PR → `dev` with description of changes
-3. Vercel creates a preview deployment automatically
-4. Review + approve → merge to `dev`
-5. Weekly: merge `dev` → `staging` for client review
-6. After client sign-off: merge `staging` → `main`
-
----
-
-## Testing
-
-```bash
-# Unit tests (Vitest)
-pnpm test
-
-# E2E tests (Playwright) — requires local services running
-pnpm test:e2e
-
-# Type check all packages
-pnpm type-check
-
-# Lint
-pnpm lint
-```
-
-### Key test areas
-- Compatibility wizard: correct SKUs returned for each printer model
-- PayFast signature validation: test vectors from PayFast sandbox docs
-- Ozow HMAC: test vectors from Ozow developer portal
-- B2B pricing: confirm correct discount applied per tier
-- Courier zone logic: postal code edge cases
-
----
-
-## Database Migrations
-
-Migrations live in `apps/backend/src/migrations/`. Always create a new migration file,
-never edit existing ones.
-
-```bash
-# Create a new migration
-pnpm --filter backend medusa db:generate <migration-name>
-
-# Apply pending migrations
-pnpm --filter backend medusa db:migrate
-
-# Rollback last migration
-pnpm --filter backend medusa db:rollback
+feat(storefront): add products listing page with category filters
+fix(seed): handle empty price field on Epson T7024
+chore(deps): pin @medusajs/admin-sdk to 2.13.6
 ```
 
 ---
 
-## Seeding Product Data
+## Database — what's seeded
 
-The client will supply product data as a CSV/spreadsheet. The seed script at
-`scripts/seed-products.ts` handles import:
+| Entity | Count | Notes |
+|---|---|---|
+| Regions | 1 | South Africa / ZAR |
+| Sales channels | 1 | TSE Online Storefront |
+| Categories | 14 | 2 parents (Inkjet, Laser) + 12 brand leaves |
+| Products | 559 | All from WooCommerce export |
+| Stock location | 1 | Kya Sands Warehouse |
+| Shipping options | 2 | JHB/PTA Own Delivery (COD, R0), Nationwide Courier (R129) |
+| Publishable API key | 1 | Manual step post-seed |
 
-```bash
-# Seed from CSV
-pnpm --filter backend tsx scripts/seed-products.ts --file ./data/products.csv
-
-# Seed compatibility data (printer model → cartridge SKU mappings)
-pnpm --filter backend tsx scripts/seed-compatibility.ts --file ./data/compatibility.csv
-```
-
-Expected CSV columns for products:
-`sku, title, description, brand, category, price, stock, images, oem`
-
-Expected CSV columns for compatibility:
-`printer_brand, printer_model, sku, oem`
+### Missing for full checkout (Phase 1)
+- **Payment providers** — PayFast and/or Ozow (configured at Milestone 3)
 
 ---
 
-## PayFast Integration Notes
+## POPIA / sensitive data rules
 
-**Sandbox testing:**
-- Merchant ID: `10000100`
-- Merchant Key: `46f0cd694581a`
-- Passphrase: leave empty in sandbox
-- Test cards: https://developers.payfast.co.za/docs#testing
-
-**Signature algorithm:**
-1. Build a query string from all non-empty form fields, alphabetically sorted
-2. Add passphrase as `passphrase=xxx` at the end (production only)
-3. MD5 hash of the query string
-4. Compare with `signature` field in ITN POST
-
-**ITN (webhook) validation:**
-After signature check, also validate:
-- `payment_status` === `"COMPLETE"`
-- `amount_gross` matches the order total in your DB (prevent tampering)
-- `item_name` matches your order reference
+- `migration/raw/customers.json` — **NEVER commit** — contains real customer PII
+- `migration/raw/orders.json` — **NEVER commit** — contains real order history
+- Real customer/order data must only ever be migrated to the production Vultr JHB server
+- Synthetic data only in seed scripts
 
 ---
 
-## Meta Graph API Notes (Instagram/Facebook bot)
+## Going live checklist (Milestone 3)
 
-**Token setup:**
-1. Create a Meta App at developers.facebook.com
-2. Add "Instagram Graph API" product
-3. Generate a long-lived User Access Token (valid 60 days)
-4. Exchange for a never-expiring Page Access Token
-5. Get the Instagram Business Account ID linked to the TSE Facebook Page
-
-**Posting flow:**
-```
-POST /{ig-user-id}/media
-  { image_url, caption, access_token }
-  → returns { id: "creation_id" }
-
-POST /{ig-user-id}/media_publish
-  { creation_id, access_token }
-  → returns { id: "media_id" }
-```
-
-**Rate limits:** 25 posts per 24 hours per Instagram Business account.
-n8n workflow enforces a minimum 30-minute gap between posts.
-
----
-
-## n8n Workflow Management
-
-n8n workflows are version-controlled as JSON exports in `automation/n8n/`.
-
-**Export a workflow:**
-1. Open workflow in n8n UI
-2. Menu → Download → save to `automation/n8n/<workflow-name>.json`
-3. Commit with the code that triggered the workflow change
-
-**Import a workflow:**
-1. n8n UI → New workflow → Import from file
-2. Or use n8n CLI: `n8n import:workflow --input=automation/n8n/social-posting-workflow.json`
-
-**Active workflows in production:**
-- `social-posting-workflow.json` — Instagram/Facebook auto-posting
-- `cart-abandonment-workflow.json` — WhatsApp recovery (24hr delay)
-- `restock-alert-workflow.json` — Email/WhatsApp alert to B2B customers on restock
-
----
-
-## Sanity CMS — Owner Content
-
-The client manages the following content in Sanity (no developer needed):
-- Homepage hero banner (image, headline, CTA link)
-- Promotional banners (e.g. "10% off this week")
-- About page copy
-- Blog posts (for SEO)
-
-**Schema files:** `apps/web/src/sanity/schemas/`
-**Studio URL (production):** https://tseonline.sanity.studio
-
-To add a new content type: add a schema file, export from `schemas/index.ts`, redeploy Sanity Studio.
-
----
-
-## Monitoring & Alerts
-
-- **Vercel Analytics** — Core Web Vitals, traffic, error rates
-- **Railway metrics** — CPU, memory, request volume for Medusa
-- **Sentry** — Error tracking across frontend and backend
-  - Set `SENTRY_DSN` in both web and backend env vars
-- **Uptime monitoring** — UptimeRobot free tier, checks `/health` every 5 minutes
-  - Medusa health endpoint: `/health`
-  - Meilisearch health: `/health`
-
----
-
-## Going Live Checklist
-
-- [ ] All env vars set in Vercel and Railway for production
-- [ ] PayFast switched to production credentials (`PAYFAST_SANDBOX=false`)
-- [ ] Meta App reviewed and approved for `instagram_basic`, `instagram_content_publish`
-- [ ] Cloudflare DNS records set and proxied
-- [ ] SSL certificates auto-issued by Cloudflare / Vercel
-- [ ] Google Analytics configured and cookie banner tested
-- [ ] POPIA Privacy Policy and Cookie Policy pages live
-- [ ] All Medusa migrations run on production DB
-- [ ] Product data fully seeded and reviewed by client
-- [ ] Compatibility data loaded and wizard tested with 10+ printer models
-- [ ] PayFast ITN webhook URL registered in PayFast merchant portal
-- [ ] Ozow webhook URL registered in Ozow merchant portal
-- [ ] n8n workflows imported and activated in production
-- [ ] Test order placed end-to-end (PayFast sandbox → production)
-- [ ] Resend domain verification complete (SPF + DKIM for tseonline.co.za)
-- [ ] Sentry error tracking confirmed receiving events
-- [ ] UptimeRobot monitoring active
-- [ ] Client training session completed (Sanity CMS + order management)
-- [ ] DNS cutover from old site performed during low-traffic window
+- [ ] Vultr JHB server provisioned, Docker stack deployed
+- [ ] Domain DNS pointed to Vultr (tse-cartridges.co.za)
+- [ ] SSL via Caddy or nginx + Let's Encrypt
+- [ ] All env vars set for production
+- [ ] Medusa migrations run on production DB
+- [ ] Product data seeded and reviewed by client
+- [ ] Publishable API key created for production
+- [ ] Shipping options configured in Medusa admin
+- [ ] PayFast credentials configured (PAYFAST_SANDBOX=false)
+- [ ] POPIA Privacy Policy page live
+- [ ] Test order placed end-to-end
+- [ ] DNS cutover from old WooCommerce site during low-traffic window
