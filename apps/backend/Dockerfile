@@ -12,14 +12,12 @@ COPY packages/types/package.json ./packages/types/
 
 RUN pnpm install --frozen-lockfile
 
-ENV PATH="/app/node_modules/.bin:$PATH"
-
 # Sources
 COPY packages/ ./packages/
 COPY apps/backend/ ./apps/backend/
 
 # medusa build outputs to apps/backend/.medusa/server/
-RUN pnpm --filter @tse/backend build
+RUN cd /app/apps/backend && PATH="/app/node_modules/.bin:$PATH" pnpm run build
 
 # ---- Runner ----
 FROM node:20-alpine AS runner
