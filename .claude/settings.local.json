@@ -44,7 +44,8 @@
       "Bash(tse-products)",
       "Bash(pub-c1cb9e1286454c148839e7021cf36b6f.r2.dev)",
       "Bash(@medusajs/file-s3)",
-      "Bash(gh secret *)"
+      "Bash(gh secret *)",
+      "PowerShell(Get-ChildItem \"E:\\\\TriNext\\\\TSE-web\\\\UI\\\\tse-rework\" -Depth 2 | Select-Object FullName | Where-Object { $_.FullName -notmatch \"node_modules|\\\\.git\" })"
     ]
   }
 }
