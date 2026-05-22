@@ -44,6 +44,9 @@ COPY --from=builder /app/apps/backend/dist/public ./apps/backend/public
 # Seed data needed by medusa exec src/scripts/seed.ts
 COPY --from=builder /app/migration/seed-data.json ./migration/seed-data.json
 
+# Source scripts needed by medusa exec (exec requires .ts source, not compiled dist)
+COPY --from=builder /app/apps/backend/src ./apps/backend/src
+
 # Config and manifest files needed by medusa start and db:migrate
 COPY --from=builder /app/apps/backend/medusa-config.ts ./apps/backend/medusa-config.ts
 COPY --from=builder /app/apps/backend/tsconfig.json ./apps/backend/tsconfig.json
