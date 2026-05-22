@@ -15,6 +15,7 @@ RUN pnpm install --frozen-lockfile
 # Sources
 COPY packages/ ./packages/
 COPY apps/backend/ ./apps/backend/
+COPY migration/seed-data.json ./migration/seed-data.json
 
 # medusa build outputs to apps/backend/dist/
 WORKDIR /app/apps/backend
@@ -39,6 +40,9 @@ COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
 # tsconfig.outDir="./dist" cascades to medusa-build, so admin lands in
 # dist/public/admin/, but adminLoader expects ${cwd}/public/admin/index.html.
 COPY --from=builder /app/apps/backend/dist/public ./apps/backend/public
+
+# Seed data needed by medusa exec src/scripts/seed.ts
+COPY --from=builder /app/migration/seed-data.json ./migration/seed-data.json
 
 # Config and manifest files needed by medusa start and db:migrate
 COPY --from=builder /app/apps/backend/medusa-config.ts ./apps/backend/medusa-config.ts
