@@ -11,12 +11,12 @@
     "migrate": "medusa migrations run"
   },
   "dependencies": {
-    "@medusajs/file-s3": "^2.15.2",
-    "@medusajs/admin-sdk": "^2.15.2",
-    "@medusajs/dashboard": "^2.15.2",
-    "@medusajs/draft-order": "^2.15.2",
-    "@medusajs/framework": "^2.15.2",
-    "@medusajs/medusa": "^2.15.2",
+    "@medusajs/admin-sdk": "2.15.3",
+    "@medusajs/dashboard": "^2.15.3",
+    "@medusajs/draft-order": "^2.15.3",
+    "@medusajs/file-s3": "^2.15.3",
+    "@medusajs/framework": "^2.15.3",
+    "@medusajs/medusa": "^2.15.3",
     "@tse/types": "workspace:*",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
