@@ -38,7 +38,13 @@
       "Bash(dir /b \"C:\\\\Users\\\\rynobotes\\\\WebstormProjects\\\\tse-ui\")",
       "Bash(dir /b \"C:\\\\Users\\\\rynobotes\\\\WebstormProjects\\\\tse-ui\\\\apps\")",
       "Bash(nslookup dev.tse-cartridges.co.za)",
-      "Bash(nslookup api.dev.tse-cartridges.co.za)"
+      "Bash(nslookup api.dev.tse-cartridges.co.za)",
+      "PowerShell(pnpm medusa *)",
+      "PowerShell(Get-ChildItem *)",
+      "Bash(tse-products)",
+      "Bash(pub-c1cb9e1286454c148839e7021cf36b6f.r2.dev)",
+      "Bash(@medusajs/file-s3)",
+      "Bash(gh secret *)"
     ]
   }
 }
