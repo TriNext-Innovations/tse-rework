@@ -44,7 +44,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
   // category param is always a real category ID from the URL
   if (category) params.append('category_id[]', category)
 
-  params.append('fields', '+metadata,+categories.id,+categories.name,+categories.handle')
+  params.append('fields', '+metadata,+categories.id,+categories.name,+categories.handle,+images')
   const data = await fetch(`${BACKEND}/store/products?${params}`, {
     headers: { 'x-publishable-api-key': PUB_KEY },
     next: { revalidate: 60 },
@@ -121,27 +121,37 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
                   const priceZar = amount ? Math.round(amount / 100) : null
                   const type = p.metadata?.cartridge_type === 'inkjet' ? 'Inkjet' : 'Laser'
 
+                  const imageUrl = p.images?.[0]?.url
+
                   return (
                     <article
                       key={p.id}
                       className="group relative bg-white rounded-[16px] p-4 overflow-hidden cursor-pointer hover:-translate-y-1 transition-transform duration-300"
                     >
-                      {/* Card illustration */}
+                      {/* Product image */}
                       <div className="relative h-28 flex items-end justify-center mb-3">
-                        <div
-                          className={`w-16 h-24 rounded-[6px] shadow-[0_12px_24px_-12px_rgba(10,10,10,0.35)] relative overflow-hidden ${
-                            i % 4 === 0 ? 'bg-gradient-to-br from-[#0A0A0A] to-[#2A2A2A]' :
-                            i % 4 === 1 ? 'bg-gradient-to-br from-[#41e0f5] to-[#0fb8d4]' :
-                            i % 4 === 2 ? 'bg-gradient-to-br from-[#1a1a2e] to-[#3a3a5c]' :
-                            'bg-gradient-to-br from-[#2d1a0e] to-[#5a3520]'
-                          }`}
-                        >
-                          <div className="absolute top-0 left-0 right-0 h-1.5 bg-white/25" />
-                          <div className="absolute bottom-2 left-2 right-2 flex items-end justify-between">
-                            <span className="font-display text-white text-[9px] leading-none">TSE</span>
-                            <span className="w-2 h-2 rounded-full border border-white/40" />
+                        {imageUrl ? (
+                          <img
+                            src={imageUrl}
+                            alt={p.title}
+                            className="h-24 w-auto max-w-[80px] object-contain drop-shadow-md"
+                          />
+                        ) : (
+                          <div
+                            className={`w-16 h-24 rounded-[6px] shadow-[0_12px_24px_-12px_rgba(10,10,10,0.35)] relative overflow-hidden ${
+                              i % 4 === 0 ? 'bg-gradient-to-br from-[#0A0A0A] to-[#2A2A2A]' :
+                              i % 4 === 1 ? 'bg-gradient-to-br from-[#41e0f5] to-[#0fb8d4]' :
+                              i % 4 === 2 ? 'bg-gradient-to-br from-[#1a1a2e] to-[#3a3a5c]' :
+                              'bg-gradient-to-br from-[#2d1a0e] to-[#5a3520]'
+                            }`}
+                          >
+                            <div className="absolute top-0 left-0 right-0 h-1.5 bg-white/25" />
+                            <div className="absolute bottom-2 left-2 right-2 flex items-end justify-between">
+                              <span className="font-display text-white text-[9px] leading-none">TSE</span>
+                              <span className="w-2 h-2 rounded-full border border-white/40" />
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
 
                       <div className="text-[9px] uppercase tracking-[0.16em] text-[#6B6B66] mb-1">{type}</div>

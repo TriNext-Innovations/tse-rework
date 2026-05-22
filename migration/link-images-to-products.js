@@ -27,10 +27,11 @@ function loadEnv(filePath) {
 }
 
 const env          = loadEnv(ENV_PATH);
-const R2_PUBLIC_URL = env.R2_PUBLIC_URL.replace(/\/$/, '');
-const MEDUSA_URL   = env.MEDUSA_BACKEND_URL || 'http://localhost:9000';
-const MEDUSA_EMAIL = env.MEDUSA_ADMIN_EMAIL;
-const MEDUSA_PASSWORD = env.MEDUSA_ADMIN_PASSWORD;
+// Allow env var overrides for running against production
+const R2_PUBLIC_URL = (process.env.R2_PUBLIC_URL || env.R2_PUBLIC_URL).replace(/\/$/, '');
+const MEDUSA_URL   = process.env.MEDUSA_BACKEND_URL || env.MEDUSA_BACKEND_URL || 'http://localhost:9000';
+const MEDUSA_EMAIL = process.env.MEDUSA_ADMIN_EMAIL || env.MEDUSA_ADMIN_EMAIL;
+const MEDUSA_PASSWORD = process.env.MEDUSA_ADMIN_PASSWORD || env.MEDUSA_ADMIN_PASSWORD;
 
 function wcUrlToR2(wcUrl) {
   const filename = wcUrl.split('/').pop();

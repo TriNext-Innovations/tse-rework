@@ -14,6 +14,8 @@ export type TrendingProduct = {
   handle: string
   variants: Array<{ sku: string | null; calculated_price?: { calculated_amount: number } | null }>
   categories: Array<{ name: string }>
+  images?: Array<{ url: string }>
+  metadata?: Record<string, unknown>
 }
 
 const brands = ['HP', 'Canon', 'Epson', 'Brother', 'Samsung', 'Lexmark', 'Xerox', 'Pantum', 'Ricoh', 'Kyocera', 'Konica Minolta', 'OKI', 'Olivetti']
@@ -586,18 +588,26 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
 
                   <div className="relative h-32 sm:h-36 flex items-end justify-center mb-4">
                     <div className="product-img relative">
-                      <div className={`w-20 h-28 sm:w-24 sm:h-32 rounded-[8px] shadow-[0_18px_30px_-15px_rgba(10,10,10,0.4)] relative overflow-hidden ${
-                        i % 3 === 0 ? 'bg-gradient-to-br from-[#0A0A0A] to-[#2A2A2A]' :
-                        i % 3 === 1 ? 'bg-gradient-to-br from-[#41e0f5] to-[#0fb8d4]' :
-                        'bg-gradient-to-br from-[#1a1a2e] to-[#3a3a5c]'
-                      }`}>
-                        <div className="absolute top-0 left-0 right-0 h-2 bg-[var(--paper)]/30" />
-                        <div className="absolute top-3 left-2 right-2 text-[6px] uppercase tracking-[0.15em] text-[var(--paper)]/70">{sku.slice(0, 10)}</div>
-                        <div className="absolute bottom-3 left-2 right-2 flex items-end justify-between">
-                          <div className="font-display text-[var(--paper)] text-sm leading-none">TSE</div>
-                          <div className="w-3 h-3 rounded-full border border-[var(--paper)]/40" />
+                      {p.images?.[0]?.url ? (
+                        <img
+                          src={p.images[0].url}
+                          alt={p.title}
+                          className="h-28 sm:h-32 w-auto max-w-[96px] object-contain drop-shadow-lg"
+                        />
+                      ) : (
+                        <div className={`w-20 h-28 sm:w-24 sm:h-32 rounded-[8px] shadow-[0_18px_30px_-15px_rgba(10,10,10,0.4)] relative overflow-hidden ${
+                          i % 3 === 0 ? 'bg-gradient-to-br from-[#0A0A0A] to-[#2A2A2A]' :
+                          i % 3 === 1 ? 'bg-gradient-to-br from-[#41e0f5] to-[#0fb8d4]' :
+                          'bg-gradient-to-br from-[#1a1a2e] to-[#3a3a5c]'
+                        }`}>
+                          <div className="absolute top-0 left-0 right-0 h-2 bg-[var(--paper)]/30" />
+                          <div className="absolute top-3 left-2 right-2 text-[6px] uppercase tracking-[0.15em] text-[var(--paper)]/70">{sku.slice(0, 10)}</div>
+                          <div className="absolute bottom-3 left-2 right-2 flex items-end justify-between">
+                            <div className="font-display text-[var(--paper)] text-sm leading-none">TSE</div>
+                            <div className="w-3 h-3 rounded-full border border-[var(--paper)]/40" />
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   </div>
 

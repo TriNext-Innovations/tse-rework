@@ -15,7 +15,7 @@ export default async function StorefrontPage() {
     const regionId = regions?.[0]?.id ?? ''
 
     const productsRes = await fetch(
-      `${BACKEND}/store/products?limit=6&region_id=${regionId}&fields=+metadata,+categories.id,+categories.name,+categories.handle`,
+      `${BACKEND}/store/products?limit=6&region_id=${regionId}&fields=+metadata,+categories.id,+categories.name,+categories.handle,+images`,
       {
         headers: { 'x-publishable-api-key': PUB_KEY },
         next: { revalidate: 300 },
