@@ -592,7 +592,7 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
                         <img
                           src={p.images[0].url}
                           alt={p.title}
-                          className="h-28 sm:h-32 w-auto max-w-[96px] object-contain drop-shadow-lg"
+                          className="h-full w-full object-contain drop-shadow-lg"
                         />
                       ) : (
                         <div className={`w-20 h-28 sm:w-24 sm:h-32 rounded-[8px] shadow-[0_18px_30px_-15px_rgba(10,10,10,0.4)] relative overflow-hidden ${

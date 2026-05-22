@@ -134,7 +134,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
                           <img
                             src={imageUrl}
                             alt={p.title}
-                            className="h-24 w-auto max-w-[80px] object-contain drop-shadow-md"
+                            className="h-full w-full object-contain drop-shadow-md"
                           />
                         ) : (
                           <div
