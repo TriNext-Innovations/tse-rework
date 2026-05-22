@@ -11,6 +11,7 @@
     "migrate": "medusa migrations run"
   },
   "dependencies": {
+    "@medusajs/file-s3": "^2.15.2",
     "@medusajs/admin-sdk": "^2.15.2",
     "@medusajs/dashboard": "^2.15.2",
     "@medusajs/draft-order": "^2.15.2",

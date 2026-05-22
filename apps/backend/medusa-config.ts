@@ -22,7 +22,27 @@ export default defineConfig({
         | 'server'
         | undefined) ?? 'shared',
   },
-  modules: [],
+  modules: [
+    {
+      resolve: '@medusajs/medusa/file',
+      options: {
+        providers: [
+          {
+            resolve: '@medusajs/file-s3',
+            id: 's3',
+            options: {
+              file_url: process.env.R2_PUBLIC_URL,
+              access_key_id: process.env.R2_ACCESS_KEY_ID,
+              secret_access_key: process.env.R2_SECRET_ACCESS_KEY,
+              region: 'auto',
+              bucket: process.env.R2_BUCKET,
+              endpoint: process.env.R2_ENDPOINT,
+            },
+          },
+        ],
+      },
+    },
+  ],
   admin: {
     disable: process.env.DISABLE_MEDUSA_ADMIN === 'true',
     backendUrl:
