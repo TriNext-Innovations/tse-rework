@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TSE Online — Brand Guidelines</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,Inter,sans-serif;font-size:14px;line-height:1.6;color:#111827;background:#fff;max-width:960px;margin:0 auto;padding:40px 24px}
+h1{font-size:22px;font-weight:700;border-bottom:2px solid #dfe344;padding-bottom:8px;margin-bottom:24px}
+h2{font-size:17px;font-weight:600;margin:28px 0 10px}
+h3{font-size:14px;font-weight:600;margin:18px 0 6px}
+p{margin-bottom:10px}
+a{color:#0f766e;text-decoration:none}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+th{background:#f7f7f4;text-align:left;padding:7px 10px;border:1px solid #ebebea;font-weight:600}
+td{padding:7px 10px;border:1px solid #ebebea;vertical-align:top}
+code{background:#f7f7f4;padding:1px 5px;border-radius:3px;font-family:Consolas,'Courier New',monospace;font-size:12px;color:#374151}
+ul,ol{margin:8px 0 10px 22px}
+li{margin-bottom:3px}
+hr{border:none;border-top:1px solid #ebebea;margin:28px 0}
+blockquote{border-left:3px solid #dfe344;padding:8px 14px;background:#fafaf7;margin:12px 0;color:#374151;font-size:13px}
+.swatch{display:inline-block;width:14px;height:14px;border-radius:2px;vertical-align:middle;margin-right:5px;border:1px solid rgba(0,0,0,.12)}
+@media print{body{padding:20px;max-width:100%;font-size:12px}h1{font-size:18px}h2{font-size:15px}}
+</style>
+</head>
+<body>
+
+<h1>TSE Online — Brand Guidelines</h1>
+<p style="color:#6b7280;font-size:13px">TriNext Innovations · Confirmed 2026-05-15 · <a href="brand.html">brand.html</a></p>
+
+<hr>
+
+<h2>1. Brand Identity</h2>
+<p><strong>Technical Systems Engineering (TSE)</strong> has supplied quality generic/compatible printer cartridges since <strong>1987</strong>, from Unit 34, A.P.D. Industrial Park, Kya Sands, Johannesburg.</p>
+<p>TSE sells <strong>only generic/compatible cartridges</strong> — never OEM originals. Value proposition: same print quality as OEM at a fraction of the price, backed by a replacement guarantee.</p>
+<p>The logo's halftone dot gradient — lime, cyan, pink, black — represents the four CMYK inks. TSE is literally a colour company.</p>
+
+<hr>
+
+<h2>2. Logo</h2>
+<h3>Primary Logo</h3>
+<ul>
+  <li>File: <code>apps/web/public/brand/logo.png</code> (3 MB, transparent background)</li>
+  <li>Aspect ratio: 2:1 (width:height)</li>
+  <li>Wordmark with CMYK halftone dot gradient: lime → cyan → pink → black</li>
+  <li><strong>Note:</strong> current SVG is a raster trace (1.3 MB) — not true vector. Original Illustrator/CorelDraw source still outstanding from client.</li>
+</ul>
+
+<h3>Variants</h3>
+<table>
+  <tr><th>Variant</th><th>When to use</th><th>Implementation</th></tr>
+  <tr><td><code>color</code></td><td>Light backgrounds, white surfaces</td><td>PNG as-is</td></tr>
+  <tr><td><code>dark-bg</code></td><td>Dark or coloured backgrounds</td><td>White pill wrapper: <code>bg-white rounded-lg px-2 py-1</code></td></tr>
+  <tr><td><code>mono-white</code></td><td>Dark solid fills</td><td>CSS: <code>filter: brightness(0) invert(1)</code></td></tr>
+  <tr><td><code>mono-dark</code></td><td>Light backgrounds needing single-colour mark</td><td>CSS: <code>filter: brightness(0)</code></td></tr>
+</table>
+<p>All variants handled by <code>apps/web/src/components/layout/Logo.tsx</code>.</p>
+
+<h3>Logo Rules</h3>
+<ul>
+  <li>Minimum width: 80px — maintain 2:1 ratio, never stretch</li>
+  <li>Do not recolour manually — use the four approved variants only</li>
+  <li>Do not place colour logo on dark backgrounds without the white pill wrapper</li>
+  <li>No drop shadows on the logo itself</li>
+  <li>Clear space: minimum half the logo height on all sides</li>
+</ul>
+
+<hr>
+
+<h2>3. Colour Palette</h2>
+<p>All values confirmed by client (issue #23, 2026-05-15). Never hardcode hex in components — use Tailwind utilities or CSS variables.</p>
+
+<h3>Core Palette</h3>
+<table>
+  <tr><th>Name</th><th>Hex</th><th>HSL</th><th>Role</th></tr>
+  <tr>
+    <td><span class="swatch" style="background:#dfe344"></span><strong>Lime</strong> (Primary)</td>
+    <td><code>#dfe344</code></td><td><code>62 74% 58%</code></td>
+    <td>Primary CTAs, key highlights, active states. Always use dark text on lime backgrounds.</td>
+  </tr>
+  <tr>
+    <td><span class="swatch" style="background:#41e0f5"></span><strong>Cyan</strong> (Secondary)</td>
+    <td><code>#41e0f5</code></td><td><code>187 90% 61%</code></td>
+    <td>Secondary accents, links, interactive elements, hover states</td>
+  </tr>
+  <tr>
+    <td><span class="swatch" style="background:#ee75e9"></span><strong>Pink</strong> (Accent)</td>
+    <td><code>#ee75e9</code></td><td><code>303 78% 70%</code></td>
+    <td>Glows, ambient blur effects, decorative accents — not for large solid fills</td>
+  </tr>
+  <tr>
+    <td><span class="swatch" style="background:#111827;"></span><strong>Black</strong> (Dark)</td>
+    <td><code>#111827</code></td><td><code>221 39% 11%</code></td>
+    <td>Footer, dark surfaces, body text, letterforms, button text on lime/pink</td>
+  </tr>
+</table>
+
+<h3>Extended Palette</h3>
+<table>
+  <tr><th>Name</th><th>Hex</th><th>Role</th></tr>
+  <tr><td>Page background</td><td><code>#FFFFFF</code></td><td>Default light surface</td></tr>
+  <tr><td>Surface / card</td><td><code>#F7F7F4</code></td><td>Slightly off-white, faint lime tint</td></tr>
+  <tr><td>Border</td><td><code>#EBEBEA</code></td><td>Dividers, input outlines</td></tr>
+  <tr><td>Body text</td><td><code>#374151</code></td><td>Primary readable text</td></tr>
+  <tr><td>Muted text</td><td><code>#6B7280</code></td><td>Labels, captions, placeholders</td></tr>
+</table>
+
+<h3>Colour Rules</h3>
+<ul>
+  <li>Lime and cyan must never be used as text colour on white — contrast fails WCAG AA</li>
+  <li>Lime buttons always use <code>#111827</code> text (not white)</li>
+  <li>Pink is soft — glows and decorative only, not large solid backgrounds</li>
+  <li>Source of truth: <code>apps/web/src/app/globals.css</code> — Brand Tokens block</li>
+</ul>
+
+<hr>
+
+<h2>4. Typography</h2>
+<p>Both fonts loaded via <code>next/font/google</code> in <code>apps/web/src/app/layout.tsx</code>.</p>
+
+<table>
+  <tr><th>Role</th><th>Font</th><th>Weight</th><th>Usage</th></tr>
+  <tr><td>Display / Headings</td><td><strong>Fraunces</strong></td><td>300–700, italic available</td><td>Hero headings, section titles, large pull quotes</td></tr>
+  <tr><td>Body / UI</td><td><strong>Inter</strong></td><td>400–600</td><td>Navigation, product names, prices, descriptions, buttons, labels</td></tr>
+</table>
+<p>CSS variables: <code>--font-display</code> (Fraunces), <code>--font-sans</code> (Inter). Typography confirmation pending from client — issue #24.</p>
+
+<h3>Type Rules</h3>
+<ul>
+  <li>Heading scale: <code>9.5vw</code> hero → <code>6xl</code> → <code>5xl</code> → <code>4xl</code> → <code>3xl</code> → <code>2xl</code></li>
+  <li>Body text minimum: <code>15px</code> / <code>text-sm</code> — never smaller on mobile</li>
+  <li>Line height: <code>1.5–1.75</code> for body copy</li>
+  <li>Line length: 65–75 characters target (<code>max-w-xl</code> or <code>max-w-2xl</code>)</li>
+  <li>Fraunces italic: sparingly for editorial emphasis, not UI labels</li>
+</ul>
+
+<hr>
+
+<h2>5. Brand Voice</h2>
+<h3>Tone</h3>
+<ul>
+  <li>Direct and confident — no filler words, no corporate hedging</li>
+  <li>Honest — generic is the product; own it as the selling point</li>
+  <li>Practical — SA offices care about price, reliability, and speed</li>
+</ul>
+
+<h3>Core Lines (use verbatim)</h3>
+<ul>
+  <li><em>"Generic. Not generic."</em> — hero headline</li>
+  <li><em>"Works as good, or even better than the original."</em> — the guarantee</li>
+  <li><em>"Order before noon, on your desk tomorrow."</em> — delivery promise (JHB/PTA)</li>
+  <li><em>"South Africa's printer-cartridge specialist since 1987."</em> — trust anchor</li>
+</ul>
+
+<table>
+  <tr><th>Use</th><th>Avoid</th></tr>
+  <tr><td>Compatible · Generic · Quality generic · Specialist · Guaranteed</td><td>OEM · Genuine · Authentic · Original · Cheap</td></tr>
+</table>
+
+<hr>
+
+<h2>6. Imagery</h2>
+<ul>
+  <li>Clean product shots on white or near-white backgrounds</li>
+  <li>Current source: WooCommerce media library export — sufficient for relaunch</li>
+  <li>Avoid: lifestyle shots that obscure the product; generic stock office imagery</li>
+  <li>Client to supply updated photography post-launch (issue #25)</li>
+</ul>
+
+<hr>
+
+<h2>7. Iconography</h2>
+<ul>
+  <li>SVG icons only — no emoji as UI icons</li>
+  <li>Preferred: Lucide or Heroicons — consistent <code>24×24</code> viewBox, <code>strokeWidth="2"</code></li>
+  <li>Minimum touch target: <code>44×44px</code></li>
+  <li>Icon colour: <code>currentColor</code> — never hardcode fill</li>
+</ul>
+
+<hr>
+
+<h2>8. Motion</h2>
+<table>
+  <tr><th>Element</th><th>Duration</th><th>Easing</th></tr>
+  <tr><td>Micro-interactions (hover, focus)</td><td>150–300ms</td><td>ease-out</td></tr>
+  <tr><td>Page-level reveals</td><td>900ms</td><td>cubic-bezier(.22,1,.36,1)</td></tr>
+  <tr><td>Ambient / decorative</td><td>7–22s</td><td>ease-in-out / linear</td></tr>
+</table>
+<ul>
+  <li>Always include <code>prefers-reduced-motion</code> override — decorative animations off</li>
+  <li>Only animate <code>transform</code> and <code>opacity</code> — never <code>width</code>, <code>height</code>, or <code>margin</code></li>
+</ul>
+
+<hr>
+
+<h2>9. Layout &amp; Spacing</h2>
+<ul>
+  <li>Max content width: <code>max-w-7xl</code> (80rem / 1280px)</li>
+  <li>Page horizontal padding: <code>px-4 sm:px-8 lg:px-12</code></li>
+  <li>Section vertical padding: <code>py-16 sm:py-24</code> (standard) / <code>py-20 sm:py-28</code> (feature)</li>
+  <li>Border radius: <code>rounded-[20px]</code> product cards · <code>rounded-[24px]</code> bento cards · <code>rounded-[28px]</code> CTA · <code>rounded-full</code> pills</li>
+  <li>Z-index: <code>z-10</code> content · <code>z-20</code> overlays · <code>z-40</code> nav · <code>z-50</code> modals</li>
+</ul>
+
+<hr>
+
+<h2>10. Do / Don't</h2>
+<table>
+  <tr><th>Do</th><th>Don't</th></tr>
+  <tr><td>Call products "generic" or "compatible"</td><td>Use "OEM", "genuine", or "authentic"</td></tr>
+  <tr><td>Use <code>#111827</code> for body text on white</td><td>Use lime or cyan as text colour on white</td></tr>
+  <tr><td>White pill wrapper on dark backgrounds</td><td>Place colour logo directly on dark fills</td></tr>
+  <tr><td>Dark text (<code>#111827</code>) on lime/pink buttons</td><td>White text on lime or pink (contrast too low)</td></tr>
+  <tr><td>Founding year: 1987</td><td>Use any other year</td></tr>
+  <tr><td>SVG icons from Lucide / Heroicons</td><td>Emoji as UI icons</td></tr>
+  <tr><td><code>transform</code>/<code>opacity</code> for animations</td><td><code>width</code>/<code>height</code>/<code>margin</code> animations</td></tr>
+</table>
+
+</body>
+</html>

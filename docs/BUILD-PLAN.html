@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TSE Online — Build Plan</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,Inter,sans-serif;font-size:14px;line-height:1.6;color:#111827;background:#fff;max-width:960px;margin:0 auto;padding:40px 24px}
+h1{font-size:22px;font-weight:700;border-bottom:2px solid #dfe344;padding-bottom:8px;margin-bottom:24px}
+h2{font-size:17px;font-weight:600;margin:28px 0 10px}
+h3{font-size:14px;font-weight:600;margin:18px 0 6px}
+p{margin-bottom:10px}
+a{color:#0f766e;text-decoration:none}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+th{background:#f7f7f4;text-align:left;padding:7px 10px;border:1px solid #ebebea;font-weight:600}
+td{padding:7px 10px;border:1px solid #ebebea;vertical-align:top}
+code{background:#f7f7f4;padding:1px 5px;border-radius:3px;font-family:Consolas,'Courier New',monospace;font-size:12px;color:#374151}
+pre{background:#111827;color:#e5e7eb;padding:16px;border-radius:6px;overflow-x:auto;margin:14px 0;font-size:12px;line-height:1.5}
+pre code{background:none;padding:0;color:inherit}
+ul,ol{margin:8px 0 10px 22px}
+li{margin-bottom:4px}
+hr{border:none;border-top:1px solid #ebebea;margin:28px 0}
+blockquote{border-left:3px solid #dfe344;padding:8px 14px;background:#fafaf7;margin:12px 0;color:#374151;font-size:13px}
+.badge{display:inline-block;padding:1px 7px;border-radius:3px;font-size:11px;font-weight:600}
+.done{background:#d1fae5;color:#065f46}
+.pending{background:#fef3c7;color:#92400e}
+.blocked{background:#fee2e2;color:#991b1b}
+.live{background:#dbeafe;color:#1e40af}
+.risk-h{color:#991b1b;font-weight:600}
+.risk-m{color:#92400e;font-weight:600}
+.risk-l{color:#065f46;font-weight:600}
+@media print{body{padding:20px;max-width:100%;font-size:12px}h1{font-size:18px}h2{font-size:15px}pre{font-size:11px}}
+</style>
+</head>
+<body>
+
+<h1>TSE Online — Build Plan</h1>
+<p style="color:#6b7280;font-size:13px">Start: April 2026 · Go-live target: June 2026 · Companion to <a href="Architecture.html">Architecture.html</a></p>
+
+<hr>
+
+<h2>Current State</h2>
+
+<h3>Done</h3>
+<table>
+  <tr><th>Area</th><th>Status</th><th>Notes</th></tr>
+  <tr><td>Turborepo + pnpm workspaces</td><td><span class="badge done">✅ Done</span></td><td><code>turbo.json</code>, <code>pnpm-workspace.yaml</code>, root <code>package.json</code></td></tr>
+  <tr><td><code>apps/web</code> — Next.js 15 (App Router, TS, Tailwind)</td><td><span class="badge done">✅ Done</span></td><td>Storefront running at <code>dev.tse-cartridges.co.za</code></td></tr>
+  <tr><td><code>apps/backend</code> — Medusa v2</td><td><span class="badge done">✅ Done</span></td><td>Running at <code>api.dev.tse-cartridges.co.za</code></td></tr>
+  <tr><td>Docker Compose</td><td><span class="badge done">✅ Done</span></td><td>Postgres + Redis — local dev and production</td></tr>
+  <tr><td>Vultr JHB VPS provisioned</td><td><span class="badge live">🟢 Live</span></td><td>Deployed 2026-05-20 — <code>dev.tse-cartridges.co.za</code></td></tr>
+  <tr><td>Let's Encrypt TLS cert</td><td><span class="badge live">🟢 Live</span></td><td>SAN cert — expires 2026-08-18</td></tr>
+  <tr><td>CI workflows</td><td><span class="badge done">✅ Done</span></td><td><code>.github/workflows/ci.yml</code> — lint / type-check on PRs</td></tr>
+  <tr><td>Product seed</td><td><span class="badge done">✅ Done</span></td><td>559 products from WooCommerce export</td></tr>
+  <tr><td>Design system (brand tokens)</td><td><span class="badge done">✅ Done</span></td><td>Confirmed CMYK palette — lime / cyan / pink / black</td></tr>
+  <tr><td>Cloudflare R2 (product images)</td><td><span class="badge live">🟢 Live</span></td><td>Images serving from R2 CDN</td></tr>
+  <tr><td><code>packages/config</code></td><td><span class="badge done">✅ Done</span></td><td>Tailwind, ESLint, tsconfig presets</td></tr>
+  <tr><td><code>packages/types</code></td><td><span class="badge done">✅ Done</span></td><td>product, cart, customer, compatibility, b2b types</td></tr>
+  <tr><td>Compatibility data model</td><td><span class="badge done">✅ Designed</span></td><td>3-table schema — pending client CSV to run Phase 2 migration</td></tr>
+</table>
+
+<h3>Build Backlog</h3>
+<ul>
+  <li>No real Medusa modules — <code>compatibility/</code>, <code>b2b/</code>, <code>courier/</code>, <code>payfast/</code>, <code>ozow/</code></li>
+  <li>No subscribers (<code>order-placed</code>, <code>product-updated</code>, <code>search-sync</code>)</li>
+  <li>No storefront commerce surfaces — <code>products/</code>, <code>cart/</code>, <code>checkout/</code>, <code>account/*</code>, <code>compatibility/</code>, <code>b2b/*</code></li>
+  <li>No payment flows (PayFast ITN, Ozow webhook)</li>
+  <li>No transactional emails (Resend + React Email templates)</li>
+  <li>No search (Meilisearch index + sync + UI)</li>
+  <li>No POPIA layer (cookie banner, privacy/cookies pages, data-requests endpoint)</li>
+  <li>No courier integration (Courier Guy / Aramex)</li>
+  <li>No admin extensions (compatibility widget, B2B tier widget, social posts, quotes route)</li>
+  <li>No tests (Vitest unit, Playwright E2E)</li>
+</ul>
+
+<hr>
+
+<h2>Infrastructure</h2>
+<pre><code>Browser
+   │
+   ▼
+Cloudflare Free  (DNS + CDN + DDoS + SSL — JHB PoP)
+   │
+   ▼
+Vultr JHB VPS — 2 vCPU / 4 GB RAM / 80 GB SSD  (~R440/mo)
+   │  Docker Compose manages all services below
+   ├── Next.js 15  (port 3000)
+   ├── Medusa v2   (port 9000)
+   ├── PostgreSQL 16  (port 5432, named volume — SA-hosted, no cross-border)
+   ├── Redis 7     (port 6379, internal)
+   ├── Meilisearch (port 7700, internal)  ← Phase 2
+   └── n8n VM      (separate 1 GB Vultr VPS)  ← Phase 5
+         │
+   Cloudflare R2  (product images — 10 GB free)
+   Resend Free    (transactional email — 3K/mo)
+   PayFast / Ozow (payment processors — SA-hosted, external)
+   Meta Graph API (Instagram/Facebook — external)
+   Anthropic API  (caption generation — external, pay-per-use)</code></pre>
+
+<p><strong>All compute and data stored in South Africa</strong> (Vultr JHB). Only Resend is cross-border, covered by s.72(1)(c) necessity-for-contract + signed DPA.</p>
+
+<hr>
+
+<h2>Phased Build</h2>
+
+<h3>Phase 0 — Foundations <span class="badge live">✅ Complete</span></h3>
+<ul>
+  <li>✅ Vultr JHB VPS provisioned — 2 vCPU / 4 GB / 80 GB SSD</li>
+  <li>✅ Docker Compose stack deployed (<code>dev.tse-cartridges.co.za</code> live 2026-05-20)</li>
+  <li>✅ Cloudflare DNS configured (proxied) + Let's Encrypt TLS</li>
+  <li>✅ Medusa API responds at <code>api.dev.tse-cartridges.co.za/health</code></li>
+  <li>✅ 559 products seeded from WooCommerce export</li>
+  <li>✅ Product images migrated to Cloudflare R2</li>
+  <li>✅ CI workflow — lint + type-check on PRs</li>
+  <li>✅ Brand colours confirmed (lime / cyan / pink / black)</li>
+</ul>
+
+<h3>Phase 1 — Design System &amp; Catalogue (Week 2)</h3>
+<ul>
+  <li>☐ Build <code>packages/ui</code> components: <code>Button</code>, <code>Badge</code>, <code>ProductCard</code>, <code>CartDrawer</code>, <code>CompatibilityBadge</code>, <code>PricingTierBadge</code></li>
+  <li>☐ Real Header — sticky, blur, cart count, account icon, CMD+K trigger</li>
+  <li>☐ <code>(storefront)/products/page.tsx</code> — catalogue grid, RSC, pagination</li>
+  <li>☐ <code>(storefront)/products/[handle]/page.tsx</code> — <code>generateMetadata</code> + JSON-LD Product schema</li>
+  <li>☐ Seed Medusa with placeholder product data for client review</li>
+</ul>
+<p><em>Exit: client can browse a real catalogue on the preview URL.</em></p>
+
+<h3>Phase 2 — Compatibility Wizard &amp; Search (Week 3)</h3>
+<ul>
+  <li>☐ <code>modules/compatibility/</code> + table migration + service</li>
+  <li>☐ <code>/store/compatibility/{brands,models,cartridges}</code> REST endpoints</li>
+  <li>☐ <code>(storefront)/compatibility/page.tsx</code> — 3-step wizard (Client Component)</li>
+  <li>☐ Meilisearch index, <code>search-sync</code> subscriber, bulk-index script</li>
+  <li>☐ Header CMD+K <code>SearchModal</code> with Meilisearch adapter and filters</li>
+  <li>☐ Compatibility CSV importer in <code>scripts/seed-compatibility.ts</code></li>
+</ul>
+<p><em>Exit: typing "M404n" or selecting HP → LaserJet Pro M404n returns correct cartridges.</em></p>
+
+<h3>Phase 3 — Cart, Checkout &amp; Payments (Week 4)</h3>
+<ul>
+  <li>☐ Cart drawer wired to Medusa cart, <code>useOptimistic</code> for qty changes</li>
+  <li>☐ <code>(storefront)/cart/page.tsx</code> and <code>(storefront)/checkout/page.tsx</code></li>
+  <li>☐ <code>modules/payfast/</code> — AbstractPaymentProvider + ITN webhook + signature validation</li>
+  <li>☐ <code>modules/ozow/</code> — AbstractPaymentProvider + HMAC-SHA512 webhook</li>
+  <li>☐ <code>modules/courier/</code> — rate calc, Courier Guy + Aramex, 12:00 cutoff, flat-rate fallback</li>
+  <li>☐ React Email templates: <code>OrderConfirmation</code>, <code>ShippingUpdate</code>, <code>PasswordReset</code></li>
+  <li>☐ Resend wiring in <code>apps/backend/src/lib/email.ts</code></li>
+</ul>
+<p><em>Exit: test order placed end-to-end against PayFast sandbox, confirmation email received.</em></p>
+
+<h3>Phase 4 — B2B &amp; Accounts (Week 5)</h3>
+<ul>
+  <li>☐ <code>modules/b2b/</code> — <code>pricing_tier</code> + auto-applied price lists</li>
+  <li>☐ <code>(storefront)/account/*</code> — orders, addresses, password reset</li>
+  <li>☐ <code>(storefront)/b2b/</code> — login, dashboard, quote</li>
+  <li>☐ <code>quote_request</code> table + <code>POST /store/b2b/quote</code> + admin email via Resend</li>
+  <li>☐ Admin widgets: compatibility, B2B tier, social posts, quotes route</li>
+</ul>
+<p><em>Exit: client logs in as reseller and sees reseller pricing.</em></p>
+
+<h3>Phase 5 — Automation, POPIA &amp; Launch Hardening (Week 6)</h3>
+<ul>
+  <li>☐ n8n workflow — Anthropic caption + Meta Graph post on product create/restock</li>
+  <li>☐ <code>subscribers/product-updated.ts</code> triggers n8n on create/restock</li>
+  <li>☐ POPIA: <code>CookieBanner</code>, <code>(legal)/privacy</code>, <code>(legal)/cookies</code>, <code>/store/data-requests</code></li>
+  <li>☐ <code>sitemap.ts</code>, <code>robots.ts</code>, security headers in <code>next.config.ts</code></li>
+  <li>☐ Sentry wired in both apps; UptimeRobot pinging <code>/health</code></li>
+  <li>☐ Full going-live checklist in <a href="DEVELOPER-GUIDE.html">DEVELOPER-GUIDE.html</a></li>
+</ul>
+<p><em>Exit: client signs off; DNS cutover scheduled.</em></p>
+
+<hr>
+
+<h2>Module Dependency Graph</h2>
+<pre><code>                ┌── compatibility module ─┐
+products/seed ──┤                         ├── compatibility wizard ─┐
+                └── meilisearch sync ─────┘                          │
+                                                                     ▼
+                ┌── courier module ──────┐                       checkout
+   addresses ───┤                        ├── shipping options ───┘  │
+                └── postal code zones ───┘                           │
+                                                                     ▼
+                ┌── payfast provider ────┐                        order placed
+   checkout ────┤                        ├── ITN webhooks ──────────┤
+                └── ozow provider ───────┘                           │
+                                                                     ▼
+                                          order-placed subscriber ──► Resend (email)
+                                                                      n8n (social)
+   b2b module ──► customer groups + price lists ──► auto-applied at checkout</code></pre>
+
+<hr>
+
+<h2>Open Decisions</h2>
+<table>
+  <tr><th>#</th><th>Decision</th><th>Owner</th><th>Needed by</th></tr>
+  <tr><td>1</td><td>Design direction locked (storefront look + feel)</td><td>Client</td><td>Phase 1 start</td></tr>
+  <tr><td>2</td><td>PayFast and Ozow sandbox credentials in hand</td><td>Client</td><td>Phase 3 start</td></tr>
+  <tr><td>3</td><td>Reseller / wholesale discount %s (assumed 15% / 25%)</td><td>Client</td><td>Phase 4 start</td></tr>
+  <tr><td>4</td><td>Final product CSV (SKU, title, price, stock, images) — <strong>BLOCKER</strong>: all 560 WC products have no SKU</td><td>Client</td><td>Phase 1 seed</td></tr>
+  <tr><td>5</td><td>Compatibility CSV (printer brand → model → SKU)</td><td>Client</td><td>Phase 2 end</td></tr>
+  <tr><td>6</td><td>Courier accounts — Courier Guy and Aramex API credentials</td><td>Client</td><td>Phase 3 start</td></tr>
+  <tr><td>7</td><td>Meta Business — Page + Instagram Business linked, app reviewed</td><td>Client</td><td>Phase 5 start</td></tr>
+  <tr><td>8</td><td>Resend sending domain — DKIM/SPF configured</td><td>Client + Dev</td><td>Phase 3 start</td></tr>
+  <tr><td>9</td><td>Information Officer named and registered with Information Regulator</td><td>Client</td><td>Before launch</td></tr>
+  <tr><td>10</td><td>DPAs signed with Resend, Meta, Anthropic, Cloudflare</td><td>Client + Dev</td><td>Before launch</td></tr>
+</table>
+
+<hr>
+
+<h2>Risk Register</h2>
+<table>
+  <tr><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Mitigation</th></tr>
+  <tr><td>PayFast ITN signature mismatch (field-order bugs)</td><td class="risk-h">High</td><td>Cannot accept payment</td><td>Test against PayFast sandbox vectors day 1 of Phase 3; isolate signature logic with unit tests</td></tr>
+  <tr><td>Meta App review rejected (<code>instagram_content_publish</code>)</td><td class="risk-m">Medium</td><td>No auto-posting at launch</td><td>Submit in Phase 4, not 5 — review takes 5–10 business days</td></tr>
+  <tr><td>Courier API downtime at checkout</td><td class="risk-m">Medium</td><td>Customer cannot complete order</td><td>Flat-rate fallback table in <code>courier/rates.ts</code></td></tr>
+  <tr><td>60-day Meta token expiry forgotten</td><td class="risk-m">Medium</td><td>Auto-posting silently breaks</td><td>Cron in n8n refreshes long-lived token weekly + Sentry alert on failure</td></tr>
+  <tr><td>Product CSV arrives malformed / late</td><td class="risk-h">High</td><td>Catalogue empty at launch</td><td>Build importer in Phase 1 against synthetic data; client supplies by Phase 4 end</td></tr>
+  <tr><td>Single VPS = single point of failure</td><td class="risk-m">Medium</td><td>Downtime during hardware event</td><td>Vultr SLA + UptimeRobot alerts; Docker auto-restart. Upgrade to 2-VPS when traffic justifies.</td></tr>
+</table>
+
+<hr>
+
+<h2>Infrastructure Costs</h2>
+<table>
+  <tr><th>Service</th><th>Plan</th><th>Cost (ZAR)</th><th>Notes</th></tr>
+  <tr><td>Vultr JHB Main VM</td><td>2 vCPU / 4 GB / 80 GB SSD</td><td><strong>~R440</strong></td><td>The only real bill. Hosts everything.</td></tr>
+  <tr><td>Vultr JHB n8n VM</td><td>1 vCPU / 1 GB / 25 GB SSD</td><td><strong>~R111</strong></td><td>Automation only</td></tr>
+  <tr><td>Vultr automated backups</td><td>20% of VPS</td><td>~R88</td><td>Recommended. Or DIY to Cloudflare R2 (free).</td></tr>
+  <tr><td>Cloudflare Free</td><td>DNS + CDN + DDoS</td><td>R0</td><td>Free forever</td></tr>
+  <tr><td>Cloudflare R2</td><td>10 GB storage + 1 M ops</td><td>R0</td><td>Free tier — sufficient for product images</td></tr>
+  <tr><td>Resend Free</td><td>3,000 emails/mo</td><td>R0</td><td>Free forever at this volume</td></tr>
+  <tr><td>UptimeRobot Free</td><td>50 monitors</td><td>R0</td><td>Free forever</td></tr>
+  <tr><td><strong>Total (with backups)</strong></td><td></td><td><strong>~R640/mo</strong></td><td></td></tr>
+  <tr><td><strong>Total (without backups)</strong></td><td></td><td><strong>~R550/mo</strong></td><td></td></tr>
+</table>
+
+<h3>Variable Costs</h3>
+<table>
+  <tr><th>Item</th><th>Model</th><th>Est. at launch</th></tr>
+  <tr><td>Anthropic API (Claude captions)</td><td>Per token</td><td>~R30–80/mo</td></tr>
+  <tr><td>PayFast</td><td>3.5% + R2 per transaction</td><td>On real sales only</td></tr>
+  <tr><td>Ozow</td><td>~1.5% per transaction</td><td>On real sales only</td></tr>
+  <tr><td>Courier Guy / Aramex</td><td>Per shipment</td><td>On real shipments only</td></tr>
+</table>
+
+<h3>Growth Triggers</h3>
+<table>
+  <tr><th>Trigger</th><th>Upgrade</th><th>Cost delta</th></tr>
+  <tr><td>VPS memory consistently &gt;75%</td><td>Resize Vultr → 8 GB plan</td><td>+~R440/mo</td></tr>
+  <tr><td>Media storage &gt;10 GB</td><td>Cloudflare R2 paid tier</td><td>+~R10/mo per 10 GB</td></tr>
+  <tr><td>&gt;5,000 visits/mo</td><td>Add 2nd Vultr VPS, split app + DB tiers</td><td>+~R440/mo</td></tr>
+</table>
+
+<hr>
+
+<h2>POPIA — Data Residency</h2>
+<p><strong>All personal data stays in South Africa (Vultr JHB).</strong> Only Resend is cross-border — covered by POPIA s.72(1)(c) (necessary for contract performance) + signed DPA.</p>
+
+<table>
+  <tr><th>Service</th><th>Holds PII?</th><th>Region</th><th>POPIA status</th></tr>
+  <tr><td>Vultr JHB PostgreSQL (Docker)</td><td>Yes — customers, addresses, orders, B2B accounts</td><td>✅ Johannesburg</td><td>✅ SA-hosted — no s.72 trigger</td></tr>
+  <tr><td>Vultr JHB Next.js + Medusa</td><td>Compute only — no persistence</td><td>✅ Johannesburg</td><td>✅ SA-hosted — no s.72 trigger</td></tr>
+  <tr><td>Cloudflare R2</td><td>No — product images only</td><td>✅ Johannesburg CDN</td><td>✅ No PII</td></tr>
+  <tr><td>Resend</td><td>Yes — email address + body</td><td>US/EU</td><td>✅ s.72(1)(c) + DPA</td></tr>
+  <tr><td>Meilisearch (Vultr JHB)</td><td>No — products only</td><td>✅ Johannesburg</td><td>✅ No PII</td></tr>
+  <tr><td>PayFast / Ozow</td><td>Card data — handled entirely by them</td><td>South Africa</td><td>✅ Not our processor</td></tr>
+  <tr><td>Cloudflare CDN</td><td>In-flight only — no persistence</td><td>JHB PoP</td><td>✅ Transit only</td></tr>
+</table>
+
+<h3>POPIA Obligations (regardless of hosting)</h3>
+<ul>
+  <li>Privacy Policy disclosing every third-party processor and its hosting region</li>
+  <li>Cookie banner with granular consent (Necessary / Analytics / Marketing)</li>
+  <li><code>data_requests</code> table + <code>/store/data-requests</code> endpoint (Phase 5)</li>
+  <li>36-hour breach notification process — Information Regulator + affected subjects</li>
+  <li>Information Officer named and registered with the Information Regulator (client's MD by default)</li>
+  <li>Signed DPAs with Resend, Meta, Anthropic, Cloudflare before go-live</li>
+  <li>Retention schedule: orders 5 years (SARS), marketing consent re-confirmed annually, abandoned-cart data purged after 90 days</li>
+</ul>
+
+</body>
+</html>

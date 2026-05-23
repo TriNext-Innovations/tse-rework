@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TSE Online — Docs Index</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,Inter,sans-serif;font-size:14px;line-height:1.6;color:#111827;background:#fff;max-width:960px;margin:0 auto;padding:40px 24px}
+h1{font-size:22px;font-weight:700;border-bottom:2px solid #dfe344;padding-bottom:8px;margin-bottom:24px}
+h2{font-size:17px;font-weight:600;margin:28px 0 10px}
+h3{font-size:14px;font-weight:600;margin:18px 0 6px}
+p{margin-bottom:10px}
+a{color:#0f766e;text-decoration:none}
+a:hover{text-decoration:underline}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+th{background:#f7f7f4;text-align:left;padding:7px 10px;border:1px solid #ebebea;font-weight:600}
+td{padding:7px 10px;border:1px solid #ebebea;vertical-align:top}
+code{background:#f7f7f4;padding:1px 5px;border-radius:3px;font-family:Consolas,'Courier New',monospace;font-size:12px;color:#374151}
+ul{margin:8px 0 10px 22px}
+li{margin-bottom:4px}
+hr{border:none;border-top:1px solid #ebebea;margin:28px 0}
+.badge{display:inline-block;padding:1px 7px;border-radius:3px;font-size:11px;font-weight:600}
+.done{background:#d1fae5;color:#065f46}
+.pending{background:#fef3c7;color:#92400e}
+.live{background:#dbeafe;color:#1e40af}
+@media print{body{padding:20px;max-width:100%;font-size:12px}h1{font-size:18px}h2{font-size:15px}}
+</style>
+</head>
+<body>
+
+<h1>TSE Online — Docs</h1>
+<p style="color:#6b7280;font-size:13px">TriNext Innovations · <a href="../README.html">← Project README</a></p>
+
+<hr>
+
+<h2>Documents</h2>
+<table>
+  <tr><th>File</th><th>Contents</th></tr>
+  <tr><td><a href="Architecture.html">Architecture.html</a></td><td>System architecture, data flow, stack decisions, env vars, deployment</td></tr>
+  <tr><td><a href="BUILD-PLAN.html">BUILD-PLAN.html</a></td><td>Phase 0–5 build plan, risks, costs, POPIA analysis</td></tr>
+  <tr><td><a href="DEVELOPER-GUIDE.html">DEVELOPER-GUIDE.html</a></td><td>Local setup, known gotchas, git workflow, seeded entities, go-live checklist</td></tr>
+  <tr><td><a href="PROD-DEPLOY.html">PROD-DEPLOY.html</a></td><td>First-run deploy sequence, gotchas from 2026-05-20 cutover, cert renewal, DR</td></tr>
+  <tr><td><a href="data-model.html">data-model.html</a></td><td>Compatibility schema — printer_brand → printer_model → cartridge_compatibility, DDL, queries</td></tr>
+  <tr><td><a href="design-tokens.html">design-tokens.html</a></td><td>Brand colour tokens (confirmed CMYK palette), Tailwind utilities, shadcn mapping, typography</td></tr>
+  <tr><td><a href="brand.html">brand.html</a></td><td>Brand guidelines — logo, colours, typography, voice, motion, layout rules</td></tr>
+  <tr><td><a href="CLIENT-PENDING.html">CLIENT-PENDING.html</a></td><td>Outstanding client actions and resolved items</td></tr>
+  <tr><td><a href="RETAINER-SCOPE.html">RETAINER-SCOPE.html</a></td><td>Monthly retainer scope — infrastructure, marketing automation, retained dev</td></tr>
+  <tr><td><a href="AI-CODE-PROMPTS.html">AI-CODE-PROMPTS.html</a></td><td>Claude prompts for each major feature (Prompts 1–12)</td></tr>
+</table>
+
+<hr>
+
+<h2>Current Spec</h2>
+
+<h3>Apps</h3>
+<table>
+  <tr><th>Workspace</th><th>Package</th><th>Port</th><th>Entry</th></tr>
+  <tr><td><code>apps/web</code></td><td><code>@tse/web</code></td><td>3000</td><td><code>src/app/layout.tsx</code></td></tr>
+  <tr><td><code>apps/backend</code></td><td><code>@tse/backend</code></td><td>9000</td><td>Medusa v2</td></tr>
+</table>
+
+<h3>Shared Packages</h3>
+<table>
+  <tr><th>Workspace</th><th>Package</th><th>Contents</th></tr>
+  <tr><td><code>packages/config</code></td><td><code>@tse/config</code></td><td>Tailwind config, ESLint config, TS base config</td></tr>
+  <tr><td><code>packages/ui</code></td><td><code>@tse/ui</code></td><td>Shared shadcn/ui component exports</td></tr>
+  <tr><td><code>packages/types</code></td><td><code>@tse/types</code></td><td>Shared TypeScript interfaces</td></tr>
+</table>
+
+<h3>Design System</h3>
+<table>
+  <tr><th>Token type</th><th>Source of truth</th><th>How to use</th></tr>
+  <tr><td>Brand colours</td><td><code>apps/web/src/app/globals.css</code> — Brand Tokens block</td><td><code>bg-brand-primary</code>, <code>text-brand-text</code>, etc.</td></tr>
+  <tr><td>shadcn colours</td><td><code>globals.css</code> — shadcn Variable Mapping block</td><td><code>bg-background</code>, <code>text-foreground</code>, etc.</td></tr>
+  <tr><td>Tailwind config</td><td><code>packages/config/tailwind.config.ts</code></td><td><code>brand.*</code> utilities + shadcn tokens</td></tr>
+  <tr><td>Fonts</td><td><code>apps/web/src/app/layout.tsx</code></td><td>Inter → <code>font-sans</code> · Fraunces → <code>font-display</code></td></tr>
+</table>
+
+<h3>Confirmed Brand Colours</h3>
+<table>
+  <tr><th>Token</th><th>Value</th><th>Purpose</th></tr>
+  <tr><td><code>--brand-primary</code></td><td><code>62 74% 58%</code> (#dfe344 lime)</td><td>CTA buttons, active states — dark text always</td></tr>
+  <tr><td><code>--brand-secondary</code></td><td><code>187 90% 61%</code> (#41e0f5 cyan)</td><td>Links, interactive elements</td></tr>
+  <tr><td><code>--brand-accent</code></td><td><code>303 78% 70%</code> (#ee75e9 pink)</td><td>Glows, decorative accents</td></tr>
+  <tr><td><code>--brand-dark</code></td><td><code>221 39% 11%</code> (#111827)</td><td>Dark surfaces, body text, nav</td></tr>
+</table>
+
+<h3>Infrastructure</h3>
+<table>
+  <tr><th>Component</th><th>Config file</th><th>Status</th></tr>
+  <tr><td>Docker Compose</td><td><code>docker-compose.yml</code></td><td><span class="badge live">🟢 Live</span> Vultr JHB — deployed 2026-05-20</td></tr>
+  <tr><td>Nginx</td><td><code>infrastructure/nginx/</code></td><td><span class="badge live">🟢 Live</span> TLS via Let's Encrypt SAN cert (expires 2026-08-18)</td></tr>
+  <tr><td>CI/CD</td><td><code>.github/workflows/ci.yml</code></td><td><span class="badge live">🟢 Live</span> lint + type-check on PRs</td></tr>
+  <tr><td>Hosting</td><td>Vultr JHB VPS (<code>tse-prod-jnb</code>)</td><td><span class="badge live">🟢 Live</span> <code>/opt/tse-ui</code></td></tr>
+  <tr><td>Dev URL</td><td>—</td><td><a href="https://dev.tse-cartridges.co.za">dev.tse-cartridges.co.za</a> · <a href="https://api.dev.tse-cartridges.co.za">api.dev.tse-cartridges.co.za</a></td></tr>
+</table>
+
+<h3>Migration Data (<code>migration/raw/</code>)</h3>
+<table>
+  <tr><th>File</th><th>Contents</th><th>Status</th></tr>
+  <tr><td><code>products.json</code></td><td>Raw WooCommerce export (560 products)</td><td><span class="badge done">Done</span></td></tr>
+  <tr><td><code>products-transformed.json</code></td><td>Grouped variable/simple (340 products)</td><td><span class="badge done">Done</span></td></tr>
+  <tr><td><code>printer-brands.json</code></td><td>12 printer brands extracted</td><td><span class="badge done">Done</span></td></tr>
+  <tr><td><code>printer-models.json</code></td><td>512 unique models grouped by brand</td><td><span class="badge done">Done</span></td></tr>
+  <tr><td><code>compat-map-draft.csv</code></td><td>249 products mapped — send to client for validation</td><td><span class="badge pending">⏳ Awaiting client</span></td></tr>
+  <tr><td><code>compat-gaps.csv</code></td><td>91 products with no compat data — client to fill</td><td><span class="badge pending">⏳ Awaiting client</span></td></tr>
+  <tr><td><code>customers.json</code></td><td><strong>NEVER commit — POPIA sensitive</strong></td><td>SA infrastructure only</td></tr>
+</table>
+
+<hr>
+
+<h2>Open Issues</h2>
+<p>Full issue list: <a href="https://github.com/TriNext-Innovations/tse-rework/issues">github.com/TriNext-Innovations/tse-rework/issues</a></p>
+
+<h3>Critical Path — Blocked on Client</h3>
+<table>
+  <tr><th>#</th><th>Issue</th><th>Blocked by</th></tr>
+  <tr><td>#5.1</td><td>PayFast merchant credentials</td><td>Client</td></tr>
+  <tr><td>#2.4</td><td>Map cartridge SKUs to printer models</td><td>Client (return compat CSV)</td></tr>
+  <tr><td>#22</td><td>Logo source file (Illustrator/CorelDraw)</td><td>Client</td></tr>
+  <tr><td>#24</td><td>Font pairing confirmation</td><td>Client</td></tr>
+</table>
+
+<h3>TriNext Actions (no client dependency)</h3>
+<table>
+  <tr><th>#</th><th>Issue</th></tr>
+  <tr><td>—</td><td>Phase 1: UI components + catalogue</td></tr>
+  <tr><td>—</td><td>Phase 2: Compatibility wizard + search</td></tr>
+  <tr><td>#5.4</td><td>Resend transactional email setup</td></tr>
+  <tr><td>—</td><td>Cert renewal cron (due before 2026-08-04)</td></tr>
+</table>
+
+</body>
+</html>

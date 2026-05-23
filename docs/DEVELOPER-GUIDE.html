@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TSE Online — Developer Guide</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,Inter,sans-serif;font-size:14px;line-height:1.6;color:#111827;background:#fff;max-width:960px;margin:0 auto;padding:40px 24px}
+h1{font-size:22px;font-weight:700;border-bottom:2px solid #dfe344;padding-bottom:8px;margin-bottom:24px}
+h2{font-size:17px;font-weight:600;margin:28px 0 10px}
+h3{font-size:14px;font-weight:600;margin:18px 0 6px}
+p{margin-bottom:10px}
+a{color:#0f766e;text-decoration:none}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+th{background:#f7f7f4;text-align:left;padding:7px 10px;border:1px solid #ebebea;font-weight:600}
+td{padding:7px 10px;border:1px solid #ebebea;vertical-align:top}
+code{background:#f7f7f4;padding:1px 5px;border-radius:3px;font-family:Consolas,'Courier New',monospace;font-size:12px;color:#374151}
+pre{background:#111827;color:#e5e7eb;padding:16px;border-radius:6px;overflow-x:auto;margin:14px 0;font-size:12px;line-height:1.5}
+pre code{background:none;padding:0;color:inherit}
+ul,ol{margin:8px 0 10px 22px}
+li{margin-bottom:4px}
+hr{border:none;border-top:1px solid #ebebea;margin:28px 0}
+blockquote{border-left:3px solid #dfe344;padding:8px 14px;background:#fafaf7;margin:12px 0;color:#374151;font-size:13px}
+.warn{border-left:3px solid #f59e0b;padding:8px 14px;background:#fffbeb;margin:12px 0;color:#374151;font-size:13px}
+@media print{body{padding:20px;max-width:100%;font-size:12px}h1{font-size:18px}h2{font-size:15px}pre{font-size:11px}}
+</style>
+</head>
+<body>
+
+<h1>TSE Online — Developer Guide</h1>
+
+<h2>Stack</h2>
+<table>
+  <tr><th>Layer</th><th>Technology</th></tr>
+  <tr><td>Storefront</td><td>Next.js 15 (App Router, React 19)</td></tr>
+  <tr><td>Commerce engine</td><td>Medusa v2 (self-hosted)</td></tr>
+  <tr><td>Database</td><td>PostgreSQL 16 (Docker)</td></tr>
+  <tr><td>Cache / queues</td><td>Redis 7 (Docker)</td></tr>
+  <tr><td>Package manager</td><td>pnpm 9 (workspace monorepo)</td></tr>
+  <tr><td>Local infra</td><td>Docker Compose (Postgres + Redis)</td></tr>
+  <tr><td>Production</td><td>Vultr JHB VPS — <code>dev.tse-cartridges.co.za</code></td></tr>
+</table>
+
+<hr>
+
+<h2>Prerequisites</h2>
+<ul>
+  <li>Node.js 20+</li>
+  <li>pnpm 9+</li>
+  <li>Docker Desktop (running)</li>
+  <li>Git</li>
+</ul>
+
+<hr>
+
+<h2>First-Time Local Setup</h2>
+
+<h3>1. Clone and install</h3>
+<pre><code>git clone &lt;repo-url&gt;
+cd tse-ui
+pnpm install</code></pre>
+<blockquote>A <code>.npmrc</code> at repo root hoists <code>@medusajs/*</code>, <code>react</code>, and <code>react-dom</code> so Vite (Medusa admin bundler) can find them. Do not delete it.</blockquote>
+
+<h3>2. Start Docker services</h3>
+<pre><code>docker-compose up -d</code></pre>
+<p>Starts <strong>Postgres on :5432</strong> and <strong>Redis on :6379</strong>. Medusa runs locally, not in Docker.</p>
+
+<h3>3. Create backend env file</h3>
+<pre><code>cp apps/backend/.env.example apps/backend/.env</code></pre>
+<p>Minimum <code>apps/backend/.env</code>:</p>
+<pre><code>DATABASE_URL=postgresql://postgres:tse_local_dev@localhost:5432/tse_medusa
+REDIS_URL=redis://localhost:6379
+JWT_SECRET=local-dev-jwt-secret-tse
+COOKIE_SECRET=local-dev-cookie-secret-tse
+MEDUSA_BACKEND_URL=http://localhost:9000
+MEDUSA_WORKER_MODE=shared
+DISABLE_MEDUSA_ADMIN=false
+STORE_CORS=http://localhost:3000,http://localhost:3001
+ADMIN_CORS=http://localhost:9000
+AUTH_CORS=http://localhost:9000,http://localhost:3000,http://localhost:3001
+MEDUSA_ADMIN_EMAIL=admin@tse.co.za
+MEDUSA_ADMIN_PASSWORD=TseAdmin2026!
+STOREFRONT_URL=http://localhost:3001</code></pre>
+
+<h3>4. Run Medusa migrations</h3>
+<pre><code>pnpm --filter @tse/backend migrate</code></pre>
+
+<h3>5. Start Medusa</h3>
+<pre><code>pnpm --filter @tse/backend dev</code></pre>
+<p>Admin dashboard: <code>http://localhost:9000/app</code> · API: <code>http://localhost:9000</code></p>
+
+<h3>6. Seed the database</h3>
+<pre><code>pnpm tsx scripts/seed.ts</code></pre>
+<p>Idempotent — safe to re-run. Seeds:</p>
+<ul>
+  <li>South Africa region (ZAR)</li>
+  <li>TSE Online Storefront sales channel</li>
+  <li>Category hierarchy: Inkjet Cartridges → brands, Laser Cartridges → brands</li>
+  <li>All 559 products from <code>migration/raw/products.json</code></li>
+  <li>Links all products to the sales channel</li>
+</ul>
+
+<h3>7. Create a publishable API key</h3>
+<pre><code># Authenticate
+TOKEN=$(curl -s -X POST http://localhost:9000/auth/user/emailpass \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@tse.co.za","password":"TseAdmin2026!"}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])")
+
+# Create key
+KEY_ID=$(curl -s -X POST http://localhost:9000/admin/api-keys \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"title":"TSE Online Storefront","type":"publishable"}' \
+  | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['api_key']['id'])")
+
+TOKEN_VALUE=$(curl -s http://localhost:9000/admin/api-keys/$KEY_ID \
+  -H "Authorization: Bearer $TOKEN" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['api_key']['token'])")
+
+# Link to sales channel (get channel ID from seed output or admin UI)
+curl -s -X POST "http://localhost:9000/admin/api-keys/$KEY_ID/sales-channels" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{\"add\":[\"$CHANNEL_ID\"]}"
+
+echo "NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=$TOKEN_VALUE"</code></pre>
+<p>Or via admin UI: <strong>Settings → API Keys → Create → link to TSE Online Storefront channel</strong>.</p>
+
+<h3>8. Create web env file</h3>
+<p><code>apps/web/.env.local</code>:</p>
+<pre><code>NEXT_PUBLIC_MEDUSA_BACKEND_URL=http://localhost:9000
+NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=pk_&lt;your-key&gt;</code></pre>
+
+<h3>9. Start the storefront</h3>
+<pre><code>pnpm --filter @tse/web dev</code></pre>
+<p>Storefront: <code>http://localhost:3001</code></p>
+
+<hr>
+
+<h2>Daily Dev Workflow</h2>
+<pre><code># Terminal 1 — infrastructure
+docker-compose up -d
+
+# Terminal 2 — Medusa backend
+pnpm --filter @tse/backend dev
+
+# Terminal 3 — Next.js storefront
+pnpm --filter @tse/web dev</code></pre>
+
+<hr>
+
+<h2>Known Gotchas</h2>
+
+<table>
+  <tr><th>Symptom</th><th>Cause &amp; Fix</th></tr>
+  <tr>
+    <td>esbuild version conflict on install</td>
+    <td>pnpm overrides in root <code>package.json</code> pin esbuild to <code>0.25.6</code>. If missing, re-add the override.</td>
+  </tr>
+  <tr>
+    <td>Medusa admin blank screen</td>
+    <td>Requires <code>@medusajs/dashboard</code>, <code>react</code>, <code>react-dom</code> as explicit deps in <code>apps/backend/package.json</code> + <code>.npmrc</code> hoisting. Both committed.</td>
+  </tr>
+  <tr>
+    <td><code>Cannot find module '@medusajs/admin-sdk'</code></td>
+    <td><code>@medusajs/draft-order</code> requires <code>@medusajs/admin-sdk@2.13.6</code> exactly. Pinned via pnpm override.</td>
+  </tr>
+  <tr>
+    <td><code>Cannot find module '@medusajs/framework/utils'</code></td>
+    <td><code>apps/backend/tsconfig.json</code> must use <code>moduleResolution: "bundler"</code> (not <code>"node"</code>).</td>
+  </tr>
+  <tr>
+    <td><code>ts-node</code> missing</td>
+    <td>Must be in <code>apps/backend/package.json</code> devDependencies. tsconfig includes <code>ts-node: { transpileOnly: true }</code>.</td>
+  </tr>
+  <tr>
+    <td>CORS errors in storefront</td>
+    <td><code>STORE_CORS</code> must include storefront origin. <code>pnpm dev</code> may allocate <code>:3001</code> if <code>:3000</code> is taken — set both.</td>
+  </tr>
+  <tr>
+    <td>Store API returns 0 products</td>
+    <td>(1) Products must be linked to the sales channel tied to the publishable key. (2) Pass <code>region_id</code> to get <code>calculated_price</code> on variants.</td>
+  </tr>
+  <tr>
+    <td>Shipping option creation fails: "Providers not allowed"</td>
+    <td>The fulfillment provider must be associated with the stock location via <code>POST /admin/stock-locations/:id/fulfillment-providers</code> before creating options. The seed script handles this.</td>
+  </tr>
+  <tr>
+    <td><code>GET /admin/fulfillment-sets/:id</code> returns HTML</td>
+    <td>This endpoint does not exist in Medusa v2. Use <code>GET /admin/stock-locations/:id?fields=*fulfillment_sets,*fulfillment_sets.service_zones</code>.</td>
+  </tr>
+</table>
+
+<hr>
+
+<h2>Project Structure</h2>
+<pre><code>tse-ui/
+├── apps/
+│   ├── backend/          Medusa v2 backend
+│   │   ├── src/
+│   │   │   └── admin/    Custom admin widgets &amp; routes
+│   │   ├── medusa-config.ts
+│   │   └── .env          Local env (not committed)
+│   └── web/              Next.js 15 storefront
+│       ├── src/
+│       │   ├── app/
+│       │   │   ├── (storefront)/   Public-facing pages
+│       │   │   └── (main)/         Other routes
+│       │   ├── components/
+│       │   └── lib/
+│       │       └── medusa.ts       SDK client
+│       └── .env.local    Local env (not committed)
+├── scripts/
+│   └── seed.ts           Database seed script
+├── migration/
+│   └── raw/
+│       └── products.json WooCommerce export (559 products)
+├── docker-compose.yml    Postgres + Redis
+├── .npmrc               pnpm hoisting config
+└── package.json         Root — pnpm overrides</code></pre>
+
+<hr>
+
+<h2>Git Workflow</h2>
+<pre><code>main          ← production (dev.tse-cartridges.co.za)
+initial/      ← Phase 0 build branch (current)
+feature/*     ← feature branches
+fix/*         ← bug fixes</code></pre>
+
+<p><strong>Commit format (Conventional Commits):</strong></p>
+<pre><code>feat(storefront): add products listing page with category filters
+fix(seed): handle empty price field on Epson T7024
+chore(deps): pin @medusajs/admin-sdk to 2.13.6</code></pre>
+
+<hr>
+
+<h2>Database — Seeded Entities</h2>
+<table>
+  <tr><th>Entity</th><th>Count</th><th>Notes</th></tr>
+  <tr><td>Regions</td><td>1</td><td>South Africa / ZAR</td></tr>
+  <tr><td>Sales channels</td><td>1</td><td>TSE Online Storefront</td></tr>
+  <tr><td>Categories</td><td>14</td><td>2 parents (Inkjet, Laser) + 12 brand leaves</td></tr>
+  <tr><td>Products</td><td>559</td><td>All from WooCommerce export</td></tr>
+  <tr><td>Stock location</td><td>1</td><td>Kya Sands Warehouse</td></tr>
+  <tr><td>Shipping options</td><td>2</td><td>JHB/PTA Own Delivery (COD, R0) · Nationwide Courier (R129)</td></tr>
+  <tr><td>Publishable API key</td><td>1</td><td>Manual step post-seed</td></tr>
+</table>
+<p>Payment providers (PayFast / Ozow) configured at Milestone 3.</p>
+
+<hr>
+
+<h2>POPIA / Sensitive Data Rules</h2>
+<div class="warn">
+  <ul>
+    <li><code>migration/raw/customers.json</code> — <strong>NEVER commit</strong> — contains real customer PII</li>
+    <li><code>migration/raw/orders.json</code> — <strong>NEVER commit</strong> — contains real order history</li>
+    <li>Real customer/order data must only be migrated to the production Vultr JHB server</li>
+    <li>Synthetic data only in seed scripts</li>
+  </ul>
+</div>
+
+<hr>
+
+<h2>Going Live Checklist (Milestone 3)</h2>
+<ul>
+  <li>☑ Vultr JHB server provisioned, Docker stack deployed — <em>done 2026-05-20</em></li>
+  <li>☑ Domain DNS pointed to Vultr (<code>dev.tse-cartridges.co.za</code>)</li>
+  <li>☑ SSL via Let's Encrypt SAN cert (expires 2026-08-18)</li>
+  <li>☐ All env vars set for production</li>
+  <li>☑ Medusa migrations run on production DB</li>
+  <li>☑ Product data seeded and reviewed by client</li>
+  <li>☐ Publishable API key created for production</li>
+  <li>☐ Shipping options configured in Medusa admin</li>
+  <li>☐ PayFast credentials configured (<code>PAYFAST_SANDBOX=false</code>)</li>
+  <li>☐ POPIA Privacy Policy page live</li>
+  <li>☐ Test order placed end-to-end</li>
+  <li>☐ DNS cutover from WooCommerce during low-traffic window</li>
+</ul>
+
+</body>
+</html>
