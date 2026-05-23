@@ -36,7 +36,17 @@ export function Navbar({ categories = [], right }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [brandsExpanded, setBrandsExpanded] = useState(false)
   const shopRef = useRef<HTMLDivElement>(null)
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const router = useRouter()
+
+  function openShop() {
+    if (closeTimer.current) clearTimeout(closeTimer.current)
+    setShopOpen(true)
+  }
+
+  function scheduleClose() {
+    closeTimer.current = setTimeout(() => setShopOpen(false), 200)
+  }
 
   const brandCategories = categories.filter((c) => !TYPE_CATEGORIES.has(c.name))
   const brands = brandCategories.length > 0 ? brandCategories : FALLBACK_BRANDS
@@ -54,7 +64,10 @@ export function Navbar({ categories = [], right }: NavbarProps) {
       }
     }
     document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      if (closeTimer.current) clearTimeout(closeTimer.current)
+    }
   }, [])
 
   return (
@@ -158,8 +171,8 @@ export function Navbar({ categories = [], right }: NavbarProps) {
           <div
             ref={shopRef}
             className="relative"
-            onMouseEnter={() => setShopOpen(true)}
-            onMouseLeave={() => setShopOpen(false)}
+            onMouseEnter={openShop}
+            onMouseLeave={scheduleClose}
           >
             <Link
               href="/products"
@@ -178,7 +191,7 @@ export function Navbar({ categories = [], right }: NavbarProps) {
             </Link>
 
             {shopOpen && (
-              <div className="mega-panel" role="menu">
+              <div className="mega-panel" role="menu" onMouseEnter={openShop} onMouseLeave={scheduleClose}>
                 <div className="text-[9px] uppercase tracking-[0.2em] text-[#9ca3af] mb-3 px-1">Shop by brand</div>
                 <div className="grid grid-cols-3 gap-1">
                   {brands.map((b) => (
