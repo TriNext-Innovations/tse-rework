@@ -2,7 +2,7 @@
 
 Headless e-commerce platform for TSE Online — South Africa's printer cartridge supplier. Migrating from WooCommerce to a Medusa v2 + Next.js 15 monorepo, self-hosted on Vultr Johannesburg.
 
-**Current phase:** Phase 0 — Pre-Build (audit, scaffold, infrastructure config)  
+**Current phase:** Phase 2 — Storefront Pages  
 **Go-live target:** June 2026
 
 ---
@@ -63,28 +63,59 @@ pnpm install
 
 ```bash
 cp apps/backend/.env.example apps/backend/.env
-cp apps/web/.env.example     apps/web/.env.local
+# fill in apps/backend/.env — minimum: DATABASE_URL, REDIS_URL, JWT_SECRET, COOKIE_SECRET
 ```
 
-See each `.env.example` for field documentation.
+The root `.env` already contains `POSTGRES_PASSWORD` for docker-compose. Edit it if you want a different password (and mirror it in `apps/backend/.env`).
 
-### 3. Run the full stack
+### 3. Start the database and Redis
 
 ```bash
-docker compose up --build
+docker compose up postgres redis -d
+```
+
+This starts Postgres on `localhost:5432` and Redis on `localhost:6379` in the background. Everything else runs natively for hot-reload.
+
+### 4. Run database migrations
+
+```bash
+pnpm --filter backend migrate
+```
+
+Only needed on first run and after pulling changes that add new migrations.
+
+### 5. Start the Medusa backend
+
+```bash
+pnpm --filter backend dev
+```
+
+Medusa takes ~10–15 seconds to boot. Wait for:
+
+```
+✔ Server is ready on port: 9000
+```
+
+### 6. Start the Next.js storefront
+
+In a second terminal:
+
+```bash
+pnpm --filter web dev
 ```
 
 | URL | Service |
 |---|---|
 | http://localhost:3000 | Next.js storefront |
 | http://localhost:9000 | Medusa API |
-| http://localhost:9000/app | Medusa admin |
+| http://localhost:9000/app | Medusa admin dashboard |
 | http://localhost:9000/health | Medusa health check |
 
-### 4. Run apps without Docker (needs local Postgres + Redis)
+### Shut it all down
 
 ```bash
-pnpm dev
+# Stop the dev servers with Ctrl+C in each terminal, then:
+docker compose down
 ```
 
 ---
@@ -93,11 +124,14 @@ pnpm dev
 
 | Command | Description |
 |---|---|
-| `pnpm dev` | Start all apps in dev mode |
+| `docker compose up postgres redis -d` | Start infra only (Postgres + Redis) |
+| `pnpm --filter backend migrate` | Run pending DB migrations |
+| `pnpm --filter backend dev` | Start Medusa backend with hot reload |
+| `pnpm --filter web dev` | Start Next.js storefront with hot reload |
 | `pnpm build` | Build all workspaces |
 | `pnpm lint` | Lint all workspaces |
 | `pnpm type-check` | TypeScript checks across all workspaces |
-| `docker compose up --build` | Full stack via Docker |
+| `docker compose up --build` | Full production-like stack via Docker |
 | `pnpm --filter @tse/web exec shadcn add <component>` | Add a shadcn component |
 
 ---

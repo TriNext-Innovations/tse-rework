@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
-import { Logo } from '@/components/layout'
+import { Navbar } from '@/components/layout'
 import { ProductFilters } from './ProductFilters'
 import { AddToCartButton } from './AddToCartButton'
 
@@ -11,23 +11,30 @@ const PAGE_SIZE = 24
 type SearchParams = Promise<{ category?: string; page?: string }>
 
 async function getRegionId(): Promise<string> {
-  const res = await fetch(`${BACKEND}/store/regions?limit=1`, {
-    headers: { 'x-publishable-api-key': PUB_KEY },
-    next: { revalidate: 3600 },
-  })
-  const d = await res.json()
-  return d.regions?.[0]?.id ?? ''
+  try {
+    const res = await fetch(`${BACKEND}/store/regions?limit=1`, {
+      headers: { 'x-publishable-api-key': PUB_KEY },
+      next: { revalidate: 3600 },
+    })
+    const d = await res.json()
+    return d.regions?.[0]?.id ?? ''
+  } catch {
+    return ''
+  }
 }
 
-async function getCategories() {
-  const res = await fetch(`${BACKEND}/store/product-categories?limit=50&include_descendants_tree=true`, {
-    headers: { 'x-publishable-api-key': PUB_KEY },
-    next: { revalidate: 3600 },
-  })
-  const d = await res.json()
-  return (d.product_categories ?? []) as any[]
+async function getCategories(): Promise<any[]> {
+  try {
+    const res = await fetch(`${BACKEND}/store/product-categories?limit=50&include_descendants_tree=true`, {
+      headers: { 'x-publishable-api-key': PUB_KEY },
+      next: { revalidate: 3600 },
+    })
+    const d = await res.json()
+    return (d.product_categories ?? []) as any[]
+  } catch {
+    return []
+  }
 }
-
 
 export default async function ProductsPage({ searchParams }: { searchParams: SearchParams }) {
   const { category = '', page: pageParam = '1' } = await searchParams
@@ -41,17 +48,24 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
     offset: String(offset),
   })
   if (regionId) params.append('region_id', regionId)
-  // category param is always a real category ID from the URL
   if (category) params.append('category_id[]', category)
 
   params.append('fields', '+metadata,+categories.id,+categories.name,+categories.handle,+images')
-  const data = await fetch(`${BACKEND}/store/products?${params}`, {
-    headers: { 'x-publishable-api-key': PUB_KEY },
-    next: { revalidate: 60 },
-  }).then((r) => r.json())
 
-  const products: any[] = data.products ?? []
-  const total: number = data.count ?? 0
+  let products: any[] = []
+  let total = 0
+
+  try {
+    const data = await fetch(`${BACKEND}/store/products?${params}`, {
+      headers: { 'x-publishable-api-key': PUB_KEY },
+      next: { revalidate: 60 },
+    }).then((r) => r.json())
+    products = data.products ?? []
+    total = data.count ?? 0
+  } catch {
+    // Medusa offline — page renders empty with filters still usable
+  }
+
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
   const activeCategoryName = category
@@ -65,27 +79,9 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
         .font-display-italic { font-family: var(--font-fraunces), Georgia, serif; font-style: italic; }
       `}</style>
 
-      {/* Nav */}
-      <header className="sticky top-0 z-40 bg-[#F5F4F0]/90 backdrop-blur-xl border-b border-black/8 px-4 sm:px-8 lg:px-12">
-        <div className="mx-auto max-w-7xl flex items-center justify-between h-14">
-          <Link href="/" className="flex items-center gap-2">
-            <Logo width={72} variant="color" linked={false} />
-          </Link>
-          <nav className="hidden md:flex items-center gap-5 text-sm text-[#374151]">
-            <Link href="/products" className="font-medium text-[#111827]">Shop</Link>
-            <a href="/#finder" className="hover:text-[#111827] transition-colors">Find by printer</a>
-            <a href="/#delivery" className="hover:text-[#111827] transition-colors">Delivery</a>
-          </nav>
-          <Link
-            href="/"
-            className="text-sm font-medium text-[#374151] hover:text-[#111827] transition-colors"
-          >
-            ← Home
-          </Link>
-        </div>
-      </header>
+      <Navbar categories={allCategories} />
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 py-10">
+      <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 pt-28 pb-10">
         {/* Page heading */}
         <div className="mb-8">
           <h1 className="font-display font-light text-4xl sm:text-5xl tracking-tight leading-[0.95]">
