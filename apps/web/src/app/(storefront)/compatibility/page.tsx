@@ -19,35 +19,16 @@ export const metadata: Metadata = {
   description: 'Search by printer model and instantly see compatible generic cartridges. Quality guaranteed.',
 }
 
-async function getRegionId(): Promise<string> {
-  try {
-    const res = await fetch(`${BACKEND}/store/regions?limit=1`, {
-      headers: { 'x-publishable-api-key': PUB_KEY },
-      next: { revalidate: 3600 },
-    })
-    const d = await res.json()
-    return d.regions?.[0]?.id ?? ''
-  } catch {
-    return ''
-  }
-}
-
-// TODO(claus): Replace with /store/compatibility?model= when P1.3.3 ships
-async function searchProducts(model: string, regionId: string): Promise<any[]> {
+async function searchCompatibility(model: string): Promise<any[]> {
   if (!model) return []
   try {
-    const params = new URLSearchParams({
-      q: model,
-      limit: '12',
-      fields: '+images,+categories.id,+categories.name,+variants.calculated_price,+metadata',
-    })
-    if (regionId) params.set('region_id', regionId)
-    const res = await fetch(`${BACKEND}/store/products?${params}`, {
+    const params = new URLSearchParams({ model })
+    const res = await fetch(`${BACKEND}/store/compatibility?${params}`, {
       headers: { 'x-publishable-api-key': PUB_KEY },
       next: { revalidate: 60 },
     })
     const d = await res.json()
-    return (d.products ?? []) as any[]
+    return (d.results ?? []) as any[]
   } catch {
     return []
   }
@@ -57,8 +38,7 @@ type Props = { searchParams: Promise<{ model?: string }> }
 
 export default async function CompatibilityPage({ searchParams }: Props) {
   const { model = '' } = await searchParams
-  const regionId = await getRegionId()
-  const results  = model ? await searchProducts(model, regionId) : []
+  const results = model ? await searchCompatibility(model) : []
 
   const hasResults = results.length > 0
 
@@ -163,24 +143,23 @@ export default async function CompatibilityPage({ searchParams }: Props) {
                 </p>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-                  {results.map((p: any, i: number) => {
-                    const variant  = p.variants?.[0]
-                    const sku      = variant?.sku ?? '—'
-                    const amount   = variant?.calculated_price?.calculated_amount
-                    const priceZar = amount ? Math.round(amount / 100) : null
-                    const imgUrl   = p.images?.[0]?.url
+                  {results.map((r: any, i: number) => {
+                    // API returns: { sku, printer_brand, printer_model, handle, title, thumbnail }
+                    // handle/title/thumbnail are null until products are seeded
+                    const href = r.handle ? `/products/${r.handle}` : `/products?q=${encodeURIComponent(r.sku)}`
+                    const label = r.title ?? `${r.printer_brand} — ${r.printer_model}`
 
                     return (
                       <Link
-                        key={p.id}
-                        href={`/products/${p.handle}`}
+                        key={`${r.printer_model}-${r.sku}`}
+                        href={href}
                         className="group bg-white rounded-[16px] p-4 hover:-translate-y-1 transition-transform duration-300"
                       >
                         <div className="relative h-28 flex items-center justify-center mb-3">
-                          {imgUrl ? (
+                          {r.thumbnail ? (
                             <Image
-                              src={imgUrl}
-                              alt={p.title}
+                              src={r.thumbnail}
+                              alt={label}
                               width={112}
                               height={112}
                               className="h-24 w-auto object-contain"
@@ -200,14 +179,9 @@ export default async function CompatibilityPage({ searchParams }: Props) {
                           )}
                         </div>
 
-                        <h2 className="font-display text-sm leading-tight tracking-tight line-clamp-2 mb-1">{p.title}</h2>
-                        <div className="text-[10px] text-[#9ca3af] mb-3">SKU {sku}</div>
-                        <div className="font-display text-lg">
-                          {priceZar
-                            ? `R${priceZar.toLocaleString('en-ZA')}`
-                            : <span className="text-[#9ca3af] text-sm">POA</span>
-                          }
-                        </div>
+                        <h2 className="font-display text-sm leading-tight tracking-tight line-clamp-2 mb-1">{label}</h2>
+                        <div className="text-[10px] text-[#9ca3af] mb-3">SKU {r.sku}</div>
+                        <div className="text-[10px] text-[#6B6B66]">{r.printer_brand} · {r.printer_model}</div>
                       </Link>
                     )
                   })}

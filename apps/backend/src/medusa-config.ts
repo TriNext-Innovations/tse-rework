@@ -22,7 +22,11 @@ export default defineConfig({
         | 'server'
         | undefined) ?? 'shared',
   },
-  modules: [],
+  modules: [
+    {
+      resolve: "./src/modules/compatibility",
+    },
+  ],
   admin: {
     disable: process.env.DISABLE_MEDUSA_ADMIN === 'true',
     backendUrl:
