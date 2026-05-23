@@ -120,9 +120,10 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
                   const imageUrl = p.images?.[0]?.url
 
                   return (
-                    <article
+                    <Link
                       key={p.id}
-                      className="group relative bg-white rounded-[16px] p-4 overflow-hidden cursor-pointer hover:-translate-y-1 transition-transform duration-300"
+                      href={`/products/${p.handle}`}
+                      className="group relative bg-white rounded-[16px] p-4 overflow-hidden hover:-translate-y-1 transition-transform duration-300"
                     >
                       {/* Product image */}
                       <div className="relative h-28 flex items-end justify-center mb-3">
@@ -160,7 +161,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
                         </div>
                         <AddToCartButton id={p.id} title={p.title} sku={sku} price={priceZar} />
                       </div>
-                    </article>
+                    </Link>
                   )
                 })}
               </div>

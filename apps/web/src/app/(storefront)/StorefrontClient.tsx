@@ -530,7 +530,7 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
               const type = p.metadata?.cartridge_type === 'inkjet' ? 'Inkjet' : 'Laser'
 
               return (
-                <article key={p.id} data-reveal onClick={() => router.push('/products')} className="product-card group relative bg-[var(--paper-2)] rounded-[20px] p-5 sm:p-6 overflow-hidden cursor-pointer">
+                <article key={p.id} data-reveal onClick={() => router.push(`/products/${p.handle}`)} className="product-card group relative bg-[var(--paper-2)] rounded-[20px] p-5 sm:p-6 overflow-hidden cursor-pointer">
                   <div className="flex items-start justify-between mb-4">
                     <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--muted)]">{type}</span>
                   </div>
