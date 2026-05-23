@@ -2,9 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Logo } from '@/components/layout'
+import { Navbar, Logo } from '@/components/layout'
 import { useCart } from '@/contexts/CartContext'
-import { CartButton } from '@/components/CartButton'
 
 type Theme = 'editorial' | 'brand'
 
@@ -143,37 +142,6 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
         .pill-nav-item { position: relative; }
         .pill-nav-item::after { content:''; position:absolute; left: 12px; right: 12px; bottom: 4px; height: 2px; background: var(--magenta); transform: scaleX(0); transform-origin: left; transition: transform .35s cubic-bezier(.22,1,.36,1); }
         .pill-nav-item:hover::after { transform: scaleX(1); }
-        .glass-nav {
-          background: rgba(255, 255, 255, 0.19);
-          backdrop-filter: blur(7px);
-          -webkit-backdrop-filter: blur(7px);
-          border-radius: 9999px;
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          box-shadow:
-            0 8px 32px rgba(0, 0, 0, 0.1),
-            inset 0 1px 0 rgba(255, 255, 255, 0.5),
-            inset 0 -1px 0 rgba(255, 255, 255, 0.1),
-            inset 0 0 0px 0px rgba(255, 255, 255, 0);
-          overflow: hidden;
-        }
-        .glass-nav::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: 1px;
-          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
-        }
-        .glass-nav::after {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 1px;
-          height: 100%;
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.8), transparent, rgba(255, 255, 255, 0.3));
-        }
         @media (prefers-reduced-motion: reduce) {
           .animate-ticker, .animate-float, .animate-spin-slow { animation: none; }
           [data-reveal] { opacity: 1; transform: none; transition: none; }
@@ -181,22 +149,12 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
       `}</style>
 
       {/* ─────────────── FLOATING NAV ─────────────── */}
-      <header className="glass-nav fixed top-4 left-4 right-4 z-40 flex items-center justify-between px-3 sm:px-5 py-2.5">
-        <a href="#top" className="flex items-center gap-2 pl-2 cursor-pointer">
-          <Logo width={80} variant="color" linked={false} />
-          <span className="hidden md:inline text-[10px] uppercase tracking-[0.18em] text-[var(--muted)] ml-1">Est. 1987</span>
-        </a>
-        <nav className="hidden md:flex items-center gap-1 text-sm font-medium text-[var(--ink-2)]">
-          <a href="#shop" className="pill-nav-item px-3 py-1.5 cursor-pointer">Shop</a>
-          <a href="#bento" className="pill-nav-item px-3 py-1.5 cursor-pointer">Why generic</a>
-          <a href="#finder" className="pill-nav-item px-3 py-1.5 cursor-pointer">Find your cartridge</a>
-          <a href="#delivery" className="pill-nav-item px-3 py-1.5 cursor-pointer">Delivery</a>
-        </nav>
-        <div className="flex items-center gap-2">
+      <Navbar
+        right={
           <div
             role="radiogroup"
             aria-label="Colour theme"
-            className="relative flex items-center bg-[var(--ink)]/5 border border-[var(--ink)]/10 rounded-full p-0.5 text-[11px] font-medium overflow-hidden"
+            className="relative hidden sm:flex items-center bg-[var(--ink)]/5 border border-[var(--ink)]/10 rounded-full p-0.5 text-[11px] font-medium overflow-hidden"
           >
             <span
               aria-hidden
@@ -215,7 +173,7 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
                 <span className="w-2 h-2 rounded-full bg-[#111827]" />
                 <span className="w-2 h-2 rounded-full bg-[#41e0f5]" />
               </span>
-              <span className={`hidden md:inline transition-colors duration-300 ${theme === 'editorial' ? 'text-[var(--paper)]' : 'text-[var(--muted)]'}`}>Editorial</span>
+              <span className={`hidden lg:inline transition-colors duration-300 ${theme === 'editorial' ? 'text-[var(--paper)]' : 'text-[var(--muted)]'}`}>Editorial</span>
             </button>
             <button
               type="button"
@@ -229,20 +187,11 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
                 <span className="w-2 h-2 rounded-full bg-[#dfe344]" />
                 <span className="w-2 h-2 rounded-full bg-[#41e0f5]" />
               </span>
-              <span className={`hidden md:inline transition-colors duration-300 ${theme === 'brand' ? 'text-[var(--paper)]' : 'text-[var(--muted)]'}`}>Brand</span>
+              <span className={`hidden lg:inline transition-colors duration-300 ${theme === 'brand' ? 'text-[var(--paper)]' : 'text-[var(--muted)]'}`}>Brand</span>
             </button>
           </div>
-
-          <button
-            aria-label="Search"
-            onClick={() => router.push('/products')}
-            className="hidden sm:inline-flex items-center justify-center w-9 h-9 rounded-full hover:bg-[var(--ink)]/5 transition-colors cursor-pointer"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          </button>
-          <CartButton />
-        </div>
-      </header>
+        }
+      />
 
       {/* ─────────────── HERO ─────────────── */}
       <section id="top" ref={heroRef} className="relative pt-32 sm:pt-36 pb-16 sm:pb-24 px-4 sm:px-8 lg:px-12 overflow-hidden">

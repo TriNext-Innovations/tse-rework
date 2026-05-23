@@ -8,7 +8,7 @@
     "start": "medusa start",
     "lint": "eslint src --ext .ts",
     "type-check": "tsc --noEmit",
-    "migrate": "medusa migrations run"
+    "migrate": "medusa db:migrate"
   },
   "dependencies": {
     "@medusajs/admin-sdk": "2.15.3",
