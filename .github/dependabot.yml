@@ -1,0 +1,80 @@
+version: 2
+
+updates:
+  # ── Root workspace ──────────────────────────────────────────────────────────
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Africa/Johannesburg
+    groups:
+      medusa:
+        patterns:
+          - "@medusajs/*"
+      dev-tooling:
+        patterns:
+          - "turbo"
+          - "typescript"
+          - "@types/*"
+    labels:
+      - "dependencies"
+      - "automerge"
+
+  # ── Web (Next.js storefront) ─────────────────────────────────────────────────
+  - package-ecosystem: npm
+    directory: /apps/web
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Africa/Johannesburg
+    groups:
+      next:
+        patterns:
+          - "next"
+          - "react"
+          - "react-dom"
+      testing:
+        patterns:
+          - "vitest"
+          - "@vitest/*"
+          - "@testing-library/*"
+          - "@playwright/*"
+          - "playwright"
+      tailwind:
+        patterns:
+          - "tailwindcss"
+          - "@tailwindcss/*"
+    labels:
+      - "dependencies"
+      - "automerge"
+
+  # ── Backend (Medusa) ─────────────────────────────────────────────────────────
+  - package-ecosystem: npm
+    directory: /apps/backend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Africa/Johannesburg
+    groups:
+      medusa:
+        patterns:
+          - "@medusajs/*"
+    labels:
+      - "dependencies"
+      - "automerge"
+
+  # ── GitHub Actions ───────────────────────────────────────────────────────────
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Africa/Johannesburg
+    labels:
+      - "dependencies"
+      - "automerge"
