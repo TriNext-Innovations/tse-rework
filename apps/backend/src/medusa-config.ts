@@ -25,6 +25,7 @@ export default defineConfig({
   modules: [
     {
       resolve: "./src/modules/compatibility",
+      key: "compatibility",
     },
   ],
   admin: {

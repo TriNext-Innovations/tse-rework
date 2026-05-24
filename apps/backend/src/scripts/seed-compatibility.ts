@@ -2,18 +2,18 @@
  * Compatibility seed script — loads compat-map-draft.csv into the DB.
  *
  * Usage (from monorepo root):
- *   pnpm --filter @tse/backend exec medusa exec src/scripts/seed-compatibility.ts
+ *   pnpm --filter @tse/backend seed:compat
  *
- * Idempotent — safe to re-run. Skips rows that already exist.
- * Logs brand/model/compat counts on completion.
+ * Idempotent — safe to re-run. Uses direct SQL so it works regardless of
+ * whether the Medusa DI container has loaded the compatibility module.
  */
 
 import { MedusaContainer } from "@medusajs/framework/types"
-import { COMPATIBILITY_MODULE } from "../modules/compatibility"
 import * as fs from "fs"
 import * as path from "path"
+import { Client } from "pg"
+import { randomUUID } from "crypto"
 
-// CSV lives two levels up from apps/backend/
 const CSV_PATH = path.join(process.cwd(), "../../migration/raw/compat-map-draft.csv")
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -26,7 +26,6 @@ function slugify(text: string): string {
     .replace(/^-+|-+$/g, "")
 }
 
-// Minimal CSV line parser — handles double-quoted fields with embedded commas.
 function parseCSVLine(line: string): string[] {
   const fields: string[] = []
   let inQuotes = false
@@ -47,7 +46,6 @@ function parseCSVLine(line: string): string[] {
   return fields
 }
 
-// Split " / " separated lists, trim each element, drop empties.
 function splitList(raw: string): string[] {
   return raw
     .split("/")
@@ -57,7 +55,7 @@ function splitList(raw: string): string[] {
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
-export default async function seedCompatibility({ container }: { container: MedusaContainer }) {
+export default async function seedCompatibility(_: { container: MedusaContainer }) {
   console.log("\n═══════════════════════════════════════════════════════════════")
   console.log("  Compatibility Seed Script")
   console.log("═══════════════════════════════════════════════════════════════\n")
@@ -66,126 +64,143 @@ export default async function seedCompatibility({ container }: { container: Medu
     throw new Error(`CSV not found: ${CSV_PATH}`)
   }
 
-  const service = container.resolve(COMPATIBILITY_MODULE) as any
+  const databaseUrl = process.env.DATABASE_URL
+  if (!databaseUrl) throw new Error("DATABASE_URL environment variable not set")
 
-  // ── Load existing data into memory for idempotency checks ─────────────────
-  const existingBrands: any[] = await service.listPrinterBrands({}, { select: ["id", "name", "slug"] })
-  const brandBySlug = new Map<string, string>(existingBrands.map((b: any) => [b.slug, b.id]))
+  const db = new Client({ connectionString: databaseUrl })
+  await db.connect()
 
-  const existingModels: any[] = await service.listPrinterModels({}, { select: ["id", "brand_id", "slug"] })
-  const modelKey = (brandId: string, slug: string) => `${brandId}::${slug}`
-  const modelByKey = new Map<string, string>(
-    existingModels.map((m: any) => [modelKey(m.brand_id, m.slug), m.id])
-  )
-
-  const existingCompats: any[] = await service.listCartridgeCompats(
-    {},
-    { select: ["printer_model_id", "sku"] }
-  )
-  const compatKey = (modelId: string, sku: string) => `${modelId}::${sku}`
-  const existingCompatSet = new Set<string>(
-    existingCompats.map((cc: any) => compatKey(cc.printer_model_id, cc.sku))
-  )
-
-  // ── Parse CSV ─────────────────────────────────────────────────────────────
-  const fileContent = fs.readFileSync(CSV_PATH, "utf-8")
-  const lines = fileContent.split("\n").filter(Boolean)
-  const dataLines = lines.slice(1) // skip header row
-
-  let brandsCreated = 0
-  let modelsCreated = 0
-  let compatsCreated = 0
-  let compatsSkipped = 0
-  let rowErrors = 0
-
-  console.log(`  CSV rows to process: ${dataLines.length}\n`)
-
-  for (const line of dataLines) {
-    const fields = parseCSVLine(line)
-    if (fields.length < 4) continue
-
-    // Columns: Product Name | SKU(s) | Printer Brand | Compatible Models
-    const brandName = (fields[2] ?? "").trim()
-    const skusRaw   = (fields[1] ?? "").trim()
-    const modelsRaw = (fields[3] ?? "").trim()
-
-    if (!brandName || !skusRaw || !modelsRaw) continue
-
-    // Skip rows where models column is just the brand name or very short
-    const modelNames = splitList(modelsRaw).filter(
-      (m) => m.toLowerCase() !== brandName.toLowerCase() && m.length > 2
+  try {
+    // ── Load existing data into memory for idempotency checks ─────────────────
+    const { rows: existingBrands } = await db.query<{ id: string; slug: string }>(
+      "SELECT id, slug FROM printer_brand WHERE deleted_at IS NULL"
     )
-    const skus = splitList(skusRaw)
+    const brandBySlug = new Map<string, string>(existingBrands.map((r) => [r.slug, r.id]))
 
-    if (!modelNames.length || !skus.length) continue
+    const { rows: existingModels } = await db.query<{ id: string; brand_id: string; slug: string }>(
+      "SELECT id, brand_id, slug FROM printer_model WHERE deleted_at IS NULL"
+    )
+    const modelKey = (brandId: string, slug: string) => `${brandId}::${slug}`
+    const modelByKey = new Map<string, string>(
+      existingModels.map((r) => [modelKey(r.brand_id, r.slug), r.id])
+    )
 
-    try {
-      // ── Get or create brand ─────────────────────────────────────────────
-      const brandSlug = slugify(brandName)
-      let brandId: string = brandBySlug.get(brandSlug) ?? ""
+    const { rows: existingCompats } = await db.query<{ printer_model_id: string; sku: string }>(
+      "SELECT printer_model_id, sku FROM cartridge_compat WHERE deleted_at IS NULL"
+    )
+    const compatKey = (modelId: string, sku: string) => `${modelId}::${sku}`
+    const existingCompatSet = new Set<string>(
+      existingCompats.map((r) => compatKey(r.printer_model_id, r.sku))
+    )
 
-      if (!brandId) {
-        const [created] = await service.createPrinterBrands([{ name: brandName, slug: brandSlug }])
-        brandId = created.id as string
-        brandBySlug.set(brandSlug, brandId)
-        brandsCreated++
-      }
+    // ── Parse CSV ─────────────────────────────────────────────────────────────
+    const fileContent = fs.readFileSync(CSV_PATH, "utf-8")
+    const lines = fileContent.split("\n").filter(Boolean)
+    const dataLines = lines.slice(1)
 
-      // ── Get or create each printer model ────────────────────────────────
-      const modelIds: string[] = []
+    let brandsCreated = 0
+    let modelsCreated = 0
+    let compatsCreated = 0
+    let compatsSkipped = 0
+    let rowErrors = 0
 
-      for (const modelName of modelNames) {
-        const mSlug  = slugify(modelName)
-        const key    = modelKey(brandId, mSlug)
-        let modelId: string = modelByKey.get(key) ?? ""
+    console.log(`  CSV rows to process: ${dataLines.length}\n`)
 
-        if (!modelId) {
-          const [created] = await service.createPrinterModels([{
-            name: modelName,
-            slug: mSlug,
-            brand_id: brandId,
-            validated: false,
-          }])
-          modelId = created.id as string
-          modelByKey.set(key, modelId)
-          modelsCreated++
+    for (const line of dataLines) {
+      const fields = parseCSVLine(line)
+      if (fields.length < 4) continue
+
+      const brandName = (fields[2] ?? "").trim()
+      const skusRaw   = (fields[1] ?? "").trim()
+      const modelsRaw = (fields[3] ?? "").trim()
+
+      if (!brandName || !skusRaw || !modelsRaw) continue
+
+      const modelNames = splitList(modelsRaw).filter(
+        (m) => m.toLowerCase() !== brandName.toLowerCase() && m.length > 2
+      )
+      const skus = splitList(skusRaw)
+
+      if (!modelNames.length || !skus.length) continue
+
+      try {
+        // ── Get or create brand ─────────────────────────────────────────────
+        const brandSlug = slugify(brandName)
+        let brandId: string = brandBySlug.get(brandSlug) ?? ""
+
+        if (!brandId) {
+          const { rows } = await db.query<{ id: string }>(
+            `INSERT INTO printer_brand (id, name, slug, created_at, updated_at)
+             VALUES ($1, $2, $3, now(), now())
+             ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, updated_at = now()
+             RETURNING id`,
+            [randomUUID(), brandName, brandSlug]
+          )
+          brandId = rows[0]!.id
+          brandBySlug.set(brandSlug, brandId)
+          brandsCreated++
         }
 
-        modelIds.push(modelId)
-      }
+        // ── Get or create each printer model ────────────────────────────────
+        const modelIds: string[] = []
 
-      // ── Create cartridge_compat rows (model × sku) ─────────────────────
-      for (const modelId of modelIds) {
-        for (const sku of skus) {
-          const key = compatKey(modelId, sku)
-          if (existingCompatSet.has(key)) {
-            compatsSkipped++
-            continue
+        for (const modelName of modelNames) {
+          const mSlug = slugify(modelName)
+          const key   = modelKey(brandId, mSlug)
+          let mId: string = modelByKey.get(key) ?? ""
+
+          if (!mId) {
+            const { rows } = await db.query<{ id: string }>(
+              `INSERT INTO printer_model (id, name, slug, brand_id, validated, created_at, updated_at)
+               VALUES ($1, $2, $3, $4, false, now(), now())
+               ON CONFLICT (brand_id, slug) DO UPDATE SET name = EXCLUDED.name, updated_at = now()
+               RETURNING id`,
+              [randomUUID(), modelName, mSlug, brandId]
+            )
+            mId = rows[0]!.id
+            modelByKey.set(key, mId)
+            modelsCreated++
           }
 
-          await service.createCartridgeCompats([{
-            sku,
-            printer_model_id: modelId,
-            source: "parsed",
-          }])
-
-          existingCompatSet.add(key)
-          compatsCreated++
+          modelIds.push(mId)
         }
-      }
-    } catch (err: any) {
-      console.error(`  [error] Row "${fields[0]}": ${err.message}`)
-      rowErrors++
-    }
-  }
 
-  // ── Summary ───────────────────────────────────────────────────────────────
-  console.log("═══════════════════════════════════════════════════════════════")
-  console.log("  Seed complete")
-  console.log("═══════════════════════════════════════════════════════════════")
-  console.log(`  Brands   created: ${brandsCreated} (${brandBySlug.size} total)`)
-  console.log(`  Models   created: ${modelsCreated} (${modelByKey.size} total)`)
-  console.log(`  Compat rows:      ${compatsCreated} new / ${compatsSkipped} skipped`)
-  if (rowErrors) console.log(`  Row errors:       ${rowErrors}`)
-  console.log()
+        // ── Create cartridge_compat rows (model × sku) ─────────────────────
+        for (const mId of modelIds) {
+          for (const sku of skus) {
+            const key = compatKey(mId, sku)
+            if (existingCompatSet.has(key)) {
+              compatsSkipped++
+              continue
+            }
+
+            await db.query(
+              `INSERT INTO cartridge_compat (id, sku, source, printer_model_id, created_at, updated_at)
+               VALUES ($1, $2, 'parsed', $3, now(), now())
+               ON CONFLICT (printer_model_id, sku) DO NOTHING`,
+              [randomUUID(), sku, mId]
+            )
+
+            existingCompatSet.add(key)
+            compatsCreated++
+          }
+        }
+      } catch (err: any) {
+        console.error(`  [error] Row "${fields[0]}": ${err.message}`)
+        rowErrors++
+      }
+    }
+
+    // ── Summary ───────────────────────────────────────────────────────────────
+    console.log("═══════════════════════════════════════════════════════════════")
+    console.log("  Seed complete")
+    console.log("═══════════════════════════════════════════════════════════════")
+    console.log(`  Brands   created: ${brandsCreated} (${brandBySlug.size} total)`)
+    console.log(`  Models   created: ${modelsCreated} (${modelByKey.size} total)`)
+    console.log(`  Compat rows:      ${compatsCreated} new / ${compatsSkipped} skipped`)
+    if (rowErrors) console.log(`  Row errors:       ${rowErrors}`)
+    console.log()
+  } finally {
+    await db.end()
+  }
 }

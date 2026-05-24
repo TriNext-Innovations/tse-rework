@@ -9,6 +9,7 @@
     "lint": "eslint src --ext .ts",
     "type-check": "tsc --noEmit",
     "migrate": "medusa db:migrate",
+    "migrate:compat": "medusa exec src/scripts/migrate-compatibility.ts",
     "seed:compat": "medusa exec src/scripts/seed-compatibility.ts"
   },
   "dependencies": {
@@ -25,8 +26,10 @@
   "devDependencies": {
     "@tse/config": "workspace:*",
     "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.11",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "pg": "^8.13.3",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3"
   }
