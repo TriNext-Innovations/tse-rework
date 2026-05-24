@@ -4,12 +4,13 @@ import { useRouter } from 'next/navigation'
 import { useState, useTransition, useRef, useEffect } from 'react'
 
 const POPULAR_MODELS = [
-  'HP LaserJet 1020', 'HP DeskJet 2700', 'HP OfficeJet 4650', 'HP LaserJet Pro M404',
-  'Canon PIXMA G3410', 'Canon PIXMA MG2550', 'Canon i-SENSYS MF3010',
-  'Epson EcoTank L3250', 'Epson Expression Home XP-4105',
-  'Brother DCP-L2530DW', 'Brother HL-L2350DW', 'Brother MFC-L2710DW',
-  'Samsung Xpress M2020', 'Samsung Xpress M2070',
-  'Lexmark B2236dw', 'Xerox Phaser 3020',
+  'HP P1102', 'HP P1005', 'HP M127', 'HP M203', 'HP M233', 'HP M236sdw',
+  'HP Pro MFP M182', 'HP Enterprise M507', 'HP Enterprise M555dn',
+  'Canon MF3010', 'Canon LBP2900', 'Canon MF4410', 'Canon MF443DW', 'Canon MF654',
+  'Brother HL-L3280CDW', 'Brother MFC-L3720cdw', 'Brother DCP-L3520cdw', 'Brother HL-L5200',
+  'Samsung M2020', 'Samsung ML2160', 'Samsung CLX3305', 'Samsung C480',
+  'Epson Eco Tank L1110', 'Pantum P2500', 'Pantum M6500',
+  'Xerox Phaser 3010', 'Lexmark E260', 'Kyocera ECOSYS M2040dn',
 ]
 
 export function CompatSearch({ initialQuery }: { initialQuery: string }) {
