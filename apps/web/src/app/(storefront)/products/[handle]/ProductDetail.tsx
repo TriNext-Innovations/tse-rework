@@ -72,11 +72,18 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
   const handleAddToCart = useCallback(() => {
     if (!variant) return
     for (let i = 0; i < qty; i++) {
-      addItem({ id: product.id, title: product.title, sku, price: priceZar })
+      addItem({
+        id: `${product.id}-${variant.id}`,
+        title: product.title,
+        sku,
+        price: priceZar,
+        thumbnail: images[0]?.url,
+        variantId: variant.id,
+      })
     }
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
-  }, [variant, qty, product, sku, priceZar, addItem])
+  }, [variant, qty, product, sku, priceZar, images, addItem])
 
   const cartridgeType = product.metadata?.cartridge_type === 'inkjet' ? 'Inkjet' : 'Laser'
 
