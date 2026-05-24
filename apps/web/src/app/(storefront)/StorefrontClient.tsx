@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Navbar, Logo } from '@/components/layout'
 import { useCart } from '@/contexts/CartContext'
@@ -17,7 +17,7 @@ export type TrendingProduct = {
   metadata?: Record<string, unknown>
 }
 
-const brands = ['HP', 'Canon', 'Epson', 'Brother', 'Samsung', 'Lexmark', 'Xerox', 'Pantum', 'Ricoh', 'Kyocera', 'Konica Minolta', 'OKI', 'Olivetti']
+export type CompatModel = { brand: string; model: string; cartridge_count: number }
 
 const faqs = [
   { q: 'Will a generic cartridge work in my printer?', a: "Yes. Our compatibles are engineered to spec for each printer model and meet or exceed OEM page yield. If it doesn't print as well as the original — we replace it." },
@@ -26,28 +26,57 @@ const faqs = [
   { q: 'Do you do bulk / business pricing?', a: 'Yes. Offices, schools, print shops — call 011 708 2304 or email sales@tse.co.za for a quote.' },
 ]
 
-const popularSearches = [
-  { label: 'HP LaserJet M404', brand: 'HP', model: 'LaserJet M404' },
-  { label: 'Canon MF273dw', brand: 'Canon', model: 'MF273dw' },
-  { label: 'Brother HL-L2375DW', brand: 'Brother', model: 'HL-L2375DW' },
-  { label: 'Epson L3250', brand: 'Epson', model: 'L3250' },
-]
 
-export default function StorefrontClient({ trendingProducts }: { trendingProducts: TrendingProduct[] }) {
+export default function StorefrontClient({
+  trendingProducts,
+  compatModels,
+}: {
+  trendingProducts: TrendingProduct[]
+  compatModels: CompatModel[]
+}) {
+  // Brands sorted alphabetically; models grouped per brand keeping the
+  // DB ordering (which is by cartridge_count DESC) so the most-supported
+  // printers appear first in the datalist.
+  const brands = useMemo(
+    () => [...new Set(compatModels.map((m) => m.brand))].sort(),
+    [compatModels],
+  )
+  const modelsByBrand = useMemo(() => {
+    const g: Record<string, string[]> = {}
+    for (const m of compatModels) (g[m.brand] ??= []).push(m.model)
+    return g
+  }, [compatModels])
+  // One representative model per brand, top 4 brands by cartridge count
+  const popularSearches = useMemo(() => {
+    const seen = new Set<string>()
+    const out: string[] = []
+    for (const m of compatModels) {
+      if (seen.has(m.brand)) continue
+      seen.add(m.brand)
+      out.push(`${m.brand} ${m.model}`)
+      if (out.length >= 4) break
+    }
+    return out
+  }, [compatModels])
+
   const [openFaq, setOpenFaq] = useState<number | null>(0)
   const [mouse, setMouse] = useState({ x: -1000, y: -1000 })
   const [theme, setTheme] = useState<Theme>('editorial')
-  const [finderBrand, setFinderBrand] = useState('HP')
+  const [finderBrand, setFinderBrand] = useState(brands[0] ?? '')
   const [finderModel, setFinderModel] = useState('')
+
+  // Sync finderBrand once data arrives if we started with empty list
+  useEffect(() => {
+    if (!finderBrand && brands[0]) setFinderBrand(brands[0])
+  }, [brands, finderBrand])
   const heroRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const { addItem } = useCart()
 
   function runFinder() {
-    const params = new URLSearchParams()
-    if (finderBrand) params.set('brand', finderBrand)
-    if (finderModel) params.set('model', finderModel)
-    router.push(`/products?${params.toString()}`)
+    const query = [finderBrand, finderModel].filter(Boolean).join(' ').trim()
+    if (!query) return
+    router.push(`/compatibility?model=${encodeURIComponent(query)}`)
   }
 
   useEffect(() => {
@@ -468,12 +497,19 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
                   <label className="block text-[9px] uppercase tracking-[0.2em] text-[var(--muted)] px-3 pt-3">Printer model</label>
                   <input
                     type="text"
-                    placeholder="e.g. LaserJet Pro M404dn"
+                    list="finder-models"
+                    placeholder="e.g. P1102, MX494, HL-L3280CDW"
                     value={finderModel}
                     onChange={(e) => setFinderModel(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && runFinder()}
                     className="w-full bg-transparent px-3 pb-3 text-sm font-medium focus:outline-none placeholder:text-[var(--muted)]"
+                    autoComplete="off"
                   />
+                  <datalist id="finder-models">
+                    {(modelsByBrand[finderBrand] ?? []).map((m) => (
+                      <option key={m} value={m} />
+                    ))}
+                  </datalist>
                 </div>
                 <button
                   onClick={runFinder}
@@ -486,14 +522,10 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
 
               <div className="mt-4 flex flex-wrap items-center gap-2">
                 <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--paper)]/50 mr-1">Popular:</span>
-                {popularSearches.map(({ label, brand, model }) => (
+                {popularSearches.map((label) => (
                   <button
                     key={label}
-                    onClick={() => {
-                      setFinderBrand(brand)
-                      setFinderModel(model)
-                      router.push(`/products?brand=${encodeURIComponent(brand)}&model=${encodeURIComponent(model)}`)
-                    }}
+                    onClick={() => router.push(`/compatibility?model=${encodeURIComponent(label)}`)}
                     className="text-xs px-3 py-1.5 border border-[var(--paper)]/15 rounded-full hover:border-[var(--magenta)] hover:text-[var(--magenta)] transition-colors cursor-pointer"
                   >
                     {label}

@@ -9,8 +9,10 @@ type Category = { id: string; name: string; handle: string }
 type ProductImage = { url: string }
 type Variant = {
   id: string
+  title?: string
   sku?: string
   calculated_price?: { calculated_amount?: number }
+  options?: Array<{ value: string; option?: { title?: string } }>
 }
 type Product = {
   id: string
@@ -19,7 +21,23 @@ type Product = {
   handle: string
   images?: ProductImage[]
   variants?: Variant[]
+  options?: Array<{ id: string; title: string; values?: Array<{ value: string }> }>
   metadata?: Record<string, unknown>
+}
+
+// Visual swatch colour for known cartridge colours; falls back to neutral grey
+const SWATCH: Record<string, string> = {
+  black:   '#111827',
+  cyan:    '#00b8d4',
+  magenta: '#d81b60',
+  yellow:  '#fbc02d',
+  colour:  'linear-gradient(135deg,#00b8d4 0%,#d81b60 50%,#fbc02d 100%)',
+  color:   'linear-gradient(135deg,#00b8d4 0%,#d81b60 50%,#fbc02d 100%)',
+}
+const swatchStyle = (label: string): React.CSSProperties => {
+  const v = SWATCH[label.toLowerCase()]
+  if (!v) return { background: '#9ca3af' }
+  return v.startsWith('linear') ? { background: v } : { background: v }
 }
 
 type Props = {
@@ -33,16 +51,23 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
   const { addItem } = useCart()
 
   const images = product.images ?? []
-  const variant = product.variants?.[0]
-  const sku = variant?.sku ?? '—'
-  const priceZar = variant?.calculated_price?.calculated_amount
-    ? Math.round(variant.calculated_price.calculated_amount / 100)
-    : null
+  const variants = product.variants ?? []
 
   const [activeImage, setActiveImage] = useState(0)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [qty, setQty] = useState(1)
   const [added, setAdded] = useState(false)
+  const [selectedVariantId, setSelectedVariantId] = useState<string>(variants[0]?.id ?? '')
+
+  const variant = variants.find((v) => v.id === selectedVariantId) ?? variants[0]
+  const sku = variant?.sku ?? '—'
+  const priceZar = variant?.calculated_price?.calculated_amount
+    ? Math.round(variant.calculated_price.calculated_amount / 100)
+    : null
+
+  // Single colour-like option (Black/Cyan/Magenta/Yellow) — render as swatches
+  const colourOption = product.options?.find((o) => /colou?r/i.test(o.title))
+  const hasMultipleVariants = variants.length > 1
 
   const handleAddToCart = useCallback(() => {
     if (!variant) return
@@ -205,6 +230,42 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
               <p className="text-sm text-[#4B4B46] leading-relaxed mb-6 max-w-md">
                 {product.description}
               </p>
+            )}
+
+            {/* Variant selector */}
+            {hasMultipleVariants && (
+              <div className="mb-6">
+                <div className="flex items-baseline gap-2 mb-3">
+                  <span className="text-xs uppercase tracking-[0.16em] text-[#6B6B66]">
+                    {colourOption?.title ?? 'Variant'}
+                  </span>
+                  <span className="text-sm text-[#111827] font-medium">{variant?.title ?? ''}</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {variants.map((v) => {
+                    const label = v.title ?? v.sku ?? ''
+                    const isSelected = v.id === variant?.id
+                    return (
+                      <button
+                        key={v.id}
+                        onClick={() => setSelectedVariantId(v.id)}
+                        className={`flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full border text-xs transition-colors ${
+                          isSelected
+                            ? 'border-[#111827] bg-[#111827] text-white'
+                            : 'border-black/15 text-[#374151] hover:border-black/40'
+                        }`}
+                        aria-pressed={isSelected}
+                      >
+                        <span
+                          className="w-4 h-4 rounded-full border border-black/10"
+                          style={swatchStyle(label)}
+                        />
+                        <span>{label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
             )}
 
             {/* Qty + Add to cart */}

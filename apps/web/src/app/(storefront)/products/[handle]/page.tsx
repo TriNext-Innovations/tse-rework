@@ -5,7 +5,7 @@ import ProductDetail from './ProductDetail'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const PUB_KEY  = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
-const FIELDS   = '+images,+categories.id,+categories.name,+categories.handle,+variants.calculated_price,+metadata'
+const FIELDS   = '+images,+categories.id,+categories.name,+categories.handle,+variants.calculated_price,+variants.title,+variants.options,+options,+metadata'
 const TYPE_CATS = new Set(['Inkjet Cartridges', 'Laser Cartridges'])
 
 async function getCategories(): Promise<any[]> {

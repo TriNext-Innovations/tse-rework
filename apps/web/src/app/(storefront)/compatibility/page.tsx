@@ -34,11 +34,27 @@ async function searchCompatibility(model: string): Promise<any[]> {
   }
 }
 
+async function fetchSuggestions(): Promise<string[]> {
+  try {
+    const res = await fetch(`${BACKEND}/store/compatibility/models`, {
+      headers: { 'x-publishable-api-key': PUB_KEY },
+      next: { revalidate: 3600 },
+    })
+    const d = await res.json()
+    return (d.models ?? []).map((m: { brand: string; model: string }) => `${m.brand} ${m.model}`)
+  } catch {
+    return []
+  }
+}
+
 type Props = { searchParams: Promise<{ model?: string }> }
 
 export default async function CompatibilityPage({ searchParams }: Props) {
   const { model = '' } = await searchParams
-  const results = model ? await searchCompatibility(model) : []
+  const [results, suggestions] = await Promise.all([
+    model ? searchCompatibility(model) : Promise.resolve([]),
+    fetchSuggestions(),
+  ])
 
   const hasResults = results.length > 0
 
@@ -100,7 +116,7 @@ export default async function CompatibilityPage({ searchParams }: Props) {
                 </button>
               </form>
             }>
-              <CompatSearch initialQuery={model} />
+              <CompatSearch initialQuery={model} suggestions={suggestions} />
             </Suspense>
           </div>
 

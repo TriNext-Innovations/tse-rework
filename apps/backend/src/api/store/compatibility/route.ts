@@ -22,28 +22,36 @@ const getPool = () => {
   return _pool
 }
 
+// Normalize a search string the same way we built search_name:
+// lowercase + strip all non-alphanumeric chars.
+const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "")
+
+type Row = { sku: string; brand: string; model: string }
+
 /**
  * GET /store/compatibility?model=HP+LaserJet+1020
  *
- * Searches in order:
- *   1. model name ILIKE %query%          ("LaserJet 1020")
- *   2. brand name ILIKE %query%          ("HP")
- *   3. split on first space: brand ILIKE "HP%", model ILIKE "%LaserJet 1020%"
+ * Search strategy:
+ *   Stage 1 — normalize the full query, match against pm.search_name
+ *             Catches "PIXMA MX494", "MX494", "Canon PIXMA MX494", "HP LaserJet M233"
  *
- * Returns 200 with empty array when nothing matches.
+ *   Stage 2 — try each word-boundary split: first N words as brand prefix,
+ *             rest as normalized model token against pm.search_name
+ *             Catches "Canon MX494" (brand="Canon", token="mx494")
+ *             and "HP M233" (brand="HP", token="m233")
  */
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const q = ((req.query.model as string) ?? "").trim()
-  console.log(`[compat] query="${q}"`)
+  const normQ = norm(q)
+  console.log(`[compat] query="${q}" norm="${normQ}"`)
 
-  if (!q || q.length < 2) {
+  if (!q || normQ.length < 2) {
     return res.json({ results: [] })
   }
 
   const db = getPool()
 
-  // Single reusable SQL — joins all three tables, caller passes WHERE fragment via params.
-  const sql = `
+  const baseSQL = `
     SELECT cc.sku,
            pb.name AS brand,
            pm.name AS model
@@ -53,43 +61,26 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     WHERE  cc.deleted_at IS NULL
   `
 
-  // Stage 1 — model name
-  let { rows } = await db.query<{ sku: string; brand: string; model: string }>(
-    `${sql} AND pm.name ILIKE $1 LIMIT 100`,
-    [`%${q}%`]
+  // Stage 1 — full normalized query against search_name
+  let { rows } = await db.query<Row>(
+    `${baseSQL} AND pm.search_name ILIKE $1 LIMIT 100`,
+    [`%${normQ}%`]
   )
-  console.log(`[compat] stage1 (model ILIKE): ${rows.length} rows`)
+  console.log(`[compat] stage1 search_name ILIKE "%${normQ}%": ${rows.length} rows`)
 
-  // Stage 2 — brand name
-  if (!rows.length) {
-    ;({ rows } = await db.query<{ sku: string; brand: string; model: string }>(
-      `${sql} AND pb.name ILIKE $1 LIMIT 100`,
-      [`%${q}%`]
-    ))
-    console.log(`[compat] stage2 (brand ILIKE): ${rows.length} rows`)
-  }
-
-  // Stage 3 — try every brand-prefix / model-suffix split.
-  // For each split, also strip product-line words from the model prefix
-  // (e.g. "Canon PIXMA MX494" → brand="Canon", strip "PIXMA", search "MX494").
-  // Spaces are removed from both the query term and the stored name so that
-  // "MX494" matches the DB value "MX 494".
+  // Stage 2 — split on whitespace: try each prefix as brand, rest as model token
   if (!rows.length) {
     const words = q.split(/\s+/)
-    outer: for (let i = 1; i < words.length && !rows.length; i++) {
+    outer: for (let i = 1; i < words.length; i++) {
       const brandPart = words.slice(0, i).join(" ")
-      const modelWords = words.slice(i)
-      for (let j = 0; j < modelWords.length && !rows.length; j++) {
-        // Join remaining words without spaces for normalised comparison
-        const modelToken = modelWords.slice(j).join("")
-        if (modelToken.length < 3) continue
-        ;({ rows } = await db.query<{ sku: string; brand: string; model: string }>(
-          `${sql} AND pb.name ILIKE $1 AND REPLACE(pm.name, ' ', '') ILIKE $2 LIMIT 100`,
-          [`${brandPart}%`, `%${modelToken}%`]
-        ))
-        console.log(`[compat] stage3 brand="${brandPart}" token="${modelToken}": ${rows.length} rows`)
-        if (rows.length) break outer
-      }
+      const modelNorm = norm(words.slice(i).join(" "))
+      if (modelNorm.length < 2) continue
+      ;({ rows } = await db.query<Row>(
+        `${baseSQL} AND pb.name ILIKE $1 AND pm.search_name ILIKE $2 LIMIT 100`,
+        [`${brandPart}%`, `%${modelNorm}%`]
+      ))
+      console.log(`[compat] stage2 brand="${brandPart}" model_norm="${modelNorm}": ${rows.length} rows`)
+      if (rows.length) break outer
     }
   }
 
@@ -127,13 +118,12 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         if (product) {
           // Prefer images[0].url (same source as products page) over thumbnail,
           // which may still hold the old WordPress URL from the WooCommerce import.
-          const imageUrl: string | null =
-            product.images?.[0]?.url ?? product.thumbnail ?? null
+          const imageUrl: string | null = product.images?.[0]?.url ?? product.thumbnail ?? null
           variantMap.set(v.sku as string, {
             product_id: v.product_id as string,
-            title: product.title as string,
-            thumbnail: ownThumbnail(imageUrl),
-            handle: product.handle as string,
+            title:      product.title as string,
+            thumbnail:  ownThumbnail(imageUrl),
+            handle:     product.handle as string,
           })
         }
       }
@@ -143,19 +133,26 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     console.log(`[compat] product enrichment skipped: ${err.message}`)
   }
 
-  const results = rows.map((r) => {
+  // Dedupe by product (when matched) so colour variants of the same cartridge
+  // collapse into one card. SKUs without a matched product stay individual.
+  const seen = new Set<string>()
+  const results: any[] = []
+  for (const r of rows) {
     const product = variantMap.get(r.sku)
-    return {
-      sku: r.sku,
+    const key = product?.product_id ?? r.sku
+    if (seen.has(key)) continue
+    seen.add(key)
+    results.push({
+      sku:           r.sku,
       printer_brand: r.brand,
       printer_model: r.model,
-      product_id: product?.product_id ?? null,
-      title: product?.title ?? null,
-      thumbnail: product?.thumbnail ?? null,
-      handle: product?.handle ?? null,
-    }
-  })
+      product_id:    product?.product_id ?? null,
+      title:         product?.title ?? null,
+      thumbnail:     product?.thumbnail ?? null,
+      handle:        product?.handle ?? null,
+    })
+  }
 
-  console.log(`[compat] returning ${results.length} results`)
+  console.log(`[compat] returning ${results.length} deduped results (from ${rows.length} rows)`)
   return res.json({ results })
 }

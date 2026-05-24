@@ -16,8 +16,22 @@ async function fetchProducts(url: string): Promise<any[]> {
   return data.products ?? []
 }
 
+async function fetchCompatModels(): Promise<Array<{ brand: string; model: string; cartridge_count: number }>> {
+  try {
+    const res = await fetch(`${BACKEND}/store/compatibility/models`, {
+      headers: { 'x-publishable-api-key': PUB_KEY },
+      next: { revalidate: 3600 },
+    })
+    const d = await res.json()
+    return d.models ?? []
+  } catch {
+    return []
+  }
+}
+
 export default async function StorefrontPage() {
   let trendingProducts: any[] = []
+  const compatModels = await fetchCompatModels()
 
   try {
     // Attempt 1: fetch with region for calculated prices
@@ -42,5 +56,5 @@ export default async function StorefrontPage() {
     // Medusa unavailable — homepage still renders without products
   }
 
-  return <StorefrontClient trendingProducts={trendingProducts} />
+  return <StorefrontClient trendingProducts={trendingProducts} compatModels={compatModels} />
 }

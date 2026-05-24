@@ -10,7 +10,9 @@
     "type-check": "tsc --noEmit",
     "migrate": "medusa db:migrate",
     "migrate:compat": "medusa exec src/scripts/migrate-compatibility.ts",
-    "seed:compat": "medusa exec src/scripts/seed-compatibility.ts"
+    "migrate:compat:v2": "medusa exec src/scripts/migrate-compatibility-v2.ts",
+    "seed:compat": "medusa exec src/scripts/seed-compatibility.ts",
+    "seed:compat:reset": "medusa exec src/scripts/seed-compatibility-reset.ts"
   },
   "dependencies": {
     "@medusajs/admin-sdk": "2.15.3",

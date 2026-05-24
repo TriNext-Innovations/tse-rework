@@ -1,11 +1,9 @@
 /**
  * Compatibility seed script — loads compat-map-draft.csv into the DB.
  *
- * Usage (from monorepo root):
- *   pnpm --filter @tse/backend seed:compat
- *
- * Idempotent — safe to re-run. Uses direct SQL so it works regardless of
- * whether the Medusa DI container has loaded the compatibility module.
+ * Usage:
+ *   pnpm --filter @tse/backend seed:compat          # idempotent upsert
+ *   pnpm --filter @tse/backend seed:compat:reset     # truncate + full re-seed
  */
 
 import { MedusaContainer } from "@medusajs/framework/types"
@@ -13,6 +11,7 @@ import * as fs from "fs"
 import * as path from "path"
 import { Client } from "pg"
 import { randomUUID } from "crypto"
+import { buildSearchName } from "./canonicalize"
 
 const CSV_PATH = path.join(process.cwd(), "../../migration/raw/compat-map-draft.csv")
 
@@ -46,18 +45,27 @@ function parseCSVLine(line: string): string[] {
   return fields
 }
 
+// Split on both "/" and "&" separators (some rows use "T730 & T830")
 function splitList(raw: string): string[] {
   return raw
-    .split("/")
+    .split(/\s*(?:\/|&)\s*/)
     .map((s) => s.trim())
     .filter(Boolean)
+}
+
+// Strip brand name prefix if a model was inadvertently stored as "HP 2130"
+function stripBrandPrefix(brand: string, model: string): string {
+  const prefix = brand.toLowerCase() + " "
+  if (model.toLowerCase().startsWith(prefix)) return model.slice(prefix.length).trim()
+  return model
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 export default async function seedCompatibility(_: { container: MedusaContainer }) {
+  const RESET = process.env.RESET_COMPAT === "true"
   console.log("\n═══════════════════════════════════════════════════════════════")
-  console.log("  Compatibility Seed Script")
+  console.log(`  Compatibility Seed Script${RESET ? " (RESET mode)" : ""}`)
   console.log("═══════════════════════════════════════════════════════════════\n")
 
   if (!fs.existsSync(CSV_PATH)) {
@@ -71,7 +79,12 @@ export default async function seedCompatibility(_: { container: MedusaContainer 
   await db.connect()
 
   try {
-    // ── Load existing data into memory for idempotency checks ─────────────────
+    if (RESET) {
+      console.log("  Truncating existing data...\n")
+      await db.query("TRUNCATE cartridge_compat, printer_model, printer_brand CASCADE")
+    }
+
+    // ── In-memory caches for idempotency ─────────────────────────────────────
     const { rows: existingBrands } = await db.query<{ id: string; slug: string }>(
       "SELECT id, slug FROM printer_brand WHERE deleted_at IS NULL"
     )
@@ -96,7 +109,7 @@ export default async function seedCompatibility(_: { container: MedusaContainer 
     // ── Parse CSV ─────────────────────────────────────────────────────────────
     const fileContent = fs.readFileSync(CSV_PATH, "utf-8")
     const lines = fileContent.split("\n").filter(Boolean)
-    const dataLines = lines.slice(1)
+    const dataLines = lines.slice(1) // skip header
 
     let brandsCreated = 0
     let modelsCreated = 0
@@ -116,12 +129,13 @@ export default async function seedCompatibility(_: { container: MedusaContainer 
 
       if (!brandName || !skusRaw || !modelsRaw) continue
 
-      const modelNames = splitList(modelsRaw).filter(
-        (m) => m.toLowerCase() !== brandName.toLowerCase() && m.length > 2
-      )
+      const rawModelNames = splitList(modelsRaw)
+        .map((m) => stripBrandPrefix(brandName, m))
+        .filter((m) => m.toLowerCase() !== brandName.toLowerCase() && m.length > 2)
+
       const skus = splitList(skusRaw)
 
-      if (!modelNames.length || !skus.length) continue
+      if (!rawModelNames.length || !skus.length) continue
 
       try {
         // ── Get or create brand ─────────────────────────────────────────────
@@ -144,18 +158,24 @@ export default async function seedCompatibility(_: { container: MedusaContainer 
         // ── Get or create each printer model ────────────────────────────────
         const modelIds: string[] = []
 
-        for (const modelName of modelNames) {
-          const mSlug = slugify(modelName)
-          const key   = modelKey(brandId, mSlug)
-          let mId: string = modelByKey.get(key) ?? ""
+        for (const modelName of rawModelNames) {
+          const mSlug      = slugify(modelName)
+          const searchName = buildSearchName(brandName, modelName)
+          const key        = modelKey(brandId, mSlug)
+          let mId: string  = modelByKey.get(key) ?? ""
 
           if (!mId) {
             const { rows } = await db.query<{ id: string }>(
-              `INSERT INTO printer_model (id, name, slug, brand_id, validated, created_at, updated_at)
-               VALUES ($1, $2, $3, $4, false, now(), now())
-               ON CONFLICT (brand_id, slug) DO UPDATE SET name = EXCLUDED.name, updated_at = now()
+              `INSERT INTO printer_model
+                 (id, name, slug, brand_id, search_name, validated, created_at, updated_at)
+               VALUES ($1, $2, $3, $4, $5, false, now(), now())
+               ON CONFLICT (brand_id, slug)
+               DO UPDATE SET
+                 name        = EXCLUDED.name,
+                 search_name = EXCLUDED.search_name,
+                 updated_at  = now()
                RETURNING id`,
-              [randomUUID(), modelName, mSlug, brandId]
+              [randomUUID(), modelName, mSlug, brandId, searchName]
             )
             mId = rows[0]!.id
             modelByKey.set(key, mId)
@@ -175,7 +195,8 @@ export default async function seedCompatibility(_: { container: MedusaContainer 
             }
 
             await db.query(
-              `INSERT INTO cartridge_compat (id, sku, source, printer_model_id, created_at, updated_at)
+              `INSERT INTO cartridge_compat
+                 (id, sku, source, printer_model_id, created_at, updated_at)
                VALUES ($1, $2, 'parsed', $3, now(), now())
                ON CONFLICT (printer_model_id, sku) DO NOTHING`,
               [randomUUID(), sku, mId]
