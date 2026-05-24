@@ -19,6 +19,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '*.r2.dev',
       },
+      {
+        protocol: 'https',
+        hostname: 'www.tse.co.za',
+      },
     ],
   },
   outputFileTracingRoot: path.join(__dirname, '../../'),

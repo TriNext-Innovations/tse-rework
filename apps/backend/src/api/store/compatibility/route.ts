@@ -2,90 +2,82 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { Modules } from "@medusajs/framework/utils"
 import { Pool } from "pg"
 
-// Module-level pool — one instance per server process, reused across requests.
 let _pool: Pool | null = null
 const getPool = () => {
   if (!_pool) _pool = new Pool({ connectionString: process.env.DATABASE_URL })
   return _pool
 }
 
-// Three-stage search: model name → brand name → brand-prefix + model-suffix.
-// Handles "HP LaserJet 1020" even though models are stored as "LaserJet 1020".
-async function queryCompat(
-  db: Pool,
-  query: string
-): Promise<Array<{ sku: string; brand: string; model: string }>> {
-  const toRow = (r: { sku: string; brand_name: string; model_name: string }) => ({
-    sku: r.sku,
-    brand: r.brand_name,
-    model: r.model_name,
-  })
-
-  const baseSelect = `
-    SELECT cc.sku, pb.name AS brand_name, pm.name AS model_name
-    FROM   cartridge_compat cc
-    JOIN   printer_model pm ON pm.id = cc.printer_model_id
-    JOIN   printer_brand pb ON pb.id = pm.brand_id
-    WHERE  pm.deleted_at IS NULL
-      AND  pb.deleted_at IS NULL
-      AND  cc.deleted_at IS NULL
-  `
-
-  // Stage 1 — model name ILIKE
-  const { rows: byModel } = await db.query<{ sku: string; brand_name: string; model_name: string }>(
-    `${baseSelect} AND pm.name ILIKE $1 LIMIT 100`,
-    [`%${query}%`]
-  )
-  if (byModel.length) return byModel.map(toRow)
-
-  // Stage 2 — brand name ILIKE
-  const { rows: byBrand } = await db.query<{ sku: string; brand_name: string; model_name: string }>(
-    `${baseSelect} AND pb.name ILIKE $1 LIMIT 100`,
-    [`%${query}%`]
-  )
-  if (byBrand.length) return byBrand.map(toRow)
-
-  // Stage 3 — split "HP LaserJet 1020" → brand="HP", model="LaserJet 1020"
-  const words = query.split(/\s+/)
-  if (words.length > 1) {
-    for (let i = 1; i < words.length; i++) {
-      const brandPart = words.slice(0, i).join(" ")
-      const modelPart = words.slice(i).join(" ")
-
-      const { rows: bySplit } = await db.query<{ sku: string; brand_name: string; model_name: string }>(
-        `${baseSelect} AND pb.name ILIKE $1 AND pm.name ILIKE $2 LIMIT 100`,
-        [`${brandPart}%`, `%${modelPart}%`]
-      )
-      if (bySplit.length) return bySplit.map(toRow)
-    }
-  }
-
-  return []
-}
-
 /**
  * GET /store/compatibility?model=HP+LaserJet+1020
  *
- * Returns cartridges compatible with the given printer model.
- * Uses direct SQL — no dependency on the custom Medusa module container.
- * Always returns 200; empty array when no match.
+ * Searches in order:
+ *   1. model name ILIKE %query%          ("LaserJet 1020")
+ *   2. brand name ILIKE %query%          ("HP")
+ *   3. split on first space: brand ILIKE "HP%", model ILIKE "%LaserJet 1020%"
+ *
+ * Returns 200 with empty array when nothing matches.
  */
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
-  const query = ((req.query.model as string) ?? "").trim()
+  const q = ((req.query.model as string) ?? "").trim()
+  console.log(`[compat] query="${q}"`)
 
-  if (!query || query.length < 2) {
+  if (!q || q.length < 2) {
     return res.json({ results: [] })
   }
 
   const db = getPool()
-  const matches = await queryCompat(db, query)
 
-  if (!matches.length) {
+  // Single reusable SQL — joins all three tables, caller passes WHERE fragment via params.
+  const sql = `
+    SELECT cc.sku,
+           pb.name AS brand,
+           pm.name AS model
+    FROM   cartridge_compat cc
+    JOIN   printer_model pm ON pm.id  = cc.printer_model_id AND pm.deleted_at IS NULL
+    JOIN   printer_brand pb ON pb.id  = pm.brand_id         AND pb.deleted_at IS NULL
+    WHERE  cc.deleted_at IS NULL
+  `
+
+  // Stage 1 — model name
+  let { rows } = await db.query<{ sku: string; brand: string; model: string }>(
+    `${sql} AND pm.name ILIKE $1 LIMIT 100`,
+    [`%${q}%`]
+  )
+  console.log(`[compat] stage1 (model ILIKE): ${rows.length} rows`)
+
+  // Stage 2 — brand name
+  if (!rows.length) {
+    ;({ rows } = await db.query<{ sku: string; brand: string; model: string }>(
+      `${sql} AND pb.name ILIKE $1 LIMIT 100`,
+      [`%${q}%`]
+    ))
+    console.log(`[compat] stage2 (brand ILIKE): ${rows.length} rows`)
+  }
+
+  // Stage 3 — split first word as brand prefix, rest as model name
+  if (!rows.length) {
+    const spaceIdx = q.indexOf(" ")
+    if (spaceIdx > 0) {
+      const brandPart = q.slice(0, spaceIdx)
+      const modelPart = q.slice(spaceIdx + 1)
+      ;({ rows } = await db.query<{ sku: string; brand: string; model: string }>(
+        `${sql} AND pb.name ILIKE $1 AND pm.name ILIKE $2 LIMIT 100`,
+        [`${brandPart}%`, `%${modelPart}%`]
+      ))
+      console.log(`[compat] stage3 (brand="${brandPart}" model="${modelPart}"): ${rows.length} rows`)
+    }
+  }
+
+  if (!rows.length) {
+    console.log("[compat] no results")
     return res.json({ results: [] })
   }
 
-  // Enrich with Medusa product data. Graceful no-op when products not seeded.
-  const skus = [...new Set(matches.map((m) => m.sku))]
+  // Enrich with Medusa product data — graceful no-op when products are not yet seeded.
+  const skus = [...new Set(rows.map((r) => r.sku))]
+  console.log(`[compat] enriching ${rows.length} results across ${skus.length} SKUs`)
+
   type ProductInfo = { product_id: string; title: string; thumbnail: string | null; handle: string }
   const variantMap = new Map<string, ProductInfo>()
 
@@ -95,20 +87,18 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       { sku: { $in: skus } },
       { select: ["id", "sku", "product_id"], take: skus.length }
     )
-
     if (variants.length) {
-      const productIds = [...new Set(variants.map((v: any) => v.product_id))]
+      const productIds = [...new Set(variants.map((v: any) => v.product_id as string))]
       const products = await productModule.listProducts(
         { id: { $in: productIds } },
         { select: ["id", "title", "thumbnail", "handle"], take: productIds.length }
       )
-      const productById = new Map(products.map((p: any) => [p.id, p]))
-
+      const productById = new Map(products.map((p: any) => [p.id as string, p]))
       for (const v of variants) {
         const product = productById.get(v.product_id) as any
         if (product) {
-          variantMap.set(v.sku, {
-            product_id: v.product_id,
+          variantMap.set(v.sku as string, {
+            product_id: v.product_id as string,
             title: product.title as string,
             thumbnail: (product.thumbnail as string | null) ?? null,
             handle: product.handle as string,
@@ -116,16 +106,17 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         }
       }
     }
-  } catch {
-    // Products not seeded yet — compat data returned without enrichment
+    console.log(`[compat] enriched ${variantMap.size} SKUs with product data`)
+  } catch (err: any) {
+    console.log(`[compat] product enrichment skipped: ${err.message}`)
   }
 
-  const results = matches.map((m) => {
-    const product = variantMap.get(m.sku)
+  const results = rows.map((r) => {
+    const product = variantMap.get(r.sku)
     return {
-      sku: m.sku,
-      printer_brand: m.brand,
-      printer_model: m.model,
+      sku: r.sku,
+      printer_brand: r.brand,
+      printer_model: r.model,
       product_id: product?.product_id ?? null,
       title: product?.title ?? null,
       thumbnail: product?.thumbnail ?? null,
@@ -133,5 +124,6 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     }
   })
 
+  console.log(`[compat] returning ${results.length} results`)
   return res.json({ results })
 }
