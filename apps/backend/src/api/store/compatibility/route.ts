@@ -69,17 +69,27 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     console.log(`[compat] stage2 (brand ILIKE): ${rows.length} rows`)
   }
 
-  // Stage 3 — split first word as brand prefix, rest as model name
+  // Stage 3 — try every brand-prefix / model-suffix split.
+  // For each split, also strip product-line words from the model prefix
+  // (e.g. "Canon PIXMA MX494" → brand="Canon", strip "PIXMA", search "MX494").
+  // Spaces are removed from both the query term and the stored name so that
+  // "MX494" matches the DB value "MX 494".
   if (!rows.length) {
-    const spaceIdx = q.indexOf(" ")
-    if (spaceIdx > 0) {
-      const brandPart = q.slice(0, spaceIdx)
-      const modelPart = q.slice(spaceIdx + 1)
-      ;({ rows } = await db.query<{ sku: string; brand: string; model: string }>(
-        `${sql} AND pb.name ILIKE $1 AND pm.name ILIKE $2 LIMIT 100`,
-        [`${brandPart}%`, `%${modelPart}%`]
-      ))
-      console.log(`[compat] stage3 (brand="${brandPart}" model="${modelPart}"): ${rows.length} rows`)
+    const words = q.split(/\s+/)
+    outer: for (let i = 1; i < words.length && !rows.length; i++) {
+      const brandPart = words.slice(0, i).join(" ")
+      const modelWords = words.slice(i)
+      for (let j = 0; j < modelWords.length && !rows.length; j++) {
+        // Join remaining words without spaces for normalised comparison
+        const modelToken = modelWords.slice(j).join("")
+        if (modelToken.length < 3) continue
+        ;({ rows } = await db.query<{ sku: string; brand: string; model: string }>(
+          `${sql} AND pb.name ILIKE $1 AND REPLACE(pm.name, ' ', '') ILIKE $2 LIMIT 100`,
+          [`${brandPart}%`, `%${modelToken}%`]
+        ))
+        console.log(`[compat] stage3 brand="${brandPart}" token="${modelToken}": ${rows.length} rows`)
+        if (rows.length) break outer
+      }
     }
   }
 
