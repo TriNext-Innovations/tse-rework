@@ -105,16 +105,24 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       const productIds = [...new Set(variants.map((v: any) => v.product_id as string))]
       const products = await productModule.listProducts(
         { id: { $in: productIds } },
-        { select: ["id", "title", "thumbnail", "handle"], take: productIds.length }
+        {
+          select: ["id", "title", "thumbnail", "handle"],
+          relations: ["images"],
+          take: productIds.length,
+        }
       )
       const productById = new Map(products.map((p: any) => [p.id as string, p]))
       for (const v of variants) {
         const product = productById.get(v.product_id) as any
         if (product) {
+          // Prefer images[0].url (same source as products page) over thumbnail,
+          // which may still hold the old WordPress URL from the WooCommerce import.
+          const imageUrl: string | null =
+            product.images?.[0]?.url ?? product.thumbnail ?? null
           variantMap.set(v.sku as string, {
             product_id: v.product_id as string,
             title: product.title as string,
-            thumbnail: ownThumbnail(product.thumbnail),
+            thumbnail: ownThumbnail(imageUrl),
             handle: product.handle as string,
           })
         }
