@@ -7,7 +7,10 @@ class CompatibilityModuleService extends MedusaService({
   CartridgeCompat,
 }) {
   // Find all SKUs compatible with printers matching the query string.
-  // Uses $ilike for case-insensitive partial match on model name.
+  // Three-stage search:
+  //   1. ILIKE on model name           ("LaserJet 1020")
+  //   2. ILIKE on brand name           ("HP")
+  //   3. Brand prefix + model suffix   ("HP LaserJet 1020" → brand="HP", model="LaserJet 1020")
   async findByModel(query: string): Promise<Array<{
     sku: string
     brand: string
@@ -17,34 +20,65 @@ class CompatibilityModuleService extends MedusaService({
 
     const q = query.trim()
 
+    // ── Stage 1: model name search ────────────────────────────────────────────
     const models = await this.listPrinterModels(
       { name: { $ilike: `%${q}%` } } as any,
-      { select: ["id", "name"], take: 50 }
+      { select: ["id", "name", "brand_id"], take: 50 }
     )
 
-    if (!models.length) {
-      // Fall back to brand-level search
+    if ((models as any).length) {
+      const brandIds = [...new Set((models as any).map((m: any) => m.brand_id).filter(Boolean))]
       const brands = await this.listPrinterBrands(
-        { name: { $ilike: `%${q}%` } } as any,
+        { id: { $in: brandIds } } as any,
         { select: ["id", "name"] }
       )
-      if ((brands as any).length) {
-        // Return all models for matching brands
-        const brandModels = await this.listPrinterModels(
-          { brand_id: { $in: (brands as any).map((b: any) => b.id) } } as any,
-          { select: ["id", "name"], take: 50 }
-        )
-        return this._compatForModels(brandModels as any, brands as any)
-      }
-      return []
+      return this._compatForModels(models as any, brands as any)
     }
 
-    const brandIds = [...new Set((models as any).map((m: any) => m.brand_id))]
+    // ── Stage 2: brand name search ────────────────────────────────────────────
     const brands = await this.listPrinterBrands(
-      { id: { $in: brandIds } } as any,
+      { name: { $ilike: `%${q}%` } } as any,
       { select: ["id", "name"] }
     )
-    return this._compatForModels(models as any, brands as any)
+
+    if ((brands as any).length) {
+      const brandModels = await this.listPrinterModels(
+        { brand_id: { $in: (brands as any).map((b: any) => b.id) } } as any,
+        { select: ["id", "name", "brand_id"], take: 50 }
+      )
+      return this._compatForModels(brandModels as any, brands as any)
+    }
+
+    // ── Stage 3: "Brand Model" split — try each word boundary ────────────────
+    // Handles "HP LaserJet 1020" when brand="HP" and model="LaserJet 1020"
+    const words = q.split(/\s+/)
+    if (words.length > 1) {
+      for (let i = 1; i < words.length; i++) {
+        const brandQuery = words.slice(0, i).join(" ")
+        const modelQuery = words.slice(i).join(" ")
+
+        const matchedBrands = await this.listPrinterBrands(
+          { name: { $ilike: `${brandQuery}%` } } as any,
+          { select: ["id", "name"] }
+        )
+
+        if (!(matchedBrands as any).length) continue
+
+        const splitModels = await this.listPrinterModels(
+          {
+            brand_id: { $in: (matchedBrands as any).map((b: any) => b.id) },
+            name: { $ilike: `%${modelQuery}%` },
+          } as any,
+          { select: ["id", "name", "brand_id"], take: 50 }
+        )
+
+        if ((splitModels as any).length) {
+          return this._compatForModels(splitModels as any, matchedBrands as any)
+        }
+      }
+    }
+
+    return []
   }
 
   // Find all printer models compatible with a given cartridge SKU.
@@ -68,7 +102,7 @@ class CompatibilityModuleService extends MedusaService({
       { select: ["id", "name", "brand_id"], take: 100 }
     )
 
-    const brandIds = [...new Set((models as any).map((m: any) => m.brand_id))]
+    const brandIds = [...new Set((models as any).map((m: any) => m.brand_id).filter(Boolean))]
     const brands = await this.listPrinterBrands(
       { id: { $in: brandIds } } as any,
       { select: ["id", "name"] }
