@@ -2,6 +2,20 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { Modules } from "@medusajs/framework/utils"
 import { Pool } from "pg"
 
+// Only pass through thumbnails stored in our own infrastructure.
+// WooCommerce import leaves WordPress URLs in the DB — drop them until
+// the import pipeline re-uploads images to S3/R2.
+const ALLOWED_THUMBNAIL_HOSTS = [".supabase.co", ".r2.dev"]
+function ownThumbnail(url: string | null | undefined): string | null {
+  if (!url) return null
+  try {
+    const host = new URL(url).hostname
+    return ALLOWED_THUMBNAIL_HOSTS.some((h) => host.endsWith(h)) ? url : null
+  } catch {
+    return null
+  }
+}
+
 let _pool: Pool | null = null
 const getPool = () => {
   if (!_pool) _pool = new Pool({ connectionString: process.env.DATABASE_URL })
@@ -100,7 +114,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
           variantMap.set(v.sku as string, {
             product_id: v.product_id as string,
             title: product.title as string,
-            thumbnail: (product.thumbnail as string | null) ?? null,
+            thumbnail: ownThumbnail(product.thumbnail),
             handle: product.handle as string,
           })
         }
