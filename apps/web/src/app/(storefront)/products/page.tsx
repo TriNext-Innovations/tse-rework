@@ -39,6 +39,7 @@ async function getCategories(): Promise<any[]> {
 export default async function ProductsPage({ searchParams }: { searchParams: SearchParams }) {
   const { category = '', page: pageParam = '1' } = await searchParams
   const page = Math.max(1, parseInt(pageParam, 10) || 1)
+  const categoryIds = category ? category.split(',').filter(Boolean) : []
 
   const [regionId, allCategories] = await Promise.all([getRegionId(), getCategories()])
 
@@ -48,7 +49,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
     offset: String(offset),
   })
   if (regionId) params.append('region_id', regionId)
-  if (category) params.append('category_id[]', category)
+  for (const id of categoryIds) params.append('category_id[]', id)
 
   params.append('fields', '+metadata,+categories.id,+categories.name,+categories.handle,+images')
 
@@ -68,8 +69,8 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
 
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
-  const activeCategoryName = category
-    ? (allCategories.find((c: any) => c.id === category)?.name ?? '')
+  const activeCategoryName = categoryIds.length > 0
+    ? (allCategories.find((c: any) => categoryIds.includes(c.id))?.name ?? '')
     : ''
 
   return (

@@ -7,23 +7,24 @@ import { Logo } from './Logo'
 import { CartButton } from '@/components/CartButton'
 
 type Category = { id: string; name: string }
+type BrandEntry = { name: string; ids: string[] }
 
 const TYPE_CATEGORIES = new Set(['Inkjet Cartridges', 'Laser Cartridges'])
 
-const FALLBACK_BRANDS: Category[] = [
-  { id: 'HP', name: 'HP' },
-  { id: 'Canon', name: 'Canon' },
-  { id: 'Epson', name: 'Epson' },
-  { id: 'Brother', name: 'Brother' },
-  { id: 'Samsung', name: 'Samsung' },
-  { id: 'Lexmark', name: 'Lexmark' },
-  { id: 'Xerox', name: 'Xerox' },
-  { id: 'Pantum', name: 'Pantum' },
-  { id: 'Ricoh', name: 'Ricoh' },
-  { id: 'Kyocera', name: 'Kyocera' },
-  { id: 'Konica Minolta', name: 'Konica Minolta' },
-  { id: 'OKI', name: 'OKI' },
-  { id: 'Olivetti', name: 'Olivetti' },
+const FALLBACK_BRANDS: BrandEntry[] = [
+  { name: 'HP', ids: ['HP'] },
+  { name: 'Canon', ids: ['Canon'] },
+  { name: 'Epson', ids: ['Epson'] },
+  { name: 'Brother', ids: ['Brother'] },
+  { name: 'Samsung', ids: ['Samsung'] },
+  { name: 'Lexmark', ids: ['Lexmark'] },
+  { name: 'Xerox', ids: ['Xerox'] },
+  { name: 'Pantum', ids: ['Pantum'] },
+  { name: 'Ricoh', ids: ['Ricoh'] },
+  { name: 'Kyocera', ids: ['Kyocera'] },
+  { name: 'Konica Minolta', ids: ['Konica Minolta'] },
+  { name: 'OKI', ids: ['OKI'] },
+  { name: 'Olivetti', ids: ['Olivetti'] },
 ]
 
 type NavbarProps = {
@@ -48,12 +49,23 @@ export function Navbar({ categories = [], right }: NavbarProps) {
     closeTimer.current = setTimeout(() => setShopOpen(false), 200)
   }
 
-  const brandCategories = categories.filter((c) => !TYPE_CATEGORIES.has(c.name))
-  const brands = brandCategories.length > 0 ? brandCategories : FALLBACK_BRANDS
-  const hasRealCategories = brandCategories.length > 0
+  const hasRealCategories = categories.some((c) => !TYPE_CATEGORIES.has(c.name))
 
-  function brandHref(b: Category) {
-    return hasRealCategories ? `/products?category=${b.id}` : `/products?brand=${encodeURIComponent(b.name)}`
+  // Deduplicate brands by name — Brother appears under both Inkjet and Laser
+  const brandMap = new Map<string, string[]>()
+  for (const c of categories) {
+    if (TYPE_CATEGORIES.has(c.name)) continue
+    const ids = brandMap.get(c.name) ?? []
+    ids.push(c.id)
+    brandMap.set(c.name, ids)
+  }
+  const uniqueBrands = [...brandMap.entries()].map(([name, ids]) => ({ name, ids }))
+  const brands: BrandEntry[] = uniqueBrands.length > 0 ? uniqueBrands : FALLBACK_BRANDS
+
+  function brandHref(b: BrandEntry) {
+    return hasRealCategories
+      ? `/products?category=${b.ids.join(',')}`
+      : `/products?brand=${encodeURIComponent(b.name)}`
   }
 
   useEffect(() => {
@@ -196,7 +208,7 @@ export function Navbar({ categories = [], right }: NavbarProps) {
                 <div className="grid grid-cols-3 gap-1">
                   {brands.map((b) => (
                     <Link
-                      key={b.id}
+                      key={b.name}
                       href={brandHref(b)}
                       role="menuitem"
                       onClick={() => setShopOpen(false)}
@@ -329,7 +341,7 @@ export function Navbar({ categories = [], right }: NavbarProps) {
                   <div className="mt-1 grid grid-cols-2 gap-0.5 pl-2">
                     {brands.map((b) => (
                       <Link
-                        key={b.id}
+                        key={b.name}
                         href={brandHref(b)}
                         onClick={() => setMobileOpen(false)}
                         className="px-3 py-2.5 rounded-lg text-[13px] text-[#374151] hover:bg-white hover:text-[#41e0f5] transition-colors font-medium"
