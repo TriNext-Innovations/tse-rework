@@ -63,7 +63,7 @@ services:
       NODE_OPTIONS: "--max-old-space-size=1536"
       MEDUSA_WORKER_MODE: "server"
       MEDUSA_DISABLE_TELEMETRY: "1"
-    entrypoint: ["/app/node_modules/.bin/medusa", "db:migrate"]
+    entrypoint: ["/app/apps/backend/docker-migrate-entrypoint.sh"]
     deploy:
       resources:
         limits:
