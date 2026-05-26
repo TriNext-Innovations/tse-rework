@@ -22,6 +22,7 @@
     "@medusajs/framework": "^2.15.3",
     "@medusajs/medusa": "^2.15.3",
     "@tse/types": "workspace:*",
+    "resend": "^4.0.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
   },
