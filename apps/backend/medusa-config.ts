@@ -24,6 +24,17 @@ export default defineConfig({
   },
   modules: [
     {
+      resolve: '@medusajs/medusa/fulfillment',
+      options: {
+        providers: [
+          {
+            resolve: './src/modules/courier-guy',
+            id: 'courier-guy',
+          },
+        ],
+      },
+    },
+    {
       resolve: '@medusajs/medusa/file',
       options: {
         providers: [
