@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Logo } from './Logo'
 import { CartButton } from '@/components/CartButton'
 import { useAuth } from '@/contexts/AuthContext'
+import { SearchModal } from '@/components/SearchModal'
 
 type Category = { id: string; name: string }
 type BrandEntry = { name: string; ids: string[] }
@@ -37,10 +38,23 @@ export function Navbar({ categories = [], right }: NavbarProps) {
   const [shopOpen, setShopOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [brandsExpanded, setBrandsExpanded] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
   const shopRef = useRef<HTMLDivElement>(null)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const router = useRouter()
   const { customer, loading: authLoading } = useAuth()
+
+  // CMD+K / Ctrl+K global shortcut
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setSearchOpen(true)
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [])
 
   function openShop() {
     if (closeTimer.current) clearTimeout(closeTimer.current)
@@ -244,7 +258,7 @@ export function Navbar({ categories = [], right }: NavbarProps) {
 
           <button
             aria-label="Search products"
-            onClick={() => router.push('/products')}
+            onClick={() => setSearchOpen(true)}
             className="hidden sm:inline-flex items-center justify-center w-9 h-9 rounded-full hover:bg-black/8 transition-colors"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -311,6 +325,13 @@ export function Navbar({ categories = [], right }: NavbarProps) {
 
             {/* Drawer nav */}
             <nav className="flex-1 overflow-y-auto p-4 space-y-0.5">
+              <button
+                onClick={() => { setMobileOpen(false); setSearchOpen(true) }}
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white text-sm font-medium transition-colors text-[#374151] cursor-pointer"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                Search cartridges
+              </button>
               <Link
                 href="/products"
                 onClick={() => setMobileOpen(false)}
@@ -401,6 +422,8 @@ export function Navbar({ categories = [], right }: NavbarProps) {
           </div>
         </>
       )}
+
+      <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   )
 }

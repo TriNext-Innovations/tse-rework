@@ -12,7 +12,8 @@
     "migrate:compat": "medusa exec src/scripts/migrate-compatibility.ts",
     "migrate:compat:v2": "medusa exec src/scripts/migrate-compatibility-v2.ts",
     "seed:compat": "medusa exec src/scripts/seed-compatibility.ts",
-    "seed:compat:reset": "medusa exec src/scripts/seed-compatibility-reset.ts"
+    "seed:compat:reset": "medusa exec src/scripts/seed-compatibility-reset.ts",
+    "search:index": "medusa exec src/scripts/bulk-index.ts"
   },
   "dependencies": {
     "@medusajs/admin-sdk": "2.15.3",
@@ -22,9 +23,10 @@
     "@medusajs/framework": "^2.15.3",
     "@medusajs/medusa": "^2.15.3",
     "@tse/types": "workspace:*",
-    "resend": "^4.0.0",
+    "meilisearch": "^0.58.0",
     "react": "^19.2.6",
-    "react-dom": "^19.2.6"
+    "react-dom": "^19.2.6",
+    "resend": "^4.0.0"
   },
   "devDependencies": {
     "@tse/config": "workspace:*",
