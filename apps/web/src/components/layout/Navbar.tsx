@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Logo } from './Logo'
 import { CartButton } from '@/components/CartButton'
+import { useAuth } from '@/contexts/AuthContext'
 
 type Category = { id: string; name: string }
 type BrandEntry = { name: string; ids: string[] }
@@ -39,6 +40,7 @@ export function Navbar({ categories = [], right }: NavbarProps) {
   const shopRef = useRef<HTMLDivElement>(null)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const router = useRouter()
+  const { customer, loading: authLoading } = useAuth()
 
   function openShop() {
     if (closeTimer.current) clearTimeout(closeTimer.current)
@@ -250,6 +252,22 @@ export function Navbar({ categories = [], right }: NavbarProps) {
             </svg>
           </button>
 
+          {!authLoading && (
+            <Link
+              href={customer ? '/account/orders' : '/account/login'}
+              aria-label={customer ? 'My account' : 'Sign in'}
+              className="hidden sm:inline-flex items-center justify-center w-9 h-9 rounded-full hover:bg-black/8 transition-colors relative"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              {customer && (
+                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#dfe344]" aria-hidden />
+              )}
+            </Link>
+          )}
+
           <CartButton />
 
           {/* Mobile hamburger */}
@@ -356,6 +374,14 @@ export function Navbar({ categories = [], right }: NavbarProps) {
 
             {/* Drawer footer — contact */}
             <div className="px-5 py-5 border-t border-black/8 space-y-2.5">
+              <Link
+                href={customer ? '/account/orders' : '/account/login'}
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-2.5 text-sm font-medium text-[#111827] hover:text-[#41e0f5] transition-colors"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                {customer ? `My account — ${customer.first_name ?? customer.email}` : 'Sign in'}
+              </Link>
               <a
                 href="tel:0117082304"
                 className="flex items-center gap-2.5 text-sm text-[#6B6B66] hover:text-[#111827] transition-colors"
