@@ -265,7 +265,7 @@ export default function StorefrontClient({
 
             <div className="mt-12 grid grid-cols-3 gap-4 max-w-md">
               <div data-reveal>
-                <div className="font-display text-3xl sm:text-4xl font-light leading-none">38<span className="text-[var(--magenta)]">.</span></div>
+                <div className="font-display text-3xl sm:text-4xl font-light leading-none">39<span className="text-[var(--magenta)]">.</span></div>
                 <div className="text-[11px] uppercase tracking-widest text-[var(--muted)] mt-2">Yrs in business</div>
               </div>
               <div data-reveal>
@@ -368,7 +368,7 @@ export default function StorefrontClient({
               </h2>
             </div>
             <p className="max-w-sm text-[var(--ink-2)] text-[15px] leading-relaxed">
-              Thirty-eight years engineering compatibles that hold up under real office use. If a cartridge fails, we replace it — that's the deal.
+              Thirty-nine years engineering compatibles that hold up under real office use. If a cartridge fails, we replace it — that's the deal.
             </p>
           </div>
 
@@ -643,7 +643,7 @@ export default function StorefrontClient({
       </section>
 
       {/* ─────────────── FAQ ─────────────── */}
-      <section className="relative px-4 sm:px-8 lg:px-12 py-16 sm:py-24">
+      <section id="faq" className="relative px-4 sm:px-8 lg:px-12 py-16 sm:py-24">
         <div className="mx-auto max-w-4xl">
           <div className="text-center mb-12" data-reveal>
             <div className="text-[11px] uppercase tracking-[0.22em] text-[var(--muted)] mb-3">№ 05 — Frequently asked</div>

@@ -17,10 +17,10 @@ const SHOP_LINKS = [
 
 const HELP_LINKS = [
   { label: 'Delivery info', href: '/#delivery' },
-  { label: 'Returns policy', href: '/' },
-  { label: 'FAQ', href: '/' },
-  { label: 'Privacy policy', href: '/privacy' },
-  { label: 'Cookie policy', href: '/cookies' },
+  { label: 'Returns & guarantee', href: '/#bento' },
+  { label: 'FAQ', href: '/#faq' },
+  { label: 'Privacy policy', href: '/legal/privacy' },
+  { label: 'Cookie policy', href: '/legal/cookies' },
   { label: 'Contact us', href: 'mailto:sales@tse.co.za' },
 ]
 
@@ -149,8 +149,8 @@ export function Footer() {
             © {new Date().getFullYear()} TSE Online. All rights reserved.
           </p>
           <div className="flex items-center gap-4 text-xs text-white/25">
-            <Link href="/privacy" className="hover:text-white/50 transition-colors">Privacy</Link>
-            <Link href="/cookies" className="hover:text-white/50 transition-colors">Cookies</Link>
+            <Link href="/legal/privacy" className="hover:text-white/50 transition-colors">Privacy</Link>
+            <Link href="/legal/cookies" className="hover:text-white/50 transition-colors">Cookies</Link>
           </div>
         </div>
       </div>
