@@ -4,12 +4,13 @@ import { Navbar } from '@/components/layout'
 
 export const metadata: Metadata = { title: 'Request Received — TSE B2B' }
 
-export default function B2BConfirmedPage({
+export default async function B2BConfirmedPage({
   searchParams,
 }: {
-  searchParams: { type?: string }
+  searchParams: Promise<{ type?: string }>
 }) {
-  const isQuote = searchParams?.type === 'quote'
+  const { type } = await searchParams
+  const isQuote = type === 'quote'
 
   return (
     <div className="min-h-screen bg-[#F5F4F0] text-[#111827]">

@@ -699,45 +699,6 @@ export default function StorefrontClient({
         </div>
       </section>
 
-      {/* ─────────────── FOOTER ─────────────── */}
-      <footer className="px-4 sm:px-8 lg:px-12 pt-8 pb-16">
-        <div className="mx-auto max-w-7xl">
-          <div className="border-t border-[var(--ink)]/10 pt-10">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-6">
-              <div className="lg:col-span-2">
-                <div className="mb-4"><Logo width={90} variant="mono-dark" linked={false} /></div>
-                <p className="text-sm text-[var(--ink-2)] max-w-sm leading-relaxed">Technical Systems Engineering — South Africa's quality-generic printer-cartridge specialist.</p>
-                <p className="mt-4 text-xs text-[var(--muted)] leading-relaxed">Unit 34, A.P.D. Industrial Park,<br />Kya Sands, Johannesburg.</p>
-              </div>
-              <div>
-                <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] mb-4">Shop</div>
-                <ul className="space-y-2 text-sm">
-                  <li><a href="/products" className="hover:text-[var(--magenta)] cursor-pointer transition-colors">Inkjet cartridges</a></li>
-                  <li><a href="/products" className="hover:text-[var(--magenta)] cursor-pointer transition-colors">Laser toner</a></li>
-                  <li><a href="/products" className="hover:text-[var(--magenta)] cursor-pointer transition-colors">All cartridges</a></li>
-                  <li><a href="mailto:sales@tse.co.za" className="hover:text-[var(--magenta)] cursor-pointer transition-colors">Bulk &amp; business</a></li>
-                </ul>
-              </div>
-              <div>
-                <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] mb-4">Hours</div>
-                <ul className="space-y-2 text-sm">
-                  <li>Mon–Thu · 8am–5pm</li>
-                  <li>Fri · 8am–4pm</li>
-                  <li className="text-[var(--muted)]">079 873 3558</li>
-                  <li className="text-[var(--muted)]">011 708 2304/5</li>
-                </ul>
-              </div>
-            </div>
-
-            <div className="mt-12 flex items-baseline justify-between border-t border-[var(--ink)]/10 pt-6">
-              <div className="text-xs text-[var(--muted)]">© {new Date().getFullYear()} TSE. All compatibles guaranteed.</div>
-              <div className="font-display text-[10vw] sm:text-[8vw] leading-none tracking-[-0.05em] text-[var(--ink)]/8 select-none pointer-events-none -mb-4 sm:-mb-6">
-                TSE<span className="font-display-italic">.</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }
