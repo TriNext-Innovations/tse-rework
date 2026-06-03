@@ -1,6 +1,8 @@
 import { defineConfig, loadEnv } from '@medusajs/framework/utils'
+import { initSentry } from './lib/sentry'
 
 loadEnv(process.env.NODE_ENV ?? 'development', process.cwd())
+initSentry()
 
 export default defineConfig({
   projectConfig: {
