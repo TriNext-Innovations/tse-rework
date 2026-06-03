@@ -13,7 +13,8 @@
     "migrate:compat:v2": "medusa exec src/scripts/migrate-compatibility-v2.ts",
     "seed:compat": "medusa exec src/scripts/seed-compatibility.ts",
     "seed:compat:reset": "medusa exec src/scripts/seed-compatibility-reset.ts",
-    "search:index": "medusa exec src/scripts/bulk-index.ts"
+    "search:index": "medusa exec src/scripts/bulk-index.ts",
+    "b2b:setup": "medusa exec src/scripts/setup-b2b-groups.ts"
   },
   "dependencies": {
     "@medusajs/admin-sdk": "2.15.3",

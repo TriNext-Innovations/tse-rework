@@ -250,6 +250,7 @@ export function Navbar({ categories = [], right }: NavbarProps) {
 
           <a href="/#finder" className="nav-link">Find by printer</a>
           <a href="/#delivery" className="nav-link">Delivery</a>
+          <Link href="/b2b" className="nav-link">B2B</Link>
         </nav>
 
         {/* Right actions */}
@@ -356,6 +357,14 @@ export function Navbar({ categories = [], right }: NavbarProps) {
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
                 Delivery info
               </a>
+              <Link
+                href="/b2b"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white text-sm font-medium transition-colors text-[#374151]"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                B2B pricing
+              </Link>
 
               {/* Brand accordion */}
               <div className="pt-2">

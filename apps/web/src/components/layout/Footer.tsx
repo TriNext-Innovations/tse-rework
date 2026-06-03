@@ -12,7 +12,8 @@ const SHOP_LINKS = [
   { label: 'Laser toner', href: '/products' },
   { label: 'All cartridges', href: '/products' },
   { label: 'Find my cartridge', href: '/compatibility' },
-  { label: 'Bulk & business orders', href: 'mailto:sales@tse.co.za' },
+  { label: 'B2B & business pricing', href: '/b2b' },
+  { label: 'Request a quote', href: '/b2b/quote' },
 ]
 
 const HELP_LINKS = [

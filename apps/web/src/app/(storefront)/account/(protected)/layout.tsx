@@ -54,6 +54,15 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
                 <div className="text-[10px] uppercase tracking-[0.18em] text-[#6B6B66] mb-1">Signed in as</div>
                 <div className="font-medium text-sm truncate">{displayName}</div>
                 <div className="text-xs text-[#6B6B66] truncate">{customer.email}</div>
+                {customer.groups && customer.groups.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {customer.groups.map((g) => (
+                      <span key={g.id} className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.15em] px-2 py-0.5 rounded-full bg-[#dfe344]/20 text-[#111827]">
+                        {g.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
               <nav className="space-y-0.5">
                 {NAV.map(({ label, href, icon }) => {

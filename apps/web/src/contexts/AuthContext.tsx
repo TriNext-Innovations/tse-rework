@@ -6,6 +6,8 @@ const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:
 const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
 const TOKEN_KEY = 'tse_auth_token'
 
+export type CustomerGroup = { id: string; name: string }
+
 export type Customer = {
   id: string
   email: string
@@ -13,6 +15,7 @@ export type Customer = {
   last_name: string | null
   phone: string | null
   addresses: CustomerAddress[]
+  groups?: CustomerGroup[]
 }
 
 export type CustomerAddress = {
@@ -65,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchCustomer = useCallback(async (tok: string): Promise<Customer | null> => {
     try {
-      const res = await fetch(`${BACKEND}/store/customers/me`, {
+      const res = await fetch(`${BACKEND}/store/customers/me?fields=*groups`, {
         headers: storeHeaders(tok),
         cache: 'no-store',
       })
