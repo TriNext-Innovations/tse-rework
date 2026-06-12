@@ -33,6 +33,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [isOpen, setIsOpen] = useState(false)
 
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('tse_cart')
+      if (saved) setItems(JSON.parse(saved))
+    } catch {}
+  }, [])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('tse_cart', JSON.stringify(items))
+    } catch {}
+  }, [items])
+
   const count = items.reduce((sum, i) => sum + i.qty, 0)
   const total = items.reduce((sum, i) => sum + (i.price ?? 0) * i.qty, 0)
 

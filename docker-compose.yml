@@ -23,6 +23,29 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  meilisearch:
+    image: getmeili/meilisearch:v1.12
+    restart: unless-stopped
+    environment:
+      MEILI_MASTER_KEY: ${MEILISEARCH_API_KEY}
+      MEILI_ENV: production
+    volumes:
+      - meilisearch_data:/meili_data
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:7700/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+
   redis:
     image: redis:7-alpine
     restart: unless-stopped
@@ -86,6 +109,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      meilisearch:
+        condition: service_healthy
     environment:
       DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/tse_medusa?sslmode=disable
       REDIS_URL: redis://redis:6379
@@ -104,7 +129,7 @@ services:
       PAYFAST_MERCHANT_KEY: ${PAYFAST_MERCHANT_KEY}
       PAYFAST_PASSPHRASE: ${PAYFAST_PASSPHRASE}
       PAYFAST_SANDBOX: ${PAYFAST_SANDBOX:-true}
-      MEILISEARCH_HOST: ${MEILISEARCH_HOST}
+      MEILISEARCH_HOST: http://meilisearch:7700
       MEILISEARCH_API_KEY: ${MEILISEARCH_API_KEY}
       SENTRY_DSN: ${SENTRY_DSN}
       OZOW_SITE_CODE: ${OZOW_SITE_CODE}
@@ -208,3 +233,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  meilisearch_data:
