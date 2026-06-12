@@ -7,6 +7,7 @@ import { MeiliSearch } from 'meilisearch'
 
 const HOST = process.env.NEXT_PUBLIC_MEILISEARCH_HOST ?? ''
 const KEY = process.env.NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY ?? ''
+const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const INDEX = 'products'
 
 type Hit = {
@@ -64,7 +65,17 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
     client.current
       .index(INDEX)
       .search<Hit>(debouncedQuery, { limit: 6 })
-      .then((r) => { setHits(r.hits); setCursor(-1) })
+      .then((r) => {
+        setHits(r.hits)
+        setCursor(-1)
+        if (r.hits.length === 0 && debouncedQuery.trim().length >= 3) {
+          fetch(`${BACKEND}/store/search/no-results`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: debouncedQuery.trim() }),
+          }).catch(() => null)
+        }
+      })
       .catch(() => setHits([]))
       .finally(() => setLoading(false))
   }, [debouncedQuery])
