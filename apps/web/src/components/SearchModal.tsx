@@ -248,10 +248,10 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
               </span>
             </div>
             <button
-              onClick={() => { router.push('/products'); onClose() }}
+              onClick={() => { router.push(`/products?q=${encodeURIComponent(query)}`); onClose() }}
               className="text-[11px] text-[#6B6B66] hover:text-[#111827] transition-colors cursor-pointer"
             >
-              View all →
+              View all results →
             </button>
           </div>
         )}

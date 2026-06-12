@@ -6,9 +6,11 @@ import { AddToCartButton } from './AddToCartButton'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
+const MEILI_HOST = process.env.MEILISEARCH_HOST ?? process.env.NEXT_PUBLIC_MEILISEARCH_HOST ?? ''
+const MEILI_KEY = process.env.MEILISEARCH_API_KEY ?? process.env.NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY ?? ''
 const PAGE_SIZE = 24
 
-type SearchParams = Promise<{ category?: string; page?: string }>
+type SearchParams = Promise<{ category?: string; page?: string; q?: string }>
 
 async function getRegionId(): Promise<string> {
   try {
@@ -20,6 +22,37 @@ async function getRegionId(): Promise<string> {
     return d.regions?.[0]?.id ?? ''
   } catch {
     return ''
+  }
+}
+
+type MeiliHit = {
+  id: string
+  title: string
+  handle: string
+  sku: string | null
+  brand: string | null
+  cartridge_type: string | null
+  price_zar: number | null
+  image_url: string | null
+}
+
+async function searchMeilisearch(query: string, offset: number): Promise<{ hits: MeiliHit[]; total: number }> {
+  if (!MEILI_HOST || !MEILI_KEY) return { hits: [], total: 0 }
+  try {
+    const res = await fetch(
+      `${MEILI_HOST}/indexes/products/search`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${MEILI_KEY}` },
+        body: JSON.stringify({ q: query, limit: PAGE_SIZE, offset }),
+        next: { revalidate: 0 },
+      }
+    )
+    if (!res.ok) return { hits: [], total: 0 }
+    const data = await res.json()
+    return { hits: data.hits ?? [], total: data.estimatedTotalHits ?? data.totalHits ?? 0 }
+  } catch {
+    return { hits: [], total: 0 }
   }
 }
 
@@ -37,39 +70,50 @@ async function getCategories(): Promise<any[]> {
 }
 
 export default async function ProductsPage({ searchParams }: { searchParams: SearchParams }) {
-  const { category = '', page: pageParam = '1' } = await searchParams
+  const { category = '', page: pageParam = '1', q = '' } = await searchParams
   const page = Math.max(1, parseInt(pageParam, 10) || 1)
+  const offset = (page - 1) * PAGE_SIZE
+  const isSearch = q.trim().length > 0
   const categoryIds = category ? category.split(',').filter(Boolean) : []
 
-  const [regionId, allCategories] = await Promise.all([getRegionId(), getCategories()])
-
-  const offset = (page - 1) * PAGE_SIZE
-  const params = new URLSearchParams({
-    limit: String(PAGE_SIZE),
-    offset: String(offset),
-  })
-  if (regionId) params.append('region_id', regionId)
-  for (const id of categoryIds) params.append('category_id[]', id)
-
-  params.append('fields', '+metadata,+categories.id,+categories.name,+categories.handle,+images')
+  const allCategories = await getCategories()
 
   let products: any[] = []
   let total = 0
 
-  try {
-    const data = await fetch(`${BACKEND}/store/products?${params}`, {
-      headers: { 'x-publishable-api-key': PUB_KEY },
-      next: { revalidate: 60 },
-    }).then((r) => r.json())
-    products = data.products ?? []
-    total = data.count ?? 0
-  } catch {
-    // Medusa offline — page renders empty with filters still usable
+  if (isSearch) {
+    const { hits, total: t } = await searchMeilisearch(q.trim(), offset)
+    total = t
+    products = hits.map((h) => ({
+      id: h.id,
+      handle: h.handle,
+      title: h.title,
+      metadata: { cartridge_type: h.cartridge_type },
+      images: h.image_url ? [{ url: h.image_url }] : [],
+      variants: [{ sku: h.sku, calculated_price: h.price_zar ? { calculated_amount: h.price_zar * 100 } : null }],
+    }))
+  } else {
+    const regionId = await getRegionId()
+    const params = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(offset) })
+    if (regionId) params.append('region_id', regionId)
+    for (const id of categoryIds) params.append('category_id[]', id)
+    params.append('fields', '+metadata,+categories.id,+categories.name,+categories.handle,+images')
+
+    try {
+      const data = await fetch(`${BACKEND}/store/products?${params}`, {
+        headers: { 'x-publishable-api-key': PUB_KEY },
+        next: { revalidate: 60 },
+      }).then((r) => r.json())
+      products = data.products ?? []
+      total = data.count ?? 0
+    } catch {
+      // Medusa offline — page renders empty with filters still usable
+    }
   }
 
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
-  const activeCategoryName = categoryIds.length > 0
+  const activeCategoryName = !isSearch && categoryIds.length > 0
     ? (allCategories.find((c: any) => categoryIds.includes(c.id))?.name ?? '')
     : ''
 
@@ -86,29 +130,33 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
         {/* Page heading */}
         <div className="mb-8">
           <h1 className="font-display font-light text-4xl sm:text-5xl tracking-tight leading-[0.95]">
-            {activeCategoryName ? (
-              <>
-                <span className="font-display-italic">{activeCategoryName}</span>
-              </>
+            {isSearch ? (
+              <>Results for <span className="font-display-italic">&ldquo;{q}&rdquo;</span></>
+            ) : activeCategoryName ? (
+              <span className="font-display-italic">{activeCategoryName}</span>
             ) : (
               <>All <span className="font-display-italic">cartridges</span></>
             )}
           </h1>
-          <p className="mt-2 text-sm text-[#6B6B66]">{total} products</p>
+          <p className="mt-2 text-sm text-[#6B6B66]">{total} {total === 1 ? 'product' : 'products'}</p>
         </div>
 
         <div className="flex gap-8 lg:gap-12">
-          {/* Sidebar */}
-          <div className="hidden md:block w-44 flex-shrink-0">
-            <Suspense fallback={null}>
-              <ProductFilters categories={allCategories} />
-            </Suspense>
-          </div>
+          {/* Sidebar — hidden during search, category filters don't apply */}
+          {!isSearch && (
+            <div className="hidden md:block w-44 flex-shrink-0">
+              <Suspense fallback={null}>
+                <ProductFilters categories={allCategories} />
+              </Suspense>
+            </div>
+          )}
 
           {/* Grid */}
           <div className="flex-1 min-w-0">
             {products.length === 0 ? (
-              <div className="text-center py-24 text-[#6B6B66]">No products found.</div>
+              <div className="text-center py-24 text-[#6B6B66]">
+                {isSearch ? `No results for "${q}".` : 'No products found.'}
+              </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                 {products.map((p: any, i: number) => {
@@ -173,7 +221,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
               <div className="mt-10 flex items-center justify-center gap-2">
                 {page > 1 && (
                   <Link
-                    href={`/products?${new URLSearchParams({ ...(category ? { category } : {}), page: String(page - 1) })}`}
+                    href={`/products?${new URLSearchParams({ ...(isSearch ? { q } : category ? { category } : {}), page: String(page - 1) })}`}
                     className="px-4 py-2 rounded-full border border-black/15 text-sm hover:border-black/40 transition-colors"
                   >
                     ← Prev
@@ -184,7 +232,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
                 </span>
                 {page < totalPages && (
                   <Link
-                    href={`/products?${new URLSearchParams({ ...(category ? { category } : {}), page: String(page + 1) })}`}
+                    href={`/products?${new URLSearchParams({ ...(isSearch ? { q } : category ? { category } : {}), page: String(page + 1) })}`}
                     className="px-4 py-2 rounded-full border border-black/15 text-sm hover:border-black/40 transition-colors"
                   >
                     Next →

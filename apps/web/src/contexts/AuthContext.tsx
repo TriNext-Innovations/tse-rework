@@ -49,6 +49,8 @@ type AuthContextType = {
   register: (input: RegisterInput) => Promise<string | null>
   logout: () => void
   refreshCustomer: () => Promise<void>
+  requestPasswordReset: (email: string) => Promise<string | null>
+  resetPassword: (token: string, password: string) => Promise<string | null>
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -165,8 +167,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (c) setCustomer(c)
   }
 
+  async function requestPasswordReset(email: string): Promise<string | null> {
+    try {
+      const res = await fetch(`${BACKEND}/auth/customer/emailpass/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: email }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        return data.message ?? 'Failed to send reset email'
+      }
+      return null
+    } catch {
+      return 'Network error — please try again'
+    }
+  }
+
+  async function resetPassword(resetToken: string, password: string): Promise<string | null> {
+    try {
+      const res = await fetch(`${BACKEND}/auth/customer/emailpass/update`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${resetToken}`,
+        },
+        body: JSON.stringify({ password }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        return data.message ?? 'Failed to reset password'
+      }
+      return null
+    } catch {
+      return 'Network error — please try again'
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ customer, token, loading, login, register, logout, refreshCustomer }}>
+    <AuthContext.Provider value={{ customer, token, loading, login, register, logout, refreshCustomer, requestPasswordReset, resetPassword }}>
       {children}
     </AuthContext.Provider>
   )
