@@ -13,5 +13,10 @@ export const onRequestError = async (
   context: { routerKind: string; routePath: string; renderSource: string },
 ) => {
   const { captureRequestError } = await import('@sentry/nextjs')
-  captureRequestError(err, request, context)
+  // Next.js hook shapes diverge from Sentry v10 types — casts are safe at runtime
+  captureRequestError(
+    err,
+    request as Parameters<typeof captureRequestError>[1],
+    context as unknown as Parameters<typeof captureRequestError>[2],
+  )
 }

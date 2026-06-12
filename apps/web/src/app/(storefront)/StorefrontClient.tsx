@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Navbar, Logo } from '@/components/layout'
+import { Navbar } from '@/components/layout'
 import { useCart } from '@/contexts/CartContext'
 
 type Theme = 'editorial' | 'brand'

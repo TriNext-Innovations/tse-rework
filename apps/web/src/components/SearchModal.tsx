@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { MeiliSearch } from 'meilisearch'
+import { Meilisearch } from 'meilisearch'
 
 const HOST = process.env.NEXT_PUBLIC_MEILISEARCH_HOST ?? ''
 const KEY = process.env.NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY ?? ''
@@ -22,9 +22,9 @@ type Hit = {
   categories: string[]
 }
 
-function getClient(): MeiliSearch | null {
+function getClient(): Meilisearch | null {
   if (!HOST || !KEY) return null
-  return new MeiliSearch({ host: HOST, apiKey: KEY })
+  return new Meilisearch({ host: HOST, apiKey: KEY })
 }
 
 function useDebounce<T>(value: T, ms: number): T {

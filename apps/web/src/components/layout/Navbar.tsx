@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { Logo } from './Logo'
 import { CartButton } from '@/components/CartButton'
 import { useAuth } from '@/contexts/AuthContext'
@@ -41,8 +40,7 @@ export function Navbar({ categories = [], right }: NavbarProps) {
   const [searchOpen, setSearchOpen] = useState(false)
   const shopRef = useRef<HTMLDivElement>(null)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const router = useRouter()
-  const { customer, loading: authLoading } = useAuth()
+const { customer, loading: authLoading } = useAuth()
 
   // CMD+K / Ctrl+K global shortcut
   useEffect(() => {

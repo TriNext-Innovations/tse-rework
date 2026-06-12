@@ -292,7 +292,7 @@ export default function B2BPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[
               { step: '01', title: 'Apply', body: 'Fill in the form above. We review every application manually — usually same business day.' },
-              { step: '02', title: 'Get approved', body: 'We set up your account with the right pricing tier. You'll shop at your discount automatically.' },
+              { step: '02', title: 'Get approved', body: "We set up your account with the right pricing tier. You'll shop at your discount automatically." },
               { step: '03', title: 'Order and save', body: 'Order online, by phone, or WhatsApp. Next-day delivery JHB/PTA — COD available for our own drivers.' },
             ].map(({ step, title, body }) => (
               <div key={step} className="border-t-2 border-[#dfe344] pt-5">

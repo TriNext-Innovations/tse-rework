@@ -91,6 +91,14 @@ async function notifyCustomer(data: Record<string, string>) {
 }
 
 export async function POST(req: NextRequest) {
+  // Validate source IP against PayFast's published ranges
+  const rawIp = req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip') ?? ''
+  const ip = rawIp.split(',')[0]?.trim() ?? ''
+  if (process.env.NODE_ENV === 'production' && !PAYFAST_IPS.has(ip)) {
+    console.error('[PayFast ITN] Request from unlisted IP:', ip)
+    return new NextResponse('FORBIDDEN', { status: 403 })
+  }
+
   const formData = await req.formData()
   const data: Record<string, string> = {}
   formData.forEach((v, k) => { data[k] = v.toString() })

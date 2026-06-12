@@ -19,7 +19,7 @@ vi.mock('next/navigation', () => ({
 
 // ── Next.js Image → plain <img> ──────────────────────────────────────────────
 vi.mock('next/image', () => ({
-  default: ({ src, alt, width, height, priority, className }: any) =>
+  default: ({ src, alt, width, height, className }: any) =>
     React.createElement('img', { src, alt, width, height, className }),
 }))
 
@@ -32,7 +32,7 @@ vi.mock('next/link', () => ({
 // ── next/dynamic → stub that sets lottieRef when rendered ────────────────────
 vi.mock('next/dynamic', () => ({
   default: (_factory: () => Promise<any>, _opts?: any) => {
-    function MockDynamic({ lottieRef, ...props }: any) {
+    function MockDynamic({ lottieRef }: any) {
       if (lottieRef && typeof lottieRef === 'object') {
         lottieRef.current = { goToAndPlay: vi.fn(), stop: vi.fn(), play: vi.fn() }
       }
