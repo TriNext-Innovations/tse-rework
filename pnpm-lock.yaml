@@ -5,7 +5,8 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@medusajs/admin-sdk': 2.15.2
+  '@medusajs/admin-sdk': 2.15.3
+  '@medusajs/admin-shared': 2.15.3
   axios: '>=1.16.1'
   '@aws-sdk/client-dynamodb': '>=3.1049.0'
   protobufjs: '>=7.6.0'
@@ -42,14 +43,14 @@ importers:
   apps/backend:
     dependencies:
       '@medusajs/admin-sdk':
-        specifier: 2.15.2
-        version: 2.15.2
+        specifier: 2.15.3
+        version: 2.15.3
       '@medusajs/dashboard':
         specifier: ^2.15.3
         version: 2.15.3(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(typescript@6.0.3)
       '@medusajs/draft-order':
         specifier: ^2.15.3
-        version: 2.15.3(@medusajs/admin-sdk@2.15.2)(@medusajs/cli@2.13.6(@types/node@22.19.17))(@medusajs/framework@2.15.3(@medusajs/cli@2.13.6(@types/node@22.19.17))(@types/node@22.19.17)(ioredis@5.10.1)(vite@8.0.14(@types/node@22.19.17)(esbuild@0.28.0)(jiti@1.21.7)(terser@5.48.0)(tsx@4.22.2)(yaml@2.9.0))(zod@4.2.0))(@medusajs/icons@2.15.3(react@19.2.6))(@medusajs/ui@4.1.13(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@6.0.3))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react-router-dom@6.30.3(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)
+        version: 2.15.3(@medusajs/admin-sdk@2.15.3)(@medusajs/cli@2.13.6(@types/node@22.19.17))(@medusajs/framework@2.15.3(@medusajs/cli@2.13.6(@types/node@22.19.17))(@types/node@22.19.17)(ioredis@5.10.1)(vite@8.0.14(@types/node@22.19.17)(esbuild@0.28.0)(jiti@1.21.7)(terser@5.48.0)(tsx@4.22.2)(yaml@2.9.0))(zod@4.2.0))(@medusajs/icons@2.15.3(react@19.2.6))(@medusajs/ui@4.1.13(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@6.0.3))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react-router-dom@6.30.3(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)
       '@medusajs/file-s3':
         specifier: ^2.15.3
         version: 2.15.3(@medusajs/framework@2.15.3(@medusajs/cli@2.13.6(@types/node@22.19.17))(@types/node@22.19.17)(ioredis@5.10.1)(vite@8.0.14(@types/node@22.19.17)(esbuild@0.28.0)(jiti@1.21.7)(terser@5.48.0)(tsx@4.22.2)(yaml@2.9.0))(zod@4.2.0))
@@ -58,7 +59,7 @@ importers:
         version: 2.15.3(@medusajs/cli@2.13.6(@types/node@22.19.17))(@types/node@22.19.17)(ioredis@5.10.1)(vite@8.0.14(@types/node@22.19.17)(esbuild@0.28.0)(jiti@1.21.7)(terser@5.48.0)(tsx@4.22.2)(yaml@2.9.0))(zod@4.2.0)
       '@medusajs/medusa':
         specifier: ^2.15.3
-        version: 2.15.3(@medusajs/admin-sdk@2.15.2)(@medusajs/cli@2.13.6(@types/node@22.19.17))(@medusajs/framework@2.15.3(@medusajs/cli@2.13.6(@types/node@22.19.17))(@types/node@22.19.17)(ioredis@5.10.1)(vite@8.0.14(@types/node@22.19.17)(esbuild@0.28.0)(jiti@1.21.7)(terser@5.48.0)(tsx@4.22.2)(yaml@2.9.0))(zod@4.2.0))(@medusajs/icons@2.15.3(react@19.2.6))(@medusajs/ui@4.1.13(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@6.0.3))(@types/node@22.19.17)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(awilix@8.0.1)(esbuild@0.28.0)(jiti@1.21.7)(picomatch@4.0.4)(posthog-node@5.29.2(rxjs@7.8.2))(react-dom@19.2.6(react@19.2.6))(react-router-dom@6.30.3(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(terser@5.48.0)(tsx@4.22.2)(typescript@6.0.3)(yaml@2.9.0)
+        version: 2.15.3(@medusajs/admin-sdk@2.15.3)(@medusajs/cli@2.13.6(@types/node@22.19.17))(@medusajs/framework@2.15.3(@medusajs/cli@2.13.6(@types/node@22.19.17))(@types/node@22.19.17)(ioredis@5.10.1)(vite@8.0.14(@types/node@22.19.17)(esbuild@0.28.0)(jiti@1.21.7)(terser@5.48.0)(tsx@4.22.2)(yaml@2.9.0))(zod@4.2.0))(@medusajs/icons@2.15.3(react@19.2.6))(@medusajs/ui@4.1.13(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@6.0.3))(@types/node@22.19.17)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(awilix@8.0.1)(esbuild@0.28.0)(jiti@1.21.7)(picomatch@4.0.4)(posthog-node@5.29.2(rxjs@7.8.2))(react-dom@19.2.6(react@19.2.6))(react-router-dom@6.30.3(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(terser@5.48.0)(tsx@4.22.2)(typescript@6.0.3)(yaml@2.9.0)
       '@sentry/node':
         specifier: ^10.56.0
         version: 10.56.0(@opentelemetry/exporter-trace-otlp-http@0.218.0(@opentelemetry/api@1.9.1))
@@ -1191,11 +1192,8 @@ packages:
   '@medusajs/admin-bundler@2.15.3':
     resolution: {integrity: sha512-5vhpLwCnF+YpcY6a9jzNuIz07ZJ5zSVFEt2BXBhiCsNODjIEaUBkg1dQhY/5lHAhk2/7qubP+XR6issQg0B2BQ==}
 
-  '@medusajs/admin-sdk@2.15.2':
-    resolution: {integrity: sha512-9BRj1SU9rut/ZvACefNOoNy5vgrWS1aedEtSIY2QFroO5D2ooHtWAxuq6wLqQIREVPnLP/y9Rfivx7DR4jjR/w==}
-
-  '@medusajs/admin-shared@2.15.2':
-    resolution: {integrity: sha512-DuQKWZhvKAL2FlVlTGl6O4rqSgGQoUjwQk4GsVfMjr3zGDb8bEcoqlJ8Kd7lFpKHXsCOnM/9buC6Un/nQ82RGg==}
+  '@medusajs/admin-sdk@2.15.3':
+    resolution: {integrity: sha512-Dn7Rff84LnG0sko1aXx8XdU/47/biHD5n7dhNUKHUpW/I4rBY0aMpMCXjKfzp1kldw0Q81sn0h/IAbIWR+7nrA==}
 
   '@medusajs/admin-shared@2.15.3':
     resolution: {integrity: sha512-JnhrOTOCZ5q5MIhOP6P2O03/LhbxZt2CBlgyiD4sKBWo9rnO2/w0IT+mQI7ATYX44p5/1v8w6rMCXI+tLOys9w==}
@@ -1322,7 +1320,7 @@ packages:
     resolution: {integrity: sha512-KUmb/+/sXhlabaLmGNQJIX7rzAy+Oaf+bkLoXxQ12b80C5mLgIfA68gt/i7g8+YKMtoyyLftekt7iD5yYQgVjQ==}
     engines: {node: '>=20'}
     peerDependencies:
-      '@medusajs/admin-sdk': 2.15.2
+      '@medusajs/admin-sdk': 2.15.3
       '@medusajs/cli': 2.15.3
       '@medusajs/framework': 2.15.3
       '@medusajs/icons': 2.15.3
@@ -8745,12 +8743,10 @@ snapshots:
       - typescript
       - yaml
 
-  '@medusajs/admin-sdk@2.15.2':
+  '@medusajs/admin-sdk@2.15.3':
     dependencies:
-      '@medusajs/admin-shared': 2.15.2
+      '@medusajs/admin-shared': 2.15.3
       zod: 4.2.0
-
-  '@medusajs/admin-shared@2.15.2': {}
 
   '@medusajs/admin-shared@2.15.3': {}
 
@@ -8999,7 +8995,7 @@ snapshots:
       - supports-color
       - tedious
 
-  '@medusajs/draft-order@2.15.3(@medusajs/admin-sdk@2.15.2)(@medusajs/cli@2.13.6(@types/node@22.19.17))(@medusajs/framework@2.15.3(@medusajs/cli@2.13.6(@types/node@22.19.17))(@types/node@22.19.17)(ioredis@5.10.1)(vite@8.0.14(@types/node@22.19.17)(esbuild@0.28.0)(jiti@1.21.7)(terser@5.48.0)(tsx@4.22.2)(yaml@2.9.0))(zod@4.2.0))(@medusajs/icons@2.15.3(react@19.2.6))(@medusajs/ui@4.1.13(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@6.0.3))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react-router-dom@6.30.3(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)':
+  '@medusajs/draft-order@2.15.3(@medusajs/admin-sdk@2.15.3)(@medusajs/cli@2.13.6(@types/node@22.19.17))(@medusajs/framework@2.15.3(@medusajs/cli@2.13.6(@types/node@22.19.17))(@types/node@22.19.17)(ioredis@5.10.1)(vite@8.0.14(@types/node@22.19.17)(esbuild@0.28.0)(jiti@1.21.7)(terser@5.48.0)(tsx@4.22.2)(yaml@2.9.0))(zod@4.2.0))(@medusajs/icons@2.15.3(react@19.2.6))(@medusajs/ui@4.1.13(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@6.0.3))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react-router-dom@6.30.3(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)':
     dependencies:
       '@ariakit/react': 0.4.26(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@babel/runtime': 7.29.2
@@ -9015,7 +9011,7 @@ snapshots:
       radix-ui: 1.1.2(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react-hook-form: 7.49.1(react@19.2.6)
     optionalDependencies:
-      '@medusajs/admin-sdk': 2.15.2
+      '@medusajs/admin-sdk': 2.15.3
       '@medusajs/cli': 2.13.6(@types/node@22.19.17)
       '@medusajs/icons': 2.15.3(react@19.2.6)
       '@medusajs/ui': 4.1.13(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
@@ -9154,7 +9150,7 @@ snapshots:
     dependencies:
       '@medusajs/framework': 2.15.3(@medusajs/cli@2.13.6(@types/node@22.19.17))(@types/node@22.19.17)(ioredis@5.10.1)(vite@8.0.14(@types/node@22.19.17)(esbuild@0.28.0)(jiti@1.21.7)(terser@5.48.0)(tsx@4.22.2)(yaml@2.9.0))(zod@4.2.0)
 
-  '@medusajs/medusa@2.15.3(@medusajs/admin-sdk@2.15.2)(@medusajs/cli@2.13.6(@types/node@22.19.17))(@medusajs/framework@2.15.3(@medusajs/cli@2.13.6(@types/node@22.19.17))(@types/node@22.19.17)(ioredis@5.10.1)(vite@8.0.14(@types/node@22.19.17)(esbuild@0.28.0)(jiti@1.21.7)(terser@5.48.0)(tsx@4.22.2)(yaml@2.9.0))(zod@4.2.0))(@medusajs/icons@2.15.3(react@19.2.6))(@medusajs/ui@4.1.13(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@6.0.3))(@types/node@22.19.17)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(awilix@8.0.1)(esbuild@0.28.0)(jiti@1.21.7)(picomatch@4.0.4)(posthog-node@5.29.2(rxjs@7.8.2))(react-dom@19.2.6(react@19.2.6))(react-router-dom@6.30.3(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(terser@5.48.0)(tsx@4.22.2)(typescript@6.0.3)(yaml@2.9.0)':
+  '@medusajs/medusa@2.15.3(@medusajs/admin-sdk@2.15.3)(@medusajs/cli@2.13.6(@types/node@22.19.17))(@medusajs/framework@2.15.3(@medusajs/cli@2.13.6(@types/node@22.19.17))(@types/node@22.19.17)(ioredis@5.10.1)(vite@8.0.14(@types/node@22.19.17)(esbuild@0.28.0)(jiti@1.21.7)(terser@5.48.0)(tsx@4.22.2)(yaml@2.9.0))(zod@4.2.0))(@medusajs/icons@2.15.3(react@19.2.6))(@medusajs/ui@4.1.13(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@6.0.3))(@types/node@22.19.17)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(awilix@8.0.1)(esbuild@0.28.0)(jiti@1.21.7)(picomatch@4.0.4)(posthog-node@5.29.2(rxjs@7.8.2))(react-dom@19.2.6(react@19.2.6))(react-router-dom@6.30.3(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(terser@5.48.0)(tsx@4.22.2)(typescript@6.0.3)(yaml@2.9.0)':
     dependencies:
       '@inquirer/checkbox': 2.5.0
       '@inquirer/confirm': 2.0.17
@@ -9176,7 +9172,7 @@ snapshots:
       '@medusajs/core-flows': 2.15.3(@medusajs/framework@2.15.3(@medusajs/cli@2.13.6(@types/node@22.19.17))(@types/node@22.19.17)(ioredis@5.10.1)(vite@8.0.14(@types/node@22.19.17)(esbuild@0.28.0)(jiti@1.21.7)(terser@5.48.0)(tsx@4.22.2)(yaml@2.9.0))(zod@4.2.0))
       '@medusajs/currency': 2.15.3(@medusajs/framework@2.15.3(@medusajs/cli@2.13.6(@types/node@22.19.17))(@types/node@22.19.17)(ioredis@5.10.1)(vite@8.0.14(@types/node@22.19.17)(esbuild@0.28.0)(jiti@1.21.7)(terser@5.48.0)(tsx@4.22.2)(yaml@2.9.0))(zod@4.2.0))
       '@medusajs/customer': 2.15.3(@medusajs/framework@2.15.3(@medusajs/cli@2.13.6(@types/node@22.19.17))(@types/node@22.19.17)(ioredis@5.10.1)(vite@8.0.14(@types/node@22.19.17)(esbuild@0.28.0)(jiti@1.21.7)(terser@5.48.0)(tsx@4.22.2)(yaml@2.9.0))(zod@4.2.0))
-      '@medusajs/draft-order': 2.15.3(@medusajs/admin-sdk@2.15.2)(@medusajs/cli@2.13.6(@types/node@22.19.17))(@medusajs/framework@2.15.3(@medusajs/cli@2.13.6(@types/node@22.19.17))(@types/node@22.19.17)(ioredis@5.10.1)(vite@8.0.14(@types/node@22.19.17)(esbuild@0.28.0)(jiti@1.21.7)(terser@5.48.0)(tsx@4.22.2)(yaml@2.9.0))(zod@4.2.0))(@medusajs/icons@2.15.3(react@19.2.6))(@medusajs/ui@4.1.13(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@6.0.3))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react-router-dom@6.30.3(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)
+      '@medusajs/draft-order': 2.15.3(@medusajs/admin-sdk@2.15.3)(@medusajs/cli@2.13.6(@types/node@22.19.17))(@medusajs/framework@2.15.3(@medusajs/cli@2.13.6(@types/node@22.19.17))(@types/node@22.19.17)(ioredis@5.10.1)(vite@8.0.14(@types/node@22.19.17)(esbuild@0.28.0)(jiti@1.21.7)(terser@5.48.0)(tsx@4.22.2)(yaml@2.9.0))(zod@4.2.0))(@medusajs/icons@2.15.3(react@19.2.6))(@medusajs/ui@4.1.13(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@6.0.3))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react-router-dom@6.30.3(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)
       '@medusajs/event-bus-local': 2.15.3(@medusajs/framework@2.15.3(@medusajs/cli@2.13.6(@types/node@22.19.17))(@types/node@22.19.17)(ioredis@5.10.1)(vite@8.0.14(@types/node@22.19.17)(esbuild@0.28.0)(jiti@1.21.7)(terser@5.48.0)(tsx@4.22.2)(yaml@2.9.0))(zod@4.2.0))
       '@medusajs/event-bus-redis': 2.15.3(@medusajs/framework@2.15.3(@medusajs/cli@2.13.6(@types/node@22.19.17))(@types/node@22.19.17)(ioredis@5.10.1)(vite@8.0.14(@types/node@22.19.17)(esbuild@0.28.0)(jiti@1.21.7)(terser@5.48.0)(tsx@4.22.2)(yaml@2.9.0))(zod@4.2.0))
       '@medusajs/file': 2.15.3(@medusajs/framework@2.15.3(@medusajs/cli@2.13.6(@types/node@22.19.17))(@types/node@22.19.17)(ioredis@5.10.1)(vite@8.0.14(@types/node@22.19.17)(esbuild@0.28.0)(jiti@1.21.7)(terser@5.48.0)(tsx@4.22.2)(yaml@2.9.0))(zod@4.2.0))
