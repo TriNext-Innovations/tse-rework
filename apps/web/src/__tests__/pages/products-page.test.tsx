@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { CartProvider } from '@/contexts/CartContext'
 import { useSearchParams } from 'next/navigation'
 import React, { Suspense } from 'react'
 
@@ -28,17 +27,19 @@ const makeProduct = (id: string, title: string, price?: number) => ({
 })
 
 function setupFetch(regionId: string, categories: any[], products: any[], count: number) {
-  let call = 0
-  vi.stubGlobal('fetch', vi.fn(() => {
-    call++
-    if (call === 1) return Promise.resolve({ json: () => Promise.resolve({ regions: regionId ? [{ id: regionId }] : [] }) })
-    if (call === 2) return Promise.resolve({ json: () => Promise.resolve({ product_categories: categories }) })
-    return Promise.resolve({ json: () => Promise.resolve({ products, count }) })
+  // Route by URL, not call order — the page fetches categories before regions.
+  vi.stubGlobal('fetch', vi.fn((url: string) => {
+    if (url.includes('/regions')) return Promise.resolve({ ok: true, json: () => Promise.resolve({ regions: regionId ? [{ id: regionId }] : [] }) })
+    if (url.includes('/product-categories')) return Promise.resolve({ ok: true, json: () => Promise.resolve({ product_categories: categories }) })
+    return Promise.resolve({ ok: true, json: () => Promise.resolve({ products, count }) })
   }))
 }
 
 async function renderProductsPage(params: { category?: string; page?: string } = {}) {
   const { default: ProductsPage } = await import('@/app/(storefront)/products/page')
+  // Import CartProvider from the same (post-resetModules) instance the page uses,
+  // otherwise the page's useCart resolves to a different context and throws.
+  const { CartProvider } = await import('@/contexts/CartContext')
   const jsx = await ProductsPage({ searchParams: Promise.resolve(params) })
   return render(
     <CartProvider>
@@ -74,7 +75,7 @@ describe('ProductsPage', () => {
   it('shows product count', async () => {
     setupFetch('reg_01', [], [makeProduct('p1', 'HP 123')], 1)
     await renderProductsPage()
-    expect(screen.getByText('1 products')).toBeInTheDocument()
+    expect(screen.getByText('1 product')).toBeInTheDocument()
   })
 
   it('renders product cards', async () => {
@@ -178,9 +179,10 @@ describe('ProductsPage', () => {
     expect(screen.getByText('Shop')).toBeInTheDocument()
   })
 
-  it('renders "← Home" back link', async () => {
+  it('provides a link back home (navbar logo)', async () => {
     setupFetch('reg_01', [], [], 0)
     await renderProductsPage()
-    expect(screen.getByText('← Home')).toBeInTheDocument()
+    const homeLinks = screen.getAllByRole('link').filter((a) => a.getAttribute('href') === '/')
+    expect(homeLinks.length).toBeGreaterThan(0)
   })
 })

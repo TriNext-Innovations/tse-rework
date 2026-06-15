@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CartButton } from '@/components/CartButton'
 import { CartProvider, useCart } from '@/contexts/CartContext'
@@ -39,7 +39,9 @@ describe('CartButton', () => {
   it('shows badge count after adding an item', async () => {
     renderCartButton()
     await userEvent.click(screen.getByText('add'))
-    expect(screen.getByText('1')).toBeInTheDocument()
+    // Scope to the cart button's badge — the drawer line item also renders "1".
+    const cartBtn = screen.getByRole('button', { name: /Cart \(1 items\)/i })
+    expect(within(cartBtn).getByText('1')).toBeInTheDocument()
   })
 
   it('updates aria-label to reflect current count', async () => {

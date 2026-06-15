@@ -39,6 +39,7 @@ describe('StorefrontPage (server component)', () => {
 
   it('renders StorefrontClient with products when backend responds', async () => {
     mockFetch([
+      { models: [] },                  // compat models — fetched first
       { regions: [{ id: 'reg_01' }] },
       { products: [mockProduct], count: 1 },
     ])
