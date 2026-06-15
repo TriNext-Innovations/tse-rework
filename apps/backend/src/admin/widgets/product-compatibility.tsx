@@ -3,25 +3,43 @@ import { useEffect, useState } from 'react'
 
 type CompatModel = { brand: string; model: string }
 
-type Props = {
-  data: {
-    product: {
-      id: string
-      title: string
-      variants?: Array<{ sku?: string | null }>
-    }
-  }
+// Medusa v2 detail widgets receive the entity directly as `data`
+// (DetailWidgetProps<AdminProduct> = { data: AdminProduct }), so the SKU is on
+// data.variants — NOT data.product.variants.
+type ProductData = {
+  id: string
+  title: string
+  variants?: Array<{ sku?: string | null }>
 }
 
-const ProductCompatibilityWidget = ({ data }: Props) => {
-  const sku = data?.product?.variants?.[0]?.sku ?? null
+const ProductCompatibilityWidget = ({ data }: { data: ProductData }) => {
+  const initialSku = data?.variants?.[0]?.sku ?? null
+  const [sku, setSku] = useState<string | null>(initialSku)
+  // Whether we've determined the SKU (from the payload or a fallback fetch).
+  const [skuResolved, setSkuResolved] = useState<boolean>(initialSku != null)
   const [models, setModels] = useState<CompatModel[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  // Fallback: if variants weren't included in the injected payload, fetch the
+  // product's first-variant SKU directly.
+  useEffect(() => {
+    if (skuResolved || !data?.id) return
+    fetch(`/admin/products/${data.id}?fields=id,variants.sku`, { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        const resolved = (d as { product?: { variants?: Array<{ sku?: string | null }> } })
+          ?.product?.variants?.[0]?.sku
+        setSku(resolved ?? null)
+      })
+      .catch(() => {})
+      .finally(() => setSkuResolved(true))
+  }, [data?.id, skuResolved])
+
   useEffect(() => {
     if (!sku) return
     setLoading(true)
+    setError('')
     fetch(`/admin/compatibility?sku=${encodeURIComponent(sku)}`, {
       credentials: 'include',
     })
@@ -46,7 +64,14 @@ const ProductCompatibilityWidget = ({ data }: Props) => {
         )}
       </div>
 
-      {!sku && (
+      {!skuResolved && (
+        <div className="flex items-center gap-2 text-xs text-gray-400">
+          <div className="w-3 h-3 border border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+          Loading…
+        </div>
+      )}
+
+      {skuResolved && !sku && (
         <p className="text-xs text-gray-400">No SKU on the first variant — add a SKU to see compatibility data.</p>
       )}
 

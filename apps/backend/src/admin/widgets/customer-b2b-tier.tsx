@@ -1,4 +1,5 @@
 import { defineWidgetConfig } from '@medusajs/admin-sdk'
+import { useEffect, useState } from 'react'
 
 const TIER_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   Reseller:  { bg: '#fef9c3', text: '#854d0e', border: '#fde047' },
@@ -12,20 +13,29 @@ const TIER_DISCOUNTS: Record<string, string> = {
 
 type CustomerGroup = { id: string; name: string }
 
-type Props = {
-  data: {
-    customer: {
-      id: string
-      email: string
-      first_name?: string | null
-      last_name?: string | null
-      groups?: CustomerGroup[]
-    }
-  }
+// Medusa v2 detail widgets receive the entity directly as `data`
+// (DetailWidgetProps<AdminCustomer> = { data: AdminCustomer }), so groups are
+// on data.groups — NOT data.customer.groups.
+type CustomerData = {
+  id: string
+  email: string
+  first_name?: string | null
+  last_name?: string | null
+  groups?: CustomerGroup[]
 }
 
-const CustomerB2BTierWidget = ({ data }: Props) => {
-  const groups: CustomerGroup[] = data?.customer?.groups ?? []
+const CustomerB2BTierWidget = ({ data }: { data: CustomerData }) => {
+  const [groups, setGroups] = useState<CustomerGroup[]>(data?.groups ?? [])
+
+  // Fallback: if groups weren't included in the injected payload, fetch them.
+  useEffect(() => {
+    if (Array.isArray(data?.groups) || !data?.id) return
+    fetch(`/admin/customers/${data.id}?fields=id,groups.id,groups.name`, { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => setGroups((d as { customer?: { groups?: CustomerGroup[] } })?.customer?.groups ?? []))
+      .catch(() => {})
+  }, [data?.id, data?.groups])
+
   const b2bGroups = groups.filter((g) => g.name === 'Reseller' || g.name === 'Wholesale')
   const isB2B = b2bGroups.length > 0
 
