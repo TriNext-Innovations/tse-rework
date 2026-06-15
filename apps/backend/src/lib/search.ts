@@ -1,4 +1,4 @@
-import { MeiliSearch } from 'meilisearch'
+import { Meilisearch } from 'meilisearch'
 
 export const SEARCH_INDEX = 'products'
 
@@ -17,8 +17,8 @@ export type SearchDocument = {
   categories: string[]
 }
 
-export function getSearchClient(): MeiliSearch {
-  return new MeiliSearch({
+export function getSearchClient(): Meilisearch {
+  return new Meilisearch({
     host: process.env.MEILISEARCH_HOST ?? 'http://localhost:7700',
     apiKey: process.env.MEILISEARCH_API_KEY ?? '',
   })
@@ -48,7 +48,7 @@ export function productToDocument(product: any): SearchDocument {
   }
 }
 
-export async function configureIndex(client: MeiliSearch): Promise<void> {
+export async function configureIndex(client: Meilisearch): Promise<void> {
   const index = client.index(SEARCH_INDEX)
   await index.updateSearchableAttributes(['title', 'sku', 'brand', 'categories', 'description'])
   await index.updateFilterableAttributes(['brand', 'cartridge_type'])

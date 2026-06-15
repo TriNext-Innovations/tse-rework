@@ -26,14 +26,14 @@ const ProductCompatibilityWidget = ({ data }: Props) => {
       credentials: 'include',
     })
       .then((r) => r.json())
-      .then((d) => setModels(d.models ?? []))
+      .then((d) => setModels((d as { models?: CompatModel[] }).models ?? []))
       .catch(() => setError('Failed to load compatibility data'))
       .finally(() => setLoading(false))
   }, [sku])
 
   const grouped = models.reduce<Record<string, string[]>>((acc, m) => {
-    if (!acc[m.brand]) acc[m.brand] = []
-    acc[m.brand].push(m.model)
+    const list = acc[m.brand] ?? (acc[m.brand] = [])
+    list.push(m.model)
     return acc
   }, {})
 
