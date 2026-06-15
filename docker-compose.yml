@@ -108,6 +108,9 @@ services:
     build:
       context: .
       dockerfile: apps/backend/Dockerfile
+      args:
+        # Bake the public API URL into the admin dashboard build.
+        MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL}
     restart: unless-stopped
     depends_on:
       medusa-migrate:

@@ -20,6 +20,11 @@ COPY migration/raw/client-review.csv ./migration/raw/client-review.csv
 
 # medusa build outputs to apps/backend/dist/
 WORKDIR /app/apps/backend
+# The admin dashboard bakes admin.backendUrl (= MEDUSA_BACKEND_URL) at build
+# time. Without it the admin defaults to http://localhost:9000 and the hosted
+# admin can't reach the API (blank page). Pass it as a build arg.
+ARG MEDUSA_BACKEND_URL=http://localhost:9000
+ENV MEDUSA_BACKEND_URL=$MEDUSA_BACKEND_URL
 ENV NODE_OPTIONS="--max-old-space-size=3072"
 RUN /app/node_modules/.bin/medusa build
 
