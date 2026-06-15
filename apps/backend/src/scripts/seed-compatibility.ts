@@ -1,5 +1,5 @@
 /**
- * Compatibility seed script — loads compat-map-draft.csv into the DB.
+ * Compatibility seed script — loads client-review.csv into the DB.
  *
  * Usage:
  *   pnpm --filter @tse/backend seed:compat          # idempotent upsert
@@ -13,7 +13,7 @@ import { Client } from "pg"
 import { randomUUID } from "crypto"
 import { buildSearchName } from "./canonicalize"
 
-const CSV_PATH = path.join(process.cwd(), "../../migration/raw/compat-map-draft.csv")
+const CSV_PATH = path.join(process.cwd(), "../../migration/raw/client-review.csv")
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

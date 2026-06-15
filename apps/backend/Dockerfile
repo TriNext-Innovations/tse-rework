@@ -16,7 +16,7 @@ RUN pnpm install --frozen-lockfile
 COPY packages/ ./packages/
 COPY apps/backend/ ./apps/backend/
 COPY migration/seed-data.json ./migration/seed-data.json
-COPY migration/raw/compat-map-draft.csv ./migration/raw/compat-map-draft.csv
+COPY migration/raw/client-review.csv ./migration/raw/client-review.csv
 
 # medusa build outputs to apps/backend/dist/
 WORKDIR /app/apps/backend
@@ -44,7 +44,7 @@ COPY --from=builder /app/apps/backend/dist/public ./apps/backend/public
 
 # Seed data and compat CSV needed by medusa exec scripts
 COPY --from=builder /app/migration/seed-data.json ./migration/seed-data.json
-COPY --from=builder /app/migration/raw/compat-map-draft.csv ./migration/raw/compat-map-draft.csv
+COPY --from=builder /app/migration/raw/client-review.csv ./migration/raw/client-review.csv
 
 # Source scripts needed by medusa exec (exec requires .ts source, not compiled dist)
 COPY --from=builder /app/apps/backend/src ./apps/backend/src
