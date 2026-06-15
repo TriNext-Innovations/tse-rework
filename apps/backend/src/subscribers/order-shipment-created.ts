@@ -4,18 +4,8 @@ import { sendEmail } from '../lib/email'
 import { shippingUpdateHtml } from '../emails/shipping-update'
 
 const SERVICE_LABELS: Record<string, { name: string; eta: string }> = {
-  'tcg-eco': { name: 'The Courier Guy', eta: '3–4 business days' },
-  'tcg-ovn': { name: 'The Courier Guy', eta: 'Next business day' },
-  'aramex-pdx': { name: 'Aramex', eta: 'Next business day' },
-  'aramex-cds': { name: 'Aramex', eta: '2–3 business days' },
-}
-
-function formatDate(date: string | Date): string {
-  return new Date(date).toLocaleDateString('en-ZA', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
+  ECO: { name: 'The Courier Guy', eta: '3–4 business days' },
+  OVN: { name: 'The Courier Guy', eta: 'Next business day' },
 }
 
 export default async function orderShipmentCreatedHandler({
@@ -57,8 +47,9 @@ export default async function orderShipmentCreatedHandler({
 
   const addr = order.shipping_address
   const shippingMethod = order.shipping_methods?.[0]
-  const optionId = shippingMethod?.data?.option_id as string | undefined
-  const service = (optionId && SERVICE_LABELS[optionId]) ?? {
+  const serviceCode = (fulfillment?.data?.service_level_code ??
+    shippingMethod?.data?.service_level_code) as string | undefined
+  const service = (serviceCode ? SERVICE_LABELS[serviceCode] : undefined) ?? {
     name: 'The Courier Guy',
     eta: '3–5 business days',
   }

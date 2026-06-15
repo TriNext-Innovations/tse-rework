@@ -84,7 +84,7 @@ export default function PrivacyPage() {
             </thead>
             <tbody>
               <tr><td>PayFast</td><td>Online payment processing</td><td>South Africa</td></tr>
-              <tr><td>The Courier Guy / Aramex</td><td>Courier delivery</td><td>South Africa</td></tr>
+              <tr><td>The Courier Guy</td><td>Courier delivery</td><td>South Africa</td></tr>
               <tr><td>Resend</td><td>Transactional email delivery</td><td>United States / EU</td></tr>
               <tr><td>Cloudflare</td><td>CDN / DNS / DDoS protection (in-transit only, no persistence)</td><td>Global (JHB PoP)</td></tr>
             </tbody>
