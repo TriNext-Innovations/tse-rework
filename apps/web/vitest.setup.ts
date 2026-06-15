@@ -43,6 +43,24 @@ vi.mock('next/dynamic', () => ({
   },
 }))
 
+// ── Auth context → default unauthenticated state ─────────────────────────────
+// Page/component tests render <Navbar>, which calls useAuth(); without a real
+// AuthProvider it throws. Provide a passthrough provider + default state.
+vi.mock('@/contexts/AuthContext', () => ({
+  AuthProvider: ({ children }: any) => children,
+  useAuth: vi.fn(() => ({
+    customer: null,
+    token: null,
+    loading: false,
+    login: vi.fn(),
+    register: vi.fn(),
+    logout: vi.fn(),
+    refreshCustomer: vi.fn(),
+    requestPasswordReset: vi.fn(),
+    resetPassword: vi.fn(),
+  })),
+}))
+
 // ── IntersectionObserver ──────────────────────────────────────────────────────
 vi.stubGlobal(
   'IntersectionObserver',
