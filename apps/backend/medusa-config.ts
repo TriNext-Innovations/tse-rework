@@ -35,7 +35,7 @@ export default defineConfig({
             id: 'shiplogic',
             options: {
               apiKey: process.env.TCG_API_KEY,
-              baseUrl: process.env.TCG_API_URL,
+              baseUrl: process.env.TCG_API_URL || undefined,
               collectionAddress: {
                 street_address: process.env.TCG_COLLECTION_STREET ?? '',
                 local_area: process.env.TCG_COLLECTION_LOCAL_AREA ?? '',

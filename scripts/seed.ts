@@ -394,6 +394,9 @@ async function ensureShippingOptions(token: string, locationId: string): Promise
       // `data` must match a FulfillmentOption from the provider's getFulfillmentOptions().
       data: { id: opt.optionId, service_level_code: opt.code, name: opt.name },
       type: { label: opt.name, description: opt.name, code: opt.code },
+      // Calculated options carry no fixed prices, but the admin API still
+      // requires the field to be present.
+      prices: [],
       rules: [{ attribute: "is_return", value: "false", operator: "eq" }],
     })
     created++

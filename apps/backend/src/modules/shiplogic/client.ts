@@ -31,7 +31,9 @@ export class ShipLogicClient {
     private readonly apiKey: string,
     baseUrl?: string,
   ) {
-    this.baseUrl = (baseUrl ?? DEFAULT_BASE_URL).replace(/\/+$/, '')
+    // Use || not ?? — an empty string (e.g. TCG_API_URL unset via compose
+    // `${TCG_API_URL:-}`) must fall back to the default, not become "".
+    this.baseUrl = (baseUrl || DEFAULT_BASE_URL).replace(/\/+$/, '')
   }
 
   /** POST /rates — live shipping quotes for a collection→delivery route. */
