@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, act } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import StorefrontClient, { type TrendingProduct } from '@/app/(storefront)/StorefrontClient'
 import { CartProvider, useCart } from '@/contexts/CartContext'
@@ -40,7 +40,7 @@ beforeEach(() => {
 function renderStorefront(products: TrendingProduct[] = []) {
   return render(
     <CartProvider>
-      <StorefrontClient trendingProducts={products} />
+      <StorefrontClient trendingProducts={products} compatModels={[]} />
     </CartProvider>,
   )
 }
@@ -77,7 +77,7 @@ describe('StorefrontClient — hero', () => {
     }
     render(
       <CartProvider>
-        <StorefrontClient trendingProducts={[]} />
+        <StorefrontClient trendingProducts={[]} compatModels={[]} />
         <Observer />
       </CartProvider>,
     )
@@ -321,12 +321,12 @@ describe('StorefrontClient — trending products', () => {
     }
     render(
       <CP>
-        <StorefrontClient trendingProducts={[mockProduct]} />
+        <StorefrontClient trendingProducts={[mockProduct]} compatModels={[]} />
         <Observer />
       </CP>,
     )
     const addBtns = screen.getAllByRole('button', { name: /Add HP 123 Black to cart/i })
-    await userEvent.click(addBtns[0])
+    await userEvent.click(addBtns[0]!)
     expect(cartCount).toBe(1)
   })
 
