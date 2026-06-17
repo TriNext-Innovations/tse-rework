@@ -63,8 +63,6 @@ const { customer, loading: authLoading } = useAuth()
     closeTimer.current = setTimeout(() => setShopOpen(false), 200)
   }
 
-  const hasRealCategories = categories.some((c) => !TYPE_CATEGORIES.has(c.name))
-
   // Deduplicate brands by name — Brother appears under both Inkjet and Laser
   const brandMap = new Map<string, string[]>()
   for (const c of categories) {
@@ -77,9 +75,9 @@ const { customer, loading: authLoading } = useAuth()
   const brands: BrandEntry[] = uniqueBrands.length > 0 ? uniqueBrands : FALLBACK_BRANDS
 
   function brandHref(b: BrandEntry) {
-    return hasRealCategories
-      ? `/products?category=${b.ids.join(',')}`
-      : `/products?brand=${encodeURIComponent(b.name)}`
+    // Always filter by brand name — the shop page resolves it to the matching
+    // categories and highlights the active brand in the filter panel.
+    return `/products?brand=${encodeURIComponent(b.name)}`
   }
 
   useEffect(() => {

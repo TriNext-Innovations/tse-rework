@@ -2,7 +2,9 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Navbar } from '@/components/layout'
-import { ProductFilters } from './ProductFilters'
+import { FilterPanel } from './FilterPanel'
+import { SortSelect } from './SortSelect'
+import { MobileFilters } from './MobileFilters'
 import { AddToCartButton } from './AddToCartButton'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
@@ -10,8 +12,61 @@ const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
 const MEILI_HOST = process.env.MEILISEARCH_HOST ?? process.env.NEXT_PUBLIC_MEILISEARCH_HOST ?? ''
 const MEILI_KEY = process.env.MEILISEARCH_API_KEY ?? process.env.NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY ?? ''
 const PAGE_SIZE = 24
+// The whole catalogue is small (~339), so for filtered browsing we fetch the
+// matching set in one call and sort/paginate in memory. This lets us sort by
+// price, which the store API's `order` param doesn't support.
+const FETCH_ALL = 400
 
-type SearchParams = Promise<{ category?: string; page?: string; q?: string }>
+type SortKey = 'featured' | 'price-asc' | 'price-desc' | 'name-asc' | 'name-desc'
+
+type SearchParams = Promise<{
+  category?: string
+  brand?: string
+  type?: string
+  sort?: string
+  page?: string
+  q?: string
+}>
+
+const TYPE_CATEGORIES = new Set(['Inkjet Cartridges', 'Laser Cartridges'])
+const TYPE_PARENT: Record<string, string> = {
+  inkjet: 'Inkjet Cartridges',
+  laser: 'Laser Cartridges',
+}
+
+// Products are assigned to the brand category (e.g. "HP" under "Laser
+// Cartridges"), never the type category directly — so a type filter resolves to
+// the brand categories under that type. type+brand resolves to the single
+// matching brand-under-type category.
+function resolveCategoryIds(
+  categories: any[],
+  opts: { type?: string; brand?: string; category?: string },
+): string[] {
+  if (opts.category) return opts.category.split(',').filter(Boolean)
+  const parent = opts.type ? TYPE_PARENT[opts.type] : undefined
+  if (!parent && !opts.brand) return []
+  return categories
+    .filter((c) => !TYPE_CATEGORIES.has(c.name))
+    .filter((c) => (opts.brand ? c.name === opts.brand : true))
+    .filter((c) => (parent ? c.parent_category?.name === parent : true))
+    .map((c) => c.id as string)
+}
+
+function priceOf(p: any): number {
+  const amt = p.variants?.[0]?.calculated_price?.calculated_amount
+  return typeof amt === 'number' ? amt : Number.POSITIVE_INFINITY
+}
+
+function sortProducts(products: any[], sort: SortKey): any[] {
+  const out = [...products]
+  switch (sort) {
+    case 'price-asc': return out.sort((a, b) => priceOf(a) - priceOf(b))
+    case 'price-desc': return out.sort((a, b) => priceOf(b) - priceOf(a))
+    case 'name-asc': return out.sort((a, b) => (a.title ?? '').localeCompare(b.title ?? ''))
+    case 'name-desc': return out.sort((a, b) => (b.title ?? '').localeCompare(a.title ?? ''))
+    default: return out
+  }
+}
 
 async function getRegionId(): Promise<string> {
   try {
@@ -59,7 +114,7 @@ async function searchMeilisearch(query: string, offset: number): Promise<{ hits:
 
 async function getCategories(): Promise<any[]> {
   try {
-    const res = await fetch(`${BACKEND}/store/product-categories?limit=50&include_descendants_tree=true`, {
+    const res = await fetch(`${BACKEND}/store/product-categories?limit=60&fields=id,name,parent_category.id,parent_category.name`, {
       headers: { 'x-publishable-api-key': PUB_KEY },
       next: { revalidate: 3600 },
     })
@@ -71,13 +126,14 @@ async function getCategories(): Promise<any[]> {
 }
 
 export default async function ProductsPage({ searchParams }: { searchParams: SearchParams }) {
-  const { category = '', page: pageParam = '1', q = '' } = await searchParams
+  const { category = '', brand = '', type = '', sort: sortParam = '', page: pageParam = '1', q = '' } = await searchParams
   const page = Math.max(1, parseInt(pageParam, 10) || 1)
   const offset = (page - 1) * PAGE_SIZE
   const isSearch = q.trim().length > 0
-  const categoryIds = category ? category.split(',').filter(Boolean) : []
+  const sort = (['price-asc', 'price-desc', 'name-asc', 'name-desc'].includes(sortParam) ? sortParam : 'featured') as SortKey
 
   const allCategories = await getCategories()
+  const categoryIds = resolveCategoryIds(allCategories, { type, brand, category })
 
   let products: any[] = []
   let total = 0
@@ -95,18 +151,19 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
     }))
   } else {
     const regionId = await getRegionId()
-    const params = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(offset) })
+    const params = new URLSearchParams({ limit: String(FETCH_ALL) })
     if (regionId) params.append('region_id', regionId)
     for (const id of categoryIds) params.append('category_id[]', id)
-    params.append('fields', '+metadata,+categories.id,+categories.name,+categories.handle,+images')
+    params.append('fields', '+metadata,+categories.id,+categories.name,+categories.handle,+images,*variants.calculated_price')
 
     try {
       const data = await fetch(`${BACKEND}/store/products?${params}`, {
         headers: { 'x-publishable-api-key': PUB_KEY },
         next: { revalidate: 60 },
       }).then((r) => r.json())
-      products = data.products ?? []
-      total = data.count ?? 0
+      const all = sortProducts(data.products ?? [], sort)
+      total = all.length
+      products = all.slice(offset, offset + PAGE_SIZE)
     } catch {
       // Medusa offline — page renders empty with filters still usable
     }
@@ -114,8 +171,9 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
 
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
-  const activeCategoryName = !isSearch && categoryIds.length > 0
-    ? (allCategories.find((c: any) => categoryIds.includes(c.id))?.name ?? '')
+  const activeCategoryName = !isSearch
+    ? [brand, type === 'inkjet' ? 'Inkjet' : type === 'laser' ? 'Laser' : '']
+        .filter(Boolean).join(' ')
     : ''
 
   return (
@@ -147,13 +205,25 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
           {!isSearch && (
             <div className="hidden md:block w-44 flex-shrink-0">
               <Suspense fallback={null}>
-                <ProductFilters categories={allCategories} />
+                <FilterPanel categories={allCategories} />
               </Suspense>
             </div>
           )}
 
           {/* Grid */}
           <div className="flex-1 min-w-0">
+            {/* Toolbar: mobile filter button + sort */}
+            {!isSearch && (
+              <div className="flex items-center justify-between gap-3 mb-5">
+                <Suspense fallback={null}>
+                  <MobileFilters categories={allCategories} />
+                </Suspense>
+                <Suspense fallback={null}>
+                  <SortSelect className="hidden md:inline-flex ml-auto" />
+                </Suspense>
+              </div>
+            )}
+
             {products.length === 0 ? (
               <div className="text-center py-24 text-[#6B6B66]">
                 {isSearch ? `No results for "${q}".` : 'No products found.'}
@@ -221,29 +291,35 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
             )}
 
             {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="mt-10 flex items-center justify-center gap-2">
-                {page > 1 && (
-                  <Link
-                    href={`/products?${new URLSearchParams({ ...(isSearch ? { q } : category ? { category } : {}), page: String(page - 1) })}`}
-                    className="px-4 py-2 rounded-full border border-black/15 text-sm hover:border-black/40 transition-colors"
-                  >
-                    ← Prev
-                  </Link>
-                )}
-                <span className="text-sm text-[#6B6B66] px-2">
-                  Page {page} of {totalPages}
-                </span>
-                {page < totalPages && (
-                  <Link
-                    href={`/products?${new URLSearchParams({ ...(isSearch ? { q } : category ? { category } : {}), page: String(page + 1) })}`}
-                    className="px-4 py-2 rounded-full border border-black/15 text-sm hover:border-black/40 transition-colors"
-                  >
-                    Next →
-                  </Link>
-                )}
-              </div>
-            )}
+            {totalPages > 1 && (() => {
+              const base: Record<string, string> = isSearch
+                ? { q }
+                : {
+                    ...(type ? { type } : {}),
+                    ...(brand ? { brand } : {}),
+                    ...(category ? { category } : {}),
+                    ...(sort !== 'featured' ? { sort } : {}),
+                  }
+              const pageHref = (n: number) =>
+                `/products?${new URLSearchParams({ ...base, page: String(n) })}`
+              return (
+                <div className="mt-10 flex items-center justify-center gap-2">
+                  {page > 1 && (
+                    <Link href={pageHref(page - 1)} className="px-4 py-2 rounded-full border border-black/15 text-sm hover:border-black/40 transition-colors">
+                      ← Prev
+                    </Link>
+                  )}
+                  <span className="text-sm text-[#6B6B66] px-2">
+                    Page {page} of {totalPages}
+                  </span>
+                  {page < totalPages && (
+                    <Link href={pageHref(page + 1)} className="px-4 py-2 rounded-full border border-black/15 text-sm hover:border-black/40 transition-colors">
+                      Next →
+                    </Link>
+                  )}
+                </div>
+              )
+            })()}
           </div>
         </div>
       </div>
