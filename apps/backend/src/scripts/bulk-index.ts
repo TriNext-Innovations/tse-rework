@@ -7,7 +7,14 @@
 
 import { MedusaContainer } from '@medusajs/framework/types'
 import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
-import { getSearchClient, configureIndex, productToDocument, SEARCH_INDEX } from '../lib/search'
+import {
+  getSearchClient,
+  configureIndex,
+  productToDocument,
+  getCompatPrintersBySku,
+  compatiblePrintersForProduct,
+  SEARCH_INDEX,
+} from '../lib/search'
 
 const BATCH = 50
 
@@ -51,7 +58,16 @@ export default async function bulkIndex({ container }: { container: MedusaContai
 
     if (products.length === 0) break
 
-    const docs = products.map(productToDocument)
+    // Printer compatibility lives in cartridge_compat, keyed by variant SKU —
+    // join it in so a printer-model query (e.g. "494") surfaces the cartridge.
+    const skus = products.flatMap((p: any) =>
+      (p.variants ?? []).map((v: any) => v?.sku).filter(Boolean),
+    )
+    const bySku = await getCompatPrintersBySku(skus)
+
+    const docs = products.map((p: any) =>
+      productToDocument(p, compatiblePrintersForProduct(p, bySku)),
+    )
     await client.index(SEARCH_INDEX).addDocuments(docs, { primaryKey: 'id' })
 
     indexed += products.length
