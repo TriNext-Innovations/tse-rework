@@ -1,10 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Logo } from '@/components/layout'
+import { Navbar } from '@/components/layout'
 import { useCart } from '@/contexts/CartContext'
-import { CartButton } from '@/components/CartButton'
 
 type Theme = 'editorial' | 'brand'
 
@@ -18,7 +17,7 @@ export type TrendingProduct = {
   metadata?: Record<string, unknown>
 }
 
-const brands = ['HP', 'Canon', 'Epson', 'Brother', 'Samsung', 'Lexmark', 'Xerox', 'Pantum', 'Ricoh', 'Kyocera', 'Konica Minolta', 'OKI', 'Olivetti']
+export type CompatModel = { brand: string; model: string; cartridge_count: number }
 
 const faqs = [
   { q: 'Will a generic cartridge work in my printer?', a: "Yes. Our compatibles are engineered to spec for each printer model and meet or exceed OEM page yield. If it doesn't print as well as the original — we replace it." },
@@ -27,28 +26,57 @@ const faqs = [
   { q: 'Do you do bulk / business pricing?', a: 'Yes. Offices, schools, print shops — call 011 708 2304 or email sales@tse.co.za for a quote.' },
 ]
 
-const popularSearches = [
-  { label: 'HP LaserJet M404', brand: 'HP', model: 'LaserJet M404' },
-  { label: 'Canon MF273dw', brand: 'Canon', model: 'MF273dw' },
-  { label: 'Brother HL-L2375DW', brand: 'Brother', model: 'HL-L2375DW' },
-  { label: 'Epson L3250', brand: 'Epson', model: 'L3250' },
-]
 
-export default function StorefrontClient({ trendingProducts }: { trendingProducts: TrendingProduct[] }) {
+export default function StorefrontClient({
+  trendingProducts,
+  compatModels,
+}: {
+  trendingProducts: TrendingProduct[]
+  compatModels: CompatModel[]
+}) {
+  // Brands sorted alphabetically; models grouped per brand keeping the
+  // DB ordering (which is by cartridge_count DESC) so the most-supported
+  // printers appear first in the datalist.
+  const brands = useMemo(
+    () => [...new Set(compatModels.map((m) => m.brand))].sort(),
+    [compatModels],
+  )
+  const modelsByBrand = useMemo(() => {
+    const g: Record<string, string[]> = {}
+    for (const m of compatModels) (g[m.brand] ??= []).push(m.model)
+    return g
+  }, [compatModels])
+  // One representative model per brand, top 4 brands by cartridge count
+  const popularSearches = useMemo(() => {
+    const seen = new Set<string>()
+    const out: string[] = []
+    for (const m of compatModels) {
+      if (seen.has(m.brand)) continue
+      seen.add(m.brand)
+      out.push(`${m.brand} ${m.model}`)
+      if (out.length >= 4) break
+    }
+    return out
+  }, [compatModels])
+
   const [openFaq, setOpenFaq] = useState<number | null>(0)
   const [mouse, setMouse] = useState({ x: -1000, y: -1000 })
   const [theme, setTheme] = useState<Theme>('editorial')
-  const [finderBrand, setFinderBrand] = useState('HP')
+  const [finderBrand, setFinderBrand] = useState(brands[0] ?? '')
   const [finderModel, setFinderModel] = useState('')
+
+  // Sync finderBrand once data arrives if we started with empty list
+  useEffect(() => {
+    if (!finderBrand && brands[0]) setFinderBrand(brands[0])
+  }, [brands, finderBrand])
   const heroRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const { addItem } = useCart()
 
   function runFinder() {
-    const params = new URLSearchParams()
-    if (finderBrand) params.set('brand', finderBrand)
-    if (finderModel) params.set('model', finderModel)
-    router.push(`/products?${params.toString()}`)
+    const query = [finderBrand, finderModel].filter(Boolean).join(' ').trim()
+    if (!query) return
+    router.push(`/compatibility?model=${encodeURIComponent(query)}`)
   }
 
   useEffect(() => {
@@ -143,37 +171,6 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
         .pill-nav-item { position: relative; }
         .pill-nav-item::after { content:''; position:absolute; left: 12px; right: 12px; bottom: 4px; height: 2px; background: var(--magenta); transform: scaleX(0); transform-origin: left; transition: transform .35s cubic-bezier(.22,1,.36,1); }
         .pill-nav-item:hover::after { transform: scaleX(1); }
-        .glass-nav {
-          background: rgba(255, 255, 255, 0.19);
-          backdrop-filter: blur(7px);
-          -webkit-backdrop-filter: blur(7px);
-          border-radius: 9999px;
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          box-shadow:
-            0 8px 32px rgba(0, 0, 0, 0.1),
-            inset 0 1px 0 rgba(255, 255, 255, 0.5),
-            inset 0 -1px 0 rgba(255, 255, 255, 0.1),
-            inset 0 0 0px 0px rgba(255, 255, 255, 0);
-          overflow: hidden;
-        }
-        .glass-nav::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: 1px;
-          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
-        }
-        .glass-nav::after {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 1px;
-          height: 100%;
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.8), transparent, rgba(255, 255, 255, 0.3));
-        }
         @media (prefers-reduced-motion: reduce) {
           .animate-ticker, .animate-float, .animate-spin-slow { animation: none; }
           [data-reveal] { opacity: 1; transform: none; transition: none; }
@@ -181,22 +178,12 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
       `}</style>
 
       {/* ─────────────── FLOATING NAV ─────────────── */}
-      <header className="glass-nav fixed top-4 left-4 right-4 z-40 flex items-center justify-between px-3 sm:px-5 py-2.5">
-        <a href="#top" className="flex items-center gap-2 pl-2 cursor-pointer">
-          <Logo width={80} variant="color" linked={false} />
-          <span className="hidden md:inline text-[10px] uppercase tracking-[0.18em] text-[var(--muted)] ml-1">Est. 1987</span>
-        </a>
-        <nav className="hidden md:flex items-center gap-1 text-sm font-medium text-[var(--ink-2)]">
-          <a href="#shop" className="pill-nav-item px-3 py-1.5 cursor-pointer">Shop</a>
-          <a href="#bento" className="pill-nav-item px-3 py-1.5 cursor-pointer">Why generic</a>
-          <a href="#finder" className="pill-nav-item px-3 py-1.5 cursor-pointer">Find your cartridge</a>
-          <a href="#delivery" className="pill-nav-item px-3 py-1.5 cursor-pointer">Delivery</a>
-        </nav>
-        <div className="flex items-center gap-2">
+      <Navbar
+        right={
           <div
             role="radiogroup"
             aria-label="Colour theme"
-            className="relative flex items-center bg-[var(--ink)]/5 border border-[var(--ink)]/10 rounded-full p-0.5 text-[11px] font-medium overflow-hidden"
+            className="relative hidden sm:flex items-center bg-[var(--ink)]/5 border border-[var(--ink)]/10 rounded-full p-0.5 text-[11px] font-medium overflow-hidden"
           >
             <span
               aria-hidden
@@ -215,7 +202,7 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
                 <span className="w-2 h-2 rounded-full bg-[#111827]" />
                 <span className="w-2 h-2 rounded-full bg-[#41e0f5]" />
               </span>
-              <span className={`hidden md:inline transition-colors duration-300 ${theme === 'editorial' ? 'text-[var(--paper)]' : 'text-[var(--muted)]'}`}>Editorial</span>
+              <span className={`hidden lg:inline transition-colors duration-300 ${theme === 'editorial' ? 'text-[var(--paper)]' : 'text-[var(--muted)]'}`}>Editorial</span>
             </button>
             <button
               type="button"
@@ -229,20 +216,11 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
                 <span className="w-2 h-2 rounded-full bg-[#dfe344]" />
                 <span className="w-2 h-2 rounded-full bg-[#41e0f5]" />
               </span>
-              <span className={`hidden md:inline transition-colors duration-300 ${theme === 'brand' ? 'text-[var(--paper)]' : 'text-[var(--muted)]'}`}>Brand</span>
+              <span className={`hidden lg:inline transition-colors duration-300 ${theme === 'brand' ? 'text-[var(--paper)]' : 'text-[var(--muted)]'}`}>Brand</span>
             </button>
           </div>
-
-          <button
-            aria-label="Search"
-            onClick={() => router.push('/products')}
-            className="hidden sm:inline-flex items-center justify-center w-9 h-9 rounded-full hover:bg-[var(--ink)]/5 transition-colors cursor-pointer"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          </button>
-          <CartButton />
-        </div>
-      </header>
+        }
+      />
 
       {/* ─────────────── HERO ─────────────── */}
       <section id="top" ref={heroRef} className="relative pt-32 sm:pt-36 pb-16 sm:pb-24 px-4 sm:px-8 lg:px-12 overflow-hidden">
@@ -287,7 +265,7 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
 
             <div className="mt-12 grid grid-cols-3 gap-4 max-w-md">
               <div data-reveal>
-                <div className="font-display text-3xl sm:text-4xl font-light leading-none">38<span className="text-[var(--magenta)]">.</span></div>
+                <div className="font-display text-3xl sm:text-4xl font-light leading-none">39<span className="text-[var(--magenta)]">.</span></div>
                 <div className="text-[11px] uppercase tracking-widest text-[var(--muted)] mt-2">Yrs in business</div>
               </div>
               <div data-reveal>
@@ -390,7 +368,7 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
               </h2>
             </div>
             <p className="max-w-sm text-[var(--ink-2)] text-[15px] leading-relaxed">
-              Thirty-eight years engineering compatibles that hold up under real office use. If a cartridge fails, we replace it — that's the deal.
+              Thirty-nine years engineering compatibles that hold up under real office use. If a cartridge fails, we replace it — that's the deal.
             </p>
           </div>
 
@@ -519,12 +497,19 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
                   <label className="block text-[9px] uppercase tracking-[0.2em] text-[var(--muted)] px-3 pt-3">Printer model</label>
                   <input
                     type="text"
-                    placeholder="e.g. LaserJet Pro M404dn"
+                    list="finder-models"
+                    placeholder="e.g. P1102, MX494, HL-L3280CDW"
                     value={finderModel}
                     onChange={(e) => setFinderModel(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && runFinder()}
                     className="w-full bg-transparent px-3 pb-3 text-sm font-medium focus:outline-none placeholder:text-[var(--muted)]"
+                    autoComplete="off"
                   />
+                  <datalist id="finder-models">
+                    {(modelsByBrand[finderBrand] ?? []).map((m) => (
+                      <option key={m} value={m} />
+                    ))}
+                  </datalist>
                 </div>
                 <button
                   onClick={runFinder}
@@ -537,14 +522,10 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
 
               <div className="mt-4 flex flex-wrap items-center gap-2">
                 <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--paper)]/50 mr-1">Popular:</span>
-                {popularSearches.map(({ label, brand, model }) => (
+                {popularSearches.map((label) => (
                   <button
                     key={label}
-                    onClick={() => {
-                      setFinderBrand(brand)
-                      setFinderModel(model)
-                      router.push(`/products?brand=${encodeURIComponent(brand)}&model=${encodeURIComponent(model)}`)
-                    }}
+                    onClick={() => router.push(`/compatibility?model=${encodeURIComponent(label)}`)}
                     className="text-xs px-3 py-1.5 border border-[var(--paper)]/15 rounded-full hover:border-[var(--magenta)] hover:text-[var(--magenta)] transition-colors cursor-pointer"
                   >
                     {label}
@@ -581,7 +562,7 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
               const type = p.metadata?.cartridge_type === 'inkjet' ? 'Inkjet' : 'Laser'
 
               return (
-                <article key={p.id} data-reveal onClick={() => router.push('/products')} className="product-card group relative bg-[var(--paper-2)] rounded-[20px] p-5 sm:p-6 overflow-hidden cursor-pointer">
+                <article key={p.id} data-reveal onClick={() => router.push(`/products/${p.handle}`)} className="product-card group relative bg-[var(--paper-2)] rounded-[20px] p-5 sm:p-6 overflow-hidden cursor-pointer">
                   <div className="flex items-start justify-between mb-4">
                     <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--muted)]">{type}</span>
                   </div>
@@ -662,7 +643,7 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
       </section>
 
       {/* ─────────────── FAQ ─────────────── */}
-      <section className="relative px-4 sm:px-8 lg:px-12 py-16 sm:py-24">
+      <section id="faq" className="relative px-4 sm:px-8 lg:px-12 py-16 sm:py-24">
         <div className="mx-auto max-w-4xl">
           <div className="text-center mb-12" data-reveal>
             <div className="text-[11px] uppercase tracking-[0.22em] text-[var(--muted)] mb-3">№ 05 — Frequently asked</div>
@@ -718,45 +699,6 @@ export default function StorefrontClient({ trendingProducts }: { trendingProduct
         </div>
       </section>
 
-      {/* ─────────────── FOOTER ─────────────── */}
-      <footer className="px-4 sm:px-8 lg:px-12 pt-8 pb-16">
-        <div className="mx-auto max-w-7xl">
-          <div className="border-t border-[var(--ink)]/10 pt-10">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-6">
-              <div className="lg:col-span-2">
-                <div className="mb-4"><Logo width={90} variant="mono-dark" linked={false} /></div>
-                <p className="text-sm text-[var(--ink-2)] max-w-sm leading-relaxed">Technical Systems Engineering — South Africa's quality-generic printer-cartridge specialist.</p>
-                <p className="mt-4 text-xs text-[var(--muted)] leading-relaxed">Unit 34, A.P.D. Industrial Park,<br />Kya Sands, Johannesburg.</p>
-              </div>
-              <div>
-                <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] mb-4">Shop</div>
-                <ul className="space-y-2 text-sm">
-                  <li><a href="/products" className="hover:text-[var(--magenta)] cursor-pointer transition-colors">Inkjet cartridges</a></li>
-                  <li><a href="/products" className="hover:text-[var(--magenta)] cursor-pointer transition-colors">Laser toner</a></li>
-                  <li><a href="/products" className="hover:text-[var(--magenta)] cursor-pointer transition-colors">All cartridges</a></li>
-                  <li><a href="mailto:sales@tse.co.za" className="hover:text-[var(--magenta)] cursor-pointer transition-colors">Bulk &amp; business</a></li>
-                </ul>
-              </div>
-              <div>
-                <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] mb-4">Hours</div>
-                <ul className="space-y-2 text-sm">
-                  <li>Mon–Thu · 8am–5pm</li>
-                  <li>Fri · 8am–4pm</li>
-                  <li className="text-[var(--muted)]">079 873 3558</li>
-                  <li className="text-[var(--muted)]">011 708 2304/5</li>
-                </ul>
-              </div>
-            </div>
-
-            <div className="mt-12 flex items-baseline justify-between border-t border-[var(--ink)]/10 pt-6">
-              <div className="text-xs text-[var(--muted)]">© {new Date().getFullYear()} TSE. All compatibles guaranteed.</div>
-              <div className="font-display text-[10vw] sm:text-[8vw] leading-none tracking-[-0.05em] text-[var(--ink)]/8 select-none pointer-events-none -mb-4 sm:-mb-6">
-                TSE<span className="font-display-italic">.</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

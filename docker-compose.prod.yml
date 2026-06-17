@@ -1,0 +1,195 @@
+# Production stack — runs alongside dev on the same VM using different host ports.
+#
+# Usage (on the VM):
+#   docker compose -p tse-prod -f docker-compose.prod.yml --env-file .env.prod up -d --build
+#
+# Ports:
+#   web   → host:3001  (dev uses 3000)
+#   medusa → host:9001  (dev uses 9000)
+#
+# Nginx (from the dev docker-compose) routes tse-cartridges.co.za → host:3001
+# and api.tse-cartridges.co.za → host:9001 via host.docker.internal.
+
+services:
+
+  postgres-prod:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    command: postgres -c max_connections=200
+    environment:
+      POSTGRES_DB: tse_medusa_prod
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d tse_medusa_prod"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  redis-prod:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_prod_data:/data
+    deploy:
+      resources:
+        limits:
+          memory: 100m
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options: { max-size: "5m", max-file: "2" }
+
+  medusa-migrate-prod:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    restart: "no"
+    depends_on:
+      postgres-prod:
+        condition: service_healthy
+      redis-prod:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres-prod:5432/tse_medusa_prod?sslmode=disable
+      REDIS_URL: redis://redis-prod:6379
+      JWT_SECRET: ${JWT_SECRET}
+      COOKIE_SECRET: ${COOKIE_SECRET}
+      NODE_OPTIONS: "--max-old-space-size=1536"
+      MEDUSA_WORKER_MODE: "server"
+      MEDUSA_DISABLE_TELEMETRY: "1"
+    entrypoint: ["/app/apps/backend/docker-migrate-entrypoint.sh"]
+    deploy:
+      resources:
+        limits:
+          memory: 1536m
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "2" }
+
+  medusa-prod:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      medusa-migrate-prod:
+        condition: service_completed_successfully
+      postgres-prod:
+        condition: service_healthy
+      redis-prod:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres-prod:5432/tse_medusa_prod?sslmode=disable
+      REDIS_URL: redis://redis-prod:6379
+      JWT_SECRET: ${JWT_SECRET}
+      COOKIE_SECRET: ${COOKIE_SECRET}
+      MEDUSA_ADMIN_EMAIL: ${MEDUSA_ADMIN_EMAIL}
+      MEDUSA_ADMIN_PASSWORD: ${MEDUSA_ADMIN_PASSWORD}
+      MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL}
+      STOREFRONT_URL: ${STOREFRONT_URL}
+      STORE_CORS: ${STORE_CORS}
+      ADMIN_CORS: ${ADMIN_CORS}
+      AUTH_CORS: ${AUTH_CORS}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL}
+      PAYFAST_MERCHANT_ID: ${PAYFAST_MERCHANT_ID}
+      PAYFAST_MERCHANT_KEY: ${PAYFAST_MERCHANT_KEY}
+      PAYFAST_PASSPHRASE: ${PAYFAST_PASSPHRASE}
+      PAYFAST_SANDBOX: ${PAYFAST_SANDBOX:-false}
+      MEILISEARCH_HOST: ${MEILISEARCH_HOST}
+      MEILISEARCH_API_KEY: ${MEILISEARCH_API_KEY}
+      SENTRY_DSN: ${SENTRY_DSN}
+      # The Courier Guy (ShipLogic) fulfillment provider
+      TCG_API_KEY: ${TCG_API_KEY}
+      TCG_API_URL: ${TCG_API_URL:-}
+      TCG_COLLECTION_STREET: ${TCG_COLLECTION_STREET}
+      TCG_COLLECTION_LOCAL_AREA: ${TCG_COLLECTION_LOCAL_AREA}
+      TCG_COLLECTION_CITY: ${TCG_COLLECTION_CITY}
+      TCG_COLLECTION_ZONE: ${TCG_COLLECTION_ZONE}
+      TCG_COLLECTION_COUNTRY: ${TCG_COLLECTION_COUNTRY}
+      TCG_COLLECTION_CODE: ${TCG_COLLECTION_CODE}
+      TCG_COLLECTION_COMPANY: ${TCG_COLLECTION_COMPANY}
+      TCG_COLLECTION_CONTACT_NAME: ${TCG_COLLECTION_CONTACT_NAME}
+      TCG_COLLECTION_CONTACT_PHONE: ${TCG_COLLECTION_CONTACT_PHONE}
+      TCG_COLLECTION_CONTACT_EMAIL: ${TCG_COLLECTION_CONTACT_EMAIL}
+      TCG_DEFAULT_LENGTH_CM: ${TCG_DEFAULT_LENGTH_CM:-22}
+      TCG_DEFAULT_WIDTH_CM: ${TCG_DEFAULT_WIDTH_CM:-11}
+      TCG_DEFAULT_HEIGHT_CM: ${TCG_DEFAULT_HEIGHT_CM:-6}
+      TCG_DEFAULT_WEIGHT_KG: ${TCG_DEFAULT_WEIGHT_KG:-0.5}
+      TCG_RATE_TAX_INCLUSIVE: ${TCG_RATE_TAX_INCLUSIVE:-true}
+      TCG_TRACKING_URL_TEMPLATE: ${TCG_TRACKING_URL_TEMPLATE:-https://www.thecourierguy.co.za/track?ref={ref}}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY}
+      R2_BUCKET: ${R2_BUCKET}
+      R2_ENDPOINT: ${R2_ENDPOINT}
+      R2_PUBLIC_URL: ${R2_PUBLIC_URL}
+    ports:
+      - "9001:9000"
+    deploy:
+      resources:
+        limits:
+          memory: 1536m
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 300s
+    logging:
+      driver: json-file
+      options: { max-size: "20m", max-file: "5" }
+
+  web-prod:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      medusa-prod:
+        condition: service_healthy
+    environment:
+      NEXT_PUBLIC_MEDUSA_URL: ${NEXT_PUBLIC_MEDUSA_BACKEND_URL}
+      NEXT_PUBLIC_MEDUSA_BACKEND_URL: ${NEXT_PUBLIC_MEDUSA_BACKEND_URL}
+      NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: ${NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+      NEXT_PUBLIC_MEILISEARCH_HOST: ${NEXT_PUBLIC_MEILISEARCH_HOST}
+      NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY: ${NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY}
+      NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN}
+      SENTRY_DSN: ${SENTRY_DSN}
+      SENTRY_ORG: ${SENTRY_ORG}
+      SENTRY_PROJECT: ${SENTRY_PROJECT}
+      PAYFAST_MERCHANT_ID: ${PAYFAST_MERCHANT_ID}
+      PAYFAST_MERCHANT_KEY: ${PAYFAST_MERCHANT_KEY}
+      PAYFAST_PASSPHRASE: ${PAYFAST_PASSPHRASE}
+      PAYFAST_SANDBOX: ${PAYFAST_SANDBOX:-false}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL}
+    ports:
+      - "3001:3000"
+    deploy:
+      resources:
+        limits:
+          memory: 350m
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+volumes:
+  postgres_prod_data:
+  redis_prod_data:

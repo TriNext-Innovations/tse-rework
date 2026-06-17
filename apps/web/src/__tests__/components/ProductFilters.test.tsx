@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ProductFilters } from '@/app/(storefront)/products/ProductFilters'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -88,7 +88,7 @@ describe('ProductFilters', () => {
     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams('page=3') as any)
     render(<ProductFilters categories={mockCategories} />)
     await userEvent.click(screen.getByText('Canon'))
-    const call = mockPush.mock.calls[0][0] as string
+    const call = mockPush.mock.calls[0]![0] as string
     expect(call).not.toContain('page=')
     expect(call).toContain('category=cat_canon')
   })

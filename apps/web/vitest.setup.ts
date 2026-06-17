@@ -19,7 +19,7 @@ vi.mock('next/navigation', () => ({
 
 // ── Next.js Image → plain <img> ──────────────────────────────────────────────
 vi.mock('next/image', () => ({
-  default: ({ src, alt, width, height, priority, className }: any) =>
+  default: ({ src, alt, width, height, className }: any) =>
     React.createElement('img', { src, alt, width, height, className }),
 }))
 
@@ -32,7 +32,7 @@ vi.mock('next/link', () => ({
 // ── next/dynamic → stub that sets lottieRef when rendered ────────────────────
 vi.mock('next/dynamic', () => ({
   default: (_factory: () => Promise<any>, _opts?: any) => {
-    function MockDynamic({ lottieRef, ...props }: any) {
+    function MockDynamic({ lottieRef }: any) {
       if (lottieRef && typeof lottieRef === 'object') {
         lottieRef.current = { goToAndPlay: vi.fn(), stop: vi.fn(), play: vi.fn() }
       }
@@ -41,6 +41,24 @@ vi.mock('next/dynamic', () => ({
     MockDynamic.displayName = 'MockDynamic'
     return MockDynamic
   },
+}))
+
+// ── Auth context → default unauthenticated state ─────────────────────────────
+// Page/component tests render <Navbar>, which calls useAuth(); without a real
+// AuthProvider it throws. Provide a passthrough provider + default state.
+vi.mock('@/contexts/AuthContext', () => ({
+  AuthProvider: ({ children }: any) => children,
+  useAuth: vi.fn(() => ({
+    customer: null,
+    token: null,
+    loading: false,
+    login: vi.fn(),
+    register: vi.fn(),
+    logout: vi.fn(),
+    refreshCustomer: vi.fn(),
+    requestPasswordReset: vi.fn(),
+    resetPassword: vi.fn(),
+  })),
 }))
 
 // ── IntersectionObserver ──────────────────────────────────────────────────────
@@ -59,7 +77,10 @@ Object.defineProperty(Element.prototype, 'getBoundingClientRect', {
   value: vi.fn(() => ({ left: 0, top: 0, right: 100, bottom: 100, width: 100, height: 100, x: 0, y: 0 })),
 })
 
-// ── Reset call history between tests (keeps implementations) ─────────────────
+// ── Reset call history + persisted state between tests ───────────────────────
 beforeEach(() => {
   vi.clearAllMocks()
+  // CartContext persists to localStorage['tse_cart']; clear it so cart state
+  // doesn't leak between tests.
+  localStorage.clear()
 })

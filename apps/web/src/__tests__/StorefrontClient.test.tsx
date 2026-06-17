@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, act } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import StorefrontClient, { type TrendingProduct } from '@/app/(storefront)/StorefrontClient'
+import StorefrontClient, { type TrendingProduct, type CompatModel } from '@/app/(storefront)/StorefrontClient'
 import { CartProvider, useCart } from '@/contexts/CartContext'
 import { useRouter } from 'next/navigation'
 import React from 'react'
@@ -26,6 +26,24 @@ const mockProductWithImage: TrendingProduct = {
   metadata: { cartridge_type: 'laser' },
 }
 
+// 13 distinct brands; first four (in array order) drive the "popular searches"
+// chips, so they're ordered HP, Canon, Brother, Epson to match those assertions.
+const mockCompatModels: CompatModel[] = [
+  { brand: 'HP', model: 'LaserJet M404', cartridge_count: 5 },
+  { brand: 'Canon', model: 'MF273dw', cartridge_count: 4 },
+  { brand: 'Brother', model: 'HL-L2375DW', cartridge_count: 4 },
+  { brand: 'Epson', model: 'L3250', cartridge_count: 3 },
+  { brand: 'Lexmark', model: 'MS431', cartridge_count: 2 },
+  { brand: 'Kyocera', model: 'P2040', cartridge_count: 2 },
+  { brand: 'Samsung', model: 'M2020', cartridge_count: 2 },
+  { brand: 'Ricoh', model: 'SP330', cartridge_count: 1 },
+  { brand: 'OKI', model: 'B412', cartridge_count: 1 },
+  { brand: 'Xerox', model: 'B210', cartridge_count: 1 },
+  { brand: 'Konica Minolta', model: 'B4000', cartridge_count: 1 },
+  { brand: 'Pantum', model: 'P2500', cartridge_count: 1 },
+  { brand: 'Dell', model: 'E310', cartridge_count: 1 },
+]
+
 beforeEach(() => {
   vi.mocked(useRouter).mockReturnValue({
     push: mockPush,
@@ -37,10 +55,10 @@ beforeEach(() => {
   } as any)
 })
 
-function renderStorefront(products: TrendingProduct[] = []) {
+function renderStorefront(products: TrendingProduct[] = [], models: CompatModel[] = mockCompatModels) {
   return render(
     <CartProvider>
-      <StorefrontClient trendingProducts={products} />
+      <StorefrontClient trendingProducts={products} compatModels={models} />
     </CartProvider>,
   )
 }
@@ -59,7 +77,7 @@ describe('StorefrontClient — hero', () => {
 
   it('renders key stats (years, brands, price)', () => {
     renderStorefront()
-    expect(screen.getAllByText(/38/)[0]).toBeInTheDocument()
+    expect(screen.getAllByText(/39/)[0]).toBeInTheDocument()
     expect(screen.getAllByText('13')[0]).toBeInTheDocument()
   })
 
@@ -77,7 +95,7 @@ describe('StorefrontClient — hero', () => {
     }
     render(
       <CartProvider>
-        <StorefrontClient trendingProducts={[]} />
+        <StorefrontClient trendingProducts={[]} compatModels={[]} />
         <Observer />
       </CartProvider>,
     )
@@ -191,55 +209,55 @@ describe('StorefrontClient — FAQ accordion', () => {
 })
 
 describe('StorefrontClient — compatibility finder', () => {
-  it('renders brand select with HP as default', () => {
+  it('defaults the brand select to the first (alphabetical) brand', () => {
     renderStorefront()
-    const select = screen.getByRole('combobox') as HTMLSelectElement
-    expect(select.value).toBe('HP')
+    const select = document.querySelector('select') as HTMLSelectElement
+    expect(select.value).toBe('Brother')
   })
 
   it('renders all 13 brands in the select', () => {
     renderStorefront()
-    const select = screen.getByRole('combobox')
+    const select = document.querySelector('select') as HTMLSelectElement
     const options = select.querySelectorAll('option')
     expect(options.length).toBe(13)
   })
 
   it('changing brand select updates state', async () => {
     renderStorefront()
-    const select = screen.getByRole('combobox') as HTMLSelectElement
+    const select = document.querySelector('select') as HTMLSelectElement
     await userEvent.selectOptions(select, 'Canon')
     expect(select.value).toBe('Canon')
   })
 
   it('typing in model input updates state', async () => {
     renderStorefront()
-    const input = screen.getByPlaceholderText(/LaserJet Pro/i)
+    const input = screen.getByPlaceholderText(/P1102/i)
     await userEvent.type(input, 'M404dn')
     expect((input as HTMLInputElement).value).toBe('M404dn')
   })
 
   it('"Find cartridges" button navigates with brand and model params', async () => {
     renderStorefront()
-    const select = screen.getByRole('combobox') as HTMLSelectElement
+    const select = document.querySelector('select') as HTMLSelectElement
     await userEvent.selectOptions(select, 'Canon')
-    const input = screen.getByPlaceholderText(/LaserJet Pro/i)
+    const input = screen.getByPlaceholderText(/P1102/i)
     await userEvent.type(input, 'MF273dw')
     await userEvent.click(screen.getByText('Find cartridges'))
-    expect(mockPush).toHaveBeenCalledWith('/products?brand=Canon&model=MF273dw')
+    expect(mockPush).toHaveBeenCalledWith('/compatibility?model=Canon%20MF273dw')
   })
 
   it('pressing Enter in model input submits the finder', async () => {
     renderStorefront()
-    const input = screen.getByPlaceholderText(/LaserJet Pro/i)
+    const input = screen.getByPlaceholderText(/P1102/i)
     await userEvent.type(input, 'M404{Enter}')
-    expect(mockPush).toHaveBeenCalledWith(expect.stringContaining('/products'))
+    expect(mockPush).toHaveBeenCalledWith(expect.stringContaining('/compatibility'))
   })
 
   it('popular search chip sets brand+model and navigates', async () => {
     renderStorefront()
     await userEvent.click(screen.getByText('HP LaserJet M404'))
     expect(mockPush).toHaveBeenCalledWith(
-      expect.stringContaining('/products?brand=HP&model=LaserJet%20M404'),
+      expect.stringContaining('/compatibility?model=HP%20LaserJet%20M404'),
     )
   })
 
@@ -321,12 +339,12 @@ describe('StorefrontClient — trending products', () => {
     }
     render(
       <CP>
-        <StorefrontClient trendingProducts={[mockProduct]} />
+        <StorefrontClient trendingProducts={[mockProduct]} compatModels={[]} />
         <Observer />
       </CP>,
     )
     const addBtns = screen.getAllByRole('button', { name: /Add HP 123 Black to cart/i })
-    await userEvent.click(addBtns[0])
+    await userEvent.click(addBtns[0]!)
     expect(cartCount).toBe(1)
   })
 
@@ -334,7 +352,7 @@ describe('StorefrontClient — trending products', () => {
     renderStorefront([mockProduct])
     const card = document.querySelector('.product-card') as HTMLElement
     await userEvent.click(card)
-    expect(mockPush).toHaveBeenCalledWith('/products')
+    expect(mockPush).toHaveBeenCalledWith('/products/hp-123-black')
   })
 })
 
@@ -372,16 +390,10 @@ describe('StorefrontClient — footer & CTA', () => {
     expect(screen.getByText('sales@tse.co.za')).toBeInTheDocument()
   })
 
-  it('renders copyright year', () => {
+  it('search button opens the search modal', async () => {
     renderStorefront()
-    expect(screen.getByText(new RegExp(new Date().getFullYear().toString()))).toBeInTheDocument()
-  })
-
-  it('search button navigates to /products', async () => {
-    renderStorefront()
-    const searchBtn = screen.getByRole('button', { name: /Search/i })
-    await userEvent.click(searchBtn)
-    expect(mockPush).toHaveBeenCalledWith('/products')
+    await userEvent.click(screen.getByRole('button', { name: /Search products/i }))
+    expect(screen.getByRole('dialog', { name: /Search/i })).toBeInTheDocument()
   })
 })
 

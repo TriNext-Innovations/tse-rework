@@ -9,7 +9,6 @@ type Category = {
   parent_category: { name: string } | null
 }
 
-// Categories that are type-labels, not brands — exclude from brand list
 const TYPE_CATEGORIES = new Set(['Inkjet Cartridges', 'Laser Cartridges'])
 
 export function ProductFilters({ categories }: { categories: Category[] }) {
@@ -18,15 +17,24 @@ export function ProductFilters({ categories }: { categories: Category[] }) {
   const [pending, startTransition] = useTransition()
 
   const activeCategory = params.get('category') ?? ''
+  const activeCategoryIds = new Set(activeCategory.split(',').filter(Boolean))
 
-  const brands = categories
-    .filter((c) => !TYPE_CATEGORIES.has(c.name))
+  // Deduplicate brands by name — Brother appears under both Inkjet and Laser
+  const brandMap = new Map<string, string[]>()
+  for (const c of categories) {
+    if (TYPE_CATEGORIES.has(c.name)) continue
+    const ids = brandMap.get(c.name) ?? []
+    ids.push(c.id)
+    brandMap.set(c.name, ids)
+  }
+  const brands = [...brandMap.entries()]
+    .map(([name, ids]) => ({ name, ids }))
     .sort((a, b) => a.name.localeCompare(b.name))
 
-  function setCategory(id: string) {
+  function setCategory(ids: string[]) {
     startTransition(() => {
       const next = new URLSearchParams(params.toString())
-      if (id) next.set('category', id)
+      if (ids.length > 0) next.set('category', ids.join(','))
       else next.delete('category')
       next.delete('page')
       router.push(`/products?${next.toString()}`)
@@ -42,7 +50,7 @@ export function ProductFilters({ categories }: { categories: Category[] }) {
     <aside className={`transition-opacity duration-200 ${pending ? 'opacity-50 pointer-events-none' : ''}`}>
       <div className="mb-4">
         <button
-          onClick={() => setCategory('')}
+          onClick={() => setCategory([])}
           className={`${pill} ${activeCategory === '' ? active : inactive} w-full`}
         >
           All products
@@ -51,13 +59,13 @@ export function ProductFilters({ categories }: { categories: Category[] }) {
 
       <div className="text-[9px] uppercase tracking-[0.22em] text-[#6B6B66] mb-2 px-1">By brand</div>
       <div className="flex flex-col gap-1">
-        {brands.map((c) => (
+        {brands.map(({ name, ids }) => (
           <button
-            key={c.id}
-            onClick={() => setCategory(c.id)}
-            className={`${pill} ${activeCategory === c.id ? active : inactive}`}
+            key={name}
+            onClick={() => setCategory(ids)}
+            className={`${pill} ${ids.some((id) => activeCategoryIds.has(id)) ? active : inactive}`}
           >
-            {c.name}
+            {name}
           </button>
         ))}
       </div>

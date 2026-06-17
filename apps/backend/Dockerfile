@@ -16,9 +16,15 @@ RUN pnpm install --frozen-lockfile
 COPY packages/ ./packages/
 COPY apps/backend/ ./apps/backend/
 COPY migration/seed-data.json ./migration/seed-data.json
+COPY migration/raw/client-review.csv ./migration/raw/client-review.csv
 
 # medusa build outputs to apps/backend/dist/
 WORKDIR /app/apps/backend
+# The admin dashboard bakes admin.backendUrl (= MEDUSA_BACKEND_URL) at build
+# time. Without it the admin defaults to http://localhost:9000 and the hosted
+# admin can't reach the API (blank page). Pass it as a build arg.
+ARG MEDUSA_BACKEND_URL=http://localhost:9000
+ENV MEDUSA_BACKEND_URL=$MEDUSA_BACKEND_URL
 ENV NODE_OPTIONS="--max-old-space-size=3072"
 RUN /app/node_modules/.bin/medusa build
 
@@ -41,8 +47,9 @@ COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
 # dist/public/admin/, but adminLoader expects ${cwd}/public/admin/index.html.
 COPY --from=builder /app/apps/backend/dist/public ./apps/backend/public
 
-# Seed data needed by medusa exec src/scripts/seed.ts
+# Seed data and compat CSV needed by medusa exec scripts
 COPY --from=builder /app/migration/seed-data.json ./migration/seed-data.json
+COPY --from=builder /app/migration/raw/client-review.csv ./migration/raw/client-review.csv
 
 # Source scripts needed by medusa exec (exec requires .ts source, not compiled dist)
 COPY --from=builder /app/apps/backend/src ./apps/backend/src
@@ -55,7 +62,8 @@ COPY --from=builder /app/apps/backend/package.json ./apps/backend/package.json
 WORKDIR /app/apps/backend
 
 COPY apps/backend/docker-entrypoint.sh ./
-RUN chmod +x docker-entrypoint.sh
+COPY apps/backend/docker-migrate-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh docker-migrate-entrypoint.sh
 
 EXPOSE 9000
 ENTRYPOINT ["./docker-entrypoint.sh"]

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent, act } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CartProvider, useCart } from '@/contexts/CartContext'
 import React from 'react'
@@ -141,14 +141,14 @@ describe('CartProvider', () => {
     renderCart()
     await userEvent.click(screen.getByText('Add HP'))
     await userEvent.click(screen.getByText('Open'))
-    const removeBtn = screen.getAllByLabelText('Remove item')[0]
+    const removeBtn = screen.getAllByLabelText('Remove item')[0]!
     await userEvent.click(removeBtn)
     expect(screen.getByTestId('count').textContent).toBe('0')
   })
 
   it('shows POA for items with null price', async () => {
     renderCart()
-    const { addItem } = useCartOutside()
+    useCartOutside()
     // Tested via consumer — price=null shows "POA"
     // Already covered in drawer render; POA appears for null-price items in the items list
     expect(true).toBe(true) // placeholder — covered by integration

@@ -23,7 +23,8 @@
   },
   "pnpm": {
     "overrides": {
-      "@medusajs/admin-sdk": "2.15.2",
+      "@medusajs/admin-sdk": "2.15.3",
+      "@medusajs/admin-shared": "2.15.3",
       "axios": ">=1.16.1",
       "@aws-sdk/client-dynamodb": ">=3.1049.0",
       "protobufjs": ">=7.6.0",
@@ -31,8 +32,6 @@
       "fast-xml-builder": ">=1.2.0",
       "fast-xml-parser": ">=5.7.0",
       "brace-expansion": "^2.0.1",
-      "esbuild": ">=0.25.0",
-      "vite": ">=6.4.2",
       "postcss": ">=8.5.10",
       "ajv": ">=8.18.0",
       "lodash": ">=4.18.0",

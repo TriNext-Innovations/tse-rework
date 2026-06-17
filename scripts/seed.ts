@@ -281,15 +281,19 @@ async function ensureStockLocation(token: string): Promise<string> {
 // ─── Shipping Options ─────────────────────────────────────────────────────────
 
 async function ensureShippingOptions(token: string, locationId: string): Promise<void> {
-  // Get fulfillment providers (manual is always present)
+  // Get fulfillment providers (manual is always present; shiplogic if configured)
   const { fulfillment_providers } = await api<{ fulfillment_providers: any[] }>(
     token, "GET", "/admin/fulfillment-providers"
   )
-  const providerId: string = fulfillment_providers?.[0]?.id ?? "manual_manual"
+  const providerId: string =
+    fulfillment_providers?.find((p: any) => p.id?.includes("manual"))?.id ?? "manual_manual"
+  const shiplogicId: string | undefined =
+    fulfillment_providers?.find((p: any) => p.id?.includes("shiplogic"))?.id
 
-  // Associate fulfillment provider with stock location (required before creating shipping options)
+  // Associate fulfillment providers with stock location (required before creating shipping options)
+  const providerIds = [providerId, ...(shiplogicId ? [shiplogicId] : [])]
   await api(token, "POST", `/admin/stock-locations/${locationId}/fulfillment-providers`,
-    { add: [providerId] }
+    { add: providerIds }
   ).catch(() => { /* already associated — ignore */ })
 
   // Get or create fulfillment set via stock location
@@ -350,13 +354,21 @@ async function ensureShippingOptions(token: string, locationId: string): Promise
   )
   const existingNames = new Set(shipping_options.map((o: any) => o.name as string))
 
-  const options = [
-    { name: "JHB/PTA Own Delivery (COD)",  amount: 0,     code: "jhb_pta_delivery" },
-    { name: "Nationwide Courier",           amount: 12900, code: "nationwide_courier" },
+  // Flat options run on the manual provider; courier options are quoted live
+  // from The Courier Guy (ShipLogic) via the shiplogic provider.
+  const flatOptions = [
+    { name: "JHB/PTA Own Delivery (COD)", amount: 0, code: "jhb_pta_delivery" },
   ]
+  const calculatedOptions = shiplogicId
+    ? [
+        { name: "The Courier Guy — Economy",   code: "ECO", optionId: "shiplogic-eco" },
+        { name: "The Courier Guy — Overnight", code: "OVN", optionId: "shiplogic-ovn" },
+      ]
+    : []
 
   let created = 0
-  for (const opt of options) {
+
+  for (const opt of flatOptions) {
     if (existingNames.has(opt.name)) continue
     await api(token, "POST", "/admin/shipping-options", {
       name: opt.name,
@@ -370,7 +382,31 @@ async function ensureShippingOptions(token: string, locationId: string): Promise
     })
     created++
   }
-  console.log(`✓ Shipping options ready (${created} created, ${options.length - created} already existed)`)
+
+  for (const opt of calculatedOptions) {
+    if (existingNames.has(opt.name)) continue
+    await api(token, "POST", "/admin/shipping-options", {
+      name: opt.name,
+      service_zone_id: serviceZoneId,
+      shipping_profile_id: profileId,
+      provider_id: shiplogicId,
+      price_type: "calculated",
+      // `data` must match a FulfillmentOption from the provider's getFulfillmentOptions().
+      data: { id: opt.optionId, service_level_code: opt.code, name: opt.name },
+      type: { label: opt.name, description: opt.name, code: opt.code },
+      // Calculated options carry no fixed prices, but the admin API still
+      // requires the field to be present.
+      prices: [],
+      rules: [{ attribute: "is_return", value: "false", operator: "eq" }],
+    })
+    created++
+  }
+
+  const total = flatOptions.length + calculatedOptions.length
+  if (!shiplogicId) {
+    console.warn("  ⚠ shiplogic provider not registered — skipping live courier options")
+  }
+  console.log(`✓ Shipping options ready (${created} created, ${total - created} already existed)`)
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
