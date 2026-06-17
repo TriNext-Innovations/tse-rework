@@ -13,4 +13,7 @@ echo "[migrate] Adding search_name column + trigram index (idempotent)..."
 echo "[migrate] Seeding compatibility data (idempotent upsert)..."
 /app/node_modules/.bin/medusa exec src/scripts/seed-compatibility.ts
 
+echo "[migrate] Ensuring PayFast pending-order table (idempotent)..."
+/app/node_modules/.bin/medusa exec src/scripts/migrate-payfast.ts
+
 echo "[migrate] All done."

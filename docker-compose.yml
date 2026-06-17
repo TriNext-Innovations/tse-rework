@@ -148,6 +148,11 @@ services:
       PAYFAST_MERCHANT_KEY: ${PAYFAST_MERCHANT_KEY}
       PAYFAST_PASSPHRASE: ${PAYFAST_PASSPHRASE}
       PAYFAST_SANDBOX: ${PAYFAST_SANDBOX:-true}
+      # Shared secret guarding the server-to-server PayFast pending/capture routes
+      PAYFAST_CAPTURE_SECRET: ${PAYFAST_CAPTURE_SECRET}
+      # Order-capture targets (defaults in code match dev; override per env)
+      MEDUSA_ZAR_REGION_ID: ${MEDUSA_ZAR_REGION_ID:-}
+      MEDUSA_SALES_CHANNEL_ID: ${MEDUSA_SALES_CHANNEL_ID:-}
       MEILISEARCH_HOST: http://meilisearch:7700
       MEILISEARCH_API_KEY: ${MEILISEARCH_API_KEY}
       SENTRY_DSN: ${SENTRY_DSN}
@@ -226,6 +231,7 @@ services:
       PAYFAST_MERCHANT_KEY: ${PAYFAST_MERCHANT_KEY}
       PAYFAST_PASSPHRASE: ${PAYFAST_PASSPHRASE}
       PAYFAST_SANDBOX: ${PAYFAST_SANDBOX:-true}
+      PAYFAST_CAPTURE_SECRET: ${PAYFAST_CAPTURE_SECRET}
       RESEND_API_KEY: ${RESEND_API_KEY}
       RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL}
     # Loopback-only — nginx proxies dev. → web:3000 over the compose network.

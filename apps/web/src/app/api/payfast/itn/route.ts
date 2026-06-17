@@ -118,10 +118,49 @@ export async function POST(req: NextRequest) {
   const status = data.payment_status?.toUpperCase()
 
   if (status === 'COMPLETE') {
-    await Promise.allSettled([notifyTeam(data), notifyCustomer(data)])
+    // Turn the stored cart into a real Medusa order (idempotent on m_payment_id).
+    // Creating the order fires order.placed, which sends the customer
+    // confirmation — so only fall back to notifyCustomer if capture produced
+    // no order. The team always gets a heads-up.
+    const orderCreated = await captureOrder(data)
+    const tasks = [notifyTeam(data)]
+    if (!orderCreated) tasks.push(notifyCustomer(data))
+    await Promise.allSettled(tasks)
   } else {
     console.warn('[PayFast ITN] Non-complete status:', status, data.m_payment_id)
   }
 
   return new NextResponse('OK', { status: 200 })
+}
+
+const MEDUSA_URL = process.env.NEXT_PUBLIC_MEDUSA_URL ?? 'http://medusa:9000'
+const CAPTURE_SECRET = process.env.PAYFAST_CAPTURE_SECRET ?? ''
+const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
+
+async function captureOrder(data: Record<string, string>): Promise<boolean> {
+  if (!CAPTURE_SECRET || !data.m_payment_id) return false
+  try {
+    const res = await fetch(`${MEDUSA_URL}/store/payfast/capture`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-payfast-secret': CAPTURE_SECRET,
+        'x-publishable-api-key': PUB_KEY,
+      },
+      body: JSON.stringify({
+        m_payment_id: data.m_payment_id,
+        payfast: {
+          pf_payment_id: data.pf_payment_id,
+          m_payment_id: data.m_payment_id,
+          amount_gross: data.amount_gross,
+        },
+      }),
+    })
+    if (!res.ok) return false
+    const json = await res.json().catch(() => ({}))
+    return Boolean(json?.order_id)
+  } catch (err) {
+    console.error('[PayFast ITN] order capture failed:', err)
+    return false
+  }
 }

@@ -77,6 +77,31 @@ export async function POST(req: NextRequest) {
 
   const signature = buildSignature(params)
 
+  // Persist the cart server-side so the (validated) ITN can turn it into a real
+  // Medusa order on payment confirmation. Best-effort: never block checkout if
+  // the backend is briefly unavailable — the team still gets the ITN email.
+  const MEDUSA_URL = process.env.NEXT_PUBLIC_MEDUSA_URL ?? 'http://medusa:9000'
+  const CAPTURE_SECRET = process.env.PAYFAST_CAPTURE_SECRET ?? ''
+  const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
+  if (CAPTURE_SECRET) {
+    try {
+      await fetch(`${MEDUSA_URL}/store/payfast/pending`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-payfast-secret': CAPTURE_SECRET,
+          'x-publishable-api-key': PUB_KEY,
+        },
+        body: JSON.stringify({
+          m_payment_id,
+          payload: { items, contact, address, amount },
+        }),
+      })
+    } catch (err) {
+      console.error('[payfast initiate] failed to persist pending order:', err)
+    }
+  }
+
   return NextResponse.json({
     url: PAYFAST_URL,
     params: { ...params, signature },
