@@ -20,13 +20,14 @@ const connectSrc = [
 
 const contentSecurityPolicy = [
   "default-src 'self'",
-  // Next.js relies on inline runtime bootstrap; eval kept for safety with some deps.
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  // Next.js relies on inline runtime bootstrap; eval kept for safety with some
+  // deps. maps.googleapis/gstatic host the Places autocomplete library.
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com https://maps.gstatic.com",
   "style-src 'self' 'unsafe-inline'",
   // https: covers R2/Supabase product images without enumerating every CDN host.
   "img-src 'self' data: https:",
   "font-src 'self' data:",
-  `connect-src ${connectSrc}`,
+  `connect-src ${connectSrc} https://maps.googleapis.com`,
   // Checkout posts to the PayFast hosted page (redirect), never an iframe here.
   "form-action 'self' https://*.payfast.co.za",
   "frame-ancestors 'self'",

@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { useCart } from '@/contexts/CartContext'
+import { AddressAutocomplete } from './AddressAutocomplete'
 
 const SA_PROVINCES = [
   'Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Natal',
@@ -218,11 +219,22 @@ export default function CheckoutForm() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-medium text-[#374151] mb-1.5 uppercase tracking-[0.12em]">Street address</label>
-                  <input
-                    type="text" autoComplete="address-line1" placeholder="12 Acacia Street"
+                  <AddressAutocomplete
                     value={address.line1}
-                    onChange={(e) => setAddress({ ...address, line1: e.target.value })}
+                    placeholder="Start typing your address…"
+                    autoComplete="address-line1"
                     className={inputClass(addressErrors.line1)}
+                    onChange={(v) => setAddress((a) => ({ ...a, line1: v }))}
+                    onSelect={(p) =>
+                      setAddress((a) => ({
+                        ...a,
+                        line1: p.line1 ?? a.line1,
+                        suburb: p.suburb ?? a.suburb,
+                        city: p.city ?? a.city,
+                        province: p.province && SA_PROVINCES.includes(p.province) ? p.province : a.province,
+                        postalCode: p.postalCode ?? a.postalCode,
+                      }))
+                    }
                   />
                   <FieldError msg={addressErrors.line1} />
                 </div>
