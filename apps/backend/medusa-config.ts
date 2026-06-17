@@ -24,11 +24,6 @@ export default defineConfig({
   },
   modules: [
     {
-      // Printer compatibility (printer_brand / printer_model / cartridge_compat).
-      // Must be registered so admin/store routes can resolve the service.
-      resolve: './src/modules/compatibility',
-    },
-    {
       resolve: '@medusajs/medusa/fulfillment',
       options: {
         providers: [
