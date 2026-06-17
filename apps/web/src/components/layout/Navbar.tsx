@@ -107,11 +107,12 @@ const { customer, loading: authLoading } = useAuth()
           border: 1px solid rgba(255,255,255,0.3);
           box-shadow: 0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -1px 0 rgba(255,255,255,0.1);
           overflow: visible;
-          /* No position here — it must not override the Tailwind `fixed` on the
-             header (this <style> wins the cascade). `fixed` already establishes
-             the positioning context the ::before highlight anchors to. Setting
-             `relative` made the navbar full-width and shifted it 16px right
-             (left-4), causing a horizontal overflow on every page. */
+          /* Intentionally no position here. The Tailwind "fixed" utility on the
+             header must win; this style block previously set position relative,
+             which (since component styles win the cascade) overrode fixed,
+             making the navbar full-width and shifting it 16px right via left-4
+             — a horizontal overflow on every page. fixed already establishes
+             the positioning context the ::before highlight anchors to. */
         }
         .navbar-glass::before {
           content: '';
