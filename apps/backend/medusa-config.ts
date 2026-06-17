@@ -2,6 +2,17 @@ import { defineConfig, loadEnv } from '@medusajs/framework/utils'
 
 loadEnv(process.env.NODE_ENV ?? 'development', process.cwd())
 
+// Fail fast rather than silently boot with a forgeable token secret if a
+// production deploy is missing JWT/COOKIE secrets (the runner sets
+// NODE_ENV=production). Local/dev still falls back to a placeholder.
+function requireSecret(name: string, fallback: string): string {
+  const value = process.env[name]
+  if (process.env.NODE_ENV === 'production' && (!value || value === 'supersecret')) {
+    throw new Error(`${name} must be set to a strong value in production`)
+  }
+  return value ?? fallback
+}
+
 export default defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
@@ -11,8 +22,8 @@ export default defineConfig({
       authCors:
         process.env.AUTH_CORS ??
         'http://localhost:7001,http://localhost:3000',
-      jwtSecret: process.env.JWT_SECRET ?? 'supersecret',
-      cookieSecret: process.env.COOKIE_SECRET ?? 'supersecret',
+      jwtSecret: requireSecret('JWT_SECRET', 'supersecret'),
+      cookieSecret: requireSecret('COOKIE_SECRET', 'supersecret'),
     },
     redisUrl: process.env.REDIS_URL,
     workerMode:
