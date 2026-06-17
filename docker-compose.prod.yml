@@ -9,6 +9,12 @@
 #
 # Nginx (from the dev docker-compose) routes tse-cartridges.co.za → host:3001
 # and api.tse-cartridges.co.za → host:9001 via host.docker.internal.
+#
+# SECURITY TODO (before go-live): 3001/9001 publish on 0.0.0.0, so the prod
+# app/API are reachable over plain HTTP on the public IP (Docker bypasses UFW),
+# bypassing nginx TLS — same class of issue fixed for dev. The clean fix is a
+# shared external Docker network joined by nginx + the prod web/medusa services,
+# routing by service name, and dropping the host port publishing entirely.
 
 services:
 
@@ -34,6 +40,7 @@ services:
   redis-prod:
     image: redis:7-alpine
     restart: unless-stopped
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
     volumes:
       - redis_prod_data:/data
     deploy:
@@ -41,7 +48,7 @@ services:
         limits:
           memory: 100m
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -61,7 +68,7 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres-prod:5432/tse_medusa_prod?sslmode=disable
-      REDIS_URL: redis://redis-prod:6379
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis-prod:6379
       JWT_SECRET: ${JWT_SECRET}
       COOKIE_SECRET: ${COOKIE_SECRET}
       NODE_OPTIONS: "--max-old-space-size=1536"
@@ -90,7 +97,7 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres-prod:5432/tse_medusa_prod?sslmode=disable
-      REDIS_URL: redis://redis-prod:6379
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis-prod:6379
       JWT_SECRET: ${JWT_SECRET}
       COOKIE_SECRET: ${COOKIE_SECRET}
       MEDUSA_ADMIN_EMAIL: ${MEDUSA_ADMIN_EMAIL}
@@ -181,7 +188,9 @@ services:
         limits:
           memory: 350m
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      # 127.0.0.1, not localhost: busybox wget resolves localhost to ::1 but
+      # Next's standalone server listens on IPv4 0.0.0.0 only → false unhealthy.
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
