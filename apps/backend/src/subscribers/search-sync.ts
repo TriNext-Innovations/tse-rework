@@ -1,8 +1,21 @@
 import { type SubscriberArgs, type SubscriberConfig } from '@medusajs/framework'
-import { Modules } from '@medusajs/framework/utils'
+import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
 import { upsertDocument, deleteDocument } from '../lib/search'
 
-const PRODUCT_RELATIONS = ['images', 'categories', 'variants', 'variants.prices']
+// Prices are reachable only via the Query graph (module link), not as a
+// `variants.prices` relation on the product module — see bulk-index.ts.
+const PRODUCT_FIELDS = [
+  'id',
+  'title',
+  'handle',
+  'description',
+  'metadata',
+  'images.url',
+  'categories.name',
+  'variants.sku',
+  'variants.prices.amount',
+  'variants.prices.currency_code',
+]
 
 export default async function searchSyncHandler({
   event: { name, data },
@@ -20,11 +33,17 @@ export default async function searchSyncHandler({
     return
   }
 
-  const productService = container.resolve(Modules.PRODUCT) as any
+  const query = container.resolve(ContainerRegistrationKeys.QUERY)
   try {
-    const product = await productService.retrieveProduct(id, {
-      relations: PRODUCT_RELATIONS,
+    const { data: [product] } = await query.graph({
+      entity: 'product',
+      fields: PRODUCT_FIELDS,
+      filters: { id },
     })
+    if (!product) {
+      console.error(`[search-sync] product ${id} not found`)
+      return
+    }
     await upsertDocument(product)
     console.log(`[search-sync] indexed "${product.title}" (${id})`)
   } catch (err: any) {

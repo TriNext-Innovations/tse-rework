@@ -6,10 +6,27 @@
  */
 
 import { MedusaContainer } from '@medusajs/framework/types'
-import { Modules } from '@medusajs/framework/utils'
+import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
 import { getSearchClient, configureIndex, productToDocument, SEARCH_INDEX } from '../lib/search'
 
 const BATCH = 50
+
+// Prices live in the pricing module, not the product module, so they are only
+// reachable through the Query graph (which traverses the module link) — NOT as
+// a `variants.prices` relation on productService.listProducts (that throws).
+const PRODUCT_FIELDS = [
+  'id',
+  'title',
+  'handle',
+  'description',
+  'metadata',
+  'status',
+  'images.url',
+  'categories.name',
+  'variants.sku',
+  'variants.prices.amount',
+  'variants.prices.currency_code',
+]
 
 export default async function bulkIndex({ container }: { container: MedusaContainer }) {
   const client = getSearchClient()
@@ -17,7 +34,7 @@ export default async function bulkIndex({ container }: { container: MedusaContai
   console.log('[bulk-index] configuring Meilisearch index settings…')
   await configureIndex(client)
 
-  const productService = container.resolve(Modules.PRODUCT) as any
+  const query = container.resolve(ContainerRegistrationKeys.QUERY)
 
   let offset = 0
   let indexed = 0
@@ -25,14 +42,12 @@ export default async function bulkIndex({ container }: { container: MedusaContai
   console.log('[bulk-index] starting product indexing…')
 
   while (true) {
-    const products: any[] = await productService.listProducts(
-      { status: ['published'] },
-      {
-        relations: ['images', 'categories', 'variants', 'variants.prices'],
-        skip: offset,
-        take: BATCH,
-      },
-    )
+    const { data: products } = await query.graph({
+      entity: 'product',
+      fields: PRODUCT_FIELDS,
+      filters: { status: 'published' },
+      pagination: { skip: offset, take: BATCH },
+    })
 
     if (products.length === 0) break
 
