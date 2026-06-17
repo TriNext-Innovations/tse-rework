@@ -2,6 +2,38 @@ import path from 'path'
 import type { NextConfig } from 'next'
 import { withSentryConfig } from '@sentry/nextjs'
 
+// Derive cross-origin connect targets from the public env so the CSP stays
+// correct across dev/prod (api host + Sentry change per environment). The
+// Meilisearch host is same-origin (served under /meili), so 'self' covers it.
+function originOf(url?: string): string | null {
+  if (!url) return null
+  try { return new URL(url).origin } catch { return null }
+}
+
+const connectSrc = [
+  "'self'",
+  originOf(process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL),
+  originOf(process.env.NEXT_PUBLIC_MEILISEARCH_HOST),
+  originOf(process.env.NEXT_PUBLIC_SENTRY_DSN),
+  'https://*.sentry.io',
+].filter(Boolean).join(' ')
+
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  // Next.js relies on inline runtime bootstrap; eval kept for safety with some deps.
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  "style-src 'self' 'unsafe-inline'",
+  // https: covers R2/Supabase product images without enumerating every CDN host.
+  "img-src 'self' data: https:",
+  "font-src 'self' data:",
+  `connect-src ${connectSrc}`,
+  // Checkout posts to the PayFast hosted page (redirect), never an iframe here.
+  "form-action 'self' https://*.payfast.co.za",
+  "frame-ancestors 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+].join('; ')
+
 const securityHeaders = [
   { key: 'X-DNS-Prefetch-Control', value: 'on' },
   { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
@@ -9,6 +41,7 @@ const securityHeaders = [
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+  { key: 'Content-Security-Policy', value: contentSecurityPolicy },
 ]
 
 const nextConfig: NextConfig = {
