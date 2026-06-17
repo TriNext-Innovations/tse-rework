@@ -166,3 +166,16 @@
     @apply font-sans;
   }
 }
+
+/* iOS Safari zooms in — and stays zoomed — whenever a focused form control has
+   a font-size below 16px. Several inputs/selects use text-sm (14px), so tapping
+   e.g. the homepage printer finder left the whole site "somewhat zoomed". Force
+   16px on form controls on small screens; desktop keeps the designed sizes.
+   Unlayered so it wins over Tailwind's utility classes. */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
