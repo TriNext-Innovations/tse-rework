@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Navbar } from '@/components/layout'
 import { ProductFilters } from './ProductFilters'
 import { AddToCartButton } from './AddToCartButton'
@@ -177,9 +178,12 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
                       {/* Product image */}
                       <div className="relative h-28 flex items-end justify-center mb-3">
                         {imageUrl ? (
-                          <img
+                          <Image
                             src={imageUrl}
                             alt={p.title}
+                            width={180}
+                            height={220}
+                            sizes="180px"
                             className="h-31 w-auto object-contain"
                           />
                         ) : (

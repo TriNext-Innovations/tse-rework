@@ -348,9 +348,12 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
                   >
                     <div className="relative h-28 flex items-end justify-center mb-3">
                       {relatedImage ? (
-                        <img
+                        <Image
                           src={relatedImage}
                           alt={p.title}
+                          width={160}
+                          height={200}
+                          sizes="160px"
                           className="h-28 w-auto object-contain"
                         />
                       ) : (

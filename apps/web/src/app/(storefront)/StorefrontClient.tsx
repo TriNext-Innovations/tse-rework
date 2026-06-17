@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { Navbar } from '@/components/layout'
 import { useCart } from '@/contexts/CartContext'
 
@@ -570,9 +571,12 @@ export default function StorefrontClient({
                   <div className="relative h-32 sm:h-36 flex items-end justify-center mb-4">
                     <div className="product-img relative">
                       {p.images?.[0]?.url ? (
-                        <img
+                        <Image
                           src={p.images[0].url}
                           alt={p.title}
+                          width={220}
+                          height={280}
+                          sizes="(max-width: 640px) 45vw, 220px"
                           className="h-28 sm:h-44 w-auto object-contain drop-shadow-lg"
                         />
                       ) : (
