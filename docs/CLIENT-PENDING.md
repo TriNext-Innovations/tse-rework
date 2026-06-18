@@ -15,6 +15,7 @@ Update the status column as items are resolved.
 | 8 | **`tse.co.za` → `tse-cartridges.co.za` redirect** (post-launch) | `tse-cartridges.co.za` is the confirmed primary domain. `tse.co.za` will redirect to it but only AFTER WooCommerce is decommissioned. DNS and nginx 301 redirect config to be set up at that time. | 🔜 Post-launch | — |
 | 9 | **Vultr VM provisioning** | We need SSH access to the Johannesburg VM to complete the deployment chain (#4.2–#4.10). Nothing goes live without this. | ⏳ Awaiting VM | #4.1 |
 | 10 | **Resend API key + sending domain** | Required for transactional email (order confirmations, password resets). Domain DNS records will need to be updated. | ⏳ Awaiting setup | #5.4 |
+| 11 | **Information Officer designated + registered** | POPIA hard go-live gate. The Information Officer defaults to TSE's MD (responsible party). Client must formally designate the person (plus any Deputies) and register them with the Information Regulator via the online portal. TriNext is an operator, not the responsible party — we cannot supply this. | ⏳ Awaiting client | #12 |
 
 ---
 
