@@ -374,25 +374,74 @@ export default function StorefrontClient({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-6 grid-rows-[auto] gap-3 sm:gap-4 auto-rows-[minmax(140px,_auto)]">
-            <article data-reveal className="bento-card sm:col-span-3 sm:row-span-2 bg-[var(--ink)] text-[var(--paper)] rounded-[24px] p-7 sm:p-10 relative overflow-hidden flex flex-col justify-between min-h-[360px]">
+            <article id="finder" data-reveal className="bento-card sm:col-span-3 sm:row-span-2 bg-[var(--ink)] text-[var(--paper)] rounded-[24px] p-7 sm:p-10 relative overflow-hidden flex flex-col justify-between min-h-[360px]">
               <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[var(--glow)] opacity-30 blur-3xl" />
-              <div className="absolute top-7 right-7 text-[10px] uppercase tracking-[0.22em] text-[var(--paper)]/50">The Guarantee</div>
+              <div className="absolute top-7 right-7 text-[10px] uppercase tracking-[0.22em] text-[var(--paper)]/50">Compatibility Finder</div>
               <div className="relative">
                 <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--magenta)] mb-4">01</div>
                 <p className="font-display font-light text-3xl sm:text-4xl leading-[1.05] tracking-tight">
-                  <span className="font-display-italic">"</span>Works as good, or even
-                  <span className="font-display-italic"> better </span>
-                  than the original.<span className="font-display-italic">"</span>
+                  Tell us your printer.<br />
+                  <span className="font-display-italic text-[var(--magenta)]">We'll do the rest.</span>
                 </p>
-                <p className="mt-6 text-sm text-[var(--paper)]/70 max-w-md">
-                  Failure? Wrong fit? Print quality off? We replace it. No tickets, no run-around — call us and it's sorted.
+                <p className="mt-4 text-sm text-[var(--paper)]/70 max-w-md">
+                  Brand, model, done. We'll pull every cartridge that fits — black, colour, high-yield — with stock and pricing in one shot.
                 </p>
               </div>
-              <div className="relative mt-8 flex items-center justify-between">
-                <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--paper)]/50">— TSE · Kya Sands, JHB</div>
-                <span className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-[var(--paper)]/20">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>
-                </span>
+
+              <div className="relative mt-8">
+                <div className="bg-[var(--paper)] text-[var(--ink)] rounded-2xl p-2 sm:p-3 flex flex-col gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="relative">
+                      <label className="block text-[9px] uppercase tracking-[0.2em] text-[var(--muted)] px-3 pt-3">Brand</label>
+                      <select
+                        value={finderBrand}
+                        onChange={(e) => setFinderBrand(e.target.value)}
+                        className="w-full bg-transparent pl-3 pr-8 pb-3 text-sm font-medium focus:outline-none appearance-none cursor-pointer"
+                      >
+                        {brands.map((b) => <option key={b}>{b}</option>)}
+                      </select>
+                      <svg className="absolute right-3 bottom-4 pointer-events-none" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m6 9 6 6 6-6"/></svg>
+                    </div>
+                    <div className="relative border-t sm:border-t-0 sm:border-l border-[var(--ink)]/10">
+                      <label className="block text-[9px] uppercase tracking-[0.2em] text-[var(--muted)] px-3 pt-3">Printer model</label>
+                      <input
+                        type="text"
+                        list="finder-models"
+                        placeholder="e.g. P1102, MX494"
+                        value={finderModel}
+                        onChange={(e) => setFinderModel(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && runFinder()}
+                        className="w-full bg-transparent px-3 pb-3 text-sm font-medium focus:outline-none placeholder:text-[var(--muted)]"
+                        autoComplete="off"
+                      />
+                      <datalist id="finder-models">
+                        {(modelsByBrand[finderBrand] ?? []).map((m) => (
+                          <option key={m} value={m} />
+                        ))}
+                      </datalist>
+                    </div>
+                  </div>
+                  <button
+                    onClick={runFinder}
+                    className="bg-[var(--ink)] hover:bg-[var(--magenta)] transition-colors duration-300 text-[var(--paper)] hover:text-[var(--on-accent)] rounded-xl px-4 py-3 text-sm font-medium cursor-pointer inline-flex items-center justify-center gap-2"
+                  >
+                    Find cartridges
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                  </button>
+                </div>
+
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--paper)]/50 mr-1">Popular:</span>
+                  {popularSearches.map((label) => (
+                    <button
+                      key={label}
+                      onClick={() => router.push(`/compatibility?model=${encodeURIComponent(label)}`)}
+                      className="text-xs px-3 py-1.5 border border-[var(--paper)]/15 rounded-full hover:border-[var(--magenta)] hover:text-[var(--magenta)] transition-colors cursor-pointer"
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </article>
 
@@ -463,87 +512,12 @@ export default function StorefrontClient({
         </div>
       </section>
 
-      {/* ─────────────── COMPATIBILITY FINDER ─────────────── */}
-      <section id="finder" className="relative px-4 sm:px-8 lg:px-12 py-16 sm:py-24">
-        <div className="mx-auto max-w-7xl bg-[var(--ink)] text-[var(--paper)] rounded-[32px] p-8 sm:p-14 relative overflow-hidden" data-reveal>
-          <div className="absolute -top-20 -left-20 w-80 h-80 rounded-full bg-[var(--glow)]/30 blur-3xl" />
-          <div className="absolute -bottom-32 -right-20 w-96 h-96 rounded-full bg-[var(--cyan)]/15 blur-3xl" />
-
-          <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-            <div className="lg:col-span-5">
-              <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--paper)]/60 mb-4">№ 02 — Compatibility Finder</div>
-              <h3 className="font-display font-light text-4xl sm:text-5xl leading-[0.95] tracking-tight">
-                Tell us your printer.<br />
-                <span className="font-display-italic text-[var(--magenta)]">We'll do the rest.</span>
-              </h3>
-              <p className="mt-4 text-sm text-[var(--paper)]/70 max-w-sm">
-                Brand, model, done. We'll pull every cartridge that fits — black, colour, high-yield — with stock and pricing in one shot.
-              </p>
-            </div>
-
-            <div className="lg:col-span-7">
-              <div className="bg-[var(--paper)] text-[var(--ink)] rounded-2xl p-2 sm:p-3 grid grid-cols-1 sm:grid-cols-12 gap-2">
-                <div className="sm:col-span-4 relative">
-                  <label className="block text-[9px] uppercase tracking-[0.2em] text-[var(--muted)] px-3 pt-3">Brand</label>
-                  <select
-                    value={finderBrand}
-                    onChange={(e) => setFinderBrand(e.target.value)}
-                    className="w-full bg-transparent pl-3 pr-8 pb-3 text-sm font-medium focus:outline-none appearance-none cursor-pointer"
-                  >
-                    {brands.map((b) => <option key={b}>{b}</option>)}
-                  </select>
-                  <svg className="absolute right-3 bottom-4 pointer-events-none" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m6 9 6 6 6-6"/></svg>
-                </div>
-                <div className="sm:col-span-5 relative border-l border-[var(--ink)]/10">
-                  <label className="block text-[9px] uppercase tracking-[0.2em] text-[var(--muted)] px-3 pt-3">Printer model</label>
-                  <input
-                    type="text"
-                    list="finder-models"
-                    placeholder="e.g. P1102, MX494, HL-L3280CDW"
-                    value={finderModel}
-                    onChange={(e) => setFinderModel(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && runFinder()}
-                    className="w-full bg-transparent px-3 pb-3 text-sm font-medium focus:outline-none placeholder:text-[var(--muted)]"
-                    autoComplete="off"
-                  />
-                  <datalist id="finder-models">
-                    {(modelsByBrand[finderBrand] ?? []).map((m) => (
-                      <option key={m} value={m} />
-                    ))}
-                  </datalist>
-                </div>
-                <button
-                  onClick={runFinder}
-                  className="sm:col-span-3 bg-[var(--ink)] hover:bg-[var(--magenta)] transition-colors duration-300 text-[var(--paper)] hover:text-[var(--on-accent)] rounded-xl px-4 py-3 text-sm font-medium cursor-pointer inline-flex items-center justify-center gap-2"
-                >
-                  Find cartridges
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                </button>
-              </div>
-
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--paper)]/50 mr-1">Popular:</span>
-                {popularSearches.map((label) => (
-                  <button
-                    key={label}
-                    onClick={() => router.push(`/compatibility?model=${encodeURIComponent(label)}`)}
-                    className="text-xs px-3 py-1.5 border border-[var(--paper)]/15 rounded-full hover:border-[var(--magenta)] hover:text-[var(--magenta)] transition-colors cursor-pointer"
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* ─────────────── TRENDING PRODUCTS ─────────────── */}
       <section id="shop" className="relative px-4 sm:px-8 lg:px-12 py-16 sm:py-24">
         <div className="mx-auto max-w-7xl">
           <div className="flex items-end justify-between flex-wrap gap-6 mb-10" data-reveal>
             <div>
-              <div className="text-[11px] uppercase tracking-[0.22em] text-[var(--muted)] mb-3">№ 03 — On the shelves</div>
+              <div className="text-[11px] uppercase tracking-[0.22em] text-[var(--muted)] mb-3">№ 02 — On the shelves</div>
               <h2 className="font-display font-light text-5xl sm:text-6xl leading-[0.92] tracking-tight">
                 This month's <span className="font-display-italic">most ordered</span>.
               </h2>
@@ -625,7 +599,7 @@ export default function StorefrontClient({
       <section className="relative px-4 sm:px-8 lg:px-12 py-20 sm:py-28">
         <div className="mx-auto max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
           <div className="lg:col-span-5" data-reveal>
-            <div className="text-[11px] uppercase tracking-[0.22em] text-[var(--muted)] mb-3">№ 04 — Field note</div>
+            <div className="text-[11px] uppercase tracking-[0.22em] text-[var(--muted)] mb-3">№ 03 — Field note</div>
             <h3 className="font-display font-light text-5xl sm:text-6xl leading-[0.95] tracking-tight">
               The print<br /><span className="font-display-italic">economy</span>,<br />re-engineered<span className="text-[var(--magenta)]">.</span>
             </h3>
@@ -650,7 +624,7 @@ export default function StorefrontClient({
       <section id="faq" className="relative px-4 sm:px-8 lg:px-12 py-16 sm:py-24">
         <div className="mx-auto max-w-4xl">
           <div className="text-center mb-12" data-reveal>
-            <div className="text-[11px] uppercase tracking-[0.22em] text-[var(--muted)] mb-3">№ 05 — Frequently asked</div>
+            <div className="text-[11px] uppercase tracking-[0.22em] text-[var(--muted)] mb-3">№ 04 — Frequently asked</div>
             <h2 className="font-display font-light text-5xl sm:text-6xl leading-[0.92] tracking-tight">
               The <span className="font-display-italic">honest</span> answers.
             </h2>
