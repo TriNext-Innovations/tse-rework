@@ -26,7 +26,7 @@
     "@sentry/node": "^10.56.0",
     "@tse/types": "workspace:*",
     "meilisearch": "^0.58.0",
-    "react": "^19.2.6",
+    "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "resend": "^4.0.0"
   },
