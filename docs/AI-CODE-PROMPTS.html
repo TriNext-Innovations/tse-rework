@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TSE Online — AI Code Prompts</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,Inter,sans-serif;font-size:14px;line-height:1.6;color:#111827;background:#fff;max-width:960px;margin:0 auto;padding:40px 24px}
+h1{font-size:22px;font-weight:700;border-bottom:2px solid #dfe344;padding-bottom:8px;margin-bottom:24px}
+h2{font-size:17px;font-weight:600;margin:28px 0 10px}
+p{margin-bottom:10px}
+pre{background:#111827;color:#e5e7eb;padding:16px;border-radius:6px;overflow-x:auto;margin:14px 0;font-size:12px;line-height:1.6;white-space:pre-wrap}
+hr{border:none;border-top:1px solid #ebebea;margin:28px 0}
+blockquote{border-left:3px solid #dfe344;padding:8px 14px;background:#fafaf7;margin:12px 0;color:#374151;font-size:13px}
+@media print{body{padding:20px;max-width:100%;font-size:12px}h1{font-size:18px}h2{font-size:15px}pre{font-size:11px}}
+</style>
+</head>
+<body>
+
+<h1>TSE Online — AI Code Prompts</h1>
+<p style="color:#6b7280;font-size:13px">Use with Claude Code in terminal. Paste prompt, review output, adjust to file structure, commit.</p>
+<blockquote>Stack: Next.js 15 · Medusa v2 · PostgreSQL 16 on Vultr JHB · Cloudflare R2 · Tailwind CSS · shadcn/ui · TypeScript<br>
+Brand: lime <code>#dfe344</code> (primary) · cyan <code>#41e0f5</code> (secondary) · pink <code>#ee75e9</code> (accent) · dark <code>#111827</code> · Inter (body) · Fraunces (display)</blockquote>
+
+<hr>
+
+<h2>PROMPT 1 — Monorepo Scaffold</h2>
+<pre>You are setting up a Turborepo monorepo for TSE Online, a South African printer cartridge e-commerce store.
+
+Create the full scaffold with:
+- apps/web: Next.js 15, App Router, TypeScript, Tailwind CSS, shadcn/ui
+- apps/backend: Medusa v2, TypeScript
+- packages/ui: shared component library
+- packages/config: shared tailwind.config.ts, tsconfig base, ESLint config
+- packages/types: shared TypeScript interfaces
+
+Also create:
+- turbo.json with build, dev, lint, type-check pipelines
+- Root package.json with workspaces
+- .env.example for all env vars (see Architecture.html)
+- .gitignore
+- docker-compose.yml for local Postgres + Redis
+
+Use pnpm workspaces. Node 20+.
+
+Output full file tree first, then each file's contents.</pre>
+
+<hr>
+
+<h2>PROMPT 2 — Design System &amp; Component Library</h2>
+<pre>You are building the design system for TSE Online, a South African printer cartridge e-commerce store.
+
+Brand colours (CSS HSL triplets, no hsl() wrapper):
+- Primary (lime):    --brand-primary: 62 74% 58%  (#dfe344) — always use dark text on this
+- Secondary (cyan):  --brand-secondary: 187 90% 61% (#41e0f5)
+- Accent (pink):     --brand-accent: 303 78% 70%  (#ee75e9)
+- Dark:              --brand-dark: 221 39% 11%    (#111827)
+- Surface:           #F7F7F4 · Border: #EBEBEA · Body text: #374151
+
+Fonts: Inter (body/UI via --font-sans) · Fraunces 300-700 (headings via --font-display)
+
+Using shadcn/ui and Tailwind CSS, create in packages/ui/src/:
+
+1. Button — variants: primary (lime bg, dark text), secondary (outline), ghost, destructive
+2. Badge — variants: inStock (green), lowStock (amber), outOfStock (red), compatible, pricing-tier
+3. ProductCard — product image, title, SKU, stock badge, compatible badge, price, "Add to Cart"
+   Accepts Medusa Product type. Images served from Cloudflare R2.
+4. CartDrawer — slide-in panel from right, line items with qty controls, subtotal, Checkout CTA
+   Uses Radix Sheet primitive
+5. CompatibilityBadge — pill showing "Compatible with HP LaserJet Pro M404n"
+6. PricingTierBadge — shows "Reseller Price" or "Wholesale Price" for B2B customers
+
+All components:
+- Fully typed TypeScript
+- Accessible (ARIA labels, keyboard navigation)
+- Dark-mode ready via Tailwind dark: variant
+- Exported from packages/ui/src/index.ts
+
+Output each component file in full.</pre>
+
+<hr>
+
+<h2>PROMPT 3 — Cartridge Compatibility Wizard</h2>
+<pre>You are building the Cartridge Compatibility Wizard for TSE Online (Next.js 15, App Router, TypeScript, Tailwind, shadcn/ui).
+
+The wizard lives at /compatibility:
+  Step 1 — User selects printer brand (HP, Canon, Epson, Samsung, Brother, Lexmark, Xerox, Pantum, Ricoh, Kyocera, Konica Minolta, OKI)
+  Step 2 — User selects printer model (fetched dynamically from /store/compatibility/models?brand=HP)
+  Step 3 — Results: matching cartridges with stock status, price, "Add to Cart"
+
+Create:
+1. apps/web/src/app/(storefront)/compatibility/page.tsx — Server Component wrapper with metadata
+2. apps/web/src/app/(storefront)/compatibility/CompatibilityWizard.tsx — Client Component, 3-step wizard using shadcn Select, Card, Button
+3. apps/backend/src/modules/compatibility/index.ts — Medusa module:
+   - CompatibilityModuleService: getBrands(), getModels(brand), getCartridges(brand, model)
+   - compatibility table schema (see data-model.html)
+4. apps/backend/src/api/store/compatibility/route.ts — REST endpoints:
+   GET /store/compatibility/brands
+   GET /store/compatibility/models?brand=
+   GET /store/compatibility/cartridges?brand=&model=
+
+Mobile-first, progress indicator, loading/error states.
+
+Output all four files in full.</pre>
+
+<hr>
+
+<h2>PROMPT 4 — PayFast &amp; Ozow Payment Integration</h2>
+<pre>You are integrating PayFast and Ozow into a Medusa v2 backend (self-hosted on Vultr JHB, Docker Compose).
+
+Create a custom Medusa payment provider for PayFast:
+- File: apps/backend/src/modules/payfast/index.ts
+- Implements Medusa AbstractPaymentProvider
+- Handles: initiatePayment, authorizePayment, capturePayment, refundPayment, cancelPayment
+- PayFast ITN (Instant Transaction Notification) webhook at POST /webhooks/payfast
+- Signature validation: MD5 hash of form fields + passphrase per PayFast docs
+- Supports sandbox and production modes via PAYFAST_SANDBOX env var
+
+Create the Ozow provider:
+- File: apps/backend/src/modules/ozow/index.ts
+- Same interface implementation
+- HMAC-SHA512 hash generation
+- Webhook at POST /webhooks/ozow
+
+Webhook routes:
+- apps/backend/src/api/store/webhooks/payfast/route.ts
+- apps/backend/src/api/store/webhooks/ozow/route.ts
+
+Full TypeScript types, error handling, logging. Output all files in full.</pre>
+
+<hr>
+
+<h2>PROMPT 5 — B2B Customer Portal</h2>
+<pre>You are building the B2B portal for TSE Online. Business customers get negotiated pricing and can place bulk orders or submit quote requests.
+
+Backend (Medusa v2):
+1. apps/backend/src/modules/b2b/index.ts
+   - B2BModuleService: assignPricingTier(customerId, tier), getTier(customerId)
+   - Tiers: 'standard' | 'reseller' | 'wholesale'
+   - Reseller: 15% below list. Wholesale: 25% below list.
+   - Auto-apply correct Medusa price list at checkout based on customer group
+2. apps/backend/src/api/admin/b2b/route.ts — Admin endpoint to assign tiers
+
+Frontend (Next.js 15):
+3. apps/web/src/app/(storefront)/b2b/dashboard/page.tsx
+   - Protected route (redirect to /account/login if not authenticated)
+   - Shows: pricing tier badge, order history, quick reorder buttons
+4. apps/web/src/app/(storefront)/b2b/quote/page.tsx
+   - Quote request form: rows of (SKU search + qty + note), submit
+   - On submit: POST to /store/b2b/quote, show confirmation
+5. apps/backend/src/api/store/b2b/quote/route.ts
+   - POST handler saves to quote_request table, sends admin email via Resend
+
+Server-rendered where possible, Client Components for interactive form elements only.
+
+Output all five files in full.</pre>
+
+<hr>
+
+<h2>PROMPT 6 — Instagram / Facebook Automation Bot (n8n)</h2>
+<pre>You are building an n8n automation workflow for TSE Online that auto-posts new and restocked products to Instagram and Facebook.
+
+Create:
+
+1. automation/n8n/social-posting-workflow.json — n8n workflow:
+   - Trigger: webhook from Medusa subscriber on product created or restocked
+   - Step 1: Fetch product details from Medusa API (title, description, price, R2 image URL)
+   - Step 2: Call Anthropic API (claude-haiku-4-5-20251001) to generate a caption
+     System prompt: "You are a social media manager for TSE Online, SA printer cartridge supplier.
+     Write punchy, friendly Instagram captions in South African English. Include hashtags.
+     Max 200 words. End with CTA to shop at tse-cartridges.co.za. Products are quality generic/compatible — never OEM."
+   - Step 3: Compose image with branded overlay (logo watermark bottom-right, lime price badge bottom-left)
+   - Step 4: POST to Instagram via Meta Graph API (/{instagram-business-id}/media then /media_publish)
+   - Step 5: POST to Facebook Page via Meta Graph API (/{page-id}/photos)
+   - Step 6: Log result to social_posts table (product_id, platform, post_id, caption, posted_at)
+
+2. apps/backend/src/subscribers/product-updated.ts
+   - Listens to product.created and product-variant.updated events
+   - On restock (qty 0 → >0): POST to n8n webhook with product payload
+   - 3-attempt retry with exponential backoff
+
+3. Medusa migration for the social_posts table
+
+Output the n8n workflow JSON and both code files in full.</pre>
+
+<hr>
+
+<h2>PROMPT 7 — Transactional Email Templates (Resend + React Email)</h2>
+<pre>You are building transactional email templates for TSE Online using Resend and React Email.
+
+Brand: lime #dfe344 primary · Inter font · clean minimal layout · dark #111827 for headings
+
+Create in apps/web/src/emails/:
+
+1. OrderConfirmation.tsx
+   - Order number, items (image, name, qty, price), subtotal, shipping, total
+   - Delivery estimate: next-day JHB/PTA if ordered before 12:00 SAST weekday; 2-3 days otherwise
+
+2. ShippingUpdate.tsx
+   - Order number, tracking number (clickable link), estimated delivery, delivery address
+
+3. PasswordReset.tsx
+   - Reset link (1-hour expiry) + security warning
+
+4. QuoteReceived.tsx (sent to admin)
+   - Customer name, company, contact details, full quote item table
+
+Also create apps/backend/src/lib/email.ts:
+   - sendOrderConfirmation(order: MedusaOrder): Promise<void>
+   - sendShippingUpdate(order, trackingNumber, courierUrl): Promise<void>
+   - sendPasswordReset(email, resetUrl): Promise<void>
+   - sendQuoteNotification(quote): Promise<void>
+   All use the Resend SDK with graceful error handling.
+
+Output all files in full.</pre>
+
+<hr>
+
+<h2>PROMPT 8 — Meilisearch Product Search</h2>
+<pre>You are integrating Meilisearch into TSE Online (Next.js 15) for fast product search.
+Meilisearch runs on the same Vultr JHB VPS at http://meilisearch:7700 (internal Docker network).
+
+Create:
+
+1. apps/backend/src/subscribers/search-sync.ts
+   - Listens to product.created, product.updated, product.deleted
+   - On create/update: upserts to Meilisearch index 'products' with:
+     id, handle, title, description, brand, category, variants (sku, price, stock),
+     compatibility (array of printer models)
+   - On delete: removes document from index
+
+2. apps/web/src/components/search/SearchModal.tsx (Client Component)
+   - Triggered by CMD+K or search icon in header
+   - Uses instantsearch.js with Meilisearch adapter
+   - Results as product cards with match highlighting
+   - Filters: brand, category, in-stock-only toggle
+   - Recent searches in localStorage
+
+3. apps/web/src/lib/meilisearch.ts
+   - Initialise Meilisearch client
+   - Configure index settings (searchable, filterable attributes, ranking rules)
+   - Typed search helper functions
+
+4. apps/backend/src/scripts/seed-search.ts
+   - Bulk-index all existing products into Meilisearch (one-time)
+
+Output all four files in full.</pre>
+
+<hr>
+
+<h2>PROMPT 9 — POPIA Compliance Layer</h2>
+<pre>You are adding POPIA compliance features to TSE Online. All data is stored in SA (Vultr JHB PostgreSQL). Only Resend is cross-border (covered by s.72(1)(c) + DPA).
+
+Create:
+
+1. apps/web/src/components/CookieBanner.tsx (Client Component)
+   - First-visit cookie consent banner (bottom of screen)
+   - Three categories: Necessary (always on), Analytics (optional), Marketing (optional)
+   - Saves consent to localStorage and cookie 'tse_cookie_consent'
+   - Dynamically loads Google Analytics if analytics accepted
+   - Dynamically loads Meta Pixel if marketing accepted
+   - Styled with lime accent, minimal design
+
+2. apps/web/src/app/(legal)/privacy/page.tsx
+   - POPIA-compliant Privacy Policy (Server Component)
+   - Covers: data collected, purpose, third parties (PayFast, Ozow, Meta, Google, Resend, Cloudflare),
+     retention periods, data subject rights (access, correction, deletion), contact details
+   - Note: all data stored SA-hosted (Vultr JHB); Resend cross-border via s.72(1)(c)
+
+3. apps/web/src/app/(legal)/cookies/page.tsx
+   - Cookie Policy listing all cookies, purpose, and expiry
+
+4. apps/backend/src/api/store/data-requests/route.ts
+   - POST /store/data-requests — customer submits access or deletion request
+   - Saves to data_requests table with status 'pending'
+   - Sends acknowledgement email to customer + notification to admin via Resend
+
+Include Medusa migration for the data_requests table. Output all files in full.</pre>
+
+<hr>
+
+<h2>PROMPT 10 — Courier Integration (Courier Guy + Aramex)</h2>
+<pre>You are building the SA courier integration for Medusa v2 on Vultr JHB.
+
+Business rules:
+- Order before 12:00 SAST Mon–Fri: next-business-day to JHB/PTA
+- All other Gauteng orders: 1–2 business days
+- Other provinces: 2–3 business days
+- Orders over R1,500: free standard shipping
+- Express: same-day JHB CBD only via Courier Guy Express
+
+Create:
+
+1. apps/backend/src/modules/courier/index.ts
+   - CourierService: getRates(orderWeight, destinationPostalCode, orderValue)
+   - Returns ShippingOption[]: { name, price, estimatedDays, carrierId }
+   - Integrates with Courier Guy API (REST, API key auth)
+   - Falls back to flat-rate table if API is unavailable
+
+2. apps/backend/src/modules/courier/zones.ts
+   - Postal code → zone mapping for SA provinces
+   - getZone(postalCode): 'jhb_pta' | 'gauteng' | 'national'
+   - isNextDayCutoffMet(): boolean (checks SAST time < 12:00)
+
+3. apps/backend/src/api/store/shipping-options/route.ts
+   - GET /store/shipping-options?postalCode=&weight=&orderValue=
+
+4. apps/backend/src/modules/courier/rates.ts
+   - Flat-rate fallback table as TypeScript const
+
+Output all files in full.</pre>
+
+<hr>
+
+<h2>PROMPT 11 — Admin Dashboard Extensions</h2>
+<pre>You are extending the Medusa v2 admin dashboard for TSE Online with custom widgets.
+
+Create:
+
+1. apps/backend/src/admin/widgets/compatibility-widget.tsx
+   - Shown on product detail page in Medusa admin
+   - Lists all printer models this product is compatible with
+   - Add/remove compatibility entries via inline form
+
+2. apps/backend/src/admin/widgets/b2b-tier-widget.tsx
+   - Shown on customer detail page
+   - Displays current pricing tier (standard/reseller/wholesale)
+   - Dropdown to change tier with confirmation dialog
+
+3. apps/backend/src/admin/widgets/social-posts-widget.tsx
+   - Shown on product detail page
+   - Lists recent Instagram/Facebook posts for this product from social_posts table
+   - "Post Now" button triggers n8n webhook immediately
+
+4. apps/backend/src/admin/routes/quotes/page.tsx
+   - Custom admin route at /quotes
+   - Table of all quote requests with status filter
+   - Click row to view details and enter a quoted price
+   - "Send Quote" triggers quote email to customer via Resend
+
+Output all files in full.</pre>
+
+<hr>
+
+<h2>PROMPT 12 — Performance &amp; SEO</h2>
+<pre>You are optimising TSE Online (Next.js 15, deployed on Vultr JHB via Docker) for Core Web Vitals and SEO.
+
+Create:
+
+1. apps/web/src/app/(storefront)/products/[handle]/page.tsx
+   - Full Server Component
+   - generateMetadata(): title, description, openGraph with R2 product image, twitter card, canonical URL, JSON-LD Product schema with offers and availability
+   - generateStaticParams(): pre-generates paths for all products
+
+2. apps/web/src/app/sitemap.ts
+   - Dynamic sitemap: all product pages, category pages, compatibility wizard, legal pages
+   - Fetches product handles from Medusa at build time
+
+3. apps/web/src/app/robots.ts
+   - Standard robots.txt allowing all crawlers, pointing to sitemap
+
+4. apps/web/next.config.ts
+   - Image domains: Cloudflare R2 (pub-*.r2.dev and *.r2.cloudflarestorage.com)
+   - Security headers: CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy
+   - output: 'standalone' for Docker deployment
+   - Compression enabled
+
+5. apps/web/src/components/layout/Header.tsx
+   - Logo, category nav, CMD+K search trigger, cart icon with count badge, account icon
+   - Sticky with blur backdrop on scroll
+   - Mobile: hamburger with slide-in nav drawer
+
+Output all files in full.</pre>
+
+</body>
+</html>

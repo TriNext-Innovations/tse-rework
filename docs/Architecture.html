@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TSE Online — Architecture</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,Inter,sans-serif;font-size:14px;line-height:1.6;color:#111827;background:#fff;max-width:960px;margin:0 auto;padding:40px 24px}
+h1{font-size:22px;font-weight:700;border-bottom:2px solid #dfe344;padding-bottom:8px;margin-bottom:24px}
+h2{font-size:17px;font-weight:600;margin:28px 0 10px}
+h3{font-size:14px;font-weight:600;margin:18px 0 6px}
+p{margin-bottom:10px}
+a{color:#0f766e;text-decoration:none}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+th{background:#f7f7f4;text-align:left;padding:7px 10px;border:1px solid #ebebea;font-weight:600}
+td{padding:7px 10px;border:1px solid #ebebea;vertical-align:top}
+code{background:#f7f7f4;padding:1px 5px;border-radius:3px;font-family:Consolas,'Courier New',monospace;font-size:12px;color:#374151}
+pre{background:#111827;color:#e5e7eb;padding:16px;border-radius:6px;overflow-x:auto;margin:14px 0;font-size:12px;line-height:1.5}
+pre code{background:none;padding:0;color:inherit}
+ul,ol{margin:8px 0 10px 22px}
+li{margin-bottom:3px}
+hr{border:none;border-top:1px solid #ebebea;margin:28px 0}
+blockquote{border-left:3px solid #dfe344;padding:8px 14px;background:#fafaf7;margin:12px 0;color:#374151;font-size:13px}
+@media print{body{padding:20px;max-width:100%;font-size:12px}h1{font-size:18px}h2{font-size:15px}pre{font-size:11px}}
+</style>
+</head>
+<body>
+
+<h1>TSE Online — Architecture</h1>
+
+<h2>Project Structure</h2>
+<pre><code>tse-ui/
+├── apps/
+│   ├── web/              Next.js 15 storefront        (@tse/web)
+│   └── backend/          Medusa v2 API + admin         (@tse/backend)
+├── packages/
+│   ├── ui/               Shared shadcn/ui components  (@tse/ui)
+│   ├── config/           Tailwind / ESLint / TS base  (@tse/config)
+│   └── types/            Shared TypeScript types      (@tse/types)
+├── infrastructure/
+│   └── nginx/            Nginx reverse proxy config
+├── migration/            WooCommerce → Medusa scripts &amp; audit data
+├── scripts/              DB seed, migration helpers
+├── docs/                 All developer documentation
+├── docker-compose.yml    Full local stack (Postgres + Redis)
+└── .github/workflows/    CI + deploy workflows</code></pre>
+
+<hr>
+
+<h2>Stack</h2>
+<table>
+  <tr><th>Layer</th><th>Technology</th><th>Hosted on</th></tr>
+  <tr><td>Frontend</td><td>Next.js 15 (App Router)</td><td>Vultr JHB VM (Docker + nginx)</td></tr>
+  <tr><td>Commerce backend</td><td>Medusa v2</td><td>Vultr JHB VM (Docker)</td></tr>
+  <tr><td>Database</td><td>PostgreSQL 16</td><td>Vultr JHB VM (Docker, named volume)</td></tr>
+  <tr><td>Cache / queues</td><td>Redis 7</td><td>Vultr JHB VM (Docker)</td></tr>
+  <tr><td>File storage</td><td>Cloudflare R2</td><td>Cloudflare (S3-compatible, free tier)</td></tr>
+  <tr><td>Search</td><td>Meilisearch</td><td>Vultr JHB VM (Docker) — Phase 2</td></tr>
+  <tr><td>Automation</td><td>n8n</td><td>Vultr JHB n8n VM (Docker) — Phase 5</td></tr>
+  <tr><td>CDN / DNS</td><td>Cloudflare Free</td><td>Cloudflare (JHB PoP)</td></tr>
+  <tr><td>Transactional email</td><td>Resend Free</td><td>External</td></tr>
+  <tr><td>Payments</td><td>PayFast + Ozow</td><td>External (SA-hosted)</td></tr>
+  <tr><td>Social API</td><td>Meta Graph API</td><td>External</td></tr>
+  <tr><td>AI captions</td><td>Anthropic Claude API</td><td>External</td></tr>
+</table>
+
+<blockquote><strong>Two VMs on Vultr JHB.</strong> Main VM (4 GB RAM / 2 vCPU / 80 GB NVMe) runs web + backend + db + redis via Docker Compose. n8n VM (1 GB RAM) runs n8n separately to isolate automation workloads.</blockquote>
+
+<hr>
+
+<h2>Data Flow</h2>
+<pre><code>Browser / Mobile
+      │
+      ▼
+Cloudflare CDN (JHB PoP)
+      │
+      └─── All traffic ──────────────► Vultr JHB Main VM
+                                            │
+                                       nginx (reverse proxy)
+                                       ┌────┴────┐
+                                       │         │
+                                  :3000          :9000
+                               Next.js         Medusa v2 API
+                             (App Router)    (REST + custom routes)
+                                   │               │
+                            Server Components   PostgreSQL 16
+                            fetch Medusa SDK    (Docker, named vol)
+                                                     │
+                                            Cloudflare R2
+                                          (product images)</code></pre>
+
+<hr>
+
+<h2>Frontend Architecture (<code>apps/web</code>)</h2>
+
+<h3>App Router Structure</h3>
+<pre><code>apps/web/src/app/
+├── (storefront)/
+│   ├── layout.tsx              # Root layout with header/footer
+│   ├── page.tsx                # Homepage
+│   ├── products/
+│   │   ├── page.tsx            # Catalogue listing (RSC)
+│   │   └── [handle]/page.tsx   # Product detail page
+│   ├── compatibility/
+│   │   └── page.tsx            # Cartridge compatibility wizard
+│   ├── cart/page.tsx
+│   ├── checkout/page.tsx
+│   ├── account/
+│   │   ├── layout.tsx          # Protected layout (auth guard)
+│   │   ├── orders/page.tsx
+│   │   └── addresses/page.tsx
+│   └── b2b/
+│       ├── login/page.tsx
+│       ├── dashboard/page.tsx
+│       └── quote/page.tsx
+├── api/
+│   ├── health/route.ts         # Container healthcheck endpoint
+│   ├── revalidate/route.ts     # Medusa webhook → on-demand ISR revalidation
+│   └── webhooks/
+│       ├── payfast/route.ts
+│       └── medusa/route.ts
+└── (legal)/
+    ├── privacy/page.tsx
+    └── cookies/page.tsx</code></pre>
+
+<h3>Key Patterns</h3>
+<ul>
+  <li><strong>Server Components by default</strong> — fetch directly from Medusa SDK server-side; no client-side waterfalls</li>
+  <li><strong>Client Components only for interactivity</strong> — cart drawer, quantity selectors, wizard steps</li>
+  <li><strong>ISR</strong> — <code>revalidate: 3600</code> + on-demand via Medusa webhook calls to <code>/api/revalidate</code></li>
+  <li><strong>Optimistic updates</strong> — cart actions use React <code>useOptimistic</code></li>
+</ul>
+
+<hr>
+
+<h2>Backend Architecture (<code>apps/backend</code>)</h2>
+
+<h3>Module Structure</h3>
+<pre><code>apps/backend/src/
+├── modules/
+│   ├── compatibility/          # Cartridge compatibility data &amp; API
+│   ├── b2b/                    # B2B customer groups &amp; pricing tiers
+│   └── courier/                # SA courier rate logic
+├── api/
+│   ├── store/                  # Public storefront API extensions
+│   └── admin/                  # Admin panel API extensions
+├── workflows/
+│   ├── create-quote.ts
+│   └── bulk-order.ts
+├── subscribers/
+│   ├── order-placed.ts         # Trigger Resend confirmation email
+│   └── product-updated.ts      # Trigger n8n social post workflow
+└── medusa-config.ts</code></pre>
+
+<h3>Custom Modules</h3>
+<p><strong>Compatibility</strong> — <code>compatibility</code> table: <code>printer_brand → printer_model → cartridge_compatibility → product</code>. Wizard queries via <code>GET /store/compatibility</code>.</p>
+<p><strong>B2B</strong> — Extends Medusa customer groups with <code>pricing_tier</code> (standard / reseller / wholesale). Custom price list auto-applied at checkout based on authenticated customer's group.</p>
+<p><strong>Courier</strong> — Wraps Courier Guy and Aramex APIs. Calculates rates based on order weight, destination province, and 12:00 SAST cutoff for next-day JHB/PTA delivery.</p>
+
+<hr>
+
+<h2>Database Schema (custom tables)</h2>
+<p>All standard Medusa tables are inherited. Custom additions:</p>
+
+<pre><code>-- Cartridge compatibility
+CREATE TABLE compatibility (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  brand       TEXT NOT NULL,
+  model       TEXT NOT NULL,
+  sku         TEXT NOT NULL,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- B2B pricing tiers (extends Medusa customer_group)
+ALTER TABLE customer_group ADD COLUMN pricing_tier TEXT DEFAULT 'standard';
+
+-- Quote requests
+CREATE TABLE quote_request (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  customer_id  TEXT NOT NULL,
+  items        JSONB NOT NULL,         -- [{sku, qty}]
+  note         TEXT,
+  status       TEXT DEFAULT 'pending', -- pending | quoted | accepted | rejected
+  created_at   TIMESTAMPTZ DEFAULT NOW()
+);</code></pre>
+
+<p>Full compatibility schema (with indexes) in <a href="data-model.html">data-model.html</a>.</p>
+
+<hr>
+
+<h2>Environment Variables</h2>
+<p>See <code>.env.example</code> for the full list. Critical vars:</p>
+
+<pre><code># Medusa
+DATABASE_URL=postgresql://medusa:password@db:5432/tse?sslmode=disable
+MEDUSA_BACKEND_URL=https://api.dev.tse-cartridges.co.za
+
+# Cloudflare R2 (S3-compatible)
+S3_FILE_URL=https://pub-&lt;account-id&gt;.r2.dev
+S3_BUCKET=tse-product-images
+S3_ACCESS_KEY=
+S3_SECRET_KEY=
+S3_REGION=auto
+S3_ENDPOINT=https://&lt;account-id&gt;.r2.cloudflarestorage.com
+
+# PayFast
+PAYFAST_MERCHANT_ID=
+PAYFAST_MERCHANT_KEY=
+PAYFAST_PASSPHRASE=
+PAYFAST_SANDBOX=false
+
+# Ozow
+OZOW_SITE_CODE=
+OZOW_PRIVATE_KEY=
+OZOW_API_KEY=
+
+# Meilisearch
+MEILISEARCH_HOST=http://meilisearch:7700
+MEILISEARCH_API_KEY=
+
+# Resend
+RESEND_API_KEY=
+RESEND_FROM_EMAIL=orders@tse-cartridges.co.za
+
+# Anthropic (caption generation)
+ANTHROPIC_API_KEY=
+
+# Meta Graph API
+META_ACCESS_TOKEN=
+META_INSTAGRAM_BUSINESS_ID=
+META_FACEBOOK_PAGE_ID=
+
+# n8n
+N8N_WEBHOOK_SECRET=</code></pre>
+
+<hr>
+
+<h2>Deployment</h2>
+
+<h3>Vultr JHB Main VM</h3>
+<table>
+  <tr><th>Service</th><th>Image</th><th>Internal port</th><th>External via nginx</th></tr>
+  <tr><td><code>web</code></td><td>Built from <code>apps/web/</code></td><td>3000</td><td>dev.tse-cartridges.co.za</td></tr>
+  <tr><td><code>backend</code></td><td>Built from <code>apps/backend/</code></td><td>9000</td><td>api.dev.tse-cartridges.co.za</td></tr>
+  <tr><td><code>db</code></td><td><code>postgres:16-alpine</code></td><td>5432</td><td>Internal only</td></tr>
+  <tr><td><code>redis</code></td><td><code>redis:7-alpine</code></td><td>6379</td><td>Internal only</td></tr>
+</table>
+
+<p><strong>Deploy flow:</strong> push to <code>main</code> → GitHub Actions → SSH into VM → <code>git pull &amp;&amp; docker compose up --build -d</code> → health check → rollback on failure.</p>
+<p><strong>SSL:</strong> Let's Encrypt SAN cert (certbot standalone). nginx terminates TLS, forwards to containers.</p>
+
+<h3>Cloudflare</h3>
+<ul>
+  <li>DNS: A records <code>dev</code>, <code>api.dev</code> → Vultr main VM public IP (Proxied)</li>
+  <li>SSL/TLS: Full (Strict)</li>
+  <li>Page rule: bypass cache on <code>api.dev.tse-cartridges.co.za/*</code></li>
+  <li>DDoS protection active on all proxied records</li>
+</ul>
+
+<h3>Cloudflare R2 (file storage)</h3>
+<ul>
+  <li>Bucket: <code>tse-product-images</code> (public-read)</li>
+  <li>Free tier: 10 GB storage + 1 M operations/month</li>
+  <li>Zero egress fees when served through Cloudflare CDN</li>
+  <li>Connected to Medusa via <code>@medusajs/file-s3</code> (R2 is S3-compatible)</li>
+</ul>
+
+<h3>Vultr JHB n8n VM</h3>
+<ul>
+  <li>Separate 1 GB VM — isolates automation from the main server</li>
+  <li>Docker Compose with single <code>n8n</code> service</li>
+  <li>Same GitHub Actions SSH deploy pattern</li>
+</ul>
+
+</body>
+</html>

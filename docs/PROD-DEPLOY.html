@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TSE Online — Production Deploy Runbook</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,Inter,sans-serif;font-size:14px;line-height:1.6;color:#111827;background:#fff;max-width:960px;margin:0 auto;padding:40px 24px}
+h1{font-size:22px;font-weight:700;border-bottom:2px solid #dfe344;padding-bottom:8px;margin-bottom:24px}
+h2{font-size:17px;font-weight:600;margin:28px 0 10px}
+h3{font-size:14px;font-weight:600;margin:18px 0 6px;color:#374151}
+p{margin-bottom:10px}
+a{color:#0f766e;text-decoration:none}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+th{background:#f7f7f4;text-align:left;padding:7px 10px;border:1px solid #ebebea;font-weight:600}
+td{padding:7px 10px;border:1px solid #ebebea;vertical-align:top}
+code{background:#f7f7f4;padding:1px 5px;border-radius:3px;font-family:Consolas,'Courier New',monospace;font-size:12px;color:#374151}
+pre{background:#111827;color:#e5e7eb;padding:16px;border-radius:6px;overflow-x:auto;margin:14px 0;font-size:12px;line-height:1.5}
+pre code{background:none;padding:0;color:inherit}
+ul,ol{margin:8px 0 10px 22px}
+li{margin-bottom:4px}
+hr{border:none;border-top:1px solid #ebebea;margin:28px 0}
+blockquote{border-left:3px solid #dfe344;padding:8px 14px;background:#fafaf7;margin:12px 0;color:#374151;font-size:13px}
+.warn{border-left:3px solid #ef4444;padding:8px 14px;background:#fff1f2;margin:12px 0;color:#374151;font-size:13px}
+@media print{body{padding:20px;max-width:100%;font-size:12px}h1{font-size:18px}h2{font-size:15px}pre{font-size:11px}}
+</style>
+</head>
+<body>
+
+<h1>Production Deploy Runbook</h1>
+<p style="color:#6b7280;font-size:13px">First deploy completed <strong>2026-05-20</strong> — <code>dev.tse-cartridges.co.za</code> live on Vultr JHB VPS.<br>
+Use <code>make help</code> from <code>/opt/tse-ui</code> for all ops commands.</p>
+
+<hr>
+
+<h2>1. Prerequisites</h2>
+<p>Confirm all before touching the server.</p>
+
+<table>
+  <tr><th>#</th><th>Requirement</th><th>Verify</th></tr>
+  <tr>
+    <td>1</td>
+    <td>VPS reachable, Docker + Docker Compose installed</td>
+    <td><code>ssh linuxuser@&lt;host&gt;</code> then <code>docker --version &amp;&amp; docker compose version</code></td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td>Project cloned at <code>/opt/tse-ui</code>, git remote pointing at GitHub</td>
+    <td><code>cd /opt/tse-ui &amp;&amp; git remote -v</code></td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td><code>.env</code> populated (POSTGRES_PASSWORD, JWT_SECRET, COOKIE_SECRET, all third-party keys)</td>
+    <td><code>grep -c "=" .env</code> — should match count in <code>.env.example</code></td>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td>Both DNS records resolve to server's public IP</td>
+    <td><code>for h in dev.tse-cartridges.co.za api.dev.tse-cartridges.co.za; do echo "$h -&gt; $(dig +short $h | tail -1)"; done</code></td>
+  </tr>
+  <tr>
+    <td>5</td>
+    <td>Firewall allows inbound 80 and 443</td>
+    <td><code>curl -I http://&lt;server-ip&gt;</code> from outside VPS — should reach nginx, not time out</td>
+  </tr>
+  <tr>
+    <td>6</td>
+    <td>No other process bound to ports 80 / 443 / 5432 / 6379 / 9000 / 3000</td>
+    <td><code>sudo ss -tlnp | grep -E ':(80|443|5432|6379|9000|3000)\s'</code></td>
+  </tr>
+</table>
+
+<div class="warn">Do not rotate <code>POSTGRES_PASSWORD</code> without recreating the postgres volume — it backs the <code>DATABASE_URL</code> for both Medusa services.</div>
+
+<hr>
+
+<h2>2. First-Run Deploy Sequence</h2>
+<p>Dependency chain: <code>postgres → redis → medusa-migrate → medusa → web → nginx</code>. nginx has a TLS cert chicken-and-egg — follow this order exactly.</p>
+
+<pre><code># All commands run from /opt/tse-ui on the VPS
+cd /opt/tse-ui
+git pull origin main
+
+# 1. Bring up data services + run migrations
+docker compose up -d postgres redis
+docker compose up medusa-migrate   # foreground — watch all 25 modules complete
+
+# 2. Bring up Medusa (first boot: 30-90s — wait for 'healthy')
+docker compose up -d medusa
+
+# 3. Bring up storefront (depends on medusa healthy)
+docker compose up -d web
+
+# 4. Issue TLS cert via certbot --standalone (nginx NOT running yet, :80 is free)
+#    Single SAN cert covering BOTH domains, stored under live/dev.tse-cartridges.co.za/
+docker run --rm -p 80:80 \
+  -v tse-ui_certbot_certs:/etc/letsencrypt \
+  -v tse-ui_certbot_www:/var/www/certbot \
+  certbot/certbot certonly --standalone \
+    --non-interactive --agree-tos --no-eff-email \
+    --email ryno@trinextinnovations.co.za \
+    -d dev.tse-cartridges.co.za \
+    -d api.dev.tse-cartridges.co.za
+
+# Verify SAN cert covers both domains
+sudo openssl x509 \
+  -in /var/lib/docker/volumes/tse-ui_certbot_certs/_data/live/dev.tse-cartridges.co.za/cert.pem \
+  -noout -text | grep -A1 "Subject Alternative Name"
+
+# 5. Bring up nginx (cert now exists)
+docker compose up -d nginx
+
+# 6. Verify
+docker compose ps</code></pre>
+
+<p>Expected: <code>https://dev.tse-cartridges.co.za</code> → Next.js storefront · <code>https://api.dev.tse-cartridges.co.za/health</code> → <code>OK</code></p>
+
+<hr>
+
+<h2>3. Gotchas (Hit on 2026-05-20)</h2>
+
+<h3>3.1 <code>medusa db:migrate</code> hangs 25 minutes on Docker-networked Postgres</h3>
+<p><strong>Symptom:</strong> <code>Running migrations...</code> then 25-min silence, then 25× <code>KnexTimeoutError</code>.</p>
+<p><strong>Cause:</strong> Medusa 2.15.2's <code>lockKnex</code> infers SSL from the DB hostname. A Docker service name (<code>postgres</code>) doesn't match the <code>localhost|127.0.0.1</code> regex, so SSL gets forced on. Bare <code>postgres:16-alpine</code> doesn't support SSL — handshake fails. Knex's <code>propagateCreateError: false</code> silences the real error; you only see the timeout.</p>
+<p><strong>Fix in repo:</strong> <code>docker-compose.yml</code> appends <code>?sslmode=disable</code> to <code>DATABASE_URL</code> for both <code>medusa-migrate</code> and <code>medusa</code>.</p>
+<div class="warn">If you switch to managed Postgres (RDS, Vultr Managed PG), <strong>remove <code>?sslmode=disable</code></strong> and set <code>sslmode=require</code> instead.</div>
+
+<h3>3.2 <code>medusa start</code> fails: "Could not find index.html in admin build directory"</h3>
+<p><strong>Cause:</strong> <code>apps/backend/tsconfig.json</code> overrides <code>outDir</code> to <code>./dist</code>. Medusa writes admin bundle to <code>dist/public/admin/</code> but the admin loader looks for <code>${process.cwd()}/public/admin/index.html</code>. Path mismatch.</p>
+<p><strong>Fix in repo:</strong> Dockerfile lifts the admin output:</p>
+<pre><code>COPY --from=builder /app/apps/backend/dist/public ./apps/backend/public</code></pre>
+<p>Do not change <code>tsconfig.outDir</code> without also updating this COPY line.</p>
+
+<h3>3.3 Postgres <code>max_connections=200</code> not applied</h3>
+<p><strong>Cause:</strong> <code>docker compose up -d</code> doesn't recreate an already-running container even if config changed. <code>docker compose restart</code> doesn't reapply config either.</p>
+<p><strong>Fix:</strong> <code>docker compose up -d --force-recreate postgres</code>. Named volume is preserved — no data loss.</p>
+
+<h3>3.4 nginx cert chicken-and-egg</h3>
+<p><strong>Cause:</strong> nginx won't start without certs; certbot standalone needs port 80, which nginx normally owns.</p>
+<p><strong>Fix:</strong> Follow section 2 exactly — issue cert before starting nginx.</p>
+
+<h3>3.5 SAN cert vs separate-cert paths in nginx</h3>
+<p><strong>Cause:</strong> <code>certbot certonly -d X -d Y</code> issues <strong>one</strong> SAN cert stored under <code>live/&lt;first-domain&gt;/</code> only. If nginx config had separate <code>ssl_certificate</code> paths per server block, it would fail.</p>
+<p><strong>Fix in repo:</strong> Both nginx <code>server</code> blocks in <code>infrastructure/nginx/conf.d/tse.conf</code> point at the same SAN cert under <code>live/dev.tse-cartridges.co.za/</code>.</p>
+
+<h3>3.6 <code>web</code> container shown as "unhealthy" but actually working</h3>
+<p><strong>Cause:</strong> Healthcheck polled <code>/api/health</code> — route didn't exist.</p>
+<p><strong>Fix in repo:</strong> <code>apps/web/src/app/api/health/route.ts</code> returns <code>{ ok: true }</code>.</p>
+
+<hr>
+
+<h2>4. Cert Renewal</h2>
+<p>Current cert issued 2026-05-20 · <strong>expires 2026-08-18</strong> · renew on or before <strong>2026-08-04</strong>.</p>
+
+<h3>Manual renewal</h3>
+<pre><code>cd /opt/tse-ui
+make cert-renew</code></pre>
+
+<p>Without make:</p>
+<pre><code>docker compose stop nginx
+docker run --rm -p 80:80 \
+  -v tse-ui_certbot_certs:/etc/letsencrypt \
+  -v tse-ui_certbot_www:/var/www/certbot \
+  certbot/certbot renew
+docker compose up -d nginx</code></pre>
+
+<h3>Automated renewal (host cron)</h3>
+<pre><code># sudo crontab -e
+0 3 1 */2 * cd /opt/tse-ui && docker compose stop nginx && docker run --rm -p 80:80 -v tse-ui_certbot_certs:/etc/letsencrypt -v tse-ui_certbot_www:/var/www/certbot certbot/certbot renew --quiet && docker compose up -d nginx >> /var/log/cert-renew.log 2>&1</code></pre>
+<p>Runs at 3am on the 1st of every odd month.</p>
+
+<hr>
+
+<h2>5. Service Map</h2>
+<table>
+  <tr><th>Service</th><th>Container</th><th>Image</th><th>Internal port</th><th>Health</th></tr>
+  <tr><td>Postgres</td><td><code>tse-ui-postgres-1</code></td><td><code>postgres:16-alpine</code></td><td>5432</td><td><code>pg_isready</code></td></tr>
+  <tr><td>Redis</td><td><code>tse-ui-redis-1</code></td><td><code>redis:7-alpine</code></td><td>6379</td><td><code>redis-cli ping</code></td></tr>
+  <tr><td>Medusa migrate</td><td><code>tse-ui-medusa-migrate-1</code></td><td>built locally</td><td>—</td><td>exit 0</td></tr>
+  <tr><td>Medusa API + admin</td><td><code>tse-ui-medusa-1</code></td><td>built locally</td><td>9000</td><td><code>GET /health</code></td></tr>
+  <tr><td>Next.js storefront</td><td><code>tse-ui-web-1</code></td><td>built locally</td><td>3000</td><td><code>GET /api/health</code></td></tr>
+  <tr><td>nginx reverse proxy</td><td><code>tse-ui-nginx-1</code></td><td><code>nginx:alpine</code></td><td>80 / 443</td><td>—</td></tr>
+</table>
+
+<p><strong>External routing:</strong></p>
+<ul>
+  <li><code>https://dev.tse-cartridges.co.za</code> → nginx → <code>web:3000</code></li>
+  <li><code>https://api.dev.tse-cartridges.co.za</code> → nginx → <code>medusa:9000</code> (REST API + <code>/app</code> admin)</li>
+</ul>
+
+<hr>
+
+<h2>6. Code-Only Update</h2>
+<pre><code>cd /opt/tse-ui
+git pull origin main
+docker compose build medusa web           # only rebuild changed services
+docker compose up medusa-migrate          # foreground — wait for exit 0 if migrations changed
+docker compose up -d medusa web</code></pre>
+<p>If <code>Dockerfile</code>, <code>docker-compose.yml</code>, <code>medusa-config.ts</code>, or nginx config changed, add <code>--force-recreate</code> on affected services.</p>
+<p>Always run <code>medusa-migrate</code> before the live <code>medusa</code> container if schema migrations were added.</p>
+
+<hr>
+
+<h2>7. Disaster Recovery</h2>
+<p>Two stateful pieces:</p>
+<ol>
+  <li><strong><code>postgres_data</code> volume</strong> — all customer / order / catalogue data:
+    <pre><code>docker compose exec -T postgres pg_dump -U postgres -d tse_medusa --no-owner --clean | gzip > tse_medusa_$(date +%F).sql.gz</code></pre>
+    Schedule nightly off-server (Vultr Object Storage, Cloudflare R2, <code>rsync</code>).
+  </li>
+  <li><strong><code>certbot_certs</code> volume</strong> — TLS certs. Can be reissued from scratch on a new host as long as DNS resolves. Not backup-critical.</li>
+</ol>
+<p>Redis and Next.js / Medusa containers are stateless — rebuild from git + image and the data volumes are enough to restore.</p>
+
+<hr>
+
+<h2>8. Required Environment Variables</h2>
+<table>
+  <tr><th>Service</th><th>Required vars</th></tr>
+  <tr>
+    <td><code>medusa-migrate</code>, <code>medusa</code></td>
+    <td><code>DATABASE_URL</code> (with <code>?sslmode=disable</code>), <code>REDIS_URL</code>, <code>JWT_SECRET</code>, <code>COOKIE_SECRET</code></td>
+  </tr>
+  <tr>
+    <td><code>medusa</code> only</td>
+    <td><code>MEDUSA_ADMIN_EMAIL</code>, <code>MEDUSA_ADMIN_PASSWORD</code>, <code>MEDUSA_BACKEND_URL</code>, CORS triplet, <code>RESEND_*</code>, <code>PAYFAST_*</code>, <code>OZOW_*</code>, <code>TCG_API_KEY</code>, <code>ARAMEX_*</code></td>
+  </tr>
+  <tr>
+    <td><code>web</code></td>
+    <td><code>NEXT_PUBLIC_MEDUSA_URL</code>, <code>NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY</code>, <code>NEXT_PUBLIC_SITE_URL</code></td>
+  </tr>
+</table>
+<blockquote><code>STORE_CORS</code> / <code>ADMIN_CORS</code> / <code>AUTH_CORS</code> must include <code>https://dev.tse-cartridges.co.za</code> and the admin URL (<code>https://api.dev.tse-cartridges.co.za/app</code>) — wrong CORS causes silent auth failures on admin login.</blockquote>
+
+</body>
+</html>

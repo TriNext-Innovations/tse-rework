@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TSE Online — Design Tokens</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,Inter,sans-serif;font-size:14px;line-height:1.6;color:#111827;background:#fff;max-width:960px;margin:0 auto;padding:40px 24px}
+h1{font-size:22px;font-weight:700;border-bottom:2px solid #dfe344;padding-bottom:8px;margin-bottom:24px}
+h2{font-size:17px;font-weight:600;margin:28px 0 10px}
+h3{font-size:14px;font-weight:600;margin:18px 0 6px}
+p{margin-bottom:10px}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+th{background:#f7f7f4;text-align:left;padding:7px 10px;border:1px solid #ebebea;font-weight:600}
+td{padding:7px 10px;border:1px solid #ebebea;vertical-align:top}
+code{background:#f7f7f4;padding:1px 5px;border-radius:3px;font-family:Consolas,'Courier New',monospace;font-size:12px;color:#374151}
+pre{background:#111827;color:#e5e7eb;padding:16px;border-radius:6px;overflow-x:auto;margin:14px 0;font-size:12px;line-height:1.5}
+pre code{background:none;padding:0;color:inherit}
+ul,ol{margin:8px 0 10px 22px}
+li{margin-bottom:3px}
+hr{border:none;border-top:1px solid #ebebea;margin:28px 0}
+blockquote{border-left:3px solid #dfe344;padding:8px 14px;background:#fafaf7;margin:12px 0;color:#374151;font-size:13px}
+.swatch{display:inline-block;width:14px;height:14px;border-radius:2px;vertical-align:middle;margin-right:5px;border:1px solid rgba(0,0,0,.12)}
+@media print{body{padding:20px;max-width:100%;font-size:12px}h1{font-size:18px}h2{font-size:15px}}
+</style>
+</head>
+<body>
+
+<h1>Design Tokens</h1>
+<p style="color:#6b7280;font-size:13px">Issue #7.2 · Brand colours confirmed 2026-05-15 (issue #23) · Source of truth: <code>apps/web/src/app/globals.css</code></p>
+
+<blockquote>To rebrand: edit only the Brand Tokens block in <code>globals.css</code> — nothing else in the codebase needs changing.</blockquote>
+
+<hr>
+
+<h2>Brand Tokens</h2>
+<p>CSS custom properties in HSL triplet format (<code>H S% L%</code> — no <code>hsl()</code> wrapper). This format is required for Tailwind opacity modifiers (<code>bg-brand-primary/50</code>) to work correctly.</p>
+
+<table>
+  <tr><th>Token</th><th>Light value</th><th>Dark value</th><th>Purpose</th></tr>
+  <tr>
+    <td><code>--brand-primary</code></td>
+    <td><span class="swatch" style="background:#dfe344"></span><code>62 74% 58%</code> <small>(#dfe344)</small></td>
+    <td><code>62 74% 52%</code></td>
+    <td>CTA buttons, active states, key highlights — always use dark text on this</td>
+  </tr>
+  <tr>
+    <td><code>--brand-primary-foreground</code></td>
+    <td><code>221 39% 11%</code></td>
+    <td><code>221 39% 11%</code></td>
+    <td>Text on lime backgrounds (dark, not white)</td>
+  </tr>
+  <tr>
+    <td><code>--brand-secondary</code></td>
+    <td><span class="swatch" style="background:#41e0f5"></span><code>187 90% 61%</code> <small>(#41e0f5)</small></td>
+    <td><code>187 90% 55%</code></td>
+    <td>Links, secondary buttons, interactive hover states</td>
+  </tr>
+  <tr>
+    <td><code>--brand-secondary-foreground</code></td>
+    <td><code>221 39% 11%</code></td>
+    <td><code>221 39% 11%</code></td>
+    <td>Text on cyan backgrounds</td>
+  </tr>
+  <tr>
+    <td><code>--brand-accent</code></td>
+    <td><span class="swatch" style="background:#ee75e9"></span><code>303 78% 70%</code> <small>(#ee75e9)</small></td>
+    <td><code>303 78% 65%</code></td>
+    <td>Glows, ambient blur effects, decorative accents</td>
+  </tr>
+  <tr>
+    <td><code>--brand-accent-foreground</code></td>
+    <td><code>221 39% 11%</code></td>
+    <td><code>221 39% 11%</code></td>
+    <td>Text on pink backgrounds</td>
+  </tr>
+  <tr>
+    <td><code>--brand-dark</code></td>
+    <td><span class="swatch" style="background:#111827"></span><code>221 39% 11%</code> <small>(#111827)</small></td>
+    <td><code>221 39% 11%</code></td>
+    <td>Footer, dark surfaces, body text, nav, letterforms</td>
+  </tr>
+  <tr>
+    <td><code>--brand-bg</code></td>
+    <td><code>0 0% 100%</code></td>
+    <td><code>222 47% 7%</code></td>
+    <td>Page background</td>
+  </tr>
+  <tr>
+    <td><code>--brand-surface</code></td>
+    <td><code>60 20% 97%</code> <small>(#F7F7F4)</small></td>
+    <td><code>222 47% 11%</code></td>
+    <td>Card / panel background — faint lime tint</td>
+  </tr>
+  <tr>
+    <td><code>--brand-border</code></td>
+    <td><code>60 8% 92%</code> <small>(#EBEBEA)</small></td>
+    <td><code>220 13% 18%</code></td>
+    <td>Borders and dividers</td>
+  </tr>
+  <tr>
+    <td><code>--brand-text</code></td>
+    <td><code>220 13% 26%</code> <small>(#374151)</small></td>
+    <td><code>210 40% 96%</code></td>
+    <td>Body text</td>
+  </tr>
+  <tr>
+    <td><code>--brand-text-muted</code></td>
+    <td><code>220 9% 46%</code> <small>(#6B7280)</small></td>
+    <td><code>220 9% 60%</code></td>
+    <td>Secondary / placeholder text</td>
+  </tr>
+  <tr>
+    <td><code>--brand-destructive</code></td>
+    <td><code>0 84% 60%</code></td>
+    <td><code>0 63% 55%</code></td>
+    <td>Errors, delete actions</td>
+  </tr>
+</table>
+
+<hr>
+
+<h2>Tailwind Utilities</h2>
+<p>Exposed via <code>packages/config/tailwind.config.ts</code>. All support opacity modifiers.</p>
+<pre><code>bg-brand-primary        text-brand-primary        border-brand-primary
+bg-brand-primary/50     text-brand-primary/75     ...
+
+bg-brand-secondary      text-brand-secondary
+bg-brand-accent         text-brand-accent
+bg-brand-dark           text-brand-dark
+bg-brand-bg             bg-brand-surface
+bg-brand-text           text-brand-text-muted
+bg-brand-destructive    text-brand-destructive</code></pre>
+
+<hr>
+
+<h2>shadcn Semantic Token Mapping</h2>
+<p>shadcn components use <code>--background</code>, <code>--primary</code>, <code>--border</code>, etc. These are mapped onto brand tokens in the <strong>shadcn Variable Mapping block</strong> in <code>globals.css</code>. Never set colour values in the mapping block — change them only in Brand Tokens.</p>
+
+<table>
+  <tr><th>shadcn token</th><th>Maps to</th></tr>
+  <tr><td><code>--background</code></td><td><code>--brand-bg</code></td></tr>
+  <tr><td><code>--foreground</code></td><td><code>--brand-text</code></td></tr>
+  <tr><td><code>--primary</code></td><td><code>--brand-primary</code> (lime)</td></tr>
+  <tr><td><code>--primary-foreground</code></td><td><code>--brand-primary-foreground</code> (dark)</td></tr>
+  <tr><td><code>--secondary</code></td><td><code>--brand-surface</code></td></tr>
+  <tr><td><code>--secondary-foreground</code></td><td><code>--brand-dark</code></td></tr>
+  <tr><td><code>--accent</code></td><td><code>--brand-secondary</code> (cyan)</td></tr>
+  <tr><td><code>--accent-foreground</code></td><td><code>--brand-secondary-foreground</code></td></tr>
+  <tr><td><code>--muted</code></td><td><code>--brand-surface</code></td></tr>
+  <tr><td><code>--muted-foreground</code></td><td><code>--brand-text-muted</code></td></tr>
+  <tr><td><code>--card</code></td><td><code>--brand-bg</code></td></tr>
+  <tr><td><code>--border</code></td><td><code>--brand-border</code></td></tr>
+  <tr><td><code>--input</code></td><td><code>--brand-border</code></td></tr>
+  <tr><td><code>--ring</code></td><td><code>--brand-primary</code> (lime)</td></tr>
+  <tr><td><code>--destructive</code></td><td><code>--brand-destructive</code></td></tr>
+</table>
+
+<hr>
+
+<h2>Typography Tokens</h2>
+<p>Loaded via <code>next/font/google</code> in <code>apps/web/src/app/layout.tsx</code>, injected as CSS variables on <code>&lt;html&gt;</code>.</p>
+
+<table>
+  <tr><th>Token</th><th>Font</th><th>Use</th></tr>
+  <tr><td><code>--font-sans</code> / <code>font-sans</code></td><td>Inter</td><td>Body, UI, labels, prices, buttons</td></tr>
+  <tr><td><code>--font-display</code> / <code>font-display</code></td><td>Fraunces</td><td>Headings, hero text, pull quotes</td></tr>
+</table>
+<p>Fraunces loaded at weights 300 / 400 / 500 / 700, normal + italic.</p>
+
+<hr>
+
+<h2>How to Rebrand</h2>
+<ol>
+  <li>Open <code>apps/web/src/app/globals.css</code></li>
+  <li>Edit the HSL values in the <code>/* ─── BRAND TOKENS ─── */</code> block</li>
+  <li>Update this doc's table to match</li>
+</ol>
+<p>All components, shadcn UI, and Tailwind utilities update automatically.</p>
+
+</body>
+</html>

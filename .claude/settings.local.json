@@ -25,8 +25,28 @@
       "Bash(powershell *)",
       "PowerShell(Stop-Process *)",
       "Bash(git stash *)",
-      "Bash(python *)"
-      "Bash(pip install *)"
+      "Bash(python *)",
+      "Bash(pip install *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\rynobotes\\\\WebstormProjects\\\\tse-ui\" -Recurse -Directory -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Sort-Object)",
+      "Bash(node *)",
+      "Bash(npx medusa *)",
+      "Bash(Remove-Item -Recurse -Force \"C:/Users/rynobotes/WebstormProjects/tse-ui/apps/web/.next\" -ErrorAction SilentlyContinue)",
+      "Bash(gh issue *)",
+      "WebFetch(domain:api.vultr.com)",
+      "Bash(dir /b \"C:\\\\Users\\\\rynobotes\\\\WebstormProjects\\\\tse-ui\")",
+      "Bash(dir /b \"C:\\\\Users\\\\rynobotes\\\\WebstormProjects\\\\tse-ui\\\\apps\")",
+      "Bash(nslookup dev.tse-cartridges.co.za)",
+      "Bash(nslookup api.dev.tse-cartridges.co.za)",
+      "PowerShell(pnpm medusa *)",
+      "PowerShell(Get-ChildItem *)",
+      "Bash(tse-products)",
+      "Bash(pub-c1cb9e1286454c148839e7021cf36b6f.r2.dev)",
+      "Bash(@medusajs/file-s3)",
+      "Bash(gh secret *)",
+      "PowerShell(Get-ChildItem \"E:\\\\TriNext\\\\TSE-web\\\\UI\\\\tse-rework\" -Depth 2 | Select-Object FullName | Where-Object { $_.FullName -notmatch \"node_modules|\\\\.git\" })",
+      "Bash(git checkout *)"
     ]
   }
 }

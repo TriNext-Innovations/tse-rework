@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TSE Online — Project README</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,Inter,sans-serif;font-size:14px;line-height:1.6;color:#111827;background:#fff;max-width:960px;margin:0 auto;padding:40px 24px}
+h1{font-size:22px;font-weight:700;border-bottom:2px solid #dfe344;padding-bottom:8px;margin-bottom:24px}
+h2{font-size:17px;font-weight:600;margin:28px 0 10px}
+h3{font-size:14px;font-weight:600;margin:18px 0 6px}
+p{margin-bottom:10px}
+a{color:#0f766e;text-decoration:none}
+a:hover{text-decoration:underline}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+th{background:#f7f7f4;text-align:left;padding:7px 10px;border:1px solid #ebebea;font-weight:600}
+td{padding:7px 10px;border:1px solid #ebebea;vertical-align:top}
+code{background:#f7f7f4;padding:1px 5px;border-radius:3px;font-family:Consolas,'Courier New',monospace;font-size:12px;color:#374151}
+pre{background:#111827;color:#e5e7eb;padding:16px;border-radius:6px;overflow-x:auto;margin:14px 0;font-size:12px;line-height:1.5}
+pre code{background:none;padding:0;color:inherit}
+ul,ol{margin:8px 0 10px 22px}
+li{margin-bottom:4px}
+hr{border:none;border-top:1px solid #ebebea;margin:28px 0}
+blockquote{border-left:3px solid #dfe344;padding:8px 14px;background:#fafaf7;margin:12px 0;color:#374151;font-size:13px}
+.badge{display:inline-block;padding:1px 7px;border-radius:3px;font-size:11px;font-weight:600}
+.done{background:#d1fae5;color:#065f46}
+.pending{background:#fef3c7;color:#92400e}
+.blocked{background:#fee2e2;color:#991b1b}
+.live{background:#dbeafe;color:#1e40af}
+@media print{body{padding:20px;max-width:100%;font-size:12px}h1{font-size:18px}h2{font-size:15px}pre{font-size:11px}}
+</style>
+</head>
+<body>
+
+<h1>TSE Online</h1>
+<p>Headless e-commerce for TSE Online — South Africa's printer cartridge specialist since 1987. Migrating from WooCommerce to Medusa v2 + Next.js 15, self-hosted on Vultr Johannesburg.</p>
+
+<table>
+  <tr><td><strong>Phase</strong></td><td>Phase 1 — Design System &amp; Catalogue (Phase 0 complete)</td></tr>
+  <tr><td><strong>Dev URL</strong></td><td><a href="https://dev.tse-cartridges.co.za">dev.tse-cartridges.co.za</a></td></tr>
+  <tr><td><strong>API URL</strong></td><td><a href="https://api.dev.tse-cartridges.co.za">api.dev.tse-cartridges.co.za</a></td></tr>
+  <tr><td><strong>Go-live target</strong></td><td>June 2026</td></tr>
+</table>
+
+<hr>
+
+<h2>Tech Stack</h2>
+<table>
+  <tr><th>Layer</th><th>Technology</th><th>Version</th></tr>
+  <tr><td>Storefront</td><td>Next.js (App Router)</td><td>15</td></tr>
+  <tr><td>Commerce backend</td><td>Medusa</td><td>v2</td></tr>
+  <tr><td>Database</td><td>PostgreSQL (Docker on Vultr JHB)</td><td>16</td></tr>
+  <tr><td>Cache / queues</td><td>Redis (Docker)</td><td>7</td></tr>
+  <tr><td>Shared UI</td><td>shadcn/ui (new-york) + Tailwind CSS</td><td>3.4</td></tr>
+  <tr><td>File storage</td><td>Cloudflare R2 (S3-compatible)</td><td>—</td></tr>
+  <tr><td>Email</td><td>Resend</td><td>—</td></tr>
+  <tr><td>Payments</td><td>PayFast + Ozow</td><td>—</td></tr>
+  <tr><td>Shipping</td><td>The Courier Guy + Aramex</td><td>—</td></tr>
+  <tr><td>Reverse proxy</td><td>Nginx (Alpine)</td><td>—</td></tr>
+  <tr><td>CI/CD</td><td>GitHub Actions → SSH deploy</td><td>—</td></tr>
+  <tr><td>Hosting</td><td>Vultr JHB (4 GB main VM + 1 GB n8n VM)</td><td>—</td></tr>
+</table>
+
+<hr>
+
+<h2>Repository Structure</h2>
+<pre><code>tse-ui/
+├── apps/
+│   ├── web/              Next.js 15 storefront        (@tse/web)
+│   └── backend/          Medusa v2 API + admin        (@tse/backend)
+├── packages/
+│   ├── ui/               Shared shadcn/ui components  (@tse/ui)
+│   ├── config/           Tailwind / ESLint / TS base  (@tse/config)
+│   └── types/            Shared TypeScript types      (@tse/types)
+├── infrastructure/
+│   └── nginx/            Nginx reverse proxy config
+├── migration/            WooCommerce → Medusa scripts &amp; audit data
+├── scripts/              DB seed, migration helpers
+├── docs/                 All developer documentation (HTML)
+├── docker-compose.yml    Full local stack (Postgres + Redis)
+└── .github/workflows/    ci.yml (lint/type-check) + deploy.yml</code></pre>
+
+<hr>
+
+<h2>Local Development</h2>
+
+<h3>Prerequisites</h3>
+<ul>
+  <li>Node 20+, pnpm 9+</li>
+  <li>Docker + Docker Compose</li>
+</ul>
+
+<h3>Setup</h3>
+<pre><code># 1. Install dependencies
+pnpm install
+
+# 2. Configure env files
+cp apps/backend/.env.example apps/backend/.env
+cp apps/web/.env.example     apps/web/.env.local
+
+# 3. Start Postgres + Redis
+docker-compose up -d
+
+# 4. Run Medusa migrations
+pnpm --filter @tse/backend migrate
+
+# 5. Seed the database (559 products, SA region, categories)
+pnpm tsx scripts/seed.ts
+
+# 6. Start all apps
+pnpm dev</code></pre>
+
+<table>
+  <tr><th>URL</th><th>Service</th></tr>
+  <tr><td><code>http://localhost:3001</code></td><td>Next.js storefront</td></tr>
+  <tr><td><code>http://localhost:9000</code></td><td>Medusa API</td></tr>
+  <tr><td><code>http://localhost:9000/app</code></td><td>Medusa admin</td></tr>
+  <tr><td><code>http://localhost:9000/health</code></td><td>Medusa health check</td></tr>
+</table>
+
+<hr>
+
+<h2>Common Commands</h2>
+<table>
+  <tr><th>Command</th><th>Description</th></tr>
+  <tr><td><code>pnpm dev</code></td><td>Start all apps in dev mode</td></tr>
+  <tr><td><code>pnpm build</code></td><td>Build all workspaces</td></tr>
+  <tr><td><code>pnpm lint</code></td><td>Lint all workspaces</td></tr>
+  <tr><td><code>pnpm type-check</code></td><td>TypeScript checks across all workspaces</td></tr>
+  <tr><td><code>pnpm tsx scripts/seed.ts</code></td><td>Seed database (idempotent)</td></tr>
+  <tr><td><code>pnpm --filter @tse/web exec shadcn add &lt;component&gt;</code></td><td>Add a shadcn component</td></tr>
+</table>
+
+<hr>
+
+<h2>Branching Strategy</h2>
+<table>
+  <tr><th>Branch</th><th>Purpose</th></tr>
+  <tr><td><code>main</code></td><td>Production — protected, deploys to <code>dev.tse-cartridges.co.za</code></td></tr>
+  <tr><td><code>initial/Phase-0</code></td><td>Phase 0 work (complete)</td></tr>
+  <tr><td><code>feature/*</code></td><td>Feature branches, PR into main</td></tr>
+  <tr><td><code>fix/*</code></td><td>Bug fixes</td></tr>
+</table>
+
+<hr>
+
+<h2>Deployment</h2>
+<p>Push to <code>main</code> → <code>.github/workflows/deploy.yml</code> → SSH into Vultr VM → <code>git pull + docker compose up --build -d</code> → health check → rollback on failure.</p>
+<p>Full runbook: <a href="docs/PROD-DEPLOY.html">docs/PROD-DEPLOY.html</a></p>
+
+<hr>
+
+<h2>Phase 0 — Complete <span class="badge live">🟢 Live 2026-05-20</span></h2>
+
+<h3>Done</h3>
+<ul>
+  <li>✅ WooCommerce product audit — 560 products exported, transformed to 340 variable/simple</li>
+  <li>✅ Compatibility data — 512 printer models extracted; 249 products mapped (73.2%); 91 gap products in <code>compat-gaps.csv</code> awaiting client</li>
+  <li>✅ Monorepo scaffold — Next.js 15 + Medusa v2, shadcn/ui, Tailwind v3, Inter + Fraunces fonts</li>
+  <li>✅ Design system — confirmed CMYK brand tokens (lime / cyan / pink / black)</li>
+  <li>✅ Docker Compose — 5 services, health checks</li>
+  <li>✅ Nginx — gzip, proxy headers, TLS via Let's Encrypt (SAN cert, expires 2026-08-18)</li>
+  <li>✅ Vultr JHB VPS provisioned — <code>dev.tse-cartridges.co.za</code> + <code>api.dev.tse-cartridges.co.za</code> live</li>
+  <li>✅ 559 products seeded into Medusa</li>
+  <li>✅ Product images migrated to Cloudflare R2</li>
+  <li>✅ CI workflow — lint + type-check on PRs</li>
+</ul>
+
+<h3>Still Open</h3>
+
+<table>
+  <tr><th>Item</th><th>Owner</th><th>Status</th></tr>
+  <tr><td>Logo source file (Illustrator / CorelDraw)</td><td>Client</td><td><span class="badge pending">⏳ Awaiting</span></td></tr>
+  <tr><td>Font pairing written confirmation (Inter + Fraunces)</td><td>Client</td><td><span class="badge pending">⏳ Awaiting</span></td></tr>
+  <tr><td>PayFast merchant credentials</td><td>Client</td><td><span class="badge pending">⏳ Awaiting</span></td></tr>
+  <tr><td>Ozow credentials</td><td>Client</td><td><span class="badge pending">⏳ Awaiting</span></td></tr>
+  <tr><td>Meta Business access</td><td>Client</td><td><span class="badge pending">⏳ Awaiting</span></td></tr>
+  <tr><td>Return <code>compat-gaps.csv</code> (91 products with no data)</td><td>Client</td><td><span class="badge pending">⏳ Awaiting</span></td></tr>
+  <tr><td>SKU master list (all 560 products have no SKU in WC export)</td><td>Client</td><td><span class="badge blocked">🔴 BLOCKER</span></td></tr>
+  <tr><td>Resend API key + sending domain DKIM/SPF</td><td>Client + Dev</td><td><span class="badge pending">⏳ Awaiting</span></td></tr>
+  <tr><td>Cert renewal cron on VPS</td><td>Dev</td><td>Due before 2026-08-04</td></tr>
+  <tr><td><code>tse.co.za</code> → <code>tse-cartridges.co.za</code> 301 redirect</td><td>Dev + Client</td><td>Post-launch</td></tr>
+</table>
+
+<hr>
+
+<h2>Docs</h2>
+<table>
+  <tr><th>Document</th><th>Contents</th></tr>
+  <tr><td><a href="docs/Architecture.html">Architecture.html</a></td><td>System architecture, data flow, infrastructure, env vars</td></tr>
+  <tr><td><a href="docs/BUILD-PLAN.html">BUILD-PLAN.html</a></td><td>Phase 0–5 build plan, costs, POPIA, risks</td></tr>
+  <tr><td><a href="docs/DEVELOPER-GUIDE.html">DEVELOPER-GUIDE.html</a></td><td>Local setup, gotchas, git workflow, go-live checklist</td></tr>
+  <tr><td><a href="docs/PROD-DEPLOY.html">PROD-DEPLOY.html</a></td><td>Production deploy runbook — first-run, certbot, cert renewal, DR</td></tr>
+  <tr><td><a href="docs/data-model.html">data-model.html</a></td><td>Compatibility schema, DDL, queries</td></tr>
+  <tr><td><a href="docs/design-tokens.html">design-tokens.html</a></td><td>Brand tokens, Tailwind utilities, shadcn mapping, typography</td></tr>
+  <tr><td><a href="docs/brand.html">brand.html</a></td><td>Brand guidelines — logo, colours, voice, motion, layout</td></tr>
+  <tr><td><a href="docs/CLIENT-PENDING.html">CLIENT-PENDING.html</a></td><td>Outstanding client actions and resolved items</td></tr>
+  <tr><td><a href="docs/RETAINER-SCOPE.html">RETAINER-SCOPE.html</a></td><td>Monthly retainer scope and SLAs</td></tr>
+  <tr><td><a href="docs/AI-CODE-PROMPTS.html">AI-CODE-PROMPTS.html</a></td><td>Claude prompts for Phases 1–5 features</td></tr>
+</table>
+
+<hr>
+
+<h2>Commit Convention</h2>
+<pre><code>feat:      new feature
+fix:       bug fix
+chore:     tooling, deps, config
+docs:      documentation only
+refactor:  no behaviour change
+test:      tests</code></pre>
+
+</body>
+</html>

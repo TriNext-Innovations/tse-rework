@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TSE Online — Compatibility Data Model</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,Inter,sans-serif;font-size:14px;line-height:1.6;color:#111827;background:#fff;max-width:960px;margin:0 auto;padding:40px 24px}
+h1{font-size:22px;font-weight:700;border-bottom:2px solid #dfe344;padding-bottom:8px;margin-bottom:24px}
+h2{font-size:17px;font-weight:600;margin:28px 0 10px}
+h3{font-size:14px;font-weight:600;margin:18px 0 6px}
+p{margin-bottom:10px}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+th{background:#f7f7f4;text-align:left;padding:7px 10px;border:1px solid #ebebea;font-weight:600}
+td{padding:7px 10px;border:1px solid #ebebea;vertical-align:top}
+code{background:#f7f7f4;padding:1px 5px;border-radius:3px;font-family:Consolas,'Courier New',monospace;font-size:12px;color:#374151}
+pre{background:#111827;color:#e5e7eb;padding:16px;border-radius:6px;overflow-x:auto;margin:14px 0;font-size:12px;line-height:1.5}
+pre code{background:none;padding:0;color:inherit}
+ul,ol{margin:8px 0 10px 22px}
+li{margin-bottom:3px}
+hr{border:none;border-top:1px solid #ebebea;margin:28px 0}
+blockquote{border-left:3px solid #dfe344;padding:8px 14px;background:#fafaf7;margin:12px 0;color:#374151;font-size:13px}
+.badge{display:inline-block;padding:1px 7px;border-radius:3px;font-size:11px;font-weight:600}
+.done{background:#d1fae5;color:#065f46}
+.pending{background:#fef3c7;color:#92400e}
+@media print{body{padding:20px;max-width:100%;font-size:12px}h1{font-size:18px}h2{font-size:15px}pre{font-size:11px}}
+</style>
+</head>
+<body>
+
+<h1>Compatibility Data Model</h1>
+<p style="color:#6b7280;font-size:13px">Issue #2.6 · <span class="badge done">Schema designed</span> · Blocked on client CSV validation before Phase 2 migration</p>
+
+<hr>
+
+<h2>Problem</h2>
+<p>WooCommerce held no structured printer-to-cartridge mapping. Compatibility existed only as free text in <code>short_description</code> (e.g. <em>Compatible Models: MF735cx/MF832Cdw</em>). The extraction script (<code>migration/extract-compatibility.js</code>) parsed this into <code>migration/raw/compat-map-draft.json</code>, covering 249 of 340 products (73.2%). The remaining 91 products have no data and require client input.</p>
+
+<hr>
+
+<h2>Schema</h2>
+<p>Three custom tables registered as Medusa entities in <code>apps/backend/src/models/</code>.</p>
+
+<h3><code>printer_brand</code></h3>
+<p>Canonical list of printer manufacturers.</p>
+<pre><code>CREATE TABLE printer_brand (
+  id          SERIAL PRIMARY KEY,
+  name        VARCHAR(100) NOT NULL UNIQUE,  -- e.g. "HP", "Canon"
+  slug        VARCHAR(100) NOT NULL UNIQUE,  -- e.g. "hp", "canon"
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);</code></pre>
+<p>Seed: 12 brands extracted from product categories — HP, Canon, Brother, Samsung, Pantum, Kyocera, Ricoh, Xerox, Konica Minolta, Lexmark, Epson, OKI.</p>
+
+<h3><code>printer_model</code></h3>
+<pre><code>CREATE TABLE printer_model (
+  id          SERIAL PRIMARY KEY,
+  brand_id    INTEGER NOT NULL REFERENCES printer_brand(id) ON DELETE RESTRICT,
+  name        VARCHAR(200) NOT NULL,          -- e.g. "LaserJet Pro M404n"
+  slug        VARCHAR(200) NOT NULL,          -- e.g. "laserjet-pro-m404n"
+  aliases     TEXT[],                         -- alternate strings from descriptions
+  validated   BOOLEAN NOT NULL DEFAULT false, -- true after client sign-off
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (brand_id, slug)
+);
+
+CREATE INDEX idx_printer_model_brand ON printer_model(brand_id);
+CREATE INDEX idx_printer_model_name  ON printer_model USING gin(to_tsvector('english', name));</code></pre>
+<p><code>validated = false</code> on import — TSE fills gaps and flips flag during #2.4 review.</p>
+
+<h3><code>cartridge_compatibility</code></h3>
+<p>Bridge table between <code>printer_model</code> and Medusa products. Brand is always reached <strong>through</strong> <code>printer_model</code> — never as a direct FK here (avoids fan trap).</p>
+<pre><code>CREATE TABLE cartridge_compatibility (
+  id               SERIAL PRIMARY KEY,
+  product_id       VARCHAR(255) NOT NULL,    -- Medusa product.id
+  printer_model_id INTEGER NOT NULL REFERENCES printer_model(id) ON DELETE CASCADE,
+  source           VARCHAR(50) NOT NULL DEFAULT 'parsed',
+                   -- 'parsed'   = extracted from description text
+                   -- 'client'   = provided by TSE directly
+                   -- 'verified' = TSE confirmed a parsed entry
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (product_id, printer_model_id)
+);
+
+CREATE INDEX idx_compat_product       ON cartridge_compatibility(product_id);
+CREATE INDEX idx_compat_printer_model ON cartridge_compatibility(printer_model_id);</code></pre>
+
+<hr>
+
+<h2>Entity Relationships</h2>
+<pre><code>printer_brand ──&lt; printer_model ──&lt; cartridge_compatibility ──&lt; medusa_product</code></pre>
+<p>Each arrow is a FK on the right-hand table pointing left. No entity fans out through two independent 1:N paths — no fan trap possible.</p>
+
+<hr>
+
+<h2>Queries</h2>
+
+<h3>Find cartridges for a specific printer model</h3>
+<pre><code>SELECT p.id, p.title, p.handle
+FROM   product p
+JOIN   cartridge_compatibility cc ON cc.product_id = p.id
+WHERE  cc.printer_model_id = (
+  SELECT pm.id FROM printer_model pm
+  JOIN   printer_brand pb ON pb.id = pm.brand_id
+  WHERE  pb.slug = 'hp' AND pm.slug = 'laserjet-pro-m404n'
+)
+ORDER  BY p.title;</code></pre>
+
+<h3>Find all cartridges for a brand</h3>
+<pre><code>SELECT DISTINCT p.id, p.title, p.handle
+FROM   product p
+JOIN   cartridge_compatibility cc ON cc.product_id = p.id
+JOIN   printer_model pm           ON pm.id = cc.printer_model_id
+JOIN   printer_brand pb           ON pb.id = pm.brand_id
+WHERE  pb.slug = 'hp'
+ORDER  BY p.title;</code></pre>
+
+<h3>Find validated models for brand (wizard step 2)</h3>
+<pre><code>SELECT pm.id, pm.name, pm.slug
+FROM   printer_model pm
+JOIN   printer_brand pb ON pb.id = pm.brand_id
+WHERE  pb.slug = 'hp'
+  AND  pm.validated = true
+ORDER  BY pm.name;</code></pre>
+
+<p>All three queries serve the storefront wizard via <code>GET /store/compatibility?brand=hp&amp;model=laserjet-pro-m404n</code>.</p>
+
+<hr>
+
+<h2>Migration Sequence</h2>
+<ol>
+  <li><span class="badge done">Done</span> #2.2 — <code>printer-brands.json</code> seeded from categories (12 brands)</li>
+  <li><span class="badge done">Done</span> #2.3 — <code>printer-models.json</code> extracted from descriptions (512 models)</li>
+  <li><span class="badge pending">Blocked</span> #2.4 — Send <code>compat-map-draft.csv</code> to TSE → client fills gaps + validates parsed entries</li>
+  <li>#2.5 — Document gaps (91 products with no data)</li>
+  <li>#2.6 — Schema designed (this doc)</li>
+  <li>Phase 2 — Write Medusa migration files; seed from validated CSV</li>
+</ol>
+
+<hr>
+
+<h2>Migration Files</h2>
+<table>
+  <tr><th>File</th><th>Contents</th></tr>
+  <tr><td><code>migration/raw/printer-brands.json</code></td><td>12 brands extracted from product categories</td></tr>
+  <tr><td><code>migration/raw/printer-models.json</code></td><td>512 unique models grouped by brand</td></tr>
+  <tr><td><code>migration/raw/compat-map-draft.json</code></td><td>SKU → models mapping, 249 products (73.2%)</td></tr>
+  <tr><td><code>migration/extract-compatibility.js</code></td><td>Extraction script</td></tr>
+</table>
+
+<hr>
+
+<h2>Gap Summary</h2>
+<table>
+  <tr><th>Metric</th><th>Count</th></tr>
+  <tr><td>Total products</td><td>340</td></tr>
+  <tr><td>Products with compat data</td><td>249 (73.2%)</td></tr>
+  <tr><td>Products missing compat data</td><td>91 (26.8%) — client to fill</td></tr>
+  <tr><td>Unique printer models extracted</td><td>512</td></tr>
+  <tr><td>Brands represented</td><td>12</td></tr>
+</table>
+
+</body>
+</html>

@@ -1,0 +1,22 @@
+# Dependencies (reinstalled inside Docker)
+node_modules
+**/node_modules
+
+# Build artifacts
+**/.next
+**/.medusa
+**/dist
+
+# Git
+.git
+.gitignore
+
+# Env files (secrets must be passed via docker-compose environment)
+.env
+.env.local
+.env.*.local
+
+# Dev tooling
+.claude
+.vscode
+*.log

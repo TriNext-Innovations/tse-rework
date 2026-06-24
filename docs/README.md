@@ -1,44 +1,122 @@
-# TSE Online — E-Commerce Platform
+# TSE Online — Docs
 
-Custom-built headless e-commerce platform for TSE Online, a South African
-printer cartridge supplier.
+Reference documents for the TSE Online build. The root [README.md](../README.md) has setup instructions and the full Phase 0 todo list.
 
-## Stack
+---
 
-Next.js 15 · Medusa.js v2 · Supabase · Tailwind CSS · shadcn/ui ·
-Meilisearch · Sanity · n8n · PayFast · Ozow · Resend · Cloudflare
+## Documents
 
-## Documentation
-
-| Document | Purpose |
+| File | Purpose |
 |---|---|
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Full system architecture, data flow, DB schema, env vars, deployment |
-| [docs/DEVELOPER-GUIDE.md](docs/DEVELOPER-GUIDE.md) | Local setup, git workflow, testing, migrations, go-live checklist |
-| [docs/AI-CODE-PROMPTS.md](docs/AI-CODE-PROMPTS.md) | Ready-to-use prompts for generating each major component with Claude |
-| [docs/RETAINER-SCOPE.md](docs/RETAINER-SCOPE.md) | Monthly retainer services, SLAs, and handover terms |
+| [data-model.md](data-model.md) | PostgreSQL compatibility schema — printer_brand, printer_model, cartridge_compatibility. ERD, table DDL, query examples. |
+| [design-tokens.md](design-tokens.md) | Brand colour tokens, Tailwind utilities, shadcn semantic mapping, typography. How to rebrand in one file. |
+| [Architecture.md](Architecture.md) | System architecture, data flow, infrastructure decisions. |
+| [DEVELOPER-GUIDE.md](DEVELOPER-GUIDE.md) | Local setup, git workflow, testing, migrations, go-live checklist. |
+| [BUILD-PLAN.md](BUILD-PLAN.md) | Milestone breakdown and delivery timeline. |
+| [PROD-DEPLOY.md](PROD-DEPLOY.md) | Production deploy runbook — first-run sequence, certbot bootstrap, gotchas from the 2026-05-20 dev cutover, cert renewal, DR. |
+| [RETAINER-SCOPE.md](RETAINER-SCOPE.md) | Monthly retainer services, SLAs, and handover terms. |
 
-## Quick Start
+---
 
-```bash
-pnpm install
-cp .env.example apps/web/.env.local
-cp .env.example apps/backend/.env
-docker-compose up -d
-pnpm --filter backend medusa db:migrate
-pnpm dev
-```
+## Current specs (Phase 0)
 
-## Key URLs
+### Apps
 
-| Environment | Frontend | Admin | API |
+| Workspace | Package | Port | Entry |
 |---|---|---|---|
-| Local | http://localhost:3000 | http://localhost:9000/app | http://localhost:9000 |
-| Staging | https://staging.tseonline.co.za | — | https://api-staging.tseonline.co.za |
-| Production | https://tseonline.co.za | https://admin.tseonline.co.za | https://api.tseonline.co.za |
+| `apps/web` | `@tse/web` | 3000 | `src/app/layout.tsx` |
+| `apps/backend` | `@tse/backend` | 9000 | Medusa v2 |
 
-## Client
+### Shared packages
 
-**TSE Online**  
-Contact: [TBD]  
-Project start: April 2026  
-Go-live target: June 2026
+| Workspace | Package | Contents |
+|---|---|---|
+| `packages/config` | `@tse/config` | Tailwind config, ESLint config, TS base config |
+| `packages/ui` | `@tse/ui` | Shared shadcn/ui component exports |
+| `packages/types` | `@tse/types` | Shared TypeScript interfaces |
+
+### Design system
+
+| Token type | Source of truth | How to use |
+|---|---|---|
+| Brand colours | `apps/web/src/app/globals.css` — Brand Tokens block | `bg-brand-primary`, `text-brand-text`, etc. |
+| shadcn colours | `globals.css` — shadcn Variable Mapping block | `bg-background`, `text-foreground`, etc. |
+| Tailwind config | `packages/config/tailwind.config.ts` | `brand.*` utilities + shadcn tokens |
+| Fonts | `apps/web/src/app/layout.tsx` | Inter → `font-sans`, Fraunces → `font-display` |
+
+**To rebrand:** edit only the Brand Tokens block in `globals.css`. Nothing else needs changing.
+
+### Colour tokens (placeholders — pending #3.2 client confirmation)
+
+| Token | Light | Purpose |
+|---|---|---|
+| `--brand-primary` | `173 85% 32%` (#0D9488) | CTA buttons, links |
+| `--brand-secondary` | `222 47% 11%` (#111827) | Nav, headings |
+| `--brand-accent` | `175 79% 40%` (#14B8A6) | Hover, highlights |
+| `--brand-bg` | `0 0% 100%` | Page background |
+| `--brand-surface` | `210 40% 98%` | Card background |
+| `--brand-text` | `220 13% 26%` (#374151) | Body text |
+| `--brand-text-muted` | `220 9% 46%` (#6B7280) | Secondary text |
+
+### Infrastructure
+
+| Component | Config file | Status |
+|---|---|---|
+| Docker Compose | `docker-compose.yml` | Live on Vultr JHB (dev env, 2026-05-20) |
+| Nginx | `infrastructure/nginx/` | Live, TLS via Let's Encrypt SAN cert (expires 2026-08-18) |
+| CI/CD | `.github/workflows/deploy.yml` | Written — not yet live |
+| Hosting | Vultr JHB VPS | Provisioned at `/opt/tse-ui` (`tse-prod-jnb`) |
+| URLs | — | `https://dev.tse-cartridges.co.za`, `https://api.dev.tse-cartridges.co.za` |
+
+### Migration data (in `migration/raw/`)
+
+| File | Contents | Status |
+|---|---|---|
+| `products.json` | Raw WooCommerce export (560 products) | Done |
+| `products-transformed.json` | Grouped variable/simple (340 products) | Done |
+| `printer-brands.json` | 12 printer brands extracted | Done |
+| `printer-models.json` | 512 unique models grouped by brand | Done |
+| `compat-map-draft.csv` | 249 products mapped — send to client for validation | Awaiting client |
+| `compat-gaps.csv` | 91 products with no compat data — client to fill | Awaiting client |
+| `image-audit.md` | 309 images audited, 11 low-res, 18 placeholder | Done |
+| `plugin-audit.md` | WooCommerce plugin inventory + migration decisions | Done |
+| `category-audit.md` | Type → Brand hierarchy decision | Done |
+| `attribute-audit.md` | Colour, type, yield coverage | Done |
+| `compatibility-audit.md` | No structured compat data in WooCommerce | Done |
+| `customers.json` | **NEVER commit — POPIA sensitive** | Awaiting POPIA consent |
+
+---
+
+## Open issues summary
+
+Full issue list: https://github.com/TriNext-Innovations/tse-rework/issues
+
+### Critical path blockers
+
+| # | Issue | Blocked by |
+|---|---|---|
+| #4.1 | Provision Vultr JHB main VM | Nothing — action now |
+| #5.1 | PayFast merchant credentials | Client |
+| #2.4 | Map cartridge SKUs to printer models | Client (return compat CSV) |
+| #6.8 | Confirm skeleton on dev URL | #4.1 |
+| #8.5 | Confirm PayFast sandbox access | Client + #5.1 |
+
+### TriNext actions (no client dependency)
+
+| # | Issue |
+|---|---|
+| #4.2–#4.10 | Full VM setup chain (after #4.1) |
+| #5.4 | Resend transactional email setup |
+| #3.5 | Favicon & app icons (after #3.1 logo) |
+| #8.2–#8.4 | Governance: deadlines, kickoff call, project tracker |
+
+### Waiting on client
+
+| # | Issue |
+|---|---|
+| #3.1–#3.4, #3.6 | Logo, brand colours, typography, product photos, brand guidelines |
+| #5.2 | Ozow credentials |
+| #5.3 | Meta Business access |
+| #1.6 | Customer data export (POPIA written consent) |
+| #1.7 | Order history export (client decision on scope) |
+| #5.6–#5.7 | Aramex + Courier Guy API registration |

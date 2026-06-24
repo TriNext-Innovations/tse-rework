@@ -1,6 +1,8 @@
 import { defineConfig, loadEnv } from '@medusajs/framework/utils'
+import { initSentry } from './lib/sentry'
 
 loadEnv(process.env.NODE_ENV ?? 'development', process.cwd())
+initSentry()
 
 export default defineConfig({
   projectConfig: {
@@ -22,7 +24,12 @@ export default defineConfig({
         | 'server'
         | undefined) ?? 'shared',
   },
-  modules: [],
+  modules: [
+    {
+      resolve: "./src/modules/compatibility",
+      key: "compatibility",
+    },
+  ],
   admin: {
     disable: process.env.DISABLE_MEDUSA_ADMIN === 'true',
     backendUrl:

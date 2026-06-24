@@ -8,17 +8,36 @@
     "start": "medusa start",
     "lint": "eslint src --ext .ts",
     "type-check": "tsc --noEmit",
-    "migrate": "medusa migrations run"
+    "migrate": "medusa db:migrate",
+    "migrate:compat": "medusa exec src/scripts/migrate-compatibility.ts",
+    "migrate:compat:v2": "medusa exec src/scripts/migrate-compatibility-v2.ts",
+    "seed:compat": "medusa exec src/scripts/seed-compatibility.ts",
+    "seed:compat:reset": "medusa exec src/scripts/seed-compatibility-reset.ts",
+    "search:index": "medusa exec src/scripts/bulk-index.ts",
+    "b2b:setup": "medusa exec src/scripts/setup-b2b-groups.ts"
   },
   "dependencies": {
-    "@medusajs/framework": "^2.13.6",
-    "@medusajs/medusa": "^2.0.0",
-    "@tse/types": "workspace:*"
+    "@medusajs/admin-sdk": "2.15.3",
+    "@medusajs/dashboard": "^2.15.3",
+    "@medusajs/draft-order": "^2.15.3",
+    "@medusajs/file-s3": "^2.15.3",
+    "@medusajs/framework": "^2.15.3",
+    "@medusajs/medusa": "^2.15.3",
+    "@sentry/node": "^10.56.0",
+    "@tse/types": "workspace:*",
+    "meilisearch": "^0.58.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "resend": "^4.0.0"
   },
   "devDependencies": {
     "@tse/config": "workspace:*",
-    "@types/node": "^20.12.7",
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.11",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "pg": "^8.13.3",
     "ts-node": "^10.9.2",
-    "typescript": "^5.4.5"
+    "typescript": "^6.0.3"
   }
 }

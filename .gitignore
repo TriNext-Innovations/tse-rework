@@ -33,6 +33,19 @@ Thumbs.db
 # Medusa
 uploads/
 .cache/
+.medusa/
+static/
+
+# TypeScript
+*.tsbuildinfo
+
+# Claude Code
+.claude/
+
+# Migration — sensitive data (POPIA — never commit)
+migration/raw/customers.json
+migration/raw/orders.json
+migration/images/
 
 # Logs
 *.log

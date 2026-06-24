@@ -5,7 +5,7 @@ component. Paste the prompt, review the output, adjust to fit your file structur
 
 ---
 
-## PROMPT 1 — Monorepo Scaffold
+## PROMPT 1 — Monorepo Scaffold Test
 
 ```
 You are setting up a Turborepo monorepo for a South African e-commerce store called TSE Online
