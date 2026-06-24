@@ -8,26 +8,32 @@ and **Retained Development**.
 
 ---
 
-## Pillar 1 — Infrastructure (~R1,500/month)
+## Pillar 1 — Infrastructure (~R500/month)
 
 ### What's included
 
-| Service          | Purpose                              | Approx Cost |
-|------------------|--------------------------------------|-------------|
-| Vercel Pro       | Frontend hosting + CDN               | ~R400       |
-| Railway (Starter)| Medusa + n8n + Meilisearch hosting   | ~R350       |
-| Supabase Pro     | Managed PostgreSQL + storage         | ~R350       |
-| Resend           | Transactional email (50k emails/mo)  | ~R100       |
-| Cloudflare Free  | CDN + DDoS + DNS                     | R0          |
-| Sentry (free)    | Error monitoring                     | R0          |
-| UptimeRobot      | Uptime checks + alerting             | R0          |
+| Service                  | Purpose                                         | Approx Cost     |
+|--------------------------|-------------------------------------------------|-----------------|
+| Vultr JHB VPS (4 GB)     | All compute — Next.js, Medusa, Redis, n8n       | ~R440/mo        |
+| Vultr automated backups  | Daily VPS snapshots                             | ~R88/mo         |
+| Supabase Free            | Managed PostgreSQL (500 MB — sufficient at launch) | R0           |
+| Resend Free              | Transactional email (3,000/mo, 100/day)         | R0              |
+| Cloudflare Free          | CDN + DDoS + DNS (JHB PoP)                     | R0              |
+| Sentry Free              | Error monitoring (5,000 events/mo)              | R0              |
+| UptimeRobot Free         | Uptime checks + alerting (5-min intervals)      | R0              |
+| Cloudflare R2            | Media/backup storage (10 GB free)               | R0              |
+
+**Variable costs (usage-based):**
+- Anthropic API — ~R30–80/mo at normal post volume
+- PayFast — 3.5% + R2 per transaction (only on real sales)
+- Ozow — ~1.5% per transaction (only on real sales)
 
 ### What we do
 
-- Monitor uptime and performance daily
+- Monitor uptime and performance daily via UptimeRobot + Coolify dashboards
 - Apply security patches and dependency updates weekly
-- Manage database backups (Supabase daily snapshots + weekly manual exports)
-- Review Vercel deployment logs and Railway container health
+- Manage database backups (Coolify VPS snapshots + Supabase point-in-time recovery)
+- Review Coolify deployment logs and container health on Vultr JHB
 - Keep all API integrations (PayFast, Ozow, Meta) functional as their APIs evolve
 
 ---
@@ -56,7 +62,7 @@ Each month we:
 Delivered by the 5th of each month covering:
 - Orders and revenue (pulled from Medusa)
 - Top-selling products and low-stock alerts
-- Website traffic (Vercel Analytics + Google Analytics)
+- Website traffic (Google Analytics)
 - Instagram/Facebook: follower growth, post reach, engagement rate
 - Recommendations for next month
 
@@ -90,9 +96,9 @@ Hours in excess of 8 are billed at **R450/hour** (agreed in advance).
 
 At all times, TSE Online has full ownership of:
 - The GitHub repository (we invite them as an owner)
+- The Vultr VPS (they are the account owner — we have admin access via Coolify)
+- The Coolify instance (runs on their VPS — full access handed over on cancellation)
 - The Supabase project (they are the owner, we are admins)
-- The Vercel project (they are the owner)
-- The Railway project (they are the owner)
 - The domain and DNS (their Cloudflare account)
 - The Sanity project (they are the owner)
 - All Meta Business assets (Facebook Page, Instagram account)

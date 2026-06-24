@@ -24,20 +24,21 @@ tse-online/
 
 ## Stack at a Glance
 
-| Layer              | Technology              | Hosted On         |
-|--------------------|-------------------------|-------------------|
-| Frontend           | Next.js 15 (App Router) | Vercel Pro        |
-| Commerce backend   | Medusa.js v2            | Railway           |
-| Database           | PostgreSQL (Supabase)   | Supabase          |
-| File storage       | Supabase Storage        | Supabase          |
-| Search             | Meilisearch             | Railway           |
-| CMS                | Sanity                  | Sanity Cloud      |
-| Automation engine  | n8n                     | Railway           |
-| CDN / DNS          | Cloudflare              | Cloudflare        |
-| Transactional mail | Resend                  | Resend            |
-| Payments           | PayFast + Ozow          | External          |
-| Social API         | Meta Graph API          | External          |
-| AI (captions)      | Anthropic Claude API    | External          |
+| Layer              | Technology              | Hosted On                  |
+|--------------------|-------------------------|----------------------------|
+| Frontend           | Next.js 16 (App Router) | Vultr JHB / Coolify        |
+| Commerce backend   | Medusa.js v2            | Vultr JHB / Coolify        |
+| Database           | PostgreSQL (Supabase)   | Supabase Free              |
+| File storage       | Cloudflare R2           | Cloudflare                 |
+| Cache / queues     | Redis                   | Vultr JHB / Coolify        |
+| Search             | Meilisearch             | Vultr JHB / Coolify        |
+| CMS                | Sanity                  | Sanity Cloud               |
+| Automation engine  | n8n                     | Vultr JHB / Coolify        |
+| CDN / DNS          | Cloudflare              | Cloudflare (JHB PoP)       |
+| Transactional mail | Resend Free             | Resend                     |
+| Payments           | PayFast + Ozow          | External (SA-hosted)       |
+| Social API         | Meta Graph API          | External                   |
+| AI (captions)      | Anthropic Claude API    | External                   |
 
 ---
 
@@ -47,24 +48,29 @@ tse-online/
 Browser / Mobile
       │
       ▼
-Cloudflare CDN (JHB PoP)
+Cloudflare CDN (JHB PoP)   ← DNS + DDoS + SSL at edge
       │
-      ├─── Static assets, ISR pages ──► Vercel Edge
+      ▼
+Vultr JHB VPS  (all compute runs in South Africa)
+Coolify manages services below via Docker
       │
-      └─── API routes / RSC ──────────► Vercel Serverless
-                                              │
-                                    Next.js App Router
-                                    (Server Components)
-                                              │
-                              ┌───────────────┴────────────────┐
-                              │                                 │
-                       Medusa.js API                       Sanity CMS
-                    (REST + custom routes)              (marketing content)
-                              │
-                    ┌─────────┴──────────┐
-                    │                    │
-               Supabase DB          Meilisearch
-            (PostgreSQL + RLS)     (product search)
+      ├── Next.js 16  (port 3000)
+      │     │
+      │     ├── Server Components ──► Medusa.js API (port 9000)
+      │     │                               │
+      │     │                    ┌──────────┴──────────┐
+      │     │                    │                     │
+      │     │               Supabase DB           Meilisearch
+      │     │            (PostgreSQL + RLS)      (port 7700)
+      │     │            Supabase Free — AWS US/EU
+      │     │
+      │     └── CMS content ──► Sanity Cloud (marketing content)
+      │
+      ├── Redis  (port 6379 — internal only)
+      └── n8n    (port 5678 — internal only)
+                    │
+                    ├── Anthropic API  (caption generation)
+                    └── Meta Graph API (Instagram / Facebook)
 ```
 
 ---
@@ -130,7 +136,8 @@ apps/backend/src/
 │   └── bulk-order.ts
 ├── subscribers/                # Event-driven side effects
 │   ├── order-placed.ts         # Trigger Resend confirmation email
-│   └── product-updated.ts     # Trigger n8n social post workflow
+│   ├── product-updated.ts      # Trigger n8n on product.created
+│   └── inventory-restocked.ts  # Trigger n8n on restock (0 → >0)
 └── medusa-config.ts
 ```
 
@@ -232,25 +239,31 @@ N8N_WEBHOOK_SECRET=
 
 ## Deployment
 
-### Vercel (frontend)
-- Connect GitHub repo → Vercel project
-- Set `apps/web` as root directory
-- All env vars set in Vercel dashboard
-- Preview deployments on every PR
+All production services run on a single **Vultr JHB VPS** (2 vCPU / 4 GB RAM / 80 GB SSD)
+managed by **Coolify**. Git-push to `main` → Coolify builds and deploys automatically.
 
-### Railway (Medusa backend + n8n + Meilisearch)
-- Three Railway services in one project
-- Medusa: Dockerfile in `apps/backend/`
-- n8n: official Railway template
-- Meilisearch: official Railway template
-- All share a private Railway network — Medusa calls Meilisearch internally
+### Coolify — service layout
+
+| Service     | Internal port | Public URL                        |
+|-------------|--------------|-----------------------------------|
+| Next.js 16  | 3000         | `tseonline.co.za` (via Cloudflare)|
+| Medusa v2   | 9000         | `api.tseonline.co.za`             |
+| Redis       | 6379         | Internal only                     |
+| Meilisearch | 7700         | Internal only (Phase 2)           |
+| n8n         | 5678         | Internal only (Phase 5)           |
+
+- Env vars managed in Coolify's environment panel (not in `.env` files on the server)
+- Auto-SSL via Let's Encrypt, managed by Coolify
+- Coolify automated backups cover the VPS (~R88/mo optional)
 
 ### Supabase
 - One project, `production` environment
 - Row Level Security (RLS) enabled on all tables
 - Migrations managed via `scripts/migrate.sh`
+- Cross-border (AWS US/EU) — covered by s.72 consent at signup + signed DPA (see BUILD-PLAN.md §10)
 
 ### Cloudflare
-- DNS: point `tseonline.co.za` → Vercel, `api.tseonline.co.za` → Railway
-- Enable "Proxied" on both A records for CDN + DDoS protection
-- Page rule: cache static assets aggressively, bypass cache on `/api/*`
+- DNS: point `tseonline.co.za` and `api.tseonline.co.za` → Vultr VPS IP (orange-cloud proxied)
+- SSL/TLS mode: **Full (Strict)** — origin cert issued by Cloudflare or Let's Encrypt
+- VPS firewall: accept HTTP/HTTPS only from Cloudflare IP ranges (block direct VPS IP access)
+- Page rule: bypass cache on `/api/*` and `/store/*`
