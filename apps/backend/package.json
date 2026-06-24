@@ -28,7 +28,7 @@
     "meilisearch": "^0.58.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "resend": "^4.0.0"
+    "resend": "^6.14.0"
   },
   "devDependencies": {
     "@tse/config": "workspace:*",
