@@ -1,4 +1,15 @@
 import { AbstractFulfillmentProviderService } from '@medusajs/framework/utils'
+import type {
+  FulfillmentOption,
+  CreateFulfillmentResult,
+  CreateShippingOptionDTO,
+  FulfillmentItemDTO,
+  FulfillmentOrderDTO,
+  FulfillmentDTO,
+  ValidateFulfillmentDataContext,
+  CalculatedShippingOptionPrice,
+  CalculateShippingOptionPriceDTO,
+} from '@medusajs/types'
 import { CourierGuyClient } from './client'
 import type { TCGAddress, TCGParcel } from './types'
 
@@ -20,11 +31,12 @@ const COLLECTION_CONTACT = {
   email: process.env.TCG_CONTACT_EMAIL ?? 'dispatch@tse.co.za',
 }
 
-type FulfillmentOption = { id: string; name: string; service_level_code: string }
+// Local type that extends Medusa's FulfillmentOption with TCG-specific fields
+type TCGFulfillmentOption = FulfillmentOption & { name: string; service_level_code: string }
 
 // Offer economy + overnight as the two standard options.
 // Service codes: ECO = Economy (3-4 days), OVN = Overnight (next day)
-const FULFILLMENT_OPTIONS: FulfillmentOption[] = [
+const FULFILLMENT_OPTIONS: TCGFulfillmentOption[] = [
   { id: 'tcg-eco', name: 'Economy Courier (3–4 days)', service_level_code: 'ECO' },
   { id: 'tcg-ovn', name: 'Overnight Courier (next business day)', service_level_code: 'OVN' },
 ]
@@ -87,7 +99,7 @@ function buildParcels(items: MedusaCartItem[]): TCGParcel[] {
 }
 
 export class CourierGuyFulfillmentService extends AbstractFulfillmentProviderService {
-  static identifier = 'courier-guy'
+  static override identifier = 'courier-guy'
 
   private client: CourierGuyClient
 
@@ -96,39 +108,39 @@ export class CourierGuyFulfillmentService extends AbstractFulfillmentProviderSer
     this.client = new CourierGuyClient(process.env.TCG_API_KEY ?? '')
   }
 
-  async getFulfillmentOptions(): Promise<Record<string, unknown>[]> {
+  override async getFulfillmentOptions(): Promise<FulfillmentOption[]> {
     return FULFILLMENT_OPTIONS
   }
 
-  async validateOption(data: Record<string, unknown>): Promise<boolean> {
+  override async validateOption(data: Record<string, unknown>): Promise<boolean> {
     return OPTION_MAP.has(data.id as string)
   }
 
-  async canCalculate(_data: Record<string, unknown>): Promise<boolean> {
+  override async canCalculate(_data: CreateShippingOptionDTO): Promise<boolean> {
     return Boolean(process.env.TCG_API_KEY)
   }
 
-  async validateFulfillmentData(
+  override async validateFulfillmentData(
     optionData: Record<string, unknown>,
     data: Record<string, unknown>,
-    _context: Record<string, unknown>
+    _context: ValidateFulfillmentDataContext
   ): Promise<Record<string, unknown>> {
     return { ...data, option_id: optionData.id }
   }
 
-  async calculatePrice(
-    optionData: Record<string, unknown>,
-    _data: Record<string, unknown>,
-    context: Record<string, unknown>
-  ): Promise<{ calculated_amount: number; is_calculated_price_tax_inclusive: boolean }> {
-    const option = OPTION_MAP.get(optionData.id as string)
-    if (!option) throw new Error(`Unknown TCG option: ${optionData.id}`)
+  override async calculatePrice(
+    optionData: CalculateShippingOptionPriceDTO['optionData'],
+    _data: CalculateShippingOptionPriceDTO['data'],
+    context: CalculateShippingOptionPriceDTO['context']
+  ): Promise<CalculatedShippingOptionPrice> {
+    const option = OPTION_MAP.get((optionData as Record<string, unknown>).id as string)
+    if (!option) throw new Error(`Unknown TCG option: ${(optionData as Record<string, unknown>).id}`)
 
     const shippingAddress = (
-      (context.shipping_address ?? (context.cart as any)?.shipping_address)
+      (context as any).shipping_address ?? ((context as any).cart as any)?.shipping_address
     ) as MedusaShippingAddress | undefined
 
-    const items = ((context.cart as any)?.items ?? []) as MedusaCartItem[]
+    const items = (((context as any).cart as any)?.items ?? []) as MedusaCartItem[]
 
     const deliveryAddress: TCGAddress = shippingAddress
       ? addressToTCG(shippingAddress)
@@ -150,16 +162,16 @@ export class CourierGuyFulfillmentService extends AbstractFulfillmentProviderSer
     }
   }
 
-  async createFulfillment(
+  override async createFulfillment(
     data: Record<string, unknown>,
-    items: Record<string, unknown>[],
-    order: Record<string, unknown>,
-    _fulfillment: Record<string, unknown>
-  ): Promise<Record<string, unknown>> {
+    items: Partial<Omit<FulfillmentItemDTO, 'fulfillment'>>[],
+    order: Partial<FulfillmentOrderDTO> | undefined,
+    _fulfillment: Partial<Omit<FulfillmentDTO, 'provider_id' | 'data' | 'items'>>
+  ): Promise<CreateFulfillmentResult> {
     const option = OPTION_MAP.get(data.option_id as string)
     if (!option) throw new Error(`Unknown TCG option: ${data.option_id}`)
 
-    const shippingAddress = (order as any).shipping_address as MedusaShippingAddress | undefined
+    const shippingAddress = (order as any)?.shipping_address as MedusaShippingAddress | undefined
     if (!shippingAddress) throw new Error('Order is missing a shipping address')
 
     const cartItems = items.map((i: any) => ({
@@ -178,29 +190,32 @@ export class CourierGuyFulfillmentService extends AbstractFulfillmentProviderSer
         mobile_number: shippingAddress.phone ?? '0000000000',
       },
       parcels: buildParcels(cartItems),
-      declared_value: ((order as any).total ?? 0) / 100,
-      customer_reference: String((order as any).id ?? ''),
+      declared_value: ((order as any)?.total ?? 0) / 100,
+      customer_reference: String((order as any)?.id ?? ''),
       require_waybill_number: true,
     })
 
     return {
-      tracking_reference: shipment.tracking_reference,
-      waybill_number: shipment.waybill_number ?? null,
-      shipment_id: shipment.id,
-      service_level_code: shipment.service_level_code,
+      data: {
+        tracking_reference: shipment.tracking_reference,
+        waybill_number: shipment.waybill_number ?? null,
+        shipment_id: shipment.id,
+        service_level_code: shipment.service_level_code,
+      },
+      labels: [],
     }
   }
 
-  async cancelFulfillment(data: Record<string, unknown>): Promise<Record<string, unknown>> {
+  override async cancelFulfillment(data: Record<string, unknown>): Promise<Record<string, unknown>> {
     if (data.shipment_id) {
       await this.client.cancelShipment(data.shipment_id as string)
     }
     return {}
   }
 
-  async createReturn(returnOrder: Record<string, unknown>): Promise<Record<string, unknown>> {
-    const shippingAddress = (returnOrder as any).shipping_address as MedusaShippingAddress | undefined
-    if (!shippingAddress) return { error: 'No return address provided' }
+  override async createReturnFulfillment(fulfillment: Record<string, unknown>): Promise<CreateFulfillmentResult> {
+    const shippingAddress = (fulfillment as any).shipping_address as MedusaShippingAddress | undefined
+    if (!shippingAddress) return { data: { error: 'No return address provided' }, labels: [] }
 
     const shipment = await this.client.createShipment({
       service_level_code: 'ECO',
@@ -212,18 +227,21 @@ export class CourierGuyFulfillmentService extends AbstractFulfillmentProviderSer
       },
       delivery_contact: COLLECTION_CONTACT,
       parcels: [{ submitted_length_cm: 30, submitted_width_cm: 20, submitted_height_cm: 10, submitted_weight_kg: 0.5, description: 'Return - Printer Cartridges / Toner' }],
-      customer_reference: `RETURN-${(returnOrder as any).id ?? Date.now()}`,
+      customer_reference: `RETURN-${(fulfillment as any).id ?? Date.now()}`,
       require_waybill_number: true,
     })
 
     return {
-      tracking_reference: shipment.tracking_reference,
-      waybill_number: shipment.waybill_number ?? null,
-      shipment_id: shipment.id,
+      data: {
+        tracking_reference: shipment.tracking_reference,
+        waybill_number: shipment.waybill_number ?? null,
+        shipment_id: shipment.id,
+      },
+      labels: [],
     }
   }
 
-  async retrieveDocuments(data: Record<string, unknown>, documentType: 'invoice' | 'label'): Promise<never> {
+  override async retrieveDocuments(_fulfillmentData: Record<string, unknown>, documentType: string): Promise<void> {
     throw new Error(`TCG: document type "${documentType}" not supported via API — download from portal.thecourierguy.co.za`)
   }
 }
