@@ -39,7 +39,7 @@ function setupFetch(regionId: string, categories: any[], products: any[], count:
   }))
 }
 
-async function renderProductsPage(params: { category?: string; page?: string } = {}) {
+async function renderProductsPage(params: { category?: string; page?: string; brand?: string; type?: string } = {}) {
   const { default: ProductsPage } = await import('@/app/(storefront)/products/page')
   // Import CartProvider from the same (post-resetModules) instance the page uses,
   // otherwise the page's useCart resolves to a different context and throws.
