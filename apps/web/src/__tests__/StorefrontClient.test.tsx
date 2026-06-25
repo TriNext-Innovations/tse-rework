@@ -405,10 +405,8 @@ describe('StorefrontClient — IntersectionObserver', () => {
 
   it('disconnects IntersectionObserver on unmount', () => {
     const disconnect = vi.fn()
-    vi.mocked(IntersectionObserver as any).mockReturnValue({
-      observe: vi.fn(),
-      unobserve: vi.fn(),
-      disconnect,
+    vi.mocked(IntersectionObserver as any).mockImplementation(function () {
+      return { observe: vi.fn(), unobserve: vi.fn(), disconnect }
     })
     const { unmount } = renderStorefront()
     unmount()
