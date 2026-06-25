@@ -29,8 +29,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Type check
+      - name: Type check (web)
         run: pnpm --filter @tse/web type-check
+
+      - name: Type check (backend)
+        run: pnpm --filter @tse/backend type-check
 
       - name: Unit tests with coverage
         run: pnpm --filter @tse/web test:coverage
