@@ -102,4 +102,20 @@ describe('FilterPanel', () => {
     expect(hp.className).toContain('bg-[#111827]')
     expect(hp.className).toContain('text-white')
   })
+
+  it('clicking the active brand again deselects it (removes brand param)', async () => {
+    setParams('brand=HP')
+    render(<FilterPanel categories={mockCategories} />)
+    await userEvent.click(screen.getByText('HP'))
+    const call = mockPush.mock.calls[0]![0] as string
+    expect(call).not.toContain('brand=')
+  })
+
+  it('clicking the active type again clears the type filter', async () => {
+    setParams('type=laser')
+    render(<FilterPanel categories={mockCategories} />)
+    await userEvent.click(screen.getByText('Laser'))
+    const call = mockPush.mock.calls[0]![0] as string
+    expect(call).not.toContain('type=')
+  })
 })

@@ -4,10 +4,14 @@ import { useSearchParams } from 'next/navigation'
 import React, { Suspense } from 'react'
 
 // Mock child client components to isolate server component logic
-vi.mock('@/app/(storefront)/products/ProductFilters', () => ({
-  ProductFilters: ({ categories }: { categories: any[] }) => (
+vi.mock('@/app/(storefront)/products/FilterPanel', () => ({
+  FilterPanel: ({ categories }: { categories: any[] }) => (
     <aside data-testid="filters" data-category-count={categories.length} />
   ),
+}))
+
+vi.mock('@/app/(storefront)/products/MobileFilters', () => ({
+  MobileFilters: () => null,
 }))
 
 vi.mock('@/app/(storefront)/products/AddToCartButton', () => ({
@@ -35,7 +39,7 @@ function setupFetch(regionId: string, categories: any[], products: any[], count:
   }))
 }
 
-async function renderProductsPage(params: { category?: string; page?: string } = {}) {
+async function renderProductsPage(params: { category?: string; page?: string; brand?: string; type?: string } = {}) {
   const { default: ProductsPage } = await import('@/app/(storefront)/products/page')
   // Import CartProvider from the same (post-resetModules) instance the page uses,
   // otherwise the page's useCart resolves to a different context and throws.
@@ -65,11 +69,10 @@ describe('ProductsPage', () => {
     expect(screen.getByText('cartridges')).toBeInTheDocument()
   })
 
-  it('renders active category name in heading when category is selected', async () => {
-    const cats = [{ id: 'cat_hp', name: 'HP', handle: 'hp', parent_category: null }]
-    setupFetch('reg_01', cats, [], 0)
-    await renderProductsPage({ category: 'cat_hp' })
-    expect(screen.getByText('HP')).toBeInTheDocument()
+  it('shows brand name in heading when brand filter is applied', async () => {
+    setupFetch('reg_01', [], [], 0)
+    await renderProductsPage({ brand: 'HP' })
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('HP')
   })
 
   it('shows product count', async () => {
@@ -138,7 +141,8 @@ describe('ProductsPage', () => {
   })
 
   it('shows "Next →" link on page 1 when more pages exist', async () => {
-    const products = Array.from({ length: 24 }, (_, i) => makeProduct(`p${i}`, `Prod ${i}`))
+    // Page now fetches all products and slices client-side; need 25 products to exceed PAGE_SIZE=24
+    const products = Array.from({ length: 25 }, (_, i) => makeProduct(`p${i}`, `Prod ${i}`))
     setupFetch('reg_01', [], products, 25)
     await renderProductsPage({ page: '1' })
     expect(screen.getByText('Next →')).toBeInTheDocument()
@@ -146,14 +150,16 @@ describe('ProductsPage', () => {
   })
 
   it('shows "← Prev" link on page 2', async () => {
-    const products = Array.from({ length: 24 }, (_, i) => makeProduct(`p${i}`, `Prod ${i}`))
+    // 48 products total → 2 pages of 24; page 2 should show Prev
+    const products = Array.from({ length: 48 }, (_, i) => makeProduct(`p${i}`, `Prod ${i}`))
     setupFetch('reg_01', [], products, 48)
     await renderProductsPage({ page: '2' })
     expect(screen.getByText('← Prev')).toBeInTheDocument()
   })
 
   it('shows both prev and next on middle page', async () => {
-    const products = Array.from({ length: 24 }, (_, i) => makeProduct(`p${i}`, `Prod ${i}`))
+    // 72 products → 3 pages; page 2 is in the middle
+    const products = Array.from({ length: 72 }, (_, i) => makeProduct(`p${i}`, `Prod ${i}`))
     setupFetch('reg_01', [], products, 72)
     await renderProductsPage({ page: '2' })
     expect(screen.getByText('← Prev')).toBeInTheDocument()
@@ -161,7 +167,8 @@ describe('ProductsPage', () => {
   })
 
   it('shows page indicator text', async () => {
-    const products = Array.from({ length: 24 }, (_, i) => makeProduct(`p${i}`, `Prod ${i}`))
+    // 48 products → 2 pages; page 1 should show "Page 1 of 2"
+    const products = Array.from({ length: 48 }, (_, i) => makeProduct(`p${i}`, `Prod ${i}`))
     setupFetch('reg_01', [], products, 48)
     await renderProductsPage({ page: '1' })
     expect(screen.getByText('Page 1 of 2')).toBeInTheDocument()

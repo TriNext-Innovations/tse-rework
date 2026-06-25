@@ -64,11 +64,9 @@ vi.mock('@/contexts/AuthContext', () => ({
 // ── IntersectionObserver ──────────────────────────────────────────────────────
 vi.stubGlobal(
   'IntersectionObserver',
-  vi.fn(() => ({
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-  })),
+  vi.fn(function () {
+    return { observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn() }
+  }),
 )
 
 // ── Element.getBoundingClientRect ─────────────────────────────────────────────
