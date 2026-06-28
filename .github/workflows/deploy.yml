@@ -38,11 +38,13 @@ jobs:
             git diff || true
 
             # A manual hotfix left uncommitted on the box will make `git pull`
-            # abort. Preserve any such changes in a stash (recoverable via
+            # abort. Preserve any such tracked changes in a stash (recoverable via
             # `git stash list` / `git stash show -p`) so the checkout can proceed
-            # cleanly without ever destroying work.
-            echo "▶ Stashing any local changes so the checkout can fast-forward"
-            git stash push -u -m "auto-stash before deploy $(date -u +%FT%TZ)" || echo "  (nothing to stash)"
+            # cleanly without ever destroying work. Note: no `-u` — untracked
+            # files (e.g. the root-owned nginx SSL key) can't always be read and
+            # would abort the stash; `git reset --hard` below never touches them.
+            echo "▶ Stashing any local tracked changes so the checkout can fast-forward"
+            git stash push -m "auto-stash before deploy $(date -u +%FT%TZ)" || echo "  (nothing to stash)"
 
             echo "▶ Fetching and resetting to origin/main"
             git fetch origin main
