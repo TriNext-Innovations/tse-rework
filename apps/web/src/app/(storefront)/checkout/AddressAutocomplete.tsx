@@ -103,11 +103,11 @@ export function AddressAutocomplete({
   const lastQuery = useRef('')
 
   useEffect(() => {
-    if (!KEY) { console.error('[places] NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is empty'); return }
+    if (!KEY) return
     let active = true
     loadPlaces()
-      .then((lib) => { if (active) { places.current = lib; setReady(true); console.info('[places] library ready') } })
-      .catch((e) => console.error('[places] failed to load library', e))
+      .then((lib) => { if (active) { places.current = lib; setReady(true) } })
+      .catch(() => {})
     return () => { active = false }
   }, [])
 
@@ -128,11 +128,9 @@ export function AddressAutocomplete({
         includedRegionCodes: ['za'],
         sessionToken: token.current,
       })
-      console.info('[places] suggestions', res?.suggestions?.length ?? 0)
       setSuggestions(res?.suggestions ?? [])
       setOpen(true)
-    } catch (e) {
-      console.error('[places] fetchAutocompleteSuggestions failed', e)
+    } catch {
       setSuggestions([])
     }
   }
