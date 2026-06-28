@@ -10,12 +10,22 @@ export const PAYFAST_URL = SANDBOX
   ? 'https://sandbox.payfast.co.za/eng/process'
   : 'https://www.payfast.co.za/eng/process'
 
-type CartItem = { title: string; sku: string; price: number | null; qty: number }
-
 type Body = {
-  items: CartItem[]
+  cart_id: string
   contact: { name: string; email: string; phone: string }
-  address: { line1: string; suburb: string; city: string; province: string; postalCode: string }
+}
+
+type MedusaCart = {
+  id: string
+  total: number // cents
+  items?: Array<{ title?: string; quantity?: number }>
+  shipping_address?: {
+    address_1?: string
+    address_2?: string
+    city?: string
+    province?: string
+    postal_code?: string
+  }
 }
 
 function buildSignature(params: Record<string, string>): string {
@@ -32,14 +42,34 @@ export async function POST(req: NextRequest) {
   }
 
   const body: Body = await req.json()
-  const { items, contact, address } = body
+  const { cart_id, contact } = body
+  if (!cart_id) {
+    return NextResponse.json({ error: 'cart_id is required' }, { status: 400 })
+  }
 
-  const subtotal = items.reduce((sum, i) => sum + (i.price ?? 0) * i.qty, 0)
-  if (subtotal <= 0) {
+  const MEDUSA_URL = process.env.NEXT_PUBLIC_MEDUSA_URL ?? 'http://medusa:9000'
+  const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
+
+  // Fetch the cart server-side so the charged amount comes from Medusa (items +
+  // shipping), never from a client-supplied total.
+  let cart: MedusaCart
+  try {
+    const cartRes = await fetch(
+      `${MEDUSA_URL}/store/carts/${encodeURIComponent(cart_id)}?fields=id,total,items.title,items.quantity,shipping_address.*`,
+      { headers: { 'x-publishable-api-key': PUB_KEY } },
+    )
+    if (!cartRes.ok) throw new Error(`cart fetch ${cartRes.status}`)
+    cart = (await cartRes.json()).cart
+  } catch (err) {
+    console.error('[payfast initiate] failed to load cart:', err)
+    return NextResponse.json({ error: 'Could not load your cart. Please try again.' }, { status: 502 })
+  }
+
+  if (!cart?.total || cart.total <= 0) {
     return NextResponse.json({ error: 'Order total must be greater than zero' }, { status: 400 })
   }
 
-  const amount = subtotal.toFixed(2)
+  const amount = (cart.total / 100).toFixed(2)
   const m_payment_id = crypto.randomUUID()
 
   const origin = req.headers.get('origin') ?? 'https://tse-cartridges.co.za'
@@ -47,13 +77,14 @@ export async function POST(req: NextRequest) {
   const name_first = nameParts[0] ?? contact.name
   const name_last = nameParts.slice(1).join(' ') || ''
 
-  const itemSummary = items
-    .map((i) => `${i.qty}x ${i.title}`)
+  const itemSummary = (cart.items ?? [])
+    .map((i) => `${i.quantity ?? 1}x ${i.title ?? ''}`)
     .join(', ')
     .slice(0, 100)
 
   // Custom fields: store address and items summary for ITN
-  const addressLine = `${address.line1}, ${address.suburb}, ${address.city}, ${address.province} ${address.postalCode}`.slice(0, 255)
+  const a = cart.shipping_address ?? {}
+  const addressLine = `${a.address_1 ?? ''}, ${a.address_2 ?? ''}, ${a.city ?? ''}, ${a.province ?? ''} ${a.postal_code ?? ''}`.slice(0, 255)
 
   // Build params in the exact order PayFast expects for signature
   const params: Record<string, string> = {
@@ -77,12 +108,11 @@ export async function POST(req: NextRequest) {
 
   const signature = buildSignature(params)
 
-  // Persist the cart server-side so the (validated) ITN can turn it into a real
-  // Medusa order on payment confirmation. Best-effort: never block checkout if
-  // the backend is briefly unavailable — the team still gets the ITN email.
-  const MEDUSA_URL = process.env.NEXT_PUBLIC_MEDUSA_URL ?? 'http://medusa:9000'
+  // Persist the cart reference server-side so the (validated) ITN can turn it
+  // into a real Medusa order on payment confirmation. Best-effort: never block
+  // checkout if the backend is briefly unavailable — the team still gets the
+  // ITN email.
   const CAPTURE_SECRET = process.env.PAYFAST_CAPTURE_SECRET ?? ''
-  const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
   if (CAPTURE_SECRET) {
     try {
       await fetch(`${MEDUSA_URL}/store/payfast/pending`, {
@@ -94,7 +124,7 @@ export async function POST(req: NextRequest) {
         },
         body: JSON.stringify({
           m_payment_id,
-          payload: { items, contact, address, amount },
+          payload: { cart_id, contact, amount },
         }),
       })
     } catch (err) {

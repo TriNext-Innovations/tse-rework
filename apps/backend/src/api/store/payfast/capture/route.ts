@@ -1,6 +1,6 @@
 import { MedusaRequest, MedusaResponse } from '@medusajs/framework/http'
 import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
-import { createOrderFromPending, PendingPayload } from '../../../../lib/payfast-order'
+import { createOrderFromPending, createOrderFromCart, PendingPayload } from '../../../../lib/payfast-order'
 
 function authorized(req: MedusaRequest): boolean {
   const secret = process.env.PAYFAST_CAPTURE_SECRET
@@ -40,11 +40,15 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     return res.json({ ok: true, order_id: row.order_id, already: true })
   }
 
-  const payload = (typeof row.payload === 'string' ? JSON.parse(row.payload) : row.payload) as PendingPayload
-  payload.payfast = payfast ?? {}
+  const payload = (typeof row.payload === 'string' ? JSON.parse(row.payload) : row.payload) as
+    | (PendingPayload & { cart_id?: string })
 
   try {
-    const order = await createOrderFromPending(req.scope, payload)
+    // New cart-based checkout stores a cart_id; legacy rows store the raw items
+    // payload. Dispatch accordingly.
+    const order = payload.cart_id
+      ? await createOrderFromCart(req.scope, payload.cart_id, payfast ?? {})
+      : await createOrderFromPending(req.scope, { ...payload, payfast: payfast ?? {} } as PendingPayload)
     await knex.raw(`UPDATE payfast_pending SET order_id = ? WHERE m_payment_id = ?`, [order.id, m_payment_id])
     console.log(`[payfast-capture] created order ${order.display_id ?? order.id} for ${m_payment_id}`)
     return res.json({ ok: true, order_id: order.id, display_id: order.display_id })
