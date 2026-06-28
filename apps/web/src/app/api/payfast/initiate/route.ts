@@ -54,8 +54,13 @@ export async function POST(req: NextRequest) {
   // shipping), never from a client-supplied total.
   let cart: MedusaCart
   try {
+    // NB: don't pass a sparse `fields` selection here. Restricting items to
+    // `items.title,items.quantity` drops their monetary fields, so Medusa
+    // computes `total` WITHOUT item prices — yielding shipping-only (undercharge)
+    // or 0 for free shipping (which then 400s below). The default cart response
+    // already includes the computed totals, items, and shipping_address.
     const cartRes = await fetch(
-      `${MEDUSA_URL}/store/carts/${encodeURIComponent(cart_id)}?fields=id,total,items.title,items.quantity,shipping_address.*`,
+      `${MEDUSA_URL}/store/carts/${encodeURIComponent(cart_id)}`,
       { headers: { 'x-publishable-api-key': PUB_KEY } },
     )
     if (!cartRes.ok) throw new Error(`cart fetch ${cartRes.status}`)
