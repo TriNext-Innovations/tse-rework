@@ -27,7 +27,9 @@ const contentSecurityPolicy = [
   // https: covers R2/Supabase product images without enumerating every CDN host.
   "img-src 'self' data: https:",
   "font-src 'self' data:",
-  `connect-src ${connectSrc} https://maps.googleapis.com`,
+  // maps.googleapis.com loads the JS bootstrap; places.googleapis.com serves the
+  // Places (New) Autocomplete data calls used by the checkout address field.
+  `connect-src ${connectSrc} https://maps.googleapis.com https://places.googleapis.com`,
   // Checkout posts to the PayFast hosted page (redirect), never an iframe here.
   "form-action 'self' https://*.payfast.co.za",
   "frame-ancestors 'self'",
