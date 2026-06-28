@@ -29,6 +29,8 @@ export type ShippingOption = {
   id: string
   name: string
   amount: number // cents
+  /** 'calculated' = priced live from the courier (Courier Guy); 'flat' = fixed admin price (e.g. Collect). */
+  priceType: 'flat' | 'calculated'
 }
 
 export type CartTotals = {
@@ -129,14 +131,33 @@ export async function createCartWithAddress(
 
 export async function listShippingOptions(cartId: string): Promise<ShippingOption[]> {
   const { shipping_options } = await api<{
-    shipping_options: Array<{ id: string; name: string; amount?: number; calculated_price?: { calculated_amount?: number } }>
+    shipping_options: Array<{ id: string; name: string; amount?: number; price_type?: string; calculated_price?: { calculated_amount?: number } }>
   }>(`/store/shipping-options?cart_id=${encodeURIComponent(cartId)}`)
 
-  return shipping_options.map((o) => ({
-    id: o.id,
-    name: o.name,
-    amount: o.calculated_price?.calculated_amount ?? o.amount ?? 0,
-  }))
+  // The list endpoint only resolves prices for flat-rate options. Calculated
+  // options (Courier Guy ECO/OVN) come back with calculated_price = null — their
+  // live rate must be fetched per-option from the calculate endpoint, otherwise
+  // they fall back to 0 and render as "Free". Quote them in parallel; drop any
+  // option we can't price (e.g. courier returns no rate for the address).
+  const results = await Promise.allSettled(
+    shipping_options.map(async (o): Promise<ShippingOption> => {
+      const priceType: ShippingOption['priceType'] = o.price_type === 'calculated' ? 'calculated' : 'flat'
+
+      if (priceType === 'flat') {
+        return { id: o.id, name: o.name, amount: o.calculated_price?.calculated_amount ?? o.amount ?? 0, priceType }
+      }
+
+      const { shipping_option } = await api<{ shipping_option: { calculated_price?: { calculated_amount?: number } } }>(
+        `/store/shipping-options/${encodeURIComponent(o.id)}/calculate`,
+        { method: 'POST', body: JSON.stringify({ cart_id: cartId, data: {} }) },
+      )
+      const amount = shipping_option?.calculated_price?.calculated_amount
+      if (amount == null) throw new Error(`No live rate for shipping option ${o.id}`)
+      return { id: o.id, name: o.name, amount, priceType }
+    }),
+  )
+
+  return results.filter((r): r is PromiseFulfilledResult<ShippingOption> => r.status === 'fulfilled').map((r) => r.value)
 }
 
 export async function selectShippingMethod(cartId: string, optionId: string): Promise<CartTotals> {
