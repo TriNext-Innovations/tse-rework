@@ -355,14 +355,16 @@ async function ensureShippingOptions(token: string, locationId: string): Promise
   const existingNames = new Set(shipping_options.map((o: any) => o.name as string))
 
   // Flat options run on the manual provider; courier options are quoted live
-  // from The Courier Guy (ShipLogic) via the shiplogic provider.
+  // from The Courier Guy (ShipLogic) via the shiplogic provider. Names carry
+  // The Courier Guy's own delivery estimates so the storefront can show them
+  // verbatim from Medusa admin config.
   const flatOptions = [
-    { name: "JHB/PTA Own Delivery (COD)", amount: 0, code: "jhb_pta_delivery" },
+    { name: "Collect from Kya Sands Warehouse", amount: 0, code: "collect" },
   ]
   const calculatedOptions = shiplogicId
     ? [
-        { name: "The Courier Guy — Economy",   code: "ECO", optionId: "shiplogic-eco" },
-        { name: "The Courier Guy — Overnight", code: "OVN", optionId: "shiplogic-ovn" },
+        { name: "The Courier Guy — Economy (3–4 business days)", code: "ECO", optionId: "shiplogic-eco" },
+        { name: "The Courier Guy — Overnight (next business day)", code: "OVN", optionId: "shiplogic-ovn" },
       ]
     : []
 

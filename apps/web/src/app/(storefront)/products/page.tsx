@@ -154,7 +154,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
     const params = new URLSearchParams({ limit: String(FETCH_ALL) })
     if (regionId) params.append('region_id', regionId)
     for (const id of categoryIds) params.append('category_id[]', id)
-    params.append('fields', '+metadata,+categories.id,+categories.name,+categories.handle,+images,*variants.calculated_price')
+    params.append('fields', '+metadata,+categories.id,+categories.name,+categories.handle,+images,+variants.id,+variants.sku,*variants.calculated_price')
 
     try {
       const data = await fetch(`${BACKEND}/store/products?${params}`, {
@@ -282,7 +282,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
                         <div className="font-display text-lg">
                           {priceZar ? `R${priceZar}` : <span className="text-[#9ca3af] text-sm">POA</span>}
                         </div>
-                        <AddToCartButton id={p.id} title={p.title} sku={sku} price={priceZar} />
+                        <AddToCartButton id={p.id} title={p.title} sku={sku} price={priceZar} variantId={variant?.id} thumbnail={imageUrl} />
                       </div>
                     </Link>
                   )
