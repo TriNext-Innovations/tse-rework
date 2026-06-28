@@ -29,6 +29,8 @@ export type ShippingOption = {
   id: string
   name: string
   amount: number // cents
+  /** 'calculated' = priced live from the courier (Courier Guy); 'flat' = fixed admin price (e.g. Collect). */
+  priceType: 'flat' | 'calculated'
 }
 
 export type CartTotals = {
@@ -129,13 +131,14 @@ export async function createCartWithAddress(
 
 export async function listShippingOptions(cartId: string): Promise<ShippingOption[]> {
   const { shipping_options } = await api<{
-    shipping_options: Array<{ id: string; name: string; amount?: number; calculated_price?: { calculated_amount?: number } }>
+    shipping_options: Array<{ id: string; name: string; amount?: number; price_type?: string; calculated_price?: { calculated_amount?: number } }>
   }>(`/store/shipping-options?cart_id=${encodeURIComponent(cartId)}`)
 
   return shipping_options.map((o) => ({
     id: o.id,
     name: o.name,
     amount: o.calculated_price?.calculated_amount ?? o.amount ?? 0,
+    priceType: o.price_type === 'calculated' ? 'calculated' : 'flat',
   }))
 }
 

@@ -380,6 +380,11 @@ export default function CheckoutForm() {
                           {selected && <span className="w-2 h-2 rounded-full bg-[#111827]" />}
                         </span>
                         <span className="font-medium text-sm text-[#111827]">{o.name}</span>
+                        {o.priceType === 'calculated' && (
+                          <span className="text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#dfe344] text-[#111827] px-2 py-0.5 rounded-full flex-shrink-0">
+                            Live rate
+                          </span>
+                        )}
                       </div>
                       <span className="font-display text-base flex-shrink-0">
                         {isFree ? 'Free' : `R${(o.amount / 100).toFixed(0)}`}
