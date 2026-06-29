@@ -28,7 +28,9 @@ const paymentModule = {
           merchantId: process.env.PAYFAST_MERCHANT_ID,
           merchantKey: process.env.PAYFAST_MERCHANT_KEY,
           passphrase: process.env.PAYFAST_PASSPHRASE,
-          sandbox: process.env.PAYFAST_LIVE !== 'true',
+          // Sandbox unless explicitly disabled — matches PAYFAST_SANDBOX used
+          // across the stack (compose defaults it to 'true'). Safe default.
+          sandbox: process.env.PAYFAST_SANDBOX !== 'false',
           storefrontUrl: process.env.STOREFRONT_URL,
           backendUrl: process.env.MEDUSA_BACKEND_URL,
         },

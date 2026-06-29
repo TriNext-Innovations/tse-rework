@@ -144,6 +144,8 @@ services:
       AUTH_CORS: ${AUTH_CORS}
       RESEND_API_KEY: ${RESEND_API_KEY}
       RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL}
+      # Team inbox for the backend new-order notification (#135)
+      TSE_NOTIFY_EMAIL: ${TSE_NOTIFY_EMAIL:-}
       PAYFAST_MERCHANT_ID: ${PAYFAST_MERCHANT_ID}
       PAYFAST_MERCHANT_KEY: ${PAYFAST_MERCHANT_KEY}
       PAYFAST_PASSPHRASE: ${PAYFAST_PASSPHRASE}
@@ -213,6 +215,10 @@ services:
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
         NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
         NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY:-}
+        # Route checkout through the Medusa PayFast provider (canonical flow).
+        # Default off — set NEXT_PUBLIC_PAYFAST_PROVIDER=true in the VM .env to
+        # activate (sandbox first). Baked into the client bundle at build time.
+        NEXT_PUBLIC_PAYFAST_PROVIDER: ${NEXT_PUBLIC_PAYFAST_PROVIDER:-false}
     restart: unless-stopped
     depends_on:
       medusa:
