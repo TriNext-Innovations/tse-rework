@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Meilisearch } from 'meilisearch'
+import { cartridgeTypeLabel } from '@/lib/taxonomy'
 
 const HOST = process.env.NEXT_PUBLIC_MEILISEARCH_HOST ?? ''
 const KEY = process.env.NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY ?? ''
@@ -191,7 +192,7 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
             <ul>
               {hits.map((hit, i) => {
                 const active = cursor === i
-                const typeLabel = hit.cartridge_type === 'inkjet' ? 'Inkjet' : hit.cartridge_type === 'laser' ? 'Laser' : null
+                const typeLabel = cartridgeTypeLabel(hit.cartridge_type)
                 return (
                   <li key={hit.id}>
                     <button

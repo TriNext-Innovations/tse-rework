@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useCart } from '@/contexts/CartContext'
+import { cartridgeTypeLabel } from '@/lib/taxonomy'
 
 type Category = { id: string; name: string; handle: string }
 type ProductImage = { url: string }
@@ -85,7 +86,7 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
     setTimeout(() => setAdded(false), 2000)
   }, [variant, qty, product, sku, priceZar, images, addItem])
 
-  const cartridgeType = product.metadata?.cartridge_type === 'inkjet' ? 'Inkjet' : 'Laser'
+  const cartridgeType = cartridgeTypeLabel(product.metadata?.cartridge_type) ?? 'Laser'
 
   return (
     <>
