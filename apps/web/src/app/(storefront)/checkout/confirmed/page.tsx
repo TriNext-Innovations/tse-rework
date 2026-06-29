@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { siteConfig } from '@/lib/site-config'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout'
+import { FinalizeOrder } from './FinalizeOrder'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const PUB_KEY  = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
@@ -49,6 +50,8 @@ export default async function OrderConfirmedPage() {
           Thank you for<br />
           your <span className="font-display-italic">order</span>
         </h1>
+
+        <FinalizeOrder />
 
         <p className="text-[#4B4B46] text-base mb-8 leading-relaxed">
           Your order has been sent to our team via WhatsApp. We&apos;ll confirm stock availability and arrange payment and delivery within 1 business hour.

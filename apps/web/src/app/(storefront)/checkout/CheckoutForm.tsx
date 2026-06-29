@@ -8,6 +8,8 @@ import {
   setCartContact,
   listShippingOptions,
   selectShippingMethod,
+  initPayfastSession,
+  PAYFAST_PROVIDER_ENABLED,
   type ShippingOption,
   type CartTotals,
 } from '@/lib/checkout-cart'
@@ -135,6 +137,22 @@ export default function CheckoutForm() {
     }
   }
 
+  // Standard PayFast redirect: POST a hidden form to their process URL.
+  function submitToPayfast(url: string, params: Record<string, string>) {
+    const form = document.createElement('form')
+    form.method = 'POST'
+    form.action = url
+    for (const [key, value] of Object.entries(params)) {
+      const input = document.createElement('input')
+      input.type = 'hidden'
+      input.name = key
+      input.value = value
+      form.appendChild(input)
+    }
+    document.body.appendChild(form)
+    form.submit()
+  }
+
   async function handlePayFast() {
     if (!cartId) {
       setPayfastError('Your delivery selection expired. Please reselect a delivery option.')
@@ -143,6 +161,16 @@ export default function CheckoutForm() {
     setPayfastError('')
     setPayfastLoading(true)
     try {
+      if (PAYFAST_PROVIDER_ENABLED) {
+        // Canonical flow: Medusa payment provider signs the redirect params.
+        // Keep the cart_id so /checkout/confirmed can complete the cart → order.
+        const { url, params } = await initPayfastSession(cartId)
+        submitToPayfast(url, params)
+        return
+      }
+
+      // Legacy flow: storefront API route signs + persists the pending cart;
+      // the ITN turns it into an order, so the local cart can be cleared now.
       const res = await fetch('/api/payfast/initiate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -154,23 +182,10 @@ export default function CheckoutForm() {
         return
       }
       const { url, params } = await res.json()
-
-      // Build and submit a hidden form — the standard PayFast redirect method
-      const form = document.createElement('form')
-      form.method = 'POST'
-      form.action = url
-      for (const [key, value] of Object.entries(params as Record<string, string>)) {
-        const input = document.createElement('input')
-        input.type = 'hidden'
-        input.name = key
-        input.value = value
-        form.appendChild(input)
-      }
       clearCart()
-      document.body.appendChild(form)
-      form.submit()
-    } catch {
-      setPayfastError('Network error — please try again.')
+      submitToPayfast(url, params)
+    } catch (err: any) {
+      setPayfastError(err?.message ?? 'Network error — please try again.')
     } finally {
       setPayfastLoading(false)
     }
