@@ -13,6 +13,32 @@ function requireSecret(name: string, fallback: string): string {
   return value ?? fallback
 }
 
+// Register the PayFast payment provider only when configured, so environments
+// without PayFast credentials still boot. Enable it on the ZAR region with
+// `pnpm --filter @tse/backend payfast:setup` after deploy.
+const payfastConfigured = Boolean(process.env.PAYFAST_MERCHANT_ID && process.env.PAYFAST_MERCHANT_KEY)
+const paymentModule = {
+  resolve: '@medusajs/medusa/payment',
+  options: {
+    providers: [
+      {
+        resolve: './src/modules/payfast',
+        id: 'payfast',
+        options: {
+          merchantId: process.env.PAYFAST_MERCHANT_ID,
+          merchantKey: process.env.PAYFAST_MERCHANT_KEY,
+          passphrase: process.env.PAYFAST_PASSPHRASE,
+          // Sandbox unless explicitly disabled — matches PAYFAST_SANDBOX used
+          // across the stack (compose defaults it to 'true'). Safe default.
+          sandbox: process.env.PAYFAST_SANDBOX !== 'false',
+          storefrontUrl: process.env.STOREFRONT_URL,
+          backendUrl: process.env.MEDUSA_BACKEND_URL,
+        },
+      },
+    ],
+  },
+}
+
 export default defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
@@ -34,6 +60,7 @@ export default defineConfig({
         | undefined) ?? 'shared',
   },
   modules: [
+    ...(payfastConfigured ? [paymentModule] : []),
     {
       resolve: '@medusajs/medusa/fulfillment',
       options: {
