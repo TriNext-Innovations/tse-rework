@@ -23,7 +23,7 @@
     "@medusajs/file-s3": "^2.17.1",
     "@medusajs/framework": "^2.17.1",
     "@medusajs/medusa": "^2.17.1",
-    "@sentry/node": "^10.60.0",
+    "@sentry/node": "^10.62.0",
     "@tse/types": "workspace:*",
     "meilisearch": "^0.58.0",
     "react": "^19.2.7",
