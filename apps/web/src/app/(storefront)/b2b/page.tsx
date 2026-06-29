@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { siteConfig } from '@/lib/site-config'
 import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/layout'
 
@@ -314,8 +315,8 @@ export default function B2BPage() {
             </h3>
           </div>
           <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-3 lg:items-end">
-            <a href="tel:0117082304" className="inline-flex items-center justify-center gap-2 bg-white text-[#111827] hover:bg-[#dfe344] rounded-full px-5 py-3 text-sm font-medium transition-colors">
-              011 708 2304
+            <a href={siteConfig.phone.tel} className="inline-flex items-center justify-center gap-2 bg-white text-[#111827] hover:bg-[#dfe344] rounded-full px-5 py-3 text-sm font-medium transition-colors">
+              {siteConfig.phone.display}
             </a>
             <Link href="/b2b/quote" className="inline-flex items-center justify-center gap-2 border border-white/30 hover:bg-white/10 rounded-full px-5 py-3 text-sm transition-colors">
               Request a quote →

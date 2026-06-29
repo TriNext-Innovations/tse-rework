@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { siteConfig } from '@/lib/site-config'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Suspense } from 'react'
@@ -215,13 +216,13 @@ export default async function CompatibilityPage({ searchParams }: Props) {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <a
-                    href="tel:+27798733558"
+                    href={siteConfig.whatsapp.tel}
                     className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-[#111827] text-white text-sm font-medium hover:bg-[#41e0f5] hover:text-[#111827] transition-colors"
                   >
-                    Call 079 873 3558
+                    Call {siteConfig.whatsapp.display}
                   </a>
                   <a
-                    href="mailto:sales@tse.co.za"
+                    href={siteConfig.email.mailto}
                     className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full border border-black/15 text-sm text-[#374151] hover:border-black/40 transition-colors"
                   >
                     Email us
