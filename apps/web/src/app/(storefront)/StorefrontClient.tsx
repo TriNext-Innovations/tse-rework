@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { cartridgeTypeLabel } from '@/lib/taxonomy'
 import Image from 'next/image'
 import { Navbar } from '@/components/layout'
 import { useCart } from '@/contexts/CartContext'
@@ -534,7 +535,7 @@ export default function StorefrontClient({
               const priceZar = variant?.calculated_price?.calculated_amount
                 ? (variant.calculated_price.calculated_amount / 100).toFixed(0)
                 : null
-              const type = p.metadata?.cartridge_type === 'inkjet' ? 'Inkjet' : 'Laser'
+              const type = cartridgeTypeLabel(p.metadata?.cartridge_type) ?? 'Laser'
 
               return (
                 <article key={p.id} data-reveal onClick={() => router.push(`/products/${p.handle}`)} className="product-card group relative bg-[var(--paper-2)] rounded-[20px] p-5 sm:p-6 overflow-hidden cursor-pointer">

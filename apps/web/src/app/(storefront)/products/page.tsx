@@ -6,6 +6,7 @@ import { FilterPanel } from './FilterPanel'
 import { SortSelect } from './SortSelect'
 import { MobileFilters } from './MobileFilters'
 import { AddToCartButton } from './AddToCartButton'
+import { TYPE_CATEGORY_NAMES, TYPE_PARENT, cartridgeTypeLabel } from '@/lib/taxonomy'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
@@ -28,12 +29,6 @@ type SearchParams = Promise<{
   q?: string
 }>
 
-const TYPE_CATEGORIES = new Set(['Inkjet Cartridges', 'Laser Cartridges'])
-const TYPE_PARENT: Record<string, string> = {
-  inkjet: 'Inkjet Cartridges',
-  laser: 'Laser Cartridges',
-}
-
 // Products are assigned to the brand category (e.g. "HP" under "Laser
 // Cartridges"), never the type category directly — so a type filter resolves to
 // the brand categories under that type. type+brand resolves to the single
@@ -46,7 +41,7 @@ function resolveCategoryIds(
   const parent = opts.type ? TYPE_PARENT[opts.type] : undefined
   if (!parent && !opts.brand) return []
   return categories
-    .filter((c) => !TYPE_CATEGORIES.has(c.name))
+    .filter((c) => !TYPE_CATEGORY_NAMES.has(c.name))
     .filter((c) => (opts.brand ? c.name === opts.brand : true))
     .filter((c) => (parent ? c.parent_category?.name === parent : true))
     .map((c) => c.id as string)
@@ -172,7 +167,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
   const activeCategoryName = !isSearch
-    ? [brand, type === 'inkjet' ? 'Inkjet' : type === 'laser' ? 'Laser' : '']
+    ? [brand, cartridgeTypeLabel(type) ?? '']
         .filter(Boolean).join(' ')
     : ''
 
@@ -235,7 +230,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
                   const sku = variant?.sku ?? '—'
                   const amount = variant?.calculated_price?.calculated_amount
                   const priceZar = amount ? Math.round(amount / 100) : null
-                  const type = p.metadata?.cartridge_type === 'inkjet' ? 'Inkjet' : 'Laser'
+                  const type = cartridgeTypeLabel(p.metadata?.cartridge_type) ?? 'Laser'
 
                   const imageUrl = p.images?.[0]?.url
 

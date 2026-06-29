@@ -6,11 +6,10 @@ import { Logo } from './Logo'
 import { CartButton } from '@/components/CartButton'
 import { useAuth } from '@/contexts/AuthContext'
 import { SearchModal } from '@/components/SearchModal'
+import { TYPE_CATEGORY_NAMES } from '@/lib/taxonomy'
 
 type Category = { id: string; name: string }
 type BrandEntry = { name: string; ids: string[] }
-
-const TYPE_CATEGORIES = new Set(['Inkjet Cartridges', 'Laser Cartridges'])
 
 const FALLBACK_BRANDS: BrandEntry[] = [
   { name: 'HP', ids: ['HP'] },
@@ -66,7 +65,7 @@ const { customer, loading: authLoading } = useAuth()
   // Deduplicate brands by name — Brother appears under both Inkjet and Laser
   const brandMap = new Map<string, string[]>()
   for (const c of categories) {
-    if (TYPE_CATEGORIES.has(c.name)) continue
+    if (TYPE_CATEGORY_NAMES.has(c.name)) continue
     const ids = brandMap.get(c.name) ?? []
     ids.push(c.id)
     brandMap.set(c.name, ids)
