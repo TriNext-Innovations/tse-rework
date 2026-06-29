@@ -1,8 +1,12 @@
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CartProvider, useCart } from '@/contexts/CartContext'
+import { installCartMock } from '../helpers/medusaCartMock'
 import React from 'react'
+
+// The cart is now backed by a real Medusa cart (server source of truth); these
+// tests mock the store cart API and assert against the server-derived state.
 
 function CartConsumer() {
   const { items, count, addItem, removeItem, isOpen, openCart, closeCart } = useCart()
@@ -12,7 +16,7 @@ function CartConsumer() {
       <div data-testid="item-count">{items.length}</div>
       <div data-testid="is-open">{String(isOpen)}</div>
       {items.map((item) => (
-        <div key={item.id} data-testid={`item-${item.id}`}>
+        <div key={item.id} data-testid={`item-${item.sku}`}>
           {item.title} × {item.qty} @ {item.price}
         </div>
       ))}
@@ -22,7 +26,8 @@ function CartConsumer() {
       <button onClick={() => addItem({ id: 'prod_2', title: 'Canon 737', sku: 'CAN-737', price: 450 })}>
         Add Canon
       </button>
-      <button onClick={() => removeItem('prod_1')}>Remove HP</button>
+      <button onClick={() => items[0] && removeItem(items[0].id)}>Remove first</button>
+      <button onClick={() => removeItem('li_does_not_exist')}>Remove bogus</button>
       <button onClick={openCart}>Open</button>
       <button onClick={closeCart}>Close</button>
     </div>
@@ -36,6 +41,11 @@ function renderCart() {
     </CartProvider>,
   )
 }
+
+beforeEach(() => {
+  localStorage.clear()
+  installCartMock()
+})
 
 describe('CartProvider', () => {
   it('renders children', () => {
@@ -57,40 +67,45 @@ describe('CartProvider', () => {
   it('adds a new item with qty 1', async () => {
     renderCart()
     await userEvent.click(screen.getByText('Add HP'))
-    expect(screen.getByTestId('count').textContent).toBe('1')
+    await waitFor(() => expect(screen.getByTestId('count').textContent).toBe('1'))
     expect(screen.getByTestId('item-count').textContent).toBe('1')
-    expect(screen.getByTestId('item-prod_1')).toHaveTextContent('HP 123 × 1')
+    expect(screen.getByTestId('item-HP-123')).toHaveTextContent('HP 123 × 1')
   })
 
   it('increments qty when same item is added twice', async () => {
     renderCart()
     await userEvent.click(screen.getByText('Add HP'))
+    await waitFor(() => expect(screen.getByTestId('count').textContent).toBe('1'))
     await userEvent.click(screen.getByText('Add HP'))
-    expect(screen.getByTestId('count').textContent).toBe('2')
+    await waitFor(() => expect(screen.getByTestId('count').textContent).toBe('2'))
     expect(screen.getByTestId('item-count').textContent).toBe('1')
-    expect(screen.getByTestId('item-prod_1')).toHaveTextContent('HP 123 × 2')
+    expect(screen.getByTestId('item-HP-123')).toHaveTextContent('HP 123 × 2')
   })
 
   it('tracks multiple distinct items', async () => {
     renderCart()
     await userEvent.click(screen.getByText('Add HP'))
+    await waitFor(() => expect(screen.getByTestId('count').textContent).toBe('1'))
     await userEvent.click(screen.getByText('Add Canon'))
-    expect(screen.getByTestId('count').textContent).toBe('2')
+    await waitFor(() => expect(screen.getByTestId('count').textContent).toBe('2'))
     expect(screen.getByTestId('item-count').textContent).toBe('2')
   })
 
   it('removes an item entirely', async () => {
     renderCart()
     await userEvent.click(screen.getByText('Add HP'))
-    await userEvent.click(screen.getByText('Remove HP'))
-    expect(screen.getByTestId('count').textContent).toBe('0')
+    await waitFor(() => expect(screen.getByTestId('count').textContent).toBe('1'))
+    await userEvent.click(screen.getByText('Remove first'))
+    await waitFor(() => expect(screen.getByTestId('count').textContent).toBe('0'))
     expect(screen.getByTestId('item-count').textContent).toBe('0')
   })
 
   it('removing non-existent item does nothing', async () => {
     renderCart()
     await userEvent.click(screen.getByText('Add Canon'))
-    await userEvent.click(screen.getByText('Remove HP'))
+    await waitFor(() => expect(screen.getByTestId('count').textContent).toBe('1'))
+    await userEvent.click(screen.getByText('Remove bogus'))
+    await new Promise((r) => setTimeout(r, 0))
     expect(screen.getByTestId('count').textContent).toBe('1')
   })
 
@@ -124,44 +139,39 @@ describe('CartProvider', () => {
 
   it('shows items in drawer when cart has products', async () => {
     renderCart()
-    await userEvent.click(screen.getByText('Add HP'))
-    await userEvent.click(screen.getByText('Open'))
-    expect(screen.getAllByText(/SKU HP-123/)[0]).toBeInTheDocument()
+    await userEvent.click(screen.getByText('Add HP')) // adding opens the drawer
+    expect(await screen.findAllByText(/SKU HP-123/)).not.toHaveLength(0)
   })
 
   it('shows subtotal and checkout button when items present', async () => {
     renderCart()
     await userEvent.click(screen.getByText('Add HP'))
-    await userEvent.click(screen.getByText('Open'))
-    expect(screen.getByText('Subtotal')).toBeInTheDocument()
+    expect(await screen.findByText('Subtotal')).toBeInTheDocument()
     expect(screen.getByText(/Checkout/)).toBeInTheDocument()
   })
 
   it('can remove item from drawer', async () => {
     renderCart()
     await userEvent.click(screen.getByText('Add HP'))
-    await userEvent.click(screen.getByText('Open'))
-    const removeBtn = screen.getAllByLabelText('Remove item')[0]!
+    const removeBtn = await screen.findByLabelText('Remove item')
     await userEvent.click(removeBtn)
-    expect(screen.getByTestId('count').textContent).toBe('0')
-  })
-
-  it('shows POA for items with null price', async () => {
-    renderCart()
-    useCartOutside()
-    // Tested via consumer — price=null shows "POA"
-    // Already covered in drawer render; POA appears for null-price items in the items list
-    expect(true).toBe(true) // placeholder — covered by integration
+    await waitFor(() => expect(screen.getByTestId('count').textContent).toBe('0'))
   })
 
   it('count header shows correct singular/plural', async () => {
     renderCart()
     await userEvent.click(screen.getByText('Open'))
     expect(screen.getByText('0 items')).toBeInTheDocument()
-    await userEvent.click(screen.getByText('Close'))
     await userEvent.click(screen.getByText('Add HP'))
-    await userEvent.click(screen.getByText('Open'))
-    expect(screen.getByText('1 item')).toBeInTheDocument()
+    expect(await screen.findByText('1 item')).toBeInTheDocument()
+  })
+
+  it('persists only the cart_id in localStorage', async () => {
+    renderCart()
+    await userEvent.click(screen.getByText('Add HP'))
+    await waitFor(() => expect(localStorage.getItem('tse_cart_id')).toMatch(/^cart_/))
+    // No item/price snapshot is persisted.
+    expect(localStorage.getItem('tse_cart')).toBeNull()
   })
 })
 
@@ -176,8 +186,3 @@ describe('useCart outside provider', () => {
     spy.mockRestore()
   })
 })
-
-// Helper — reads cart state directly (for isolation in one test)
-function useCartOutside() {
-  return { addItem: (_: any) => {} }
-}

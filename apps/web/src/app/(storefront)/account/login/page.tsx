@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Navbar } from '@/components/layout'
 import { useAuth } from '@/contexts/AuthContext'
+import { siteConfig } from '@/lib/site-config'
 
 function LoginContent() {
   const { login } = useAuth()
@@ -94,7 +95,7 @@ function LoginContent() {
         <Link href="/account/forgot-password" className="underline underline-offset-4 hover:text-[#111827] transition-colors">
           Forgot password?
         </Link>
-        <a href="mailto:sales@tse.co.za" className="underline underline-offset-4 hover:text-[#111827] transition-colors">
+        <a href={siteConfig.email.mailto} className="underline underline-offset-4 hover:text-[#111827] transition-colors">
           Contact us
         </a>
       </div>

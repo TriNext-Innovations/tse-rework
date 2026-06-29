@@ -1,8 +1,14 @@
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { AddToCartButton } from '@/app/(storefront)/products/AddToCartButton'
 import { CartProvider, useCart } from '@/contexts/CartContext'
+import { installCartMock } from '../helpers/medusaCartMock'
 import React from 'react'
+
+beforeEach(() => {
+  localStorage.clear()
+  installCartMock()
+})
 
 function renderButton(props = {}) {
   const defaults = { id: 'prod_1', title: 'HP 123 Black', sku: 'HP-123-BK', price: 300 }
@@ -38,7 +44,7 @@ describe('AddToCartButton', () => {
     expect(parentHandler).not.toHaveBeenCalled()
   })
 
-  it('adds item to cart when clicked', () => {
+  it('adds item to cart when clicked', async () => {
     function Inspector() {
       const { items } = useCart()
       return <div data-testid="cart-count">{items.length}</div>
@@ -51,7 +57,7 @@ describe('AddToCartButton', () => {
     )
     expect(screen.getByTestId('cart-count').textContent).toBe('0')
     fireEvent.click(screen.getByRole('button', { name: /Add Test to cart/i }))
-    expect(screen.getByTestId('cart-count').textContent).toBe('1')
+    await waitFor(() => expect(screen.getByTestId('cart-count').textContent).toBe('1'))
   })
 
   it('renders for null price (POA products)', () => {

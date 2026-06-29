@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { siteConfig } from '@/lib/site-config'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout'
 
@@ -49,8 +50,8 @@ export default function PrivacyPage() {
           <p>
             TSE is the Responsible Party under POPIA.<br />
             <strong>Address:</strong> Unit 34, A.P.D. Industrial Park, Kya Sands, Johannesburg 2163<br />
-            <strong>Phone:</strong> 011 708 2304 / 079 873 3558<br />
-            <strong>Email:</strong> <a href="mailto:sales@tse.co.za">sales@tse.co.za</a>
+            <strong>Phone:</strong> {siteConfig.phone.display} / {siteConfig.whatsapp.display}<br />
+            <strong>Email:</strong> <a href={siteConfig.email.mailto}>{siteConfig.email.sales}</a>
           </p>
 
           <h2>2. What personal information we collect</h2>
@@ -106,7 +107,7 @@ export default function PrivacyPage() {
             </li>
           </ul>
           <p>
-            To exercise your rights, email <a href="mailto:sales@tse.co.za">sales@tse.co.za</a> or call 011 708 2304.
+            To exercise your rights, email <a href={siteConfig.email.mailto}>{siteConfig.email.sales}</a> or call {siteConfig.phone.display}.
             We will respond within 30 days.
           </p>
 

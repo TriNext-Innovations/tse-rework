@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { siteConfig } from '@/lib/site-config'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout'
 
@@ -95,7 +96,7 @@ export default function CookiesPage() {
           <h2>Contact</h2>
           <p>
             Questions about this policy? Email{' '}
-            <a href="mailto:sales@tse.co.za">sales@tse.co.za</a> or call 011 708 2304.
+            <a href={siteConfig.email.mailto}>{siteConfig.email.sales}</a> or call {siteConfig.phone.display}.
             Also see our <Link href="/legal/privacy">Privacy Policy</Link>.
           </p>
         </div>

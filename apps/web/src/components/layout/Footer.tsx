@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { siteConfig } from '@/lib/site-config'
 import { Logo } from './Logo'
 
 const BRANDS = [
@@ -22,7 +23,7 @@ const HELP_LINKS = [
   { label: 'FAQ', href: '/#faq' },
   { label: 'Privacy policy', href: '/legal/privacy' },
   { label: 'Cookie policy', href: '/legal/cookies' },
-  { label: 'Contact us', href: 'mailto:sales@tse.co.za' },
+  { label: 'Contact us', href: siteConfig.email.mailto },
 ]
 
 export function Footer() {
@@ -108,18 +109,18 @@ export function Footer() {
             <h3 className="text-[10px] uppercase tracking-[0.22em] text-white/35 mb-4">Contact</h3>
             <ul className="space-y-2.5 text-sm text-white/65">
               <li>
-                <a href="tel:+27798733558" className="hover:text-[#41e0f5] transition-colors">
-                  079 873 3558
+                <a href={siteConfig.whatsapp.tel} className="hover:text-[#41e0f5] transition-colors">
+                  {siteConfig.whatsapp.display}
                 </a>
               </li>
               <li>
-                <a href="tel:+27117082304" className="hover:text-[#41e0f5] transition-colors">
-                  011 708 2304/5
+                <a href={siteConfig.phone.tel} className="hover:text-[#41e0f5] transition-colors">
+                  {siteConfig.phone.displayExt}
                 </a>
               </li>
               <li>
-                <a href="mailto:sales@tse.co.za" className="hover:text-[#41e0f5] transition-colors">
-                  sales@tse.co.za
+                <a href={siteConfig.email.mailto} className="hover:text-[#41e0f5] transition-colors">
+                  {siteConfig.email.sales}
                 </a>
               </li>
               <li className="pt-3 border-t border-white/8">

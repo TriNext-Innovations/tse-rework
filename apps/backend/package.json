@@ -14,27 +14,28 @@
     "seed:compat": "medusa exec src/scripts/seed-compatibility.ts",
     "seed:compat:reset": "medusa exec src/scripts/seed-compatibility-reset.ts",
     "search:index": "medusa exec src/scripts/bulk-index.ts",
-    "b2b:setup": "medusa exec src/scripts/setup-b2b-groups.ts"
+    "b2b:setup": "medusa exec src/scripts/setup-b2b-groups.ts",
+    "import:woocommerce": "medusa exec src/scripts/import-woocommerce.ts"
   },
   "dependencies": {
-    "@medusajs/admin-sdk": "2.16.0",
-    "@medusajs/dashboard": "^2.16.0",
-    "@medusajs/draft-order": "^2.16.0",
-    "@medusajs/file-s3": "^2.16.0",
-    "@medusajs/framework": "^2.16.0",
-    "@medusajs/medusa": "^2.16.0",
-    "@sentry/node": "^10.60.0",
+    "@medusajs/admin-sdk": "2.17.1",
+    "@medusajs/dashboard": "^2.17.1",
+    "@medusajs/draft-order": "^2.17.1",
+    "@medusajs/file-s3": "^2.17.1",
+    "@medusajs/framework": "^2.17.1",
+    "@medusajs/medusa": "^2.17.1",
+    "@sentry/node": "^10.62.0",
     "@tse/types": "workspace:*",
     "meilisearch": "^0.58.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "resend": "^6.14.0"
+    "resend": "^6.16.0"
   },
   "devDependencies": {
     "@tse/config": "workspace:*",
     "@types/node": "^22.0.0",
     "@types/pg": "^8.11.11",
-    "@types/react": "^19.2.14",
+    "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "pg": "^8.22.0",
     "ts-node": "^10.9.2",

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useCart } from '@/contexts/CartContext'
 import { AddressAutocomplete } from './AddressAutocomplete'
 import {
-  createCartWithAddress,
+  setCartContact,
   listShippingOptions,
   selectShippingMethod,
   type ShippingOption,
@@ -33,7 +33,7 @@ function inputClass(error?: string) {
 }
 
 export default function CheckoutForm() {
-  const { items, count, clearCart } = useCart()
+  const { items, count, clearCart, cartId } = useCart()
   const [step, setStep] = useState(1)
   const [contact, setContact] = useState<ContactForm>(EMPTY_CONTACT)
   const [address, setAddress] = useState<AddressForm>(EMPTY_ADDRESS)
@@ -42,8 +42,7 @@ export default function CheckoutForm() {
   const [payfastLoading, setPayfastLoading] = useState(false)
   const [payfastError, setPayfastError] = useState('')
 
-  // Medusa cart / delivery state
-  const [cartId, setCartId] = useState<string | null>(null)
+  // Delivery state (the cart itself is the session Medusa cart from context)
   const [options, setOptions] = useState<ShippingOption[]>([])
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null)
   const [totals, setTotals] = useState<CartTotals | null>(null)
@@ -84,17 +83,22 @@ export default function CheckoutForm() {
     return Object.keys(errs).length === 0
   }
 
-  // Create the Medusa cart, set the address, and load admin-configured shipping
-  // options (Collect / Courier Guy Economy + Overnight) with live prices.
+  // Set the address/email on the existing session cart, then load
+  // admin-configured shipping options (Collect / Courier Guy Economy +
+  // Overnight) with live prices.
   async function loadDeliveryOptions() {
     if (!validateAddress()) return
+    if (!cartId) {
+      setOptionsError('Your cart could not be found. Please add an item again.')
+      return
+    }
     setOptionsError('')
     setOptionsLoading(true)
     setSelectedOptionId(null)
     setTotals(null)
     try {
       const nameParts = contact.name.trim().split(/\s+/)
-      const id = await createCartWithAddress(items, contact.email, {
+      await setCartContact(cartId, contact.email, {
         first_name: nameParts[0] ?? contact.name,
         last_name: nameParts.slice(1).join(' ') || '-',
         phone: contact.phone.replace(/\s/g, ''),
@@ -104,12 +108,11 @@ export default function CheckoutForm() {
         province: address.province,
         postal_code: address.postalCode,
       })
-      const opts = await listShippingOptions(id)
+      const opts = await listShippingOptions(cartId)
       if (opts.length === 0) {
         setOptionsError('No delivery options are available for this address. Please check your details.')
         return
       }
-      setCartId(id)
       setOptions(opts)
       setStep(3)
     } catch (err: any) {
