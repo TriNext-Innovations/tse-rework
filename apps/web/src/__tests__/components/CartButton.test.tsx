@@ -1,8 +1,9 @@
-import { describe, it, expect } from 'vitest'
-import { render, screen, fireEvent, within } from '@testing-library/react'
+import { describe, it, expect, beforeEach } from 'vitest'
+import { render, screen, within, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CartButton } from '@/components/CartButton'
 import { CartProvider, useCart } from '@/contexts/CartContext'
+import { installCartMock } from '../helpers/medusaCartMock'
 import React from 'react'
 
 function CartButtonWithAdder() {
@@ -12,6 +13,9 @@ function CartButtonWithAdder() {
       <CartButton />
       <button onClick={() => addItem({ id: 'p1', title: 'HP 123', sku: 'HP-123', price: 300 })}>
         add
+      </button>
+      <button onClick={() => addItem({ id: 'p1', title: 'HP 123', sku: 'HP-123', price: 300 }, 100)}>
+        add 100
       </button>
     </>
   )
@@ -24,6 +28,11 @@ function renderCartButton() {
     </CartProvider>,
   )
 }
+
+beforeEach(() => {
+  localStorage.clear()
+  installCartMock()
+})
 
 describe('CartButton', () => {
   it('renders with accessible label showing 0 items', () => {
@@ -39,24 +48,20 @@ describe('CartButton', () => {
   it('shows badge count after adding an item', async () => {
     renderCartButton()
     await userEvent.click(screen.getByText('add'))
-    // Scope to the cart button's badge — the drawer line item also renders "1".
-    const cartBtn = screen.getByRole('button', { name: /Cart \(1 items\)/i })
+    const cartBtn = await screen.findByRole('button', { name: /Cart \(1 items\)/i })
     expect(within(cartBtn).getByText('1')).toBeInTheDocument()
   })
 
   it('updates aria-label to reflect current count', async () => {
     renderCartButton()
     await userEvent.click(screen.getByText('add'))
-    expect(screen.getByRole('button', { name: /Cart \(1 items\)/i })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /Cart \(1 items\)/i })).toBeInTheDocument()
   })
 
-  it('shows 99+ when count exceeds 99', () => {
+  it('shows 99+ when count exceeds 99', async () => {
     renderCartButton()
-    const addBtn = screen.getByText('add')
-    for (let i = 0; i < 100; i++) {
-      fireEvent.click(addBtn)
-    }
-    expect(screen.getByText('99+')).toBeInTheDocument()
+    await userEvent.click(screen.getByText('add 100'))
+    expect(await screen.findByText('99+')).toBeInTheDocument()
   })
 
   it('calls openCart when clicked', async () => {
@@ -78,9 +83,8 @@ describe('CartButton', () => {
   })
 
   it('animation is triggered when count increases', async () => {
-    // The MockDynamic in vitest.setup sets lottieRef.current.goToAndPlay
-    // After adding an item, the effect fires — we just ensure no errors are thrown
     renderCartButton()
-    await expect(userEvent.click(screen.getByText('add'))).resolves.not.toThrow()
+    await userEvent.click(screen.getByText('add'))
+    await waitFor(() => expect(screen.getByRole('button', { name: /Cart \(1 items\)/i })).toBeInTheDocument())
   })
 })

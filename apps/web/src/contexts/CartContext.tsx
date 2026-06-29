@@ -1,10 +1,21 @@
 'use client'
 
-import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { CartLottie } from '@/components/CartLottie'
+import {
+  type MedusaCart,
+  createEmptyCart,
+  getCart,
+  addLineItem,
+  updateLineItem,
+  removeLineItem,
+} from '@/lib/checkout-cart'
 
+// A line of the cart as the UI consumes it. `id` is the Medusa LINE-ITEM id
+// (used to update/remove), and `price` is in rand (Medusa stores cents). Derived
+// from the Medusa cart — never persisted; only the cart_id lives in the browser.
 export type CartItem = {
   id: string
   title: string
@@ -15,12 +26,25 @@ export type CartItem = {
   variantId?: string
 }
 
+// What callers pass to addItem. PDP/listing adds carry the variant; search adds
+// carry the product id + SKU (the cart client resolves the variant).
+export type AddToCartInput = {
+  id: string
+  title: string
+  sku: string
+  price: number | null
+  thumbnail?: string
+  variantId?: string
+}
+
 type CartContextType = {
   items: CartItem[]
   count: number
-  addItem: (item: Omit<CartItem, 'qty'>) => void
-  removeItem: (id: string) => void
-  updateQty: (id: string, qty: number) => void
+  cartId: string | null
+  pending: boolean
+  addItem: (item: AddToCartInput, quantity?: number) => void
+  removeItem: (lineId: string) => void
+  updateQty: (lineId: string, qty: number) => void
   clearCart: () => void
   isOpen: boolean
   openCart: () => void
@@ -29,49 +53,115 @@ type CartContextType = {
 
 const CartContext = createContext<CartContextType | null>(null)
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([])
-  const [isOpen, setIsOpen] = useState(false)
+const CART_ID_KEY = 'tse_cart_id'
 
-  useEffect(() => {
+function toItems(cart: MedusaCart | null): CartItem[] {
+  return (cart?.items ?? []).map((l) => ({
+    id: l.id,
+    title: l.product_title ?? l.title ?? '',
+    sku: l.variant_sku ?? '',
+    price: typeof l.unit_price === 'number' ? l.unit_price / 100 : null,
+    qty: l.quantity,
+    thumbnail: l.thumbnail ?? undefined,
+    variantId: l.variant_id,
+  }))
+}
+
+export function CartProvider({ children }: { children: React.ReactNode }) {
+  const [cart, setCart] = useState<MedusaCart | null>(null)
+  const [isOpen, setIsOpen] = useState(false)
+  const [pending, setPending] = useState(false)
+  // cartId lives in a ref too so concurrent adds don't each create a new cart.
+  const cartIdRef = useRef<string | null>(null)
+  // In-flight cart creation, shared by concurrent first-adds so they don't each
+  // POST a new cart.
+  const creatingRef = useRef<Promise<MedusaCart> | null>(null)
+
+  const setCartId = useCallback((id: string | null) => {
+    cartIdRef.current = id
     try {
-      const saved = localStorage.getItem('tse_cart')
-      if (saved) setItems(JSON.parse(saved))
+      if (id) localStorage.setItem(CART_ID_KEY, id)
+      else localStorage.removeItem(CART_ID_KEY)
     } catch {}
   }, [])
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('tse_cart', JSON.stringify(items))
-    } catch {}
-  }, [items])
+  const ensureCartId = useCallback(async (): Promise<string> => {
+    if (cartIdRef.current) return cartIdRef.current
+    if (!creatingRef.current) creatingRef.current = createEmptyCart()
+    const created = await creatingRef.current
+    setCartId(created.id)
+    setCart((prev) => prev ?? created)
+    return created.id
+  }, [setCartId])
 
+  // Hydrate the cart from the persisted cart_id. If it's gone or completed,
+  // getCart returns null and we drop the stale id so the next add recreates one.
+  useEffect(() => {
+    let saved: string | null = null
+    try {
+      saved = localStorage.getItem(CART_ID_KEY)
+    } catch {}
+    if (!saved) return
+    cartIdRef.current = saved
+    getCart(saved).then((c) => {
+      if (c) setCart(c)
+      else setCartId(null)
+    })
+  }, [setCartId])
+
+  const items = useMemo(() => toItems(cart), [cart])
   const count = items.reduce((sum, i) => sum + i.qty, 0)
   const total = items.reduce((sum, i) => sum + (i.price ?? 0) * i.qty, 0)
 
-  const addItem = useCallback((item: Omit<CartItem, 'qty'>) => {
-    setItems((prev) => {
-      const existing = prev.find((i) => i.id === item.id && i.variantId === item.variantId)
-      if (existing) return prev.map((i) =>
-        i.id === item.id && i.variantId === item.variantId ? { ...i, qty: i.qty + 1 } : i
-      )
-      return [...prev, { ...item, qty: 1 }]
-    })
-  }, [])
+  // Lazily create the Medusa cart, add the variant, and open the drawer. The
+  // returned cart (server-computed prices/totals) becomes the new state.
+  const addItem = useCallback(
+    async (item: AddToCartInput, quantity = 1) => {
+      setPending(true)
+      try {
+        const id = await ensureCartId()
+        const updated = await addLineItem(
+          id,
+          { id: item.id, title: item.title, sku: item.sku, variantId: item.variantId },
+          quantity,
+        )
+        setCart(updated)
+        setIsOpen(true)
+      } catch (err) {
+        console.error('[cart] add failed:', err)
+      } finally {
+        setPending(false)
+      }
+    },
+    [ensureCartId],
+  )
 
-  const removeItem = useCallback((id: string) => {
-    setItems((prev) => prev.filter((i) => i.id !== id))
-  }, [])
-
-  const updateQty = useCallback((id: string, qty: number) => {
-    if (qty <= 0) {
-      setItems((prev) => prev.filter((i) => i.id !== id))
-      return
+  const removeItem = useCallback(async (lineId: string) => {
+    const id = cartIdRef.current
+    if (!id) return
+    try {
+      setCart(await removeLineItem(id, lineId))
+    } catch (err) {
+      console.error('[cart] remove failed:', err)
     }
-    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, qty } : i)))
   }, [])
 
-  const clearCart = useCallback(() => setItems([]), [])
+  const updateQty = useCallback(async (lineId: string, qty: number) => {
+    const id = cartIdRef.current
+    if (!id) return
+    try {
+      setCart(qty <= 0 ? await removeLineItem(id, lineId) : await updateLineItem(id, lineId, qty))
+    } catch (err) {
+      console.error('[cart] update failed:', err)
+    }
+  }, [])
+
+  // Drop the local cart reference (e.g. after redirecting to PayFast). The
+  // Medusa cart itself is completed server-side on payment, not deleted here.
+  const clearCart = useCallback(() => {
+    setCart(null)
+    setCartId(null)
+  }, [setCartId])
 
   useEffect(() => {
     if (!isOpen) return
@@ -82,7 +172,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <CartContext.Provider
-      value={{ items, count, addItem, removeItem, updateQty, clearCart, isOpen, openCart: () => setIsOpen(true), closeCart: () => setIsOpen(false) }}
+      value={{
+        items,
+        count,
+        cartId: cart?.id ?? null,
+        pending,
+        addItem,
+        removeItem,
+        updateQty,
+        clearCart,
+        isOpen,
+        openCart: () => setIsOpen(true),
+        closeCart: () => setIsOpen(false),
+      }}
     >
       {children}
 
