@@ -30,7 +30,6 @@ export default defineConfig({
         'src/app/layout.tsx',
         'src/app/(main)/**',
         'src/app/(storefront)/layout.tsx',
-        'src/lib/woocommerce.ts',
         'src/lib/medusa.ts',
         'src/**/__tests__/**',
         'src/**/*.d.ts',
