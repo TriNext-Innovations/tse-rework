@@ -71,16 +71,17 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
 
   const handleAddToCart = useCallback(() => {
     if (!variant) return
-    for (let i = 0; i < qty; i++) {
-      addItem({
+    addItem(
+      {
         id: `${product.id}-${variant.id}`,
         title: product.title,
         sku,
         price: priceZar,
         thumbnail: images[0]?.url,
         variantId: variant.id,
-      })
-    }
+      },
+      qty,
+    )
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
   }, [variant, qty, product, sku, priceZar, images, addItem])
