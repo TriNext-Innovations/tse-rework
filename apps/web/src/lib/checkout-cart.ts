@@ -221,3 +221,52 @@ export async function selectShippingMethod(cartId: string, optionId: string): Pr
     total: cart.total ?? 0,
   }
 }
+
+// ─── Canonical PayFast flow (Medusa payment provider, #130) ───────────────────
+// Gated behind NEXT_PUBLIC_PAYFAST_PROVIDER on the storefront — when off, the
+// legacy /api/payfast/initiate path is used instead.
+
+export const PAYFAST_PROVIDER_ENABLED = process.env.NEXT_PUBLIC_PAYFAST_PROVIDER === 'true'
+// Medusa payment-provider id: `pp_<config-id>_<service-identifier>` = payfast/payfast.
+const PAYFAST_PROVIDER_ID = 'pp_payfast_payfast'
+
+export type PayfastRedirect = { url: string; params: Record<string, string> }
+
+// Create a payment collection for the cart, initialise the PayFast session
+// (Medusa calls the provider's initiatePayment, which signs the redirect
+// params), and return them for the browser to POST to PayFast.
+export async function initPayfastSession(cartId: string): Promise<PayfastRedirect> {
+  const { payment_collection } = await api<{ payment_collection: { id: string } }>(
+    `/store/payment-collections`,
+    { method: 'POST', body: JSON.stringify({ cart_id: cartId }) },
+  )
+  const { payment_collection: pc } = await api<{
+    payment_collection: { payment_sessions?: Array<{ provider_id: string; data?: Record<string, unknown> }> }
+  }>(`/store/payment-collections/${payment_collection.id}/payment-sessions`, {
+    method: 'POST',
+    body: JSON.stringify({ provider_id: PAYFAST_PROVIDER_ID }),
+  })
+
+  const session = pc.payment_sessions?.find((s) => s.provider_id === PAYFAST_PROVIDER_ID)
+  const data = session?.data as { url?: string; params?: Record<string, string> } | undefined
+  if (!data?.url || !data?.params) {
+    throw new Error('PayFast session did not return redirect params — is the provider enabled on the region?')
+  }
+  return { url: data.url, params: data.params }
+}
+
+// Complete the cart → order. Idempotent-ish: once completed it returns the order.
+// On the redirect-return the ITN may not have authorised the session yet, so the
+// caller polls (see the confirmed page).
+export async function completeCart(
+  cartId: string,
+): Promise<{ type: 'order' | 'cart'; order?: { id: string; display_id?: number }; error?: string }> {
+  try {
+    const res = await api<{ type: 'order' | 'cart'; order?: any }>(`/store/carts/${cartId}/complete`, {
+      method: 'POST',
+    })
+    return res
+  } catch (err: any) {
+    return { type: 'cart', error: err?.message ?? 'complete failed' }
+  }
+}

@@ -91,6 +91,28 @@ class PayfastProviderService extends AbstractPaymentProvider<PayfastOptions> {
     return this.sign(rest) === signature
   }
 
+  // Verify the ITN signature from the RAW posted body so field order and
+  // PayFast's own url-encoding are preserved — a parsed object reorders keys and
+  // re-encodes values, which breaks the MD5. This is the reliable path.
+  private verifyRawSignature(rawData: unknown): boolean {
+    if (!rawData) return false
+    const raw = Buffer.isBuffer(rawData) ? rawData.toString('utf8') : String(rawData)
+    let signature = ''
+    const kept: string[] = []
+    for (const pair of raw.split('&')) {
+      const idx = pair.indexOf('=')
+      const k = idx === -1 ? pair : pair.slice(0, idx)
+      const v = idx === -1 ? '' : pair.slice(idx + 1)
+      if (k === 'signature') { signature = v; continue }
+      kept.push(`${k}=${v}`)
+    }
+    const base = kept.join('&')
+    const toHash = this.options_.passphrase
+      ? `${base}&passphrase=${this.encode(this.options_.passphrase)}`
+      : base
+    return crypto.createHash('md5').update(toHash).digest('hex') === signature
+  }
+
   private toRand(amount: unknown): string {
     const divisor = this.options_.amountDivisor ?? 100
     return (Number(amount) / divisor).toFixed(2)
@@ -193,7 +215,12 @@ class PayfastProviderService extends AbstractPaymentProvider<PayfastOptions> {
     if (body.merchant_id && body.merchant_id !== this.options_.merchantId) {
       return { action: 'failed' }
     }
-    if (!this.verifySignature(body)) {
+    // Prefer the raw body for signature (preserves order); fall back to the
+    // parsed object if the platform didn't surface rawData.
+    const verified = (webhookData as any).rawData
+      ? this.verifyRawSignature((webhookData as any).rawData)
+      : this.verifySignature(body)
+    if (!verified) {
       return { action: 'failed' }
     }
 
