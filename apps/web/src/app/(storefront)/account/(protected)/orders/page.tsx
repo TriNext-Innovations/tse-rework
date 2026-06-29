@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { siteConfig } from '@/lib/site-config'
 import { useAuth } from '@/contexts/AuthContext'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
@@ -60,7 +61,7 @@ export default function OrdersPage() {
           <p className="text-sm text-[#6B6B66] max-w-xs mx-auto mb-6 leading-relaxed">
             Orders placed via WhatsApp or PayFast will appear here once your account is linked.
             For previous orders, call{' '}
-            <a href="tel:0117082304" className="underline">011 708 2304</a>.
+            <a href={siteConfig.phone.tel} className="underline">{siteConfig.phone.display}</a>.
           </p>
           <Link
             href="/products"
