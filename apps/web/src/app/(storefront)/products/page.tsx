@@ -11,7 +11,10 @@ import { TYPE_CATEGORY_NAMES, TYPE_PARENT, cartridgeTypeLabel } from '@/lib/taxo
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
 const MEILI_HOST = process.env.MEILISEARCH_HOST ?? process.env.NEXT_PUBLIC_MEILISEARCH_HOST ?? ''
-const MEILI_KEY = process.env.MEILISEARCH_API_KEY ?? process.env.NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY ?? ''
+// Search-only key — never the Meili admin/master key. This is read-only
+// search; the admin key (MEILISEARCH_API_KEY) stays strictly in the backend
+// (indexer / bulk-index) so a future move of this code client-side can't leak it.
+const MEILI_KEY = process.env.MEILISEARCH_SEARCH_KEY ?? process.env.NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY ?? ''
 const PAGE_SIZE = 24
 // The whole catalogue is small (~339), so for filtered browsing we fetch the
 // matching set in one call and sort/paginate in memory. This lets us sort by

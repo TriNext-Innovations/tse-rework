@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { siteConfig } from '@/lib/site-config'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout'
 
@@ -94,10 +95,10 @@ export default async function B2BConfirmedPage({
             Browse cartridges
           </Link>
           <a
-            href="tel:0117082304"
+            href={siteConfig.phone.tel}
             className="inline-flex items-center justify-center px-6 py-3 rounded-full border border-black/15 text-sm text-[#374151] hover:border-black/40 transition-colors"
           >
-            Call 011 708 2304
+            Call {siteConfig.phone.display}
           </a>
         </div>
       </div>
