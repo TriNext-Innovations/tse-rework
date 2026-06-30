@@ -15,6 +15,8 @@
     "seed:compat:reset": "medusa exec src/scripts/seed-compatibility-reset.ts",
     "search:index": "medusa exec src/scripts/bulk-index.ts",
     "b2b:setup": "medusa exec src/scripts/setup-b2b-groups.ts",
+    "migrate:woo": "medusa exec src/scripts/migrate-woo-archive.ts",
+    "import:woo": "medusa exec src/scripts/import-woo-orders.ts"
     "import:woocommerce": "medusa exec src/scripts/import-woocommerce.ts",
     "payfast:setup": "medusa exec src/scripts/setup-payfast.ts"
   },
