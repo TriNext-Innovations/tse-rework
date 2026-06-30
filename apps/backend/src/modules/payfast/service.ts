@@ -45,8 +45,9 @@ const PAYFAST_IPS = new Set([
  *     (the route resolves the provider as `pp_{path}`; this provider is
  *     registered as `pp_payfast_payfast`); Medusa's
  *     webhook route calls `getWebhookActionAndData`, which verifies IP +
- *     signature and returns `{ action: 'authorized', data: { session_id, amount }}`.
- *     Medusa authorizes the session; a subscriber then completes the cart → order.
+ *     signature and returns `{ action: 'captured', data: { session_id, amount }}`
+ *     (PayFast settles immediately on COMPLETE). Medusa authorizes + captures
+ *     the session and completes the cart → order.
  *
  * ⚠️ DRAFT — not verified against a PayFast sandbox. Confirm: amount units (see
  * `amountDivisor`), the session_id round-trip via m_payment_id, and signature
@@ -297,9 +298,15 @@ class PayfastProviderService extends AbstractPaymentProvider<PayfastOptions> {
     if (status === 'COMPLETE') {
       // Record the verified outcome BEFORE returning, so the authorize step that
       // Medusa runs next (and any racing storefront cart-complete) sees it.
-      await this.markStatus(sessionId, 'complete', grossAmount)
+      await this.markStatus(sessionId, 'captured', grossAmount)
+      // PayFast settles immediately on COMPLETE — the money is already taken. Use
+      // the `captured` action so Medusa's process-payment workflow runs its
+      // autocapture path (authorize → capture) in addition to completing the
+      // cart, instead of leaving the payment authorized-but-uncaptured. The
+      // cart-completion step runs regardless of action, so the order is still
+      // created.
       return {
-        action: 'authorized',
+        action: 'captured',
         data: { session_id: sessionId, amount: Number(grossAmount ?? 0) },
       }
     }
