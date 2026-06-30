@@ -145,7 +145,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
       title: h.title,
       metadata: { cartridge_type: h.cartridge_type },
       images: h.image_url ? [{ url: h.image_url }] : [],
-      variants: [{ sku: h.sku, calculated_price: h.price_zar ? { calculated_amount: h.price_zar * 100 } : null }],
+      variants: [{ sku: h.sku, calculated_price: h.price_zar ? { calculated_amount: h.price_zar } : null }],
     }))
   } else {
     const regionId = await getRegionId()
@@ -232,7 +232,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
                   const variant = p.variants?.[0]
                   const sku = variant?.sku ?? '—'
                   const amount = variant?.calculated_price?.calculated_amount
-                  const priceZar = amount ? Math.round(amount / 100) : null
+                  const priceZar = amount ? Math.round(amount) : null
                   const type = cartridgeTypeLabel(p.metadata?.cartridge_type) ?? 'Laser'
 
                   const imageUrl = p.images?.[0]?.url

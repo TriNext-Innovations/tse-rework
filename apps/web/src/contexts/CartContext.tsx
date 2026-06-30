@@ -14,7 +14,7 @@ import {
 } from '@/lib/checkout-cart'
 
 // A line of the cart as the UI consumes it. `id` is the Medusa LINE-ITEM id
-// (used to update/remove), and `price` is in rand (Medusa stores cents). Derived
+// (used to update/remove), and `price` is in rand (Medusa stores rands). Derived
 // from the Medusa cart — never persisted; only the cart_id lives in the browser.
 export type CartItem = {
   id: string
@@ -60,7 +60,7 @@ function toItems(cart: MedusaCart | null): CartItem[] {
     id: l.id,
     title: l.product_title ?? l.title ?? '',
     sku: l.variant_sku ?? '',
-    price: typeof l.unit_price === 'number' ? l.unit_price / 100 : null,
+    price: typeof l.unit_price === 'number' ? l.unit_price : null,
     qty: l.quantity,
     thumbnail: l.thumbnail ?? undefined,
     variantId: l.variant_id,

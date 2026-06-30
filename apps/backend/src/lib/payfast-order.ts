@@ -2,9 +2,8 @@ import { MedusaContainer } from '@medusajs/framework/types'
 import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
 import { createOrderWorkflow } from '@medusajs/medusa/core-flows'
 
-// This deployment stores money as integer cents (a R450 product has price
-// amount 45000), and the storefront/emails divide by 100. Order line items
-// must follow the same convention, so rand prices are scaled by 100.
+// This deployment stores money in rands (a R450 product has price amount 450).
+// Order line items follow the same convention — prices are used as-is.
 
 // Resolve the ZAR region + default sales channel once per process. Prefer an
 // explicit env override; otherwise look them up from Medusa. We deliberately
@@ -77,7 +76,7 @@ export async function createOrderFromPending(
     return {
       title: i.title,
       quantity: i.qty,
-      unit_price: Math.round((i.price ?? 0) * 100), // rand → cents
+      unit_price: i.price ?? 0, // already in rands
       ...(variant_id ? { variant_id } : {}),
       ...(product_id ? { product_id } : {}),
       ...(i.sku ? { metadata: { sku: i.sku } } : {}),
@@ -163,7 +162,7 @@ export async function createOrderFromCart(
   const items = (cart.items ?? []).map((i: any) => ({
     title: i.title,
     quantity: i.quantity,
-    unit_price: i.unit_price, // already cents
+    unit_price: i.unit_price, // already rands
     ...(i.variant_id ? { variant_id: i.variant_id } : {}),
     ...(i.product_id ? { product_id: i.product_id } : {}),
     ...(i.metadata ? { metadata: i.metadata } : {}),
@@ -171,7 +170,7 @@ export async function createOrderFromCart(
 
   const shipping_methods = (cart.shipping_methods ?? []).map((m: any) => ({
     name: m.name,
-    amount: m.amount, // already cents
+    amount: m.amount, // already rands
     ...(m.shipping_option_id ? { shipping_option_id: m.shipping_option_id } : {}),
     ...(m.data ? { data: m.data } : {}),
   }))

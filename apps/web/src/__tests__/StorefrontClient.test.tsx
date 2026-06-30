@@ -13,7 +13,7 @@ const mockProduct: TrendingProduct = {
   id: 'prod_1',
   title: 'HP 123 Black',
   handle: 'hp-123-black',
-  variants: [{ sku: 'HP-123-BK', calculated_price: { calculated_amount: 39900 } }],
+  variants: [{ sku: 'HP-123-BK', calculated_price: { calculated_amount: 399 } }],
   categories: [{ name: 'HP' }],
   images: [],
   metadata: { cartridge_type: 'inkjet' },
