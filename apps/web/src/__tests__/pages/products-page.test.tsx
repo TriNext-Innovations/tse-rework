@@ -24,7 +24,7 @@ const makeProduct = (id: string, title: string, price?: number) => ({
   id,
   title,
   handle: id,
-  variants: [{ sku: `SKU-${id}`, calculated_price: price ? { calculated_amount: price * 100 } : null }],
+  variants: [{ sku: `SKU-${id}`, calculated_price: price ? { calculated_amount: price } : null }],
   categories: [{ id: 'cat_hp', name: 'HP', handle: 'hp' }],
   images: [],
   metadata: { cartridge_type: 'laser' },

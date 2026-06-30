@@ -128,7 +128,8 @@ class PayfastProviderService extends AbstractPaymentProvider<PayfastOptions> {
   }
 
   private toRand(amount: unknown): string {
-    const divisor = this.options_.amountDivisor ?? 100
+    // Catalogue amounts are stored in rands, so the divisor is 1 by default.
+    const divisor = this.options_.amountDivisor ?? 1
     return (Number(amount) / divisor).toFixed(2)
   }
 

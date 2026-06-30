@@ -8,7 +8,7 @@ function formatPrice(amount: number, currency: string): string {
     style: 'currency',
     currency: currency.toUpperCase(),
     minimumFractionDigits: 2,
-  }).format(amount / 100)
+  }).format(amount)
 }
 
 function formatDate(date: string | Date): string {

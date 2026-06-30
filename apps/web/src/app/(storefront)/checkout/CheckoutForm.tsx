@@ -58,8 +58,8 @@ export default function CheckoutForm() {
 
   // Prefer authoritative cart totals once a method is chosen; fall back to the
   // local subtotal (+ selected delivery) before the cart has computed.
-  const deliveryRand = totals ? totals.shipping_total / 100 : selectedOption ? selectedOption.amount / 100 : 0
-  const totalRand = totals ? totals.total / 100 : subtotal + deliveryRand
+  const deliveryRand = totals ? totals.shipping_total : selectedOption ? selectedOption.amount : 0
+  const totalRand = totals ? totals.total : subtotal + deliveryRand
   const vatContent = Math.round((totalRand * 15) / 115)
 
   function validateContact(): boolean {
@@ -405,7 +405,7 @@ export default function CheckoutForm() {
                         )}
                       </div>
                       <span className="font-display text-base flex-shrink-0">
-                        {isFree ? 'Free' : `R${(o.amount / 100).toFixed(0)}`}
+                        {isFree ? 'Free' : `R${o.amount.toFixed(0)}`}
                       </span>
                     </button>
                   )
@@ -460,7 +460,7 @@ export default function CheckoutForm() {
                   <button onClick={() => setStep(3)} className="text-xs text-[#6B6B66] hover:text-[#111827] transition-colors cursor-pointer">Edit</button>
                 </div>
                 <p className="text-sm">{selectedOption?.name}</p>
-                <p className="text-sm text-[#6B6B66]">{selectedOption && selectedOption.amount === 0 ? 'Free' : `R${((selectedOption?.amount ?? 0) / 100).toFixed(0)}`}</p>
+                <p className="text-sm text-[#6B6B66]">{selectedOption && selectedOption.amount === 0 ? 'Free' : `R${(selectedOption?.amount ?? 0).toFixed(0)}`}</p>
               </div>
 
               {/* Payment */}

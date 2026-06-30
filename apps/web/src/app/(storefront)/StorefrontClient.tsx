@@ -534,7 +534,7 @@ export default function StorefrontClient({
               const variant = p.variants?.[0]
               const sku = variant?.sku ?? '—'
               const priceZar = variant?.calculated_price?.calculated_amount
-                ? (variant.calculated_price.calculated_amount / 100).toFixed(0)
+                ? variant.calculated_price.calculated_amount.toFixed(0)
                 : null
               const type = cartridgeTypeLabel(p.metadata?.cartridge_type) ?? 'Laser'
 

@@ -156,8 +156,8 @@ class ShipLogicFulfillmentProviderService extends AbstractFulfillmentProviderSer
     }
 
     return {
-      // Store prices in cents to match the rest of the catalogue.
-      calculated_amount: Math.round(match.rate * 100),
+      // Prices are in rands, matching the rest of the catalogue.
+      calculated_amount: match.rate,
       is_calculated_price_tax_inclusive: this.options_.rateIsTaxInclusive,
     }
   }

@@ -27,16 +27,16 @@ export type ShippingAddressInput = {
 export type ShippingOption = {
   id: string
   name: string
-  amount: number // cents
+  amount: number // rands
   /** 'calculated' = priced live from the courier (Courier Guy); 'flat' = fixed admin price (e.g. Collect). */
   priceType: 'flat' | 'calculated'
 }
 
 export type CartTotals = {
   id: string
-  item_total: number // cents
-  shipping_total: number // cents
-  total: number // cents
+  item_total: number // rands
+  shipping_total: number // rands
+  total: number // rands
 }
 
 // A Medusa store cart line item (default store response shape). Product/variant
@@ -47,7 +47,7 @@ export type MedusaLineItem = {
   product_title?: string
   variant_sku?: string
   thumbnail?: string | null
-  unit_price: number // cents
+  unit_price: number // rands
   quantity: number
   variant_id?: string
   product_id?: string
@@ -56,8 +56,8 @@ export type MedusaLineItem = {
 export type MedusaCart = {
   id: string
   email?: string | null
-  item_total?: number // cents
-  total?: number // cents
+  item_total?: number // rands
+  total?: number // rands
   items?: MedusaLineItem[]
 }
 

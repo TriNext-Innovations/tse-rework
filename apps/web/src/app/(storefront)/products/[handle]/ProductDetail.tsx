@@ -63,7 +63,7 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
   const variant = variants.find((v) => v.id === selectedVariantId) ?? variants[0]
   const sku = variant?.sku ?? '—'
   const priceZar = variant?.calculated_price?.calculated_amount
-    ? Math.round(variant.calculated_price.calculated_amount / 100)
+    ? Math.round(variant.calculated_price.calculated_amount)
     : null
 
   // Single colour-like option (Black/Cyan/Magenta/Yellow) — render as swatches
@@ -338,7 +338,7 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
                 const v = p.variants?.[0]
                 const relatedSku = v?.sku ?? '—'
                 const relatedPrice = v?.calculated_price?.calculated_amount
-                  ? Math.round(v.calculated_price.calculated_amount / 100)
+                  ? Math.round(v.calculated_price.calculated_amount)
                   : null
                 const relatedImage = p.images?.[0]?.url
 

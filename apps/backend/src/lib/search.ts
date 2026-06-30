@@ -92,7 +92,7 @@ export function productToDocument(
     sku: variant?.sku ?? null,
     brand,
     cartridge_type,
-    price_zar: zarPrice?.amount != null ? Math.round(zarPrice.amount / 100) : null,
+    price_zar: zarPrice?.amount != null ? Math.round(zarPrice.amount) : null,
     image_url: product.images?.[0]?.url ?? null,
     categories,
     compatible_printers: compatiblePrinters,
