@@ -40,7 +40,9 @@ const PAYFAST_IPS = new Set([
  *     the PayFast redirect params (m_payment_id = the Medusa session id) and
  *     returns them on the session `data`.
  *  2. Storefront redirects the customer to PayFast using `data.url` + `data.params`.
- *  3. PayFast posts the ITN to `${backendUrl}/hooks/payment/payfast`; Medusa's
+ *  3. PayFast posts the ITN to `${backendUrl}/hooks/payment/payfast_payfast`
+ *     (the route resolves the provider as `pp_{path}`; this provider is
+ *     registered as `pp_payfast_payfast`); Medusa's
  *     webhook route calls `getWebhookActionAndData`, which verifies IP +
  *     signature and returns `{ action: 'authorized', data: { session_id, amount }}`.
  *     Medusa authorizes the session; a subscriber then completes the cart → order.
@@ -129,7 +131,10 @@ class PayfastProviderService extends AbstractPaymentProvider<PayfastOptions> {
       merchant_key: this.options_.merchantKey,
       return_url: `${origin}/checkout/confirmed`,
       cancel_url: `${origin}/checkout`,
-      notify_url: `${backend}/hooks/payment/payfast`,
+      // The webhook route resolves the provider as `pp_{path-segment}`, and this
+      // provider registers as `pp_payfast_payfast` (identifier `payfast` + config
+      // id `payfast`) — so the path must be `payfast_payfast`, not `payfast`.
+      notify_url: `${backend}/hooks/payment/payfast_payfast`,
       ...(customer?.first_name ? { name_first: customer.first_name } : {}),
       ...(customer?.last_name ? { name_last: customer.last_name } : {}),
       ...(customer?.email ? { email_address: customer.email } : {}),

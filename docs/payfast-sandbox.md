@@ -13,8 +13,10 @@ branch does **not** change production behaviour until the flag is flipped.
 ## 0. Why you need a public tunnel
 
 PayFast's servers POST the ITN to `notify_url`, which the provider sets to
-`${MEDUSA_BACKEND_URL}/hooks/payment/payfast`. **`localhost` is unreachable from
-PayFast** — so the backend must be exposed publicly during testing:
+`${MEDUSA_BACKEND_URL}/hooks/payment/payfast_payfast` (the route resolves the
+provider as `pp_{path}`, and this provider registers as `pp_payfast_payfast`).
+**`localhost` is unreachable from PayFast** — so the backend must be exposed
+publicly during testing:
 
 ```bash
 # e.g. cloudflared or ngrok pointing at the Medusa backend (port 9000)
