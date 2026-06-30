@@ -30,6 +30,31 @@ const SERVICE_LEVELS: { code: ShipLogicServiceCode; name: string }[] = [
   { code: 'OVN', name: 'The Courier Guy — Overnight' },
 ]
 
+// The Courier Guy returns route-specific service codes, not a fixed ECO/OVN:
+//   metro     → ECO  (economy 3–4d), OVN  (overnight)
+//   regional  → ECOR (economy 3–5d), OVNR (overnight 2–3d)
+//   local     → LOF/LOX (local overnight), LSE (local same-day)
+//   any       → SDX (same-day express)
+// So we map each checkout tier to the family of codes that represents it and
+// pick the cheapest, excluding same-day services. This makes quoting + booking
+// work on every route instead of only metro→metro.
+const SAME_DAY_CODES = new Set(['SDX', 'LSX', 'LSE'])
+const OVERNIGHT_CODES = new Set(['OVN', 'OVNR', 'LOF', 'LOX'])
+const ECONOMY_CODES = new Set(['ECO', 'ECOR'])
+
+function selectRate(rates: any[], tier: string): any | undefined {
+  const usable = rates.filter(
+    (r) => r?.service_level?.code && !SAME_DAY_CODES.has(r.service_level.code),
+  )
+  if (!usable.length) return undefined
+  const family = tier === 'OVN' ? OVERNIGHT_CODES : ECONOMY_CODES
+  const inFamily = usable.filter((r) => family.has(r.service_level.code))
+  // Fall back to any deliverable rate when the exact family isn't offered (e.g.
+  // local routes have no multi-day economy — use the cheapest next-day instead).
+  const pool = inFamily.length ? inFamily : usable
+  return [...pool].sort((a, b) => a.rate - b.rate)[0]
+}
+
 class ShipLogicFulfillmentProviderService extends AbstractFulfillmentProviderService {
   static override identifier = 'shiplogic'
 
@@ -122,17 +147,17 @@ class ShipLogicFulfillmentProviderService extends AbstractFulfillmentProviderSer
       )
     }
 
-    const match = rates.find((r) => r.service_level?.code === serviceCode)
+    const match = selectRate(rates, serviceCode)
     if (!match) {
       throw new MedusaError(
         MedusaError.Types.NOT_FOUND,
-        `[shiplogic] no '${serviceCode}' rate available for this delivery address`,
+        `[shiplogic] no deliverable Courier Guy rate for this delivery address`,
       )
     }
 
     return {
-      // Store prices in cents to match the rest of the catalogue.
-      calculated_amount: Math.round(match.rate * 100),
+      // Prices are in rands, matching the rest of the catalogue.
+      calculated_amount: match.rate,
       is_calculated_price_tax_inclusive: this.options_.rateIsTaxInclusive,
     }
   }
@@ -165,13 +190,30 @@ class ShipLogicFulfillmentProviderService extends AbstractFulfillmentProviderSer
       items.map((i) => ({ quantity: i.quantity ?? 1 })),
     )
 
+    // The stored code is the checkout tier (ECO/OVN). Resolve it to the actual
+    // route-specific code The Courier Guy offers for this address before booking.
+    let bookingCode: string = serviceCode
+    try {
+      const { rates } = await this.client_.getRates({
+        collection_address: this.options_.collectionAddress,
+        delivery_address: this.toShipLogicAddress(address),
+        parcels,
+      })
+      const picked = selectRate(rates ?? [], serviceCode)
+      if (picked?.service_level?.code) bookingCode = picked.service_level.code
+    } catch (err: any) {
+      this.logger_.warn(
+        `[shiplogic] could not resolve service code at fulfillment, using ${serviceCode}: ${err?.message ?? err}`,
+      )
+    }
+
     const shipment = await this.client_.createShipment({
       collection_address: this.options_.collectionAddress,
       collection_contact: this.options_.collectionContact,
       delivery_address: this.toShipLogicAddress(address),
       delivery_contact: deliveryContact,
       parcels,
-      service_level_code: serviceCode,
+      service_level_code: bookingCode as ShipLogicServiceCode,
       customer_reference: (order as any)?.display_id
         ? `TSE-${(order as any).display_id}`
         : undefined,
@@ -193,7 +235,7 @@ class ShipLogicFulfillmentProviderService extends AbstractFulfillmentProviderSer
     const fulfillmentData: ShipLogicFulfillmentData = {
       shipment_id: shipment.id,
       tracking_reference: trackingReference,
-      service_level_code: serviceCode,
+      service_level_code: bookingCode as ShipLogicServiceCode,
       label_url: labelUrl ?? undefined,
     }
 

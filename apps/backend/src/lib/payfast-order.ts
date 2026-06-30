@@ -2,13 +2,49 @@ import { MedusaContainer } from '@medusajs/framework/types'
 import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
 import { createOrderWorkflow } from '@medusajs/medusa/core-flows'
 
-// This deployment stores money as integer cents (a R450 product has price
-// amount 45000), and the storefront/emails divide by 100. Order line items
-// must follow the same convention, so rand prices are scaled by 100.
-// `||` (not `??`): compose passes an empty string when the override is unset,
-// which must fall back to the dev default rather than an empty id.
-const REGION_ID = process.env.MEDUSA_ZAR_REGION_ID || 'reg_01KS7D85TBD4VWPEPNNDRGN0XX'
-const SALES_CHANNEL_ID = process.env.MEDUSA_SALES_CHANNEL_ID || 'sc_01KS30SJJ51D1PVG133T1WDVB3'
+// This deployment stores money in rands (a R450 product has price amount 450).
+// Order line items follow the same convention — prices are used as-is.
+
+// Resolve the ZAR region + default sales channel once per process. Prefer an
+// explicit env override; otherwise look them up from Medusa. We deliberately
+// never fall back to a hardcoded id — a wrong region/sales channel silently
+// misroutes orders (stale prod ids leaking into another environment), so we
+// fail loudly instead.
+let cachedIds: { region_id: string; sales_channel_id: string } | null = null
+
+async function resolveRegionAndChannel(
+  container: MedusaContainer,
+): Promise<{ region_id: string; sales_channel_id: string }> {
+  if (cachedIds) return cachedIds
+
+  const query = container.resolve(ContainerRegistrationKeys.QUERY)
+
+  // `||` (not `??`): compose passes an empty string when the override is unset.
+  let region_id = process.env.MEDUSA_ZAR_REGION_ID || ''
+  if (!region_id) {
+    const { data } = await query.graph({ entity: 'region', fields: ['id', 'currency_code'] })
+    region_id = data?.find((r: any) => r.currency_code?.toLowerCase() === 'zar')?.id ?? ''
+  }
+  if (!region_id) {
+    throw new Error(
+      'No ZAR region found — set MEDUSA_ZAR_REGION_ID or create a region with currency ZAR',
+    )
+  }
+
+  let sales_channel_id = process.env.MEDUSA_SALES_CHANNEL_ID || ''
+  if (!sales_channel_id) {
+    const { data } = await query.graph({ entity: 'store', fields: ['default_sales_channel_id'] })
+    sales_channel_id = data?.[0]?.default_sales_channel_id ?? ''
+  }
+  if (!sales_channel_id) {
+    throw new Error(
+      'No sales channel found — set MEDUSA_SALES_CHANNEL_ID or set a default sales channel on the store',
+    )
+  }
+
+  cachedIds = { region_id, sales_channel_id }
+  return cachedIds
+}
 
 export type PendingItem = { id?: string; title: string; sku?: string; price: number | null; qty: number }
 export type PendingPayload = {
@@ -40,7 +76,7 @@ export async function createOrderFromPending(
     return {
       title: i.title,
       quantity: i.qty,
-      unit_price: Math.round((i.price ?? 0) * 100), // rand → cents
+      unit_price: i.price ?? 0, // already in rands
       ...(variant_id ? { variant_id } : {}),
       ...(product_id ? { product_id } : {}),
       ...(i.sku ? { metadata: { sku: i.sku } } : {}),
@@ -48,10 +84,11 @@ export async function createOrderFromPending(
   })
 
   const pf = pending.payfast ?? {}
+  const { region_id, sales_channel_id } = await resolveRegionAndChannel(container)
   const { result } = await createOrderWorkflow(container).run({
     input: {
-      region_id: REGION_ID,
-      sales_channel_id: SALES_CHANNEL_ID,
+      region_id,
+      sales_channel_id,
       currency_code: 'zar',
       email: pending.contact.email,
       status: 'pending',
@@ -125,7 +162,7 @@ export async function createOrderFromCart(
   const items = (cart.items ?? []).map((i: any) => ({
     title: i.title,
     quantity: i.quantity,
-    unit_price: i.unit_price, // already cents
+    unit_price: i.unit_price, // already rands
     ...(i.variant_id ? { variant_id: i.variant_id } : {}),
     ...(i.product_id ? { product_id: i.product_id } : {}),
     ...(i.metadata ? { metadata: i.metadata } : {}),
@@ -133,16 +170,17 @@ export async function createOrderFromCart(
 
   const shipping_methods = (cart.shipping_methods ?? []).map((m: any) => ({
     name: m.name,
-    amount: m.amount, // already cents
+    amount: m.amount, // already rands
     ...(m.shipping_option_id ? { shipping_option_id: m.shipping_option_id } : {}),
     ...(m.data ? { data: m.data } : {}),
   }))
 
   const sa = cart.shipping_address ?? {}
+  const { region_id, sales_channel_id } = await resolveRegionAndChannel(container)
   const { result } = await createOrderWorkflow(container).run({
     input: {
-      region_id: REGION_ID,
-      sales_channel_id: SALES_CHANNEL_ID,
+      region_id,
+      sales_channel_id,
       currency_code: cart.currency_code ?? 'zar',
       email: cart.email,
       status: 'pending',

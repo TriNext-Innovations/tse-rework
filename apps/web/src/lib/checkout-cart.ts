@@ -1,10 +1,9 @@
-// Client-side helpers that drive a real Medusa cart during checkout. The cart is
-// the source of truth for shipping options (admin-configured) and totals; the
+// Client-side helpers that drive a real Medusa cart. The Medusa cart is the
+// source of truth for line items, prices, shipping options and totals for the
+// whole storefront session — the browser only persists the `cart_id`. The
 // PayFast amount is later recomputed server-side from the cart so the client
 // can't tamper with it. All calls use the public store API + publishable key,
 // matching the rest of the storefront.
-
-import type { CartItem } from '@/contexts/CartContext'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
@@ -28,14 +27,47 @@ export type ShippingAddressInput = {
 export type ShippingOption = {
   id: string
   name: string
-  amount: number // cents
+  amount: number // rands
+  /** 'calculated' = priced live from the courier (Courier Guy); 'flat' = fixed admin price (e.g. Collect). */
+  priceType: 'flat' | 'calculated'
 }
 
 export type CartTotals = {
   id: string
-  item_total: number // cents
-  shipping_total: number // cents
-  total: number // cents
+  item_total: number // rands
+  shipping_total: number // rands
+  total: number // rands
+}
+
+// A Medusa store cart line item (default store response shape). Product/variant
+// fields are denormalised onto the line, so a single cart fetch renders the UI.
+export type MedusaLineItem = {
+  id: string
+  title?: string
+  product_title?: string
+  variant_sku?: string
+  thumbnail?: string | null
+  unit_price: number // rands
+  quantity: number
+  variant_id?: string
+  product_id?: string
+}
+
+export type MedusaCart = {
+  id: string
+  email?: string | null
+  item_total?: number // rands
+  total?: number // rands
+  items?: MedusaLineItem[]
+}
+
+// Minimal shape the storefront needs to add a product to the cart. PDP/listing
+// adds carry the variant directly; search adds carry only the product id + SKU.
+export type AddItemInput = {
+  id: string
+  title: string
+  sku?: string
+  variantId?: string
 }
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
@@ -65,57 +97,76 @@ async function getRegionId(): Promise<string> {
   return cachedRegionId
 }
 
-// Resolve every cart item to a Medusa variant id. PDP/listing items already
-// encode it; search-added items only carry the product id + SKU, so we fetch
-// those products and match by SKU (falling back to the first variant).
-async function resolveLineItems(items: CartItem[]): Promise<Array<{ variant_id: string; quantity: number }>> {
-  const lines: Array<{ variant_id: string; quantity: number }> = []
-  const unresolved: CartItem[] = []
+// Resolve an add-to-cart item to a Medusa variant id. PDP/listing items already
+// encode it; search-added items only carry the product id + SKU, so we fetch the
+// product and match by SKU (falling back to the first variant).
+async function resolveVariantId(item: AddItemInput): Promise<string> {
+  const direct = item.variantId ?? variantFromCartId(item.id)
+  if (direct) return direct
 
-  for (const item of items) {
-    const variantId = item.variantId ?? variantFromCartId(item.id)
-    if (variantId) lines.push({ variant_id: variantId, quantity: item.qty })
-    else unresolved.push(item)
-  }
-
-  if (unresolved.length) {
-    // For unresolved items `id` is the product id (Meilisearch hit). Batch-fetch.
-    const params = new URLSearchParams({ limit: String(unresolved.length || 1) })
-    for (const it of unresolved) params.append('id[]', it.id)
-    params.append('fields', 'id,variants.id,variants.sku')
-    const { products } = await api<{ products: Array<{ id: string; variants?: Array<{ id: string; sku?: string }> }> }>(
-      `/store/products?${params.toString()}`,
-    )
-    const byProduct = new Map(products.map((p) => [p.id, p.variants ?? []]))
-
-    for (const it of unresolved) {
-      const variants = byProduct.get(it.id) ?? []
-      const match = variants.find((v) => v.sku && v.sku === it.sku) ?? variants[0]
-      if (!match?.id) {
-        throw new Error(`Could not find a purchasable variant for "${it.title}" (SKU ${it.sku}).`)
-      }
-      lines.push({ variant_id: match.id, quantity: it.qty })
-    }
-  }
-
-  return lines
+  const params = new URLSearchParams({ limit: '1' })
+  params.append('id[]', item.id)
+  params.append('fields', 'id,variants.id,variants.sku')
+  const { products } = await api<{ products: Array<{ id: string; variants?: Array<{ id: string; sku?: string }> }> }>(
+    `/store/products?${params.toString()}`,
+  )
+  const variants = products?.[0]?.variants ?? []
+  const match = variants.find((v) => v.sku && v.sku === item.sku) ?? variants[0]
+  if (!match?.id) throw new Error(`Could not find a purchasable variant for "${item.title}" (SKU ${item.sku ?? '—'}).`)
+  return match.id
 }
 
-// Create a Medusa cart from the local cart and set the shipping address + email.
-export async function createCartWithAddress(
-  items: CartItem[],
-  email: string,
-  address: ShippingAddressInput,
-): Promise<string> {
+// ─── Session cart operations ──────────────────────────────────────────────────
+
+export async function createEmptyCart(): Promise<MedusaCart> {
   const region_id = await getRegionId()
-  const line_items = await resolveLineItems(items)
-
-  const { cart } = await api<{ cart: { id: string } }>(`/store/carts`, {
+  const { cart } = await api<{ cart: MedusaCart }>(`/store/carts`, {
     method: 'POST',
-    body: JSON.stringify({ region_id, email, items: line_items }),
+    body: JSON.stringify({ region_id }),
   })
+  return cart
+}
 
-  await api(`/store/carts/${cart.id}`, {
+// Fetch a cart by id. Returns null if it no longer exists or is completed (so
+// the caller can recreate it), rather than throwing.
+export async function getCart(cartId: string): Promise<MedusaCart | null> {
+  try {
+    const { cart } = await api<{ cart: MedusaCart }>(`/store/carts/${cartId}`)
+    return cart ?? null
+  } catch {
+    return null
+  }
+}
+
+export async function addLineItem(cartId: string, item: AddItemInput, quantity = 1): Promise<MedusaCart> {
+  const variant_id = await resolveVariantId(item)
+  const { cart } = await api<{ cart: MedusaCart }>(`/store/carts/${cartId}/line-items`, {
+    method: 'POST',
+    body: JSON.stringify({ variant_id, quantity }),
+  })
+  return cart
+}
+
+export async function updateLineItem(cartId: string, lineId: string, quantity: number): Promise<MedusaCart> {
+  const { cart } = await api<{ cart: MedusaCart }>(`/store/carts/${cartId}/line-items/${lineId}`, {
+    method: 'POST',
+    body: JSON.stringify({ quantity }),
+  })
+  return cart
+}
+
+export async function removeLineItem(cartId: string, lineId: string): Promise<MedusaCart> {
+  // DELETE returns { id, object, deleted, parent: <cart> }.
+  const { parent } = await api<{ parent: MedusaCart }>(`/store/carts/${cartId}/line-items/${lineId}`, {
+    method: 'DELETE',
+  })
+  return parent
+}
+
+// Set the customer email + shipping/billing address on the existing session
+// cart (used at checkout, before listing shipping options).
+export async function setCartContact(cartId: string, email: string, address: ShippingAddressInput): Promise<void> {
+  await api(`/store/carts/${cartId}`, {
     method: 'POST',
     body: JSON.stringify({
       email,
@@ -123,20 +174,39 @@ export async function createCartWithAddress(
       billing_address: { ...address, country_code: 'za' },
     }),
   })
-
-  return cart.id
 }
+
+// ─── Shipping ─────────────────────────────────────────────────────────────────
 
 export async function listShippingOptions(cartId: string): Promise<ShippingOption[]> {
   const { shipping_options } = await api<{
-    shipping_options: Array<{ id: string; name: string; amount?: number; calculated_price?: { calculated_amount?: number } }>
+    shipping_options: Array<{ id: string; name: string; amount?: number; price_type?: string; calculated_price?: { calculated_amount?: number } }>
   }>(`/store/shipping-options?cart_id=${encodeURIComponent(cartId)}`)
 
-  return shipping_options.map((o) => ({
-    id: o.id,
-    name: o.name,
-    amount: o.calculated_price?.calculated_amount ?? o.amount ?? 0,
-  }))
+  // The list endpoint only resolves prices for flat-rate options. Calculated
+  // options (Courier Guy ECO/OVN) come back with calculated_price = null — their
+  // live rate must be fetched per-option from the calculate endpoint, otherwise
+  // they fall back to 0 and render as "Free". Quote them in parallel; drop any
+  // option we can't price (e.g. courier returns no rate for the address).
+  const results = await Promise.allSettled(
+    shipping_options.map(async (o): Promise<ShippingOption> => {
+      const priceType: ShippingOption['priceType'] = o.price_type === 'calculated' ? 'calculated' : 'flat'
+
+      if (priceType === 'flat') {
+        return { id: o.id, name: o.name, amount: o.calculated_price?.calculated_amount ?? o.amount ?? 0, priceType }
+      }
+
+      const { shipping_option } = await api<{ shipping_option: { calculated_price?: { calculated_amount?: number } } }>(
+        `/store/shipping-options/${encodeURIComponent(o.id)}/calculate`,
+        { method: 'POST', body: JSON.stringify({ cart_id: cartId, data: {} }) },
+      )
+      const amount = shipping_option?.calculated_price?.calculated_amount
+      if (amount == null) throw new Error(`No live rate for shipping option ${o.id}`)
+      return { id: o.id, name: o.name, amount, priceType }
+    }),
+  )
+
+  return results.filter((r): r is PromiseFulfilledResult<ShippingOption> => r.status === 'fulfilled').map((r) => r.value)
 }
 
 export async function selectShippingMethod(cartId: string, optionId: string): Promise<CartTotals> {
@@ -149,5 +219,54 @@ export async function selectShippingMethod(cartId: string, optionId: string): Pr
     item_total: cart.item_total ?? 0,
     shipping_total: cart.shipping_total ?? 0,
     total: cart.total ?? 0,
+  }
+}
+
+// ─── Canonical PayFast flow (Medusa payment provider, #130) ───────────────────
+// Gated behind NEXT_PUBLIC_PAYFAST_PROVIDER on the storefront — when off, the
+// legacy /api/payfast/initiate path is used instead.
+
+export const PAYFAST_PROVIDER_ENABLED = process.env.NEXT_PUBLIC_PAYFAST_PROVIDER === 'true'
+// Medusa payment-provider id: `pp_<config-id>_<service-identifier>` = payfast/payfast.
+const PAYFAST_PROVIDER_ID = 'pp_payfast_payfast'
+
+export type PayfastRedirect = { url: string; params: Record<string, string> }
+
+// Create a payment collection for the cart, initialise the PayFast session
+// (Medusa calls the provider's initiatePayment, which signs the redirect
+// params), and return them for the browser to POST to PayFast.
+export async function initPayfastSession(cartId: string): Promise<PayfastRedirect> {
+  const { payment_collection } = await api<{ payment_collection: { id: string } }>(
+    `/store/payment-collections`,
+    { method: 'POST', body: JSON.stringify({ cart_id: cartId }) },
+  )
+  const { payment_collection: pc } = await api<{
+    payment_collection: { payment_sessions?: Array<{ provider_id: string; data?: Record<string, unknown> }> }
+  }>(`/store/payment-collections/${payment_collection.id}/payment-sessions`, {
+    method: 'POST',
+    body: JSON.stringify({ provider_id: PAYFAST_PROVIDER_ID }),
+  })
+
+  const session = pc.payment_sessions?.find((s) => s.provider_id === PAYFAST_PROVIDER_ID)
+  const data = session?.data as { url?: string; params?: Record<string, string> } | undefined
+  if (!data?.url || !data?.params) {
+    throw new Error('PayFast session did not return redirect params — is the provider enabled on the region?')
+  }
+  return { url: data.url, params: data.params }
+}
+
+// Complete the cart → order. Idempotent-ish: once completed it returns the order.
+// On the redirect-return the ITN may not have authorised the session yet, so the
+// caller polls (see the confirmed page).
+export async function completeCart(
+  cartId: string,
+): Promise<{ type: 'order' | 'cart'; order?: { id: string; display_id?: number }; error?: string }> {
+  try {
+    const res = await api<{ type: 'order' | 'cart'; order?: any }>(`/store/carts/${cartId}/complete`, {
+      method: 'POST',
+    })
+    return res
+  } catch (err: any) {
+    return { type: 'cart', error: err?.message ?? 'complete failed' }
   }
 }

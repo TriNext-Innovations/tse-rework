@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useCart } from '@/contexts/CartContext'
+import { cartridgeTypeLabel } from '@/lib/taxonomy'
 
 type Category = { id: string; name: string; handle: string }
 type ProductImage = { url: string }
@@ -62,7 +63,7 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
   const variant = variants.find((v) => v.id === selectedVariantId) ?? variants[0]
   const sku = variant?.sku ?? '—'
   const priceZar = variant?.calculated_price?.calculated_amount
-    ? Math.round(variant.calculated_price.calculated_amount / 100)
+    ? Math.round(variant.calculated_price.calculated_amount)
     : null
 
   // Single colour-like option (Black/Cyan/Magenta/Yellow) — render as swatches
@@ -71,21 +72,22 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
 
   const handleAddToCart = useCallback(() => {
     if (!variant) return
-    for (let i = 0; i < qty; i++) {
-      addItem({
+    addItem(
+      {
         id: `${product.id}-${variant.id}`,
         title: product.title,
         sku,
         price: priceZar,
         thumbnail: images[0]?.url,
         variantId: variant.id,
-      })
-    }
+      },
+      qty,
+    )
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
   }, [variant, qty, product, sku, priceZar, images, addItem])
 
-  const cartridgeType = product.metadata?.cartridge_type === 'inkjet' ? 'Inkjet' : 'Laser'
+  const cartridgeType = cartridgeTypeLabel(product.metadata?.cartridge_type) ?? 'Laser'
 
   return (
     <>
@@ -336,7 +338,7 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
                 const v = p.variants?.[0]
                 const relatedSku = v?.sku ?? '—'
                 const relatedPrice = v?.calculated_price?.calculated_amount
-                  ? Math.round(v.calculated_price.calculated_amount / 100)
+                  ? Math.round(v.calculated_price.calculated_amount)
                   : null
                 const relatedImage = p.images?.[0]?.url
 

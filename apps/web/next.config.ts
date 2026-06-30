@@ -30,8 +30,12 @@ const contentSecurityPolicy = [
   // maps.googleapis.com loads the JS bootstrap; places.googleapis.com serves the
   // Places (New) Autocomplete data calls used by the checkout address field.
   `connect-src ${connectSrc} https://maps.googleapis.com https://places.googleapis.com`,
-  // Checkout posts to the PayFast hosted page (redirect), never an iframe here.
-  "form-action 'self' https://*.payfast.co.za",
+  // Checkout posts to www.payfast.co.za/eng/process, which 302-redirects the
+  // browser to payment.payfast.io to complete payment. form-action is enforced on
+  // EVERY hop, so BOTH domains must be listed — the payment page lives on the
+  // separate payfast.io domain, not payfast.co.za. Apex entries are needed too:
+  // a leading-* source matches sub-domains only, never the bare apex.
+  "form-action 'self' https://*.payfast.co.za https://payfast.co.za https://*.payfast.io https://payfast.io",
   "frame-ancestors 'self'",
   "base-uri 'self'",
   "object-src 'none'",

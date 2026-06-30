@@ -31,8 +31,24 @@ jobs:
 
             cd /opt/tse-ui
 
-            echo "▶ Pulling latest code"
-            git pull origin main
+            echo "▶ Working-tree status before deploy"
+            git status --short || true
+
+            echo "▶ Local changes that diverge from the committed tree (captured for the record):"
+            git diff || true
+
+            # A manual hotfix left uncommitted on the box will make `git pull`
+            # abort. Preserve any such tracked changes in a stash (recoverable via
+            # `git stash list` / `git stash show -p`) so the checkout can proceed
+            # cleanly without ever destroying work. Note: no `-u` — untracked
+            # files (e.g. the root-owned nginx SSL key) can't always be read and
+            # would abort the stash; `git reset --hard` below never touches them.
+            echo "▶ Stashing any local tracked changes so the checkout can fast-forward"
+            git stash push -m "auto-stash before deploy $(date -u +%FT%TZ)" || echo "  (nothing to stash)"
+
+            echo "▶ Fetching and resetting to origin/main"
+            git fetch origin main
+            git reset --hard origin/main
 
             echo "▶ Building and starting containers"
             docker compose pull --quiet

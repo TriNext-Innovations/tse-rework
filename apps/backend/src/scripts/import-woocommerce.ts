@@ -1,3 +1,24 @@
+/**
+ * Pull the full product catalogue from the live WooCommerce store and dump it
+ * to `migration/raw/products-without_sku.json` for the offline migration
+ * pipeline (CSV build + seed). This is a one-off data-migration tool — it lives
+ * in the backend, NOT the public storefront, because it carries write-capable
+ * WooCommerce API credentials.
+ *
+ * It only READS from WooCommerce and writes a JSON file; it does not mutate
+ * Medusa. The actual Woo → Medusa product mapping is handled by the existing
+ * seed/migration pipeline (see `migration/` and the seed scripts).
+ *
+ * Usage (from monorepo root):
+ *   pnpm --filter @tse/backend exec medusa exec src/scripts/import-woocommerce.ts
+ *
+ * Requires WC_STORE_URL, WC_CONSUMER_KEY, WC_CONSUMER_SECRET in the backend env.
+ */
+
+import { MedusaContainer } from '@medusajs/framework/types'
+import { writeFile, mkdir } from 'fs/promises'
+import { join } from 'path'
+
 export interface WCProduct {
   id: number
   name: string
@@ -44,14 +65,14 @@ function authHeader(): string {
 
 const WC_BASE = `${process.env.WC_STORE_URL ?? 'https://tse.co.za'}/wp-json/wc/v3`
 
-async function wcFetch<T>(path: string, params: Record<string, string | number> = {}): Promise<{ data: T; headers: Headers }> {
+async function wcFetch<T>(
+  path: string,
+  params: Record<string, string | number> = {},
+): Promise<{ data: T; headers: Headers }> {
   const url = new URL(`${WC_BASE}${path}`)
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, String(v))
 
-  const res = await fetch(url.toString(), {
-    headers: { Authorization: authHeader() },
-    next: { revalidate: 0 },
-  })
+  const res = await fetch(url.toString(), { headers: { Authorization: authHeader() } })
 
   if (!res.ok) {
     const body = await res.text()
@@ -77,7 +98,7 @@ export async function fetchAllProducts(): Promise<ProductExport> {
   for (let i = 0; i < remaining.length; i += 5) {
     const batch = remaining.slice(i, i + 5)
     const results = await Promise.all(
-      batch.map((page) => wcFetch<WCProduct[]>('/products', { per_page: PER_PAGE, page }))
+      batch.map((page) => wcFetch<WCProduct[]>('/products', { per_page: PER_PAGE, page })),
     )
     results.forEach((r) => products.push(...r.data))
   }
@@ -89,7 +110,7 @@ export async function fetchAllProducts(): Promise<ProductExport> {
   for (let i = 0; i < variable.length; i += 5) {
     const batch = variable.slice(i, i + 5)
     const results = await Promise.all(
-      batch.map((p) => wcFetch<WCVariation[]>(`/products/${p.id}/variations`, { per_page: 100 }))
+      batch.map((p) => wcFetch<WCVariation[]>(`/products/${p.id}/variations`, { per_page: 100 })),
     )
     batch.forEach((p, idx) => variationMap.set(p.id, results[idx]!.data))
   }
@@ -112,11 +133,17 @@ export async function fetchAllProducts(): Promise<ProductExport> {
   }
 }
 
-export async function fetchProductPage(page: number, perPage = 100): Promise<{ data: WCProduct[]; total: number; totalPages: number }> {
-  const { data, headers } = await wcFetch<WCProduct[]>('/products', { per_page: perPage, page })
-  return {
-    data,
-    total: parseInt(headers.get('X-WP-Total') ?? '0', 10),
-    totalPages: parseInt(headers.get('X-WP-TotalPages') ?? '1', 10),
-  }
+export default async function importWoocommerce(_: { container: MedusaContainer }) {
+  console.log('[import-woocommerce] fetching products from WooCommerce…')
+  const result = await fetchAllProducts()
+
+  // Repo root is two levels up from apps/backend.
+  const outputDir = join(process.cwd(), '..', '..', 'migration', 'raw')
+  await mkdir(outputDir, { recursive: true })
+  const outPath = join(outputDir, 'products-without_sku.json')
+  await writeFile(outPath, JSON.stringify(result, null, 2), 'utf-8')
+
+  console.log(
+    `[import-woocommerce] wrote ${result.total} products (${result.missingSkuCount} missing SKU) → migration/raw/products-without_sku.json`,
+  )
 }

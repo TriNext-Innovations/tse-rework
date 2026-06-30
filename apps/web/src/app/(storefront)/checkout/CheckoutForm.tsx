@@ -5,9 +5,11 @@ import Link from 'next/link'
 import { useCart } from '@/contexts/CartContext'
 import { AddressAutocomplete } from './AddressAutocomplete'
 import {
-  createCartWithAddress,
+  setCartContact,
   listShippingOptions,
   selectShippingMethod,
+  initPayfastSession,
+  PAYFAST_PROVIDER_ENABLED,
   type ShippingOption,
   type CartTotals,
 } from '@/lib/checkout-cart'
@@ -33,7 +35,7 @@ function inputClass(error?: string) {
 }
 
 export default function CheckoutForm() {
-  const { items, count, clearCart } = useCart()
+  const { items, count, clearCart, cartId } = useCart()
   const [step, setStep] = useState(1)
   const [contact, setContact] = useState<ContactForm>(EMPTY_CONTACT)
   const [address, setAddress] = useState<AddressForm>(EMPTY_ADDRESS)
@@ -42,8 +44,7 @@ export default function CheckoutForm() {
   const [payfastLoading, setPayfastLoading] = useState(false)
   const [payfastError, setPayfastError] = useState('')
 
-  // Medusa cart / delivery state
-  const [cartId, setCartId] = useState<string | null>(null)
+  // Delivery state (the cart itself is the session Medusa cart from context)
   const [options, setOptions] = useState<ShippingOption[]>([])
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null)
   const [totals, setTotals] = useState<CartTotals | null>(null)
@@ -57,8 +58,8 @@ export default function CheckoutForm() {
 
   // Prefer authoritative cart totals once a method is chosen; fall back to the
   // local subtotal (+ selected delivery) before the cart has computed.
-  const deliveryRand = totals ? totals.shipping_total / 100 : selectedOption ? selectedOption.amount / 100 : 0
-  const totalRand = totals ? totals.total / 100 : subtotal + deliveryRand
+  const deliveryRand = totals ? totals.shipping_total : selectedOption ? selectedOption.amount : 0
+  const totalRand = totals ? totals.total : subtotal + deliveryRand
   const vatContent = Math.round((totalRand * 15) / 115)
 
   function validateContact(): boolean {
@@ -84,17 +85,22 @@ export default function CheckoutForm() {
     return Object.keys(errs).length === 0
   }
 
-  // Create the Medusa cart, set the address, and load admin-configured shipping
-  // options (Collect / Courier Guy Economy + Overnight) with live prices.
+  // Set the address/email on the existing session cart, then load
+  // admin-configured shipping options (Collect / Courier Guy Economy +
+  // Overnight) with live prices.
   async function loadDeliveryOptions() {
     if (!validateAddress()) return
+    if (!cartId) {
+      setOptionsError('Your cart could not be found. Please add an item again.')
+      return
+    }
     setOptionsError('')
     setOptionsLoading(true)
     setSelectedOptionId(null)
     setTotals(null)
     try {
       const nameParts = contact.name.trim().split(/\s+/)
-      const id = await createCartWithAddress(items, contact.email, {
+      await setCartContact(cartId, contact.email, {
         first_name: nameParts[0] ?? contact.name,
         last_name: nameParts.slice(1).join(' ') || '-',
         phone: contact.phone.replace(/\s/g, ''),
@@ -104,12 +110,11 @@ export default function CheckoutForm() {
         province: address.province,
         postal_code: address.postalCode,
       })
-      const opts = await listShippingOptions(id)
+      const opts = await listShippingOptions(cartId)
       if (opts.length === 0) {
         setOptionsError('No delivery options are available for this address. Please check your details.')
         return
       }
-      setCartId(id)
       setOptions(opts)
       setStep(3)
     } catch (err: any) {
@@ -132,6 +137,22 @@ export default function CheckoutForm() {
     }
   }
 
+  // Standard PayFast redirect: POST a hidden form to their process URL.
+  function submitToPayfast(url: string, params: Record<string, string>) {
+    const form = document.createElement('form')
+    form.method = 'POST'
+    form.action = url
+    for (const [key, value] of Object.entries(params)) {
+      const input = document.createElement('input')
+      input.type = 'hidden'
+      input.name = key
+      input.value = value
+      form.appendChild(input)
+    }
+    document.body.appendChild(form)
+    form.submit()
+  }
+
   async function handlePayFast() {
     if (!cartId) {
       setPayfastError('Your delivery selection expired. Please reselect a delivery option.')
@@ -140,6 +161,16 @@ export default function CheckoutForm() {
     setPayfastError('')
     setPayfastLoading(true)
     try {
+      if (PAYFAST_PROVIDER_ENABLED) {
+        // Canonical flow: Medusa payment provider signs the redirect params.
+        // Keep the cart_id so /checkout/confirmed can complete the cart → order.
+        const { url, params } = await initPayfastSession(cartId)
+        submitToPayfast(url, params)
+        return
+      }
+
+      // Legacy flow: storefront API route signs + persists the pending cart;
+      // the ITN turns it into an order, so the local cart can be cleared now.
       const res = await fetch('/api/payfast/initiate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -151,23 +182,10 @@ export default function CheckoutForm() {
         return
       }
       const { url, params } = await res.json()
-
-      // Build and submit a hidden form — the standard PayFast redirect method
-      const form = document.createElement('form')
-      form.method = 'POST'
-      form.action = url
-      for (const [key, value] of Object.entries(params as Record<string, string>)) {
-        const input = document.createElement('input')
-        input.type = 'hidden'
-        input.name = key
-        input.value = value
-        form.appendChild(input)
-      }
       clearCart()
-      document.body.appendChild(form)
-      form.submit()
-    } catch {
-      setPayfastError('Network error — please try again.')
+      submitToPayfast(url, params)
+    } catch (err: any) {
+      setPayfastError(err?.message ?? 'Network error — please try again.')
     } finally {
       setPayfastLoading(false)
     }
@@ -380,9 +398,14 @@ export default function CheckoutForm() {
                           {selected && <span className="w-2 h-2 rounded-full bg-[#111827]" />}
                         </span>
                         <span className="font-medium text-sm text-[#111827]">{o.name}</span>
+                        {o.priceType === 'calculated' && (
+                          <span className="text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#dfe344] text-[#111827] px-2 py-0.5 rounded-full flex-shrink-0">
+                            Live rate
+                          </span>
+                        )}
                       </div>
                       <span className="font-display text-base flex-shrink-0">
-                        {isFree ? 'Free' : `R${(o.amount / 100).toFixed(0)}`}
+                        {isFree ? 'Free' : `R${o.amount.toFixed(0)}`}
                       </span>
                     </button>
                   )
@@ -437,7 +460,7 @@ export default function CheckoutForm() {
                   <button onClick={() => setStep(3)} className="text-xs text-[#6B6B66] hover:text-[#111827] transition-colors cursor-pointer">Edit</button>
                 </div>
                 <p className="text-sm">{selectedOption?.name}</p>
-                <p className="text-sm text-[#6B6B66]">{selectedOption && selectedOption.amount === 0 ? 'Free' : `R${((selectedOption?.amount ?? 0) / 100).toFixed(0)}`}</p>
+                <p className="text-sm text-[#6B6B66]">{selectedOption && selectedOption.amount === 0 ? 'Free' : `R${(selectedOption?.amount ?? 0).toFixed(0)}`}</p>
               </div>
 
               {/* Payment */}

@@ -2,11 +2,11 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Navbar } from '@/components/layout'
 import ProductDetail from './ProductDetail'
+import { TYPE_CATEGORY_NAMES as TYPE_CATS } from '@/lib/taxonomy'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const PUB_KEY  = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
 const FIELDS   = '+images,+categories.id,+categories.name,+categories.handle,+variants.calculated_price,+variants.title,+variants.options,+options,+metadata'
-const TYPE_CATS = new Set(['Inkjet Cartridges', 'Laser Cartridges'])
 
 async function getCategories(): Promise<any[]> {
   try {
@@ -98,7 +98,7 @@ export default async function ProductPage({ params }: Props) {
   const variant  = product.variants?.[0]
   const sku      = variant?.sku ?? ''
   const priceZar = variant?.calculated_price?.calculated_amount
-    ? Math.round(variant.calculated_price.calculated_amount / 100)
+    ? Math.round(variant.calculated_price.calculated_amount)
     : null
 
   const jsonLd = {

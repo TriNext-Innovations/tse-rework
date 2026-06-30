@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
+import { siteConfig } from '@/lib/site-config'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout'
+import { FinalizeOrder } from './FinalizeOrder'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const PUB_KEY  = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
@@ -49,6 +51,8 @@ export default async function OrderConfirmedPage() {
           your <span className="font-display-italic">order</span>
         </h1>
 
+        <FinalizeOrder />
+
         <p className="text-[#4B4B46] text-base mb-8 leading-relaxed">
           Your order has been sent to our team via WhatsApp. We&apos;ll confirm stock availability and arrange payment and delivery within 1 business hour.
         </p>
@@ -77,7 +81,7 @@ export default async function OrderConfirmedPage() {
             Continue shopping
           </Link>
           <a
-            href="https://wa.me/27798733558"
+            href={siteConfig.whatsapp.href}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center px-6 py-3 rounded-full border border-black/15 text-sm text-[#374151] hover:border-black/40 transition-colors"
@@ -88,11 +92,11 @@ export default async function OrderConfirmedPage() {
 
         <p className="text-xs text-[#9ca3af]">
           Need help?{' '}
-          <a href="tel:+27798733558" className="underline underline-offset-2 hover:text-[#111827] transition-colors">
-            Call 079 873 3558
+          <a href={siteConfig.whatsapp.tel} className="underline underline-offset-2 hover:text-[#111827] transition-colors">
+            Call {siteConfig.whatsapp.display}
           </a>
           {' '}or{' '}
-          <a href="mailto:sales@tse.co.za" className="underline underline-offset-2 hover:text-[#111827] transition-colors">
+          <a href={siteConfig.email.mailto} className="underline underline-offset-2 hover:text-[#111827] transition-colors">
             email us
           </a>
         </p>

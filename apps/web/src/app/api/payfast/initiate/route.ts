@@ -17,7 +17,7 @@ type Body = {
 
 type MedusaCart = {
   id: string
-  total: number // cents
+  total: number // rands
   items?: Array<{ title?: string; quantity?: number }>
   shipping_address?: {
     address_1?: string
@@ -54,8 +54,13 @@ export async function POST(req: NextRequest) {
   // shipping), never from a client-supplied total.
   let cart: MedusaCart
   try {
+    // NB: don't pass a sparse `fields` selection here. Restricting items to
+    // `items.title,items.quantity` drops their monetary fields, so Medusa
+    // computes `total` WITHOUT item prices — yielding shipping-only (undercharge)
+    // or 0 for free shipping (which then 400s below). The default cart response
+    // already includes the computed totals, items, and shipping_address.
     const cartRes = await fetch(
-      `${MEDUSA_URL}/store/carts/${encodeURIComponent(cart_id)}?fields=id,total,items.title,items.quantity,shipping_address.*`,
+      `${MEDUSA_URL}/store/carts/${encodeURIComponent(cart_id)}`,
       { headers: { 'x-publishable-api-key': PUB_KEY } },
     )
     if (!cartRes.ok) throw new Error(`cart fetch ${cartRes.status}`)
@@ -69,7 +74,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Order total must be greater than zero' }, { status: 400 })
   }
 
-  const amount = (cart.total / 100).toFixed(2)
+  const amount = cart.total.toFixed(2)
   const m_payment_id = crypto.randomUUID()
 
   const origin = req.headers.get('origin') ?? 'https://tse-cartridges.co.za'

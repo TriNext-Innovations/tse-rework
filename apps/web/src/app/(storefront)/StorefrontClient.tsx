@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { cartridgeTypeLabel } from '@/lib/taxonomy'
+import { siteConfig } from '@/lib/site-config'
 import Image from 'next/image'
 import { Navbar } from '@/components/layout'
 import { useCart } from '@/contexts/CartContext'
@@ -24,7 +26,7 @@ const faqs = [
   { q: 'Will a generic cartridge work in my printer?', a: "Yes. Our compatibles are engineered to spec for each printer model and meet or exceed OEM page yield. If it doesn't print as well as the original — we replace it." },
   { q: 'How does delivery work?', a: 'Order before noon and we deliver next day in Johannesburg and Pretoria via our own drivers (COD available). Nationwide courier ships same day on prepayment.' },
   { q: 'What if a cartridge is faulty?', a: "Every cartridge is covered by our guarantee. Faulty unit? We replace it, no fuss. That's the deal we've held since 1987." },
-  { q: 'Do you do bulk / business pricing?', a: 'Yes. Offices, schools, print shops — call 011 708 2304 or email sales@tse.co.za for a quote.' },
+  { q: 'Do you do bulk / business pricing?', a: `Yes. Offices, schools, print shops — call ${siteConfig.phone.display} or email ${siteConfig.email.sales} for a quote.` },
 ]
 
 
@@ -532,9 +534,9 @@ export default function StorefrontClient({
               const variant = p.variants?.[0]
               const sku = variant?.sku ?? '—'
               const priceZar = variant?.calculated_price?.calculated_amount
-                ? (variant.calculated_price.calculated_amount / 100).toFixed(0)
+                ? variant.calculated_price.calculated_amount.toFixed(0)
                 : null
-              const type = p.metadata?.cartridge_type === 'inkjet' ? 'Inkjet' : 'Laser'
+              const type = cartridgeTypeLabel(p.metadata?.cartridge_type) ?? 'Laser'
 
               return (
                 <article key={p.id} data-reveal onClick={() => router.push(`/products/${p.handle}`)} className="product-card group relative bg-[var(--paper-2)] rounded-[20px] p-5 sm:p-6 overflow-hidden cursor-pointer">
@@ -665,12 +667,12 @@ export default function StorefrontClient({
               </h3>
             </div>
             <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-3 lg:items-end">
-              <a href="tel:0117082304" className="inline-flex items-center justify-center gap-2 bg-[var(--on-accent)] text-[var(--magenta)] hover:bg-[var(--ink)] hover:text-[var(--paper)] rounded-full px-5 py-3 text-sm font-medium transition-colors duration-300 cursor-pointer">
+              <a href={siteConfig.phone.tel} className="inline-flex items-center justify-center gap-2 bg-[var(--on-accent)] text-[var(--magenta)] hover:bg-[var(--ink)] hover:text-[var(--paper)] rounded-full px-5 py-3 text-sm font-medium transition-colors duration-300 cursor-pointer">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                011 708 2304
+                {siteConfig.phone.display}
               </a>
-              <a href="mailto:sales@tse.co.za" className="inline-flex items-center justify-center gap-2 border border-[var(--on-accent)]/50 hover:bg-[var(--on-accent)] hover:text-[var(--magenta)] rounded-full px-5 py-3 text-sm font-medium transition-colors duration-300 cursor-pointer">
-                sales@tse.co.za
+              <a href={siteConfig.email.mailto} className="inline-flex items-center justify-center gap-2 border border-[var(--on-accent)]/50 hover:bg-[var(--on-accent)] hover:text-[var(--magenta)] rounded-full px-5 py-3 text-sm font-medium transition-colors duration-300 cursor-pointer">
+                {siteConfig.email.sales}
               </a>
             </div>
           </div>

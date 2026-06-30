@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import StorefrontClient, { type TrendingProduct, type CompatModel } from '@/app/(storefront)/StorefrontClient'
 import { CartProvider, useCart } from '@/contexts/CartContext'
+import { installCartMock } from './helpers/medusaCartMock'
 import { useRouter } from 'next/navigation'
 import React from 'react'
 
@@ -12,7 +13,7 @@ const mockProduct: TrendingProduct = {
   id: 'prod_1',
   title: 'HP 123 Black',
   handle: 'hp-123-black',
-  variants: [{ sku: 'HP-123-BK', calculated_price: { calculated_amount: 39900 } }],
+  variants: [{ sku: 'HP-123-BK', calculated_price: { calculated_amount: 399 } }],
   categories: [{ name: 'HP' }],
   images: [],
   metadata: { cartridge_type: 'inkjet' },
@@ -45,6 +46,8 @@ const mockCompatModels: CompatModel[] = [
 ]
 
 beforeEach(() => {
+  localStorage.clear()
+  installCartMock()
   vi.mocked(useRouter).mockReturnValue({
     push: mockPush,
     replace: vi.fn(),
@@ -100,7 +103,7 @@ describe('StorefrontClient — hero', () => {
       </CartProvider>,
     )
     await userEvent.click(screen.getByText('Add to cart — R300'))
-    expect(cartCount).toBe(1)
+    await waitFor(() => expect(cartCount).toBe(1))
   })
 
   it('mousemove on hero section updates gradient position', () => {
@@ -345,7 +348,7 @@ describe('StorefrontClient — trending products', () => {
     )
     const addBtns = screen.getAllByRole('button', { name: /Add HP 123 Black to cart/i })
     await userEvent.click(addBtns[0]!)
-    expect(cartCount).toBe(1)
+    await waitFor(() => expect(cartCount).toBe(1))
   })
 
   it('clicking product card navigates to /products', async () => {

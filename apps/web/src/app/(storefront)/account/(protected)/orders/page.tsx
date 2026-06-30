@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { siteConfig } from '@/lib/site-config'
 import { useAuth } from '@/contexts/AuthContext'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
@@ -60,7 +61,7 @@ export default function OrdersPage() {
           <p className="text-sm text-[#6B6B66] max-w-xs mx-auto mb-6 leading-relaxed">
             Orders placed via WhatsApp or PayFast will appear here once your account is linked.
             For previous orders, call{' '}
-            <a href="tel:0117082304" className="underline">011 708 2304</a>.
+            <a href={siteConfig.phone.tel} className="underline">{siteConfig.phone.display}</a>.
           </p>
           <Link
             href="/products"
@@ -78,7 +79,7 @@ export default function OrdersPage() {
             const date = new Date(order.created_at).toLocaleDateString('en-ZA', {
               day: 'numeric', month: 'long', year: 'numeric',
             })
-            const total = (order.total / 100).toFixed(0)
+            const total = order.total.toFixed(0)
             return (
               <div key={order.id} className="bg-white rounded-[20px] p-6">
                 <div className="flex items-start justify-between gap-4 mb-4">
@@ -94,7 +95,7 @@ export default function OrdersPage() {
                   {(order.items ?? []).map((item) => (
                     <li key={item.id} className="flex justify-between text-sm">
                       <span className="text-[#374151]">{item.quantity}× {item.title}</span>
-                      <span className="text-[#6B6B66]">R{(item.unit_price * item.quantity / 100).toFixed(0)}</span>
+                      <span className="text-[#6B6B66]">R{(item.unit_price * item.quantity).toFixed(0)}</span>
                     </li>
                   ))}
                 </ul>
