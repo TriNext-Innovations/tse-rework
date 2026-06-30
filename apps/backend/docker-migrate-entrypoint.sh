@@ -16,4 +16,7 @@ echo "[migrate] Seeding compatibility data (idempotent upsert)..."
 echo "[migrate] Ensuring PayFast pending-order table (idempotent)..."
 /app/node_modules/.bin/medusa exec src/scripts/migrate-payfast.ts
 
+echo "[migrate] Ensuring PayFast session-status bridge table (idempotent)..."
+/app/node_modules/.bin/medusa exec src/scripts/migrate-payfast-status.ts
+
 echo "[migrate] All done."

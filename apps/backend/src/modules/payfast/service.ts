@@ -1,6 +1,7 @@
 import crypto from 'crypto'
-import { AbstractPaymentProvider } from '@medusajs/framework/utils'
+import { AbstractPaymentProvider, ContainerRegistrationKeys } from '@medusajs/framework/utils'
 import {
+  type Logger,
   type AuthorizePaymentInput,
   type AuthorizePaymentOutput,
   type CancelPaymentInput,
@@ -55,10 +56,20 @@ class PayfastProviderService extends AbstractPaymentProvider<PayfastOptions> {
   static override identifier = 'payfast'
 
   protected readonly options_: PayfastOptions
+  // Shared app Postgres connection (registered into the module container by the
+  // module loader). Used to bridge the async ITN confirmation to the synchronous
+  // authorize call — see `markStatus`/`readStatus`. `any` to avoid pulling in a
+  // knex type dependency; it's a knex instance.
+  protected readonly pg_: any
+  protected readonly logger_?: Logger
 
   constructor(container: Record<string, unknown>, options: PayfastOptions) {
     super(container, options)
     this.options_ = options
+    this.pg_ = (container as Record<string, unknown>)[ContainerRegistrationKeys.PG_CONNECTION]
+    this.logger_ = (container as Record<string, unknown>)[ContainerRegistrationKeys.LOGGER] as
+      | Logger
+      | undefined
   }
 
   static override validateOptions(options: Record<string, unknown>) {
@@ -160,7 +171,13 @@ class PayfastProviderService extends AbstractPaymentProvider<PayfastOptions> {
   }
 
   async getPaymentStatus(input: GetPaymentStatusInput): Promise<GetPaymentStatusOutput> {
-    const raw = (input.data?.status as string) ?? 'pending'
+    // The session `data` stored at initiate is frozen at `status: 'pending'` and
+    // is never updated when the ITN lands, so it can't be the source of truth.
+    // The ITN webhook records the verified outcome in the bridge table keyed by
+    // session id; read that first and fall back to the (pending) session data.
+    const sessionId = this.sessionIdFromInput(input)
+    const persisted = await this.readStatus(sessionId)
+    const raw = persisted ?? (input.data?.status as string) ?? 'pending'
     const map: Record<string, PaymentSessionStatus> = {
       pending: 'pending',
       complete: 'authorized',
@@ -171,6 +188,50 @@ class PayfastProviderService extends AbstractPaymentProvider<PayfastOptions> {
       failed: 'error',
     }
     return { status: map[raw.toLowerCase()] ?? 'pending', data: input.data }
+  }
+
+  /** Recover the Medusa payment session id (= PayFast m_payment_id). */
+  private sessionIdFromInput(
+    input: { data?: Record<string, unknown>; context?: { idempotency_key?: string } },
+  ): string {
+    return (
+      (input.data?.m_payment_id as string) ??
+      (input.data?.session_id as string) ??
+      input.context?.idempotency_key ??
+      ''
+    )
+  }
+
+  // Bridge the async ITN to the synchronous authorize call. Only a
+  // signature-verified ITN writes here, so a 'complete' row means PayFast really
+  // confirmed payment for that session — authorizePayment can trust it.
+  private async markStatus(sessionId: string, status: string, amount?: string): Promise<void> {
+    if (!this.pg_ || !sessionId) return
+    try {
+      await this.pg_.raw(
+        `INSERT INTO payfast_session_status (session_id, status, amount, updated_at)
+         VALUES (?, ?, ?, now())
+         ON CONFLICT (session_id)
+         DO UPDATE SET status = EXCLUDED.status, amount = EXCLUDED.amount, updated_at = now()`,
+        [sessionId, status, amount ?? null],
+      )
+    } catch (err: any) {
+      this.logger_?.error(`[payfast] failed to persist session status: ${err?.message ?? err}`)
+    }
+  }
+
+  private async readStatus(sessionId: string): Promise<string | undefined> {
+    if (!this.pg_ || !sessionId) return undefined
+    try {
+      const { rows } = await this.pg_.raw(
+        `SELECT status FROM payfast_session_status WHERE session_id = ?`,
+        [sessionId],
+      )
+      return rows?.[0]?.status as string | undefined
+    } catch (err: any) {
+      this.logger_?.error(`[payfast] failed to read session status: ${err?.message ?? err}`)
+      return undefined
+    }
   }
 
   // PayFast settles immediately on COMPLETE, so capture is a no-op success.
@@ -231,20 +292,25 @@ class PayfastProviderService extends AbstractPaymentProvider<PayfastOptions> {
 
     const sessionId = body.m_payment_id ?? ''
     const status = (body.payment_status ?? '').toUpperCase()
+    const grossAmount = body.amount_gross ?? body.amount
 
     if (status === 'COMPLETE') {
+      // Record the verified outcome BEFORE returning, so the authorize step that
+      // Medusa runs next (and any racing storefront cart-complete) sees it.
+      await this.markStatus(sessionId, 'complete', grossAmount)
       return {
         action: 'authorized',
-        data: { session_id: sessionId, amount: Number(body.amount_gross ?? body.amount ?? 0) },
+        data: { session_id: sessionId, amount: Number(grossAmount ?? 0) },
       }
     }
     if (status === 'CANCELLED' || status === 'FAILED') {
+      await this.markStatus(sessionId, status === 'FAILED' ? 'failed' : 'canceled', grossAmount)
       return {
         action: 'canceled',
-        data: { session_id: sessionId, amount: Number(body.amount_gross ?? body.amount ?? 0) },
+        data: { session_id: sessionId, amount: Number(grossAmount ?? 0) },
       }
     }
-    return { action: 'pending', data: { session_id: sessionId, amount: Number(body.amount_gross ?? 0) } }
+    return { action: 'pending', data: { session_id: sessionId, amount: Number(grossAmount ?? 0) } }
   }
 }
 
