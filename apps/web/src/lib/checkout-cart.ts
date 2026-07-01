@@ -235,16 +235,30 @@ export type PayfastRedirect = { url: string; params: Record<string, string> }
 // Create a payment collection for the cart, initialise the PayFast session
 // (Medusa calls the provider's initiatePayment, which signs the redirect
 // params), and return them for the browser to POST to PayFast.
-export async function initPayfastSession(cartId: string): Promise<PayfastRedirect> {
+export async function initPayfastSession(
+  cartId: string,
+  contact?: { email?: string | null; name?: string | null },
+): Promise<PayfastRedirect> {
   const { payment_collection } = await api<{ payment_collection: { id: string } }>(
     `/store/payment-collections`,
     { method: 'POST', body: JSON.stringify({ cart_id: cartId }) },
   )
+  // Guest carts have no authenticated customer, so Medusa can't populate the
+  // provider's context.customer. Pass the buyer's contact through the session
+  // `data` so the PayFast page pre-fills their name + email.
+  const sessionData: Record<string, string> = {}
+  if (contact?.email) sessionData.email = contact.email
+  if (contact?.name) {
+    const parts = contact.name.trim().split(/\s+/)
+    sessionData.name_first = parts[0] ?? contact.name
+    const last = parts.slice(1).join(' ')
+    if (last) sessionData.name_last = last
+  }
   const { payment_collection: pc } = await api<{
     payment_collection: { payment_sessions?: Array<{ provider_id: string; data?: Record<string, unknown> }> }
   }>(`/store/payment-collections/${payment_collection.id}/payment-sessions`, {
     method: 'POST',
-    body: JSON.stringify({ provider_id: PAYFAST_PROVIDER_ID }),
+    body: JSON.stringify({ provider_id: PAYFAST_PROVIDER_ID, data: sessionData }),
   })
 
   const session = pc.payment_sessions?.find((s) => s.provider_id === PAYFAST_PROVIDER_ID)

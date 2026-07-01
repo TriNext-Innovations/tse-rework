@@ -164,7 +164,7 @@ export default function CheckoutForm() {
       if (PAYFAST_PROVIDER_ENABLED) {
         // Canonical flow: Medusa payment provider signs the redirect params.
         // Keep the cart_id so /checkout/confirmed can complete the cart → order.
-        const { url, params } = await initPayfastSession(cartId)
+        const { url, params } = await initPayfastSession(cartId, { email: contact.email, name: contact.name })
         submitToPayfast(url, params)
         return
       }
