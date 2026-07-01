@@ -16,6 +16,8 @@
     "search:index": "medusa exec src/scripts/bulk-index.ts",
     "b2b:setup": "medusa exec src/scripts/setup-b2b-groups.ts",
     "import:woocommerce": "medusa exec src/scripts/import-woocommerce.ts",
+    "migrate:woo": "medusa exec src/scripts/migrate-woo-archive.ts",
+    "import:woo": "medusa exec src/scripts/import-woo-orders.ts",
     "payfast:setup": "medusa exec src/scripts/setup-payfast.ts"
   },
   "dependencies": {
