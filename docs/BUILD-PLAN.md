@@ -212,7 +212,7 @@ Maps to AI prompts 6, 9, 10, 12.
 - [ ] Sentry wired in both apps; UptimeRobot pinging `/health`
 - [ ] Run the full **Going Live Checklist** in `docs/DEVELOPER-GUIDE.md`
 
-**Exit criteria:** client signs off; DNS cutover scheduled.
+**Exit criteria:** client signs off; new site goes live at `tse-cartridges.co.za` **side by side** with the existing WooCommerce site (`tse.co.za`). No hard cutover — both run in parallel; decommissioning the old site is a separate, later step once the new one is proven in production.
 
 ---
 
