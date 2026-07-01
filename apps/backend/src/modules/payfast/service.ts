@@ -139,6 +139,16 @@ class PayfastProviderService extends AbstractPaymentProvider<PayfastOptions> {
     const origin = this.options_.storefrontUrl ?? 'https://tse-cartridges.co.za'
     const backend = this.options_.backendUrl ?? 'http://localhost:9000'
 
+    // Guest checkouts aren't authenticated, so Medusa leaves context.customer
+    // empty (the customer is only resolved when a customer_id/actor is present).
+    // The storefront therefore passes the buyer's contact through input.data so
+    // PayFast can still pre-fill name + email. Prefer the customer record when
+    // logged in, fall back to the passed-through contact for guests.
+    const contact = (input.data ?? {}) as { email?: string; name_first?: string; name_last?: string }
+    const nameFirst = customer?.first_name ?? contact.name_first
+    const nameLast = customer?.last_name ?? contact.name_last
+    const email = customer?.email ?? contact.email
+
     const params: Record<string, string> = {
       merchant_id: this.options_.merchantId,
       merchant_key: this.options_.merchantKey,
@@ -148,9 +158,9 @@ class PayfastProviderService extends AbstractPaymentProvider<PayfastOptions> {
       // provider registers as `pp_payfast_payfast` (identifier `payfast` + config
       // id `payfast`) — so the path must be `payfast_payfast`, not `payfast`.
       notify_url: `${backend}/hooks/payment/payfast_payfast`,
-      ...(customer?.first_name ? { name_first: customer.first_name } : {}),
-      ...(customer?.last_name ? { name_last: customer.last_name } : {}),
-      ...(customer?.email ? { email_address: customer.email } : {}),
+      ...(nameFirst ? { name_first: nameFirst } : {}),
+      ...(nameLast ? { name_last: nameLast } : {}),
+      ...(email ? { email_address: email } : {}),
       // m_payment_id carries the Medusa session id so the ITN can reconcile it.
       m_payment_id: sessionId,
       amount: this.toRand(input.amount),
