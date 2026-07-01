@@ -197,10 +197,15 @@ A cleaner long-term solution is a dedicated `certbot` service in compose with th
 | Next.js storefront | `tse-ui-web-1` | built locally | 3000 | 3000 | `GET /api/health` (todo, see 3.6) |
 | nginx reverse proxy | `tse-ui-nginx-1` | `nginx:alpine` | 80 / 443 | 80 / 443 | — |
 
-External routing:
+External routing (production apex, live 2026-07-01):
 
-- `https://dev.tse-cartridges.co.za` → nginx → `web:3000` (storefront)
-- `https://api.dev.tse-cartridges.co.za` → nginx → `medusa:9000` (REST API + `/app` admin dashboard)
+- `https://tse-cartridges.co.za` → nginx → `web:3000` (storefront)
+- `https://api.tse-cartridges.co.za` → nginx → `medusa:9000` (REST API + `/app` admin dashboard)
+
+The `dev.tse-cartridges.co.za` / `api.dev.tse-cartridges.co.za` blocks still exist for
+overlap but the app no longer functions there (CORS + baked `NEXT_PUBLIC_*` are apex-only).
+See section 9 for the apex cutover. All four hosts are DNS-only (grey) Cloudflare A records
+→ the box; the apex must **not** be proxied or certbot standalone (section 9.2) can't validate.
 
 ---
 
@@ -226,11 +231,18 @@ If schema-impacting migrations were added, **always** run `medusa-migrate` to ex
 
 The two stateful pieces are:
 
-1. **`postgres_data` volume** — all customer / order / catalogue data. Back up with:
+1. **`postgres_data` volume** — all customer / order / catalogue data.
+
+   **Automated (live since 2026-07-01):** `/home/linuxuser/backup-db.sh` runs nightly via the
+   `linuxuser` crontab (`30 2 * * *`). It `pg_dump`s `tse_medusa` → gzip in
+   `/home/linuxuser/backups/` (14-day local retention) and uploads to Cloudflare R2 bucket
+   `tse-products` under `db-backups/` (30-day retention) via `rclone` (uses the `R2_*` vars
+   from `.env`; no `rclone.conf` — flags passed on the CLI). Log: `/home/linuxuser/backups/backup.log`.
+
+   Manual one-off dump:
    ```bash
-   docker compose exec -T postgres pg_dump -U postgres -d tse_medusa --no-owner --clean | gzip > tse_medusa_$(date +%F).sql.gz
+   docker exec tse-ui-postgres-1 pg_dump -U postgres -d tse_medusa --no-owner --clean | gzip > tse_medusa_$(date +%F).sql.gz
    ```
-   Schedule this nightly off-server (Vultr Object Storage, Cloudflare R2, off-box `rsync`).
 
 2. **`certbot_certs` volume** — TLS certs. Can be reissued from scratch on a new host as long as DNS still resolves (see section 2 step 4); not strictly backup-critical.
 
@@ -248,4 +260,55 @@ Each service's required env vars (already in `.env.example`):
 | `medusa` only | `MEDUSA_ADMIN_EMAIL`, `MEDUSA_ADMIN_PASSWORD`, `MEDUSA_BACKEND_URL`, CORS triplet, `RESEND_*`, `PAYFAST_*`, `OZOW_*`, `TCG_API_KEY`, `ARAMEX_*` |
 | `web` | `NEXT_PUBLIC_MEDUSA_URL`, `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY`, `NEXT_PUBLIC_SANITY_*`, `NEXT_PUBLIC_SITE_URL` |
 
-`STORE_CORS` / `ADMIN_CORS` / `AUTH_CORS` must include `https://dev.tse-cartridges.co.za` (and the admin URL, which is `https://api.dev.tse-cartridges.co.za/app`) — wrong CORS shows as silent auth failures in the admin login.
+`STORE_CORS` must include the storefront origin `https://tse-cartridges.co.za`. `AUTH_CORS`
+must include both the storefront and the admin origins (`https://tse-cartridges.co.za,https://api.tse-cartridges.co.za`).
+`ADMIN_CORS` matters only for cross-origin admin calls — the admin dashboard is served from the
+same origin as the API (`api.tse-cartridges.co.za/app` → `api.tse-cartridges.co.za/*`), so admin
+login/usage is same-origin and doesn't hit CORS regardless of `ADMIN_CORS`.
+
+---
+
+## 9. Production apex domain cutover (2026-07-01)
+
+Moved production from the `dev.tse-cartridges.co.za` label to the real apex
+`tse-cartridges.co.za` (+ `api.tse-cartridges.co.za`). The old Woo site stays on `tse.co.za`
+(different domain) — parallel run, no conflict. Dev is kept in nginx for overlap but is
+functionally decommissioned (env is apex-only).
+
+### 9.1 DNS (Cloudflare)
+- `tse-cartridges.co.za` → **A `139.84.247.189`, DNS-only (grey)** — replaced two old proxied
+  AWS parking A records (`13.248.243.5`, `76.223.105.230`).
+- `api.tse-cartridges.co.za` → **A `139.84.247.189`, DNS-only** (new).
+- DNS-only is mandatory: certbot standalone validates over plaintext :80, which Cloudflare's
+  proxy would intercept.
+
+### 9.2 TLS cert
+One SAN cert covering both apex names, issued exactly like section 2 step 4:
+```bash
+docker compose stop nginx
+docker run --rm -p 80:80 -v tse-ui_certbot_certs:/etc/letsencrypt -v tse-ui_certbot_www:/var/www/certbot \
+  certbot/certbot certonly --standalone --non-interactive --agree-tos --no-eff-email \
+  --email ryno@trinextinnovations.co.za -d tse-cartridges.co.za -d api.tse-cartridges.co.za
+docker compose up -d nginx     # NB: waits on medusa health — give it a long timeout, don't kill it mid-way
+```
+Stored at `live/tse-cartridges.co.za/` (SAN under the first `-d` name, per gotcha 3.5), expires **2026-09-29**.
+The existing certbot renewal cron in `/etc/cron.d/certbot` renews all certs automatically.
+
+### 9.3 nginx
+Two new `server` blocks added to `infrastructure/nginx/conf.d/tse.conf` (apex storefront +
+apex API), both referencing `live/tse-cartridges.co.za/`. The file is bind-mounted, so apply
+with `docker exec tse-ui-nginx-1 nginx -t && docker exec tse-ui-nginx-1 nginx -s reload`
+(zero downtime). **It is git-tracked** — the change must also land on `main` (PR #184 → develop → #185 → main)
+or the next deploy's `git reset --hard origin/main` reverts it.
+
+### 9.4 App env + web rebuild
+Update on the box `.env`: `MEDUSA_BACKEND_URL`, `NEXT_PUBLIC_MEDUSA_BACKEND_URL` → apex;
+`STORE_CORS`, `AUTH_CORS`, `STOREFRONT_URL`, `NEXT_PUBLIC_SITE_URL`, `PAYFAST_NOTIFY_URL`,
+`OZOW_NOTIFY_URL` → apex. `NEXT_PUBLIC_MEDUSA_URL=http://medusa:9000` stays internal.
+**`NEXT_PUBLIC_*` are baked at build time → `docker compose build web` then force-recreate;**
+a plain recreate keeps the old baked URL. Medusa only needs a recreate for the runtime CORS/URL vars.
+
+### 9.5 External config still owed
+- **PayFast merchant dashboard** — return/notify/cancel URLs updated to the apex.
+- **Resend** — sending domain `tse-cartridges.co.za` DKIM/SPF verified.
+- Once apex is proven, add a 301 `dev.*` → apex and retire the dev blocks.

@@ -2,8 +2,7 @@
 
 Headless e-commerce platform for TSE Online — South Africa's printer cartridge supplier. Migrating from WooCommerce to a Medusa v2 + Next.js 15 monorepo, self-hosted on Vultr Johannesburg.
 
-**Current phase:** Phase 2 — Storefront Pages  
-**Go-live target:** June 2026
+**Status:** 🟢 Live in production — [`tse-cartridges.co.za`](https://tse-cartridges.co.za) (Vultr JHB), running side by side with the legacy WooCommerce site (`tse.co.za`) since 2026-07-01. Remaining go-live gates tracked in [`docs/CLIENT-PENDING.md`](docs/CLIENT-PENDING.md).
 
 ---
 
