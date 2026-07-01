@@ -12,7 +12,7 @@ export async function sendEmail(options: {
   subject: string
   html: string
 }): Promise<void> {
-  const from = process.env.RESEND_FROM_EMAIL ?? 'orders@tse-cartridges.co.za'
+  const from = process.env.RESEND_FROM_EMAIL ?? 'sales@tse.co.za'
 
   const { error } = await getClient().emails.send({ from, ...options })
 

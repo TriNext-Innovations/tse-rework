@@ -4,7 +4,7 @@ import crypto from 'crypto'
 const MERCHANT_ID = process.env.PAYFAST_MERCHANT_ID ?? ''
 const PASSPHRASE = process.env.PAYFAST_PASSPHRASE ?? ''
 const RESEND_API_KEY = process.env.RESEND_API_KEY ?? ''
-const RESEND_FROM = process.env.RESEND_FROM_EMAIL ?? 'orders@tse-cartridges.co.za'
+const RESEND_FROM = process.env.RESEND_FROM_EMAIL ?? 'sales@tse.co.za'
 const TSE_NOTIFY_EMAIL = 'sales@tse.co.za'
 
 // PayFast production IP ranges (for validation in production)
