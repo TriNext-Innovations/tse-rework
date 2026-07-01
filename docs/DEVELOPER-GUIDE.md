@@ -291,15 +291,22 @@ chore(deps): pin @medusajs/admin-sdk to 2.13.6
 
 ## Going live checklist (Milestone 3)
 
-- [ ] Vultr JHB server provisioned, Docker stack deployed
-- [ ] Domain DNS pointed to Vultr (tse-cartridges.co.za)
-- [ ] SSL via Caddy or nginx + Let's Encrypt
-- [ ] All env vars set for production
-- [ ] Medusa migrations run on production DB
-- [ ] Product data seeded and reviewed by client
-- [ ] Publishable API key created for production
-- [ ] Shipping options configured in Medusa admin
-- [ ] PayFast credentials configured (PAYFAST_SANDBOX=false)
-- [ ] POPIA Privacy Policy page live
-- [ ] Test order placed end-to-end
-- [ ] New site live at `tse-cartridges.co.za` running **side by side** with the existing WooCommerce site (`tse.co.za`) — no hard cutover. Both sites stay online in parallel; the old site is only wound down later once the new one is proven in production (see `docs/CLIENT-PENDING.md` #8)
+Status as of 2026-07-01 — apex is live; remaining boxes are the true go-live gates.
+
+- [x] Vultr JHB server provisioned, Docker stack deployed (`tse-prod-jnb`, `139.84.247.189`)
+- [x] Domain DNS pointed to Vultr — apex `tse-cartridges.co.za` + `api.` (Cloudflare, DNS-only)
+- [x] SSL via nginx + Let's Encrypt (SAN cert, expires 2026-09-29; certbot renewal cron active)
+- [x] All env vars set for production (apex)
+- [x] Medusa migrations run on production DB
+- [x] Product data seeded (339 products / 559 variants) — [ ] final client review of live catalogue
+- [x] Publishable API key created for production
+- [x] Shipping options configured (Own Delivery COD, Collect from Kya Sands, Courier Guy Economy + Overnight)
+- [x] PayFast configured, live mode (`PAYFAST_SANDBOX=false`), provider enabled on ZAR region
+- [x] POPIA Privacy + Cookies pages live (`/legal/privacy`, `/legal/cookies`)
+- [x] Nightly DB backups automated → Cloudflare R2 (`backup-db.sh`, 02:30 cron)
+- [ ] **Real** test order placed end-to-end on live PayFast (pay → refund) — confirms live capture + ITN
+- [ ] PayFast dashboard return/notify/cancel URLs updated to apex
+- [ ] Resend sending domain DKIM/SPF verified (+ rotate exposed key)
+- [ ] POPIA Information Officer designated + registered with the Information Regulator (client)
+- [ ] Sentry DSN wired (optional — not gating)
+- [x] New site live at `tse-cartridges.co.za` running **side by side** with the existing WooCommerce site (`tse.co.za`) — no hard cutover. Both sites stay online in parallel; the old site is only wound down later once the new one is proven in production (see `docs/CLIENT-PENDING.md` #8)
