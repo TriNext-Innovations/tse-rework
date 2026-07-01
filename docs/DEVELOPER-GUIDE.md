@@ -302,4 +302,4 @@ chore(deps): pin @medusajs/admin-sdk to 2.13.6
 - [ ] PayFast credentials configured (PAYFAST_SANDBOX=false)
 - [ ] POPIA Privacy Policy page live
 - [ ] Test order placed end-to-end
-- [ ] DNS cutover from old WooCommerce site during low-traffic window
+- [ ] New site live at `tse-cartridges.co.za` running **side by side** with the existing WooCommerce site (`tse.co.za`) — no hard cutover. Both sites stay online in parallel; the old site is only wound down later once the new one is proven in production (see `docs/CLIENT-PENDING.md` #8)
