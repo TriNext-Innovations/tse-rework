@@ -8,10 +8,10 @@ export type PayfastOptions = {
   /** Medusa backend origin — used for the ITN notify_url. */
   backendUrl?: string
   /**
-   * This deployment stores money as integer cents (a R450 product = amount
-   * 45000). PayFast expects rand with two decimals, so amounts are divided by
-   * this before formatting. Set to 1 if your prices are already in major units.
-   * NB: verify against the cart total in a PayFast sandbox before going live.
+   * Prices are stored in rands (major units), so amounts are divided by 1 (i.e.
+   * used as-is) before formatting to PayFast's rand-with-two-decimals. Kept
+   * configurable for environments that still store a minor unit (set to 100).
+   * Defaults to 1.
    */
   amountDivisor?: number
 }

@@ -2,14 +2,14 @@ import { vi } from 'vitest'
 
 // A stateful in-memory fake of the Medusa store cart API, enough to drive the
 // CartContext (create cart, resolve variant by product id, add/update/remove
-// line items, fetch cart). Prices are in cents, matching Medusa.
+// line items, fetch cart). Prices are in rands, matching Medusa.
 
 type Variant = { id: string; sku: string; title: string; price: number }
 
 const CATALOG: Record<string, Variant> = {
-  prod_1: { id: 'v_1', sku: 'HP-123', title: 'HP 123', price: 30000 },
-  prod_2: { id: 'v_2', sku: 'CAN-737', title: 'Canon 737', price: 45000 },
-  p1: { id: 'v_1', sku: 'HP-123', title: 'HP 123', price: 30000 },
+  prod_1: { id: 'v_1', sku: 'HP-123', title: 'HP 123', price: 300 },
+  prod_2: { id: 'v_2', sku: 'CAN-737', title: 'Canon 737', price: 450 },
+  p1: { id: 'v_1', sku: 'HP-123', title: 'HP 123', price: 300 },
 }
 
 const BY_VARIANT: Record<string, Variant & { product_id: string }> = {}

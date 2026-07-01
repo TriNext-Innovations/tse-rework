@@ -98,7 +98,7 @@ export default async function ProductPage({ params }: Props) {
   const variant  = product.variants?.[0]
   const sku      = variant?.sku ?? ''
   const priceZar = variant?.calculated_price?.calculated_amount
-    ? Math.round(variant.calculated_price.calculated_amount / 100)
+    ? Math.round(variant.calculated_price.calculated_amount)
     : null
 
   const jsonLd = {

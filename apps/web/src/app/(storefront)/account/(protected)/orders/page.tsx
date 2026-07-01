@@ -79,7 +79,7 @@ export default function OrdersPage() {
             const date = new Date(order.created_at).toLocaleDateString('en-ZA', {
               day: 'numeric', month: 'long', year: 'numeric',
             })
-            const total = (order.total / 100).toFixed(0)
+            const total = order.total.toFixed(0)
             return (
               <div key={order.id} className="bg-white rounded-[20px] p-6">
                 <div className="flex items-start justify-between gap-4 mb-4">
@@ -95,7 +95,7 @@ export default function OrdersPage() {
                   {(order.items ?? []).map((item) => (
                     <li key={item.id} className="flex justify-between text-sm">
                       <span className="text-[#374151]">{item.quantity}× {item.title}</span>
-                      <span className="text-[#6B6B66]">R{(item.unit_price * item.quantity / 100).toFixed(0)}</span>
+                      <span className="text-[#6B6B66]">R{(item.unit_price * item.quantity).toFixed(0)}</span>
                     </li>
                   ))}
                 </ul>
