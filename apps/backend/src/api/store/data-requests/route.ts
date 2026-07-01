@@ -22,7 +22,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
   // Send notification to TSE team via Resend
   const resendKey = process.env.RESEND_API_KEY
-  const from = process.env.RESEND_FROM_EMAIL ?? 'orders@tse-cartridges.co.za'
+  const from = process.env.RESEND_FROM_EMAIL ?? 'sales@tse.co.za'
 
   if (resendKey) {
     const labels: Record<string, string> = {
