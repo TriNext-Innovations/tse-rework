@@ -60,23 +60,23 @@ export default async function CompatibilityPage({ searchParams }: Props) {
   const hasResults = results.length > 0
 
   return (
-    <div className="min-h-screen bg-[#F5F4F0] text-[#111827]">
+    <div className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
       <style>{`
         .font-display { font-family: var(--font-fraunces), Georgia, serif; font-optical-sizing: auto; }
         .font-display-italic { font-family: var(--font-fraunces), Georgia, serif; font-style: italic; }
       `}</style>
 
       {/* Nav */}
-      <header className="sticky top-0 z-40 bg-[#F5F4F0]/90 backdrop-blur-xl border-b border-black/8 px-4 sm:px-8 lg:px-12">
+      <header className="sticky top-0 z-40 bg-[var(--paper)]/90 backdrop-blur-xl border-b border-[var(--line-2)] px-4 sm:px-8 lg:px-12">
         <div className="mx-auto max-w-7xl flex items-center justify-between h-14">
           <Link href="/">
             <Logo width={72} variant="color" linked={false} />
           </Link>
-          <nav className="hidden md:flex items-center gap-5 text-sm text-[#374151]">
-            <Link href="/products" className="hover:text-[#111827] transition-colors">Shop</Link>
-            <Link href="/compatibility" className="font-medium text-[#111827]">Find by printer</Link>
+          <nav className="hidden md:flex items-center gap-5 text-sm text-[var(--ink-2)]">
+            <Link href="/products" className="hover:text-[var(--ink)] transition-colors">Shop</Link>
+            <Link href="/compatibility" className="font-medium text-[var(--ink)]">Find by printer</Link>
           </nav>
-          <Link href="/" className="text-sm font-medium text-[#374151] hover:text-[#111827] transition-colors">
+          <Link href="/" className="text-sm font-medium text-[var(--ink-2)] hover:text-[var(--ink)] transition-colors">
             ← Home
           </Link>
         </div>
@@ -96,7 +96,7 @@ export default async function CompatibilityPage({ searchParams }: Props) {
               Find cartridges<br />
               for your <span className="font-display-italic">printer</span>
             </h1>
-            <p className="text-[#4B4B46] text-base mb-8 leading-relaxed max-w-md">
+            <p className="text-[var(--ink-3)] text-base mb-8 leading-relaxed max-w-md">
               Enter your printer model and we&apos;ll show you every compatible generic cartridge we stock — guaranteed to work.
             </p>
 
@@ -107,11 +107,11 @@ export default async function CompatibilityPage({ searchParams }: Props) {
                   name="model"
                   defaultValue={model}
                   placeholder="e.g. HP LaserJet 1020"
-                  className="flex-1 px-4 py-3 rounded-[14px] bg-white border border-black/8 text-sm outline-none"
+                  className="flex-1 px-4 py-3 rounded-[14px] bg-[var(--surface)] border border-[var(--line-2)] text-sm outline-none"
                 />
                 <button
                   type="submit"
-                  className="px-5 py-3 rounded-[14px] bg-[#111827] text-white text-sm font-medium"
+                  className="px-5 py-3 rounded-[14px] bg-[var(--ink)] text-[var(--paper)] text-sm font-medium"
                 >
                   Search
                 </button>
@@ -124,13 +124,13 @@ export default async function CompatibilityPage({ searchParams }: Props) {
           {/* Brand quick-filters */}
           {!model && (
             <div className="mt-10">
-              <p className="text-xs text-[#6B6B66] uppercase tracking-[0.16em] mb-3">Search by brand</p>
+              <p className="text-xs text-[var(--muted)] uppercase tracking-[0.16em] mb-3">Search by brand</p>
               <div className="flex flex-wrap gap-2">
                 {BRAND_CHIPS.map((brand) => (
                   <Link
                     key={brand}
                     href={`/compatibility?model=${encodeURIComponent(brand)}`}
-                    className="px-4 py-1.5 rounded-full border border-black/15 text-sm text-[#374151] hover:border-[#111827] hover:text-[#111827] transition-colors"
+                    className="px-4 py-1.5 rounded-full border border-[var(--line-4)] text-sm text-[var(--ink-2)] hover:border-[var(--ink)] hover:text-[var(--ink)] transition-colors"
                   >
                     {brand}
                   </Link>
@@ -147,16 +147,16 @@ export default async function CompatibilityPage({ searchParams }: Props) {
           <div className="mx-auto max-w-7xl">
 
             {/* Breadcrumb */}
-            <div className="flex items-center gap-2 text-xs text-[#6B6B66] mb-6">
-              <Link href="/compatibility" className="hover:text-[#111827] transition-colors">All printers</Link>
+            <div className="flex items-center gap-2 text-xs text-[var(--muted)] mb-6">
+              <Link href="/compatibility" className="hover:text-[var(--ink)] transition-colors">All printers</Link>
               <span>/</span>
-              <span className="text-[#111827]">{model}</span>
+              <span className="text-[var(--ink)]">{model}</span>
             </div>
 
             {hasResults ? (
               <>
-                <p className="text-sm text-[#6B6B66] mb-6">
-                  {results.length} cartridge{results.length !== 1 ? 's' : ''} compatible with <strong className="text-[#111827]">{model}</strong>
+                <p className="text-sm text-[var(--muted)] mb-6">
+                  {results.length} cartridge{results.length !== 1 ? 's' : ''} compatible with <strong className="text-[var(--ink)]">{model}</strong>
                 </p>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -170,7 +170,7 @@ export default async function CompatibilityPage({ searchParams }: Props) {
                       <Link
                         key={`${r.printer_model}-${r.sku}`}
                         href={href}
-                        className="group bg-white rounded-[16px] p-4 hover:-translate-y-1 transition-transform duration-300"
+                        className="group bg-[var(--surface)] rounded-[16px] p-4 hover:-translate-y-1 transition-transform duration-300"
                       >
                         <div className="relative h-28 flex items-center justify-center mb-3">
                           {r.thumbnail ? (
@@ -197,8 +197,8 @@ export default async function CompatibilityPage({ searchParams }: Props) {
                         </div>
 
                         <h2 className="font-display text-sm leading-tight tracking-tight line-clamp-2 mb-1">{label}</h2>
-                        <div className="text-[10px] text-[#9ca3af] mb-3">SKU {r.sku}</div>
-                        <div className="text-[10px] text-[#6B6B66]">{r.printer_brand} · {r.printer_model}</div>
+                        <div className="text-[10px] text-[var(--muted-2)] mb-3">SKU {r.sku}</div>
+                        <div className="text-[10px] text-[var(--muted)]">{r.printer_brand} · {r.printer_model}</div>
                       </Link>
                     )
                   })}
@@ -211,19 +211,19 @@ export default async function CompatibilityPage({ searchParams }: Props) {
                 <h2 className="font-display font-light text-2xl mb-2">
                   No results for <span className="font-display-italic">&ldquo;{model}&rdquo;</span>
                 </h2>
-                <p className="text-sm text-[#6B6B66] mb-8 leading-relaxed">
+                <p className="text-sm text-[var(--muted)] mb-8 leading-relaxed">
                   We couldn&apos;t find a match in our database. Our team can help — call or WhatsApp us and we&apos;ll find the right cartridge for you.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <a
                     href={siteConfig.whatsapp.tel}
-                    className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-[#111827] text-white text-sm font-medium hover:bg-[#41e0f5] hover:text-[#111827] transition-colors"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-[var(--ink)] text-[var(--paper)] text-sm font-medium hover:bg-[#41e0f5] hover:text-[var(--on-accent)] transition-colors"
                   >
                     Call {siteConfig.whatsapp.display}
                   </a>
                   <a
                     href={siteConfig.email.mailto}
-                    className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full border border-black/15 text-sm text-[#374151] hover:border-black/40 transition-colors"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full border border-[var(--line-4)] text-sm text-[var(--ink-2)] hover:border-[var(--line-7)] transition-colors"
                   >
                     Email us
                   </a>
@@ -231,7 +231,7 @@ export default async function CompatibilityPage({ searchParams }: Props) {
                 <div className="mt-8">
                   <Link
                     href="/compatibility"
-                    className="text-sm text-[#6B6B66] hover:text-[#111827] transition-colors"
+                    className="text-sm text-[var(--muted)] hover:text-[var(--ink)] transition-colors"
                   >
                     ← Try a different model
                   </Link>
@@ -246,16 +246,16 @@ export default async function CompatibilityPage({ searchParams }: Props) {
       {!model && (
         <div className="px-4 sm:px-8 lg:px-12 pb-16">
           <div className="mx-auto max-w-7xl">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-8 border-t border-black/8">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-8 border-t border-[var(--line-2)]">
               {[
                 { step: '01', heading: 'Enter your printer', body: 'Type your printer brand and model — e.g. "HP LaserJet 1020" or "Canon PIXMA G3410".' },
                 { step: '02', heading: 'See compatible cartridges', body: 'We show every generic cartridge in our range that works with your printer, with price and SKU.' },
                 { step: '03', heading: 'Add to cart', body: 'Order online or call us. Order before noon for next-day delivery to JHB/PTA.' },
               ].map(({ step, heading, body }) => (
                 <div key={step} className="flex flex-col gap-3">
-                  <div className="font-display text-5xl text-[#111827]/8 leading-none">{step}</div>
+                  <div className="font-display text-5xl text-[var(--ink)]/8 leading-none">{step}</div>
                   <h3 className="font-display text-lg">{heading}</h3>
-                  <p className="text-sm text-[#6B6B66] leading-relaxed">{body}</p>
+                  <p className="text-sm text-[var(--muted)] leading-relaxed">{body}</p>
                 </div>
               ))}
             </div>

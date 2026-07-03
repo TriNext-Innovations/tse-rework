@@ -118,10 +118,10 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} aria-hidden />
 
       {/* Modal */}
-      <div className="relative w-full max-w-xl bg-white rounded-[24px] shadow-2xl overflow-hidden">
+      <div className="relative w-full max-w-xl bg-[var(--surface)] rounded-[24px] shadow-2xl overflow-hidden">
         {/* Input row */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-black/8">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-[var(--line-2)]">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--muted-2)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
           </svg>
           <input
@@ -131,15 +131,15 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Search cartridges, brands, SKUs…"
-            className="flex-1 bg-transparent text-[#111827] placeholder:text-[#9ca3af] text-base outline-none"
+            className="flex-1 bg-transparent text-[var(--ink)] placeholder:text-[var(--muted-2)] text-base outline-none"
             autoComplete="off"
           />
           {loading && (
-            <div className="w-4 h-4 border-2 border-black/15 border-t-[#111827] rounded-full animate-spin flex-shrink-0" />
+            <div className="w-4 h-4 border-2 border-[var(--line-4)] border-t-[var(--ink)] rounded-full animate-spin flex-shrink-0" />
           )}
           <kbd
             onClick={onClose}
-            className="hidden sm:inline-flex items-center gap-0.5 text-[10px] font-medium text-[#9ca3af] bg-black/5 px-1.5 py-0.5 rounded cursor-pointer"
+            className="hidden sm:inline-flex items-center gap-0.5 text-[10px] font-medium text-[var(--muted-2)] bg-[var(--hover-1)] px-1.5 py-0.5 rounded cursor-pointer"
           >
             Esc
           </kbd>
@@ -149,10 +149,10 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
         <div className="max-h-[60vh] overflow-y-auto">
           {!configured && (
             <div className="px-5 py-8 text-center">
-              <p className="text-sm text-[#6B6B66]">Search not configured yet.</p>
+              <p className="text-sm text-[var(--muted)]">Search not configured yet.</p>
               <button
                 onClick={() => { router.push('/products'); onClose() }}
-                className="mt-3 text-sm underline underline-offset-4 hover:text-[#111827] transition-colors cursor-pointer"
+                className="mt-3 text-sm underline underline-offset-4 hover:text-[var(--ink)] transition-colors cursor-pointer"
               >
                 Browse all cartridges →
               </button>
@@ -161,13 +161,13 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
 
           {configured && !query.trim() && (
             <div className="px-5 py-6">
-              <div className="text-[10px] uppercase tracking-[0.18em] text-[#9ca3af] mb-3">Quick links</div>
+              <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--muted-2)] mb-3">Quick links</div>
               <div className="flex flex-wrap gap-2">
                 {['HP', 'Canon', 'Epson', 'Brother', 'Samsung', 'Lexmark'].map((brand) => (
                   <button
                     key={brand}
                     onClick={() => setQuery(brand)}
-                    className="text-xs px-3 py-1.5 border border-black/10 rounded-full hover:border-[#41e0f5] hover:text-[#41e0f5] transition-colors cursor-pointer"
+                    className="text-xs px-3 py-1.5 border border-[var(--line-3)] rounded-full hover:border-[#41e0f5] hover:text-[#41e0f5] transition-colors cursor-pointer"
                   >
                     {brand}
                   </button>
@@ -178,10 +178,10 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
 
           {configured && query.trim() && !loading && hits.length === 0 && (
             <div className="px-5 py-8 text-center">
-              <p className="text-sm text-[#6B6B66]">No results for &ldquo;{query}&rdquo;</p>
+              <p className="text-sm text-[var(--muted)]">No results for &ldquo;{query}&rdquo;</p>
               <button
                 onClick={() => { router.push(`/products?q=${encodeURIComponent(query)}`); onClose() }}
-                className="mt-3 text-sm underline underline-offset-4 hover:text-[#111827] transition-colors cursor-pointer"
+                className="mt-3 text-sm underline underline-offset-4 hover:text-[var(--ink)] transition-colors cursor-pointer"
               >
                 Browse all cartridges →
               </button>
@@ -198,7 +198,7 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
                     <button
                       onMouseEnter={() => setCursor(i)}
                       onClick={() => navigate(hit.handle)}
-                      className={`w-full flex items-center gap-4 px-5 py-3.5 text-left transition-colors cursor-pointer ${active ? 'bg-[#F5F4F0]' : 'hover:bg-[#F5F4F0]'}`}
+                      className={`w-full flex items-center gap-4 px-5 py-3.5 text-left transition-colors cursor-pointer ${active ? 'bg-[var(--paper)]' : 'hover:bg-[var(--paper)]'}`}
                     >
                       {/* Thumbnail */}
                       <div className="w-10 h-14 flex-shrink-0 rounded-[8px] overflow-hidden bg-gradient-to-br from-[#0A0A0A] to-[#2A2A2A] flex items-center justify-center">
@@ -217,8 +217,8 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
 
                       {/* Details */}
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-[#111827] truncate">{hit.title}</div>
-                        <div className="text-[11px] text-[#9ca3af] mt-0.5">
+                        <div className="text-sm font-medium text-[var(--ink)] truncate">{hit.title}</div>
+                        <div className="text-[11px] text-[var(--muted-2)] mt-0.5">
                           {hit.sku && <span>SKU {hit.sku}</span>}
                           {hit.brand && hit.sku && <span className="mx-1.5">·</span>}
                           {hit.brand && <span>{hit.brand}</span>}
@@ -232,10 +232,10 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
                             R{hit.price_zar}
                           </div>
                         ) : (
-                          <div className="text-xs text-[#9ca3af]">POA</div>
+                          <div className="text-xs text-[var(--muted-2)]">POA</div>
                         )}
                         {typeLabel && (
-                          <div className="text-[10px] text-[#6B6B66] mt-0.5">{typeLabel}</div>
+                          <div className="text-[10px] text-[var(--muted)] mt-0.5">{typeLabel}</div>
                         )}
                       </div>
                     </button>
@@ -248,20 +248,20 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
 
         {/* Footer */}
         {hits.length > 0 && (
-          <div className="border-t border-black/8 px-5 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-3 text-[10px] text-[#9ca3af]">
+          <div className="border-t border-[var(--line-2)] px-5 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3 text-[10px] text-[var(--muted-2)]">
               <span className="flex items-center gap-1">
-                <kbd className="bg-black/5 px-1 py-0.5 rounded text-[9px]">↑↓</kbd>
+                <kbd className="bg-[var(--hover-1)] px-1 py-0.5 rounded text-[9px]">↑↓</kbd>
                 Navigate
               </span>
               <span className="flex items-center gap-1">
-                <kbd className="bg-black/5 px-1 py-0.5 rounded text-[9px]">↵</kbd>
+                <kbd className="bg-[var(--hover-1)] px-1 py-0.5 rounded text-[9px]">↵</kbd>
                 Open
               </span>
             </div>
             <button
               onClick={() => { router.push(`/products?q=${encodeURIComponent(query)}`); onClose() }}
-              className="text-[11px] text-[#6B6B66] hover:text-[#111827] transition-colors cursor-pointer"
+              className="text-[11px] text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer"
             >
               View all results →
             </button>

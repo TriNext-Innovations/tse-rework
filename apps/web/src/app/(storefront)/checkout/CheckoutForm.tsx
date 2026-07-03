@@ -31,7 +31,7 @@ function FieldError({ msg }: { msg?: string }) {
 }
 
 function inputClass(error?: string) {
-  return `w-full px-4 py-3 rounded-[12px] border bg-white text-sm outline-none transition-colors ${error ? 'border-red-400' : 'border-black/15 focus:border-[#111827]'}`
+  return `w-full px-4 py-3 rounded-[12px] border bg-[var(--surface)] text-sm outline-none transition-colors ${error ? 'border-red-400' : 'border-[var(--line-4)] focus:border-[var(--ink)]'}`
 }
 
 export default function CheckoutForm() {
@@ -195,7 +195,7 @@ export default function CheckoutForm() {
     return (
       <div className="text-center py-24 max-w-md mx-auto px-4">
         <h2 className="font-display font-light text-2xl mb-4">Your cart is empty</h2>
-        <Link href="/products" className="text-sm text-[#6B6B66] hover:text-[#111827] transition-colors">
+        <Link href="/products" className="text-sm text-[var(--muted)] hover:text-[var(--ink)] transition-colors">
           ← Go to shop
         </Link>
       </div>
@@ -209,12 +209,12 @@ export default function CheckoutForm() {
         .font-display-italic { font-family: var(--font-fraunces), Georgia, serif; font-style: italic; }
       `}</style>
 
-      <div className="mb-8 flex items-center gap-2 text-xs text-[#6B6B66]">
-        <Link href="/" className="hover:text-[#111827] transition-colors">Home</Link>
+      <div className="mb-8 flex items-center gap-2 text-xs text-[var(--muted)]">
+        <Link href="/" className="hover:text-[var(--ink)] transition-colors">Home</Link>
         <span>/</span>
-        <Link href="/cart" className="hover:text-[#111827] transition-colors">Cart</Link>
+        <Link href="/cart" className="hover:text-[var(--ink)] transition-colors">Cart</Link>
         <span>/</span>
-        <span className="text-[#111827]">Checkout</span>
+        <span className="text-[var(--ink)]">Checkout</span>
       </div>
 
       {/* Step indicator */}
@@ -222,14 +222,14 @@ export default function CheckoutForm() {
         {[{ n: 1, label: 'Contact' }, { n: 2, label: 'Address' }, { n: 3, label: 'Delivery' }, { n: 4, label: 'Review' }].map(
           ({ n, label }, idx) => (
             <div key={n} className="flex items-center gap-3">
-              <div className={`flex items-center gap-2 ${step >= n ? 'text-[#111827]' : 'text-[#9ca3af]'}`}>
+              <div className={`flex items-center gap-2 ${step >= n ? 'text-[var(--ink)]' : 'text-[var(--muted-2)]'}`}>
                 <span
                   className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${
                     step > n
-                      ? 'bg-[#dfe344] text-[#111827]'
+                      ? 'bg-[#dfe344] text-[var(--ink)]'
                       : step === n
-                      ? 'bg-[#111827] text-white'
-                      : 'bg-black/8 text-[#9ca3af]'
+                      ? 'bg-[var(--ink)] text-[var(--paper)]'
+                      : 'bg-[var(--hover-2)] text-[var(--muted-2)]'
                   }`}
                 >
                   {step > n ? '✓' : n}
@@ -237,7 +237,7 @@ export default function CheckoutForm() {
                 <span className="text-sm font-medium hidden sm:block">{label}</span>
               </div>
               {idx < 3 && (
-                <div className={`flex-1 h-px w-6 sm:w-12 ${step > n ? 'bg-[#dfe344]' : 'bg-black/10'}`} />
+                <div className={`flex-1 h-px w-6 sm:w-12 ${step > n ? 'bg-[#dfe344]' : 'bg-[var(--hover-3)]'}`} />
               )}
             </div>
           ),
@@ -259,7 +259,7 @@ export default function CheckoutForm() {
                   { key: 'phone', label: 'Phone number', type: 'tel', placeholder: '082 123 4567', ac: 'tel' },
                 ] as const).map(({ key, label, type, placeholder, ac }) => (
                   <div key={key}>
-                    <label className="block text-xs font-medium text-[#374151] mb-1.5 uppercase tracking-[0.12em]">
+                    <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">
                       {label}
                     </label>
                     <input
@@ -276,7 +276,7 @@ export default function CheckoutForm() {
               </div>
               <button
                 onClick={() => validateContact() && setStep(2)}
-                className="mt-8 w-full bg-[#111827] text-white rounded-full py-3.5 text-sm font-medium hover:bg-[#41e0f5] hover:text-[#111827] transition-colors cursor-pointer"
+                className="mt-8 w-full bg-[var(--ink)] text-[var(--paper)] rounded-full py-3.5 text-sm font-medium hover:bg-[#41e0f5] hover:text-[var(--on-accent)] transition-colors cursor-pointer"
               >
                 Continue to address →
               </button>
@@ -289,7 +289,7 @@ export default function CheckoutForm() {
               <h1 className="font-display font-light text-3xl mb-8">Delivery address</h1>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-medium text-[#374151] mb-1.5 uppercase tracking-[0.12em]">Street address</label>
+                  <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">Street address</label>
                   <AddressAutocomplete
                     value={address.line1}
                     placeholder="Start typing your address…"
@@ -311,7 +311,7 @@ export default function CheckoutForm() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-[#374151] mb-1.5 uppercase tracking-[0.12em]">Suburb</label>
+                    <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">Suburb</label>
                     <input
                       type="text" autoComplete="address-level3" placeholder="Randburg"
                       value={address.suburb}
@@ -321,7 +321,7 @@ export default function CheckoutForm() {
                     <FieldError msg={addressErrors.suburb} />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-[#374151] mb-1.5 uppercase tracking-[0.12em]">City</label>
+                    <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">City</label>
                     <input
                       type="text" autoComplete="address-level2" placeholder="Johannesburg"
                       value={address.city}
@@ -333,7 +333,7 @@ export default function CheckoutForm() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-[#374151] mb-1.5 uppercase tracking-[0.12em]">Province</label>
+                    <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">Province</label>
                     <select
                       autoComplete="address-level1"
                       value={address.province}
@@ -346,7 +346,7 @@ export default function CheckoutForm() {
                     <FieldError msg={addressErrors.province} />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-[#374151] mb-1.5 uppercase tracking-[0.12em]">Postal code</label>
+                    <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">Postal code</label>
                     <input
                       type="text" autoComplete="postal-code" placeholder="2194" maxLength={4}
                       value={address.postalCode}
@@ -361,14 +361,14 @@ export default function CheckoutForm() {
               <div className="flex gap-3 mt-8">
                 <button
                   onClick={() => setStep(1)}
-                  className="px-6 py-3 rounded-full border border-black/15 text-sm text-[#374151] hover:border-black/40 transition-colors cursor-pointer"
+                  className="px-6 py-3 rounded-full border border-[var(--line-4)] text-sm text-[var(--ink-2)] hover:border-[var(--line-7)] transition-colors cursor-pointer"
                 >
                   ← Back
                 </button>
                 <button
                   onClick={loadDeliveryOptions}
                   disabled={optionsLoading}
-                  className="flex-1 bg-[#111827] text-white rounded-full py-3 text-sm font-medium hover:bg-[#41e0f5] hover:text-[#111827] transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
+                  className="flex-1 bg-[var(--ink)] text-[var(--paper)] rounded-full py-3 text-sm font-medium hover:bg-[#41e0f5] hover:text-[var(--on-accent)] transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
                 >
                   {optionsLoading && <span className="inline-block w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
                   {optionsLoading ? 'Finding delivery options…' : 'Continue to delivery →'}
@@ -390,16 +390,16 @@ export default function CheckoutForm() {
                       key={o.id}
                       onClick={() => chooseOption(o.id)}
                       className={`w-full text-left rounded-[16px] p-5 border transition-colors cursor-pointer flex items-center justify-between gap-4 ${
-                        selected ? 'border-[#111827] bg-[#F5F4F0]' : 'border-black/15 hover:border-black/30'
+                        selected ? 'border-[var(--ink)] bg-[var(--paper)]' : 'border-[var(--line-4)] hover:border-[var(--line-6)]'
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <span className={`w-4 h-4 rounded-full border flex-shrink-0 flex items-center justify-center ${selected ? 'border-[#111827]' : 'border-black/30'}`}>
-                          {selected && <span className="w-2 h-2 rounded-full bg-[#111827]" />}
+                        <span className={`w-4 h-4 rounded-full border flex-shrink-0 flex items-center justify-center ${selected ? 'border-[var(--ink)]' : 'border-[var(--line-6)]'}`}>
+                          {selected && <span className="w-2 h-2 rounded-full bg-[var(--ink)]" />}
                         </span>
-                        <span className="font-medium text-sm text-[#111827]">{o.name}</span>
+                        <span className="font-medium text-sm text-[var(--ink)]">{o.name}</span>
                         {o.priceType === 'calculated' && (
-                          <span className="text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#dfe344] text-[#111827] px-2 py-0.5 rounded-full flex-shrink-0">
+                          <span className="text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#dfe344] text-[var(--ink)] px-2 py-0.5 rounded-full flex-shrink-0">
                             Live rate
                           </span>
                         )}
@@ -415,14 +415,14 @@ export default function CheckoutForm() {
               <div className="flex gap-3 mt-8">
                 <button
                   onClick={() => setStep(2)}
-                  className="px-6 py-3 rounded-full border border-black/15 text-sm text-[#374151] hover:border-black/40 transition-colors cursor-pointer"
+                  className="px-6 py-3 rounded-full border border-[var(--line-4)] text-sm text-[var(--ink-2)] hover:border-[var(--line-7)] transition-colors cursor-pointer"
                 >
                   ← Back
                 </button>
                 <button
                   onClick={() => selectedOptionId && setStep(4)}
                   disabled={!selectedOptionId}
-                  className="flex-1 bg-[#111827] text-white rounded-full py-3 text-sm font-medium hover:bg-[#41e0f5] hover:text-[#111827] transition-colors cursor-pointer disabled:opacity-40"
+                  className="flex-1 bg-[var(--ink)] text-[var(--paper)] rounded-full py-3 text-sm font-medium hover:bg-[#41e0f5] hover:text-[var(--on-accent)] transition-colors cursor-pointer disabled:opacity-40"
                 >
                   Review order →
                 </button>
@@ -435,42 +435,42 @@ export default function CheckoutForm() {
             <div>
               <h1 className="font-display font-light text-3xl mb-8">Review your order</h1>
 
-              <div className="bg-white rounded-[16px] p-5 mb-4">
+              <div className="bg-[var(--surface)] rounded-[16px] p-5 mb-4">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-xs font-medium uppercase tracking-[0.12em] text-[#6B6B66]">Contact</h3>
-                  <button onClick={() => setStep(1)} className="text-xs text-[#6B6B66] hover:text-[#111827] transition-colors cursor-pointer">Edit</button>
+                  <h3 className="text-xs font-medium uppercase tracking-[0.12em] text-[var(--muted)]">Contact</h3>
+                  <button onClick={() => setStep(1)} className="text-xs text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer">Edit</button>
                 </div>
                 <p className="text-sm">{contact.name}</p>
-                <p className="text-sm text-[#6B6B66]">{contact.email} · {contact.phone}</p>
+                <p className="text-sm text-[var(--muted)]">{contact.email} · {contact.phone}</p>
               </div>
 
-              <div className="bg-white rounded-[16px] p-5 mb-4">
+              <div className="bg-[var(--surface)] rounded-[16px] p-5 mb-4">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-xs font-medium uppercase tracking-[0.12em] text-[#6B6B66]">Delivery address</h3>
-                  <button onClick={() => setStep(2)} className="text-xs text-[#6B6B66] hover:text-[#111827] transition-colors cursor-pointer">Edit</button>
+                  <h3 className="text-xs font-medium uppercase tracking-[0.12em] text-[var(--muted)]">Delivery address</h3>
+                  <button onClick={() => setStep(2)} className="text-xs text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer">Edit</button>
                 </div>
                 <p className="text-sm">{address.line1}</p>
-                <p className="text-sm text-[#6B6B66]">{address.suburb}, {address.city}</p>
-                <p className="text-sm text-[#6B6B66]">{address.province} {address.postalCode}</p>
+                <p className="text-sm text-[var(--muted)]">{address.suburb}, {address.city}</p>
+                <p className="text-sm text-[var(--muted)]">{address.province} {address.postalCode}</p>
               </div>
 
-              <div className="bg-white rounded-[16px] p-5 mb-6">
+              <div className="bg-[var(--surface)] rounded-[16px] p-5 mb-6">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-xs font-medium uppercase tracking-[0.12em] text-[#6B6B66]">Delivery method</h3>
-                  <button onClick={() => setStep(3)} className="text-xs text-[#6B6B66] hover:text-[#111827] transition-colors cursor-pointer">Edit</button>
+                  <h3 className="text-xs font-medium uppercase tracking-[0.12em] text-[var(--muted)]">Delivery method</h3>
+                  <button onClick={() => setStep(3)} className="text-xs text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer">Edit</button>
                 </div>
                 <p className="text-sm">{selectedOption?.name}</p>
-                <p className="text-sm text-[#6B6B66]">{selectedOption && selectedOption.amount === 0 ? 'Free' : `R${(selectedOption?.amount ?? 0).toFixed(0)}`}</p>
+                <p className="text-sm text-[var(--muted)]">{selectedOption && selectedOption.amount === 0 ? 'Free' : `R${(selectedOption?.amount ?? 0).toFixed(0)}`}</p>
               </div>
 
               {/* Payment */}
               <div className="mb-6">
-                <h3 className="text-xs font-medium uppercase tracking-[0.12em] text-[#6B6B66] mb-4">How would you like to pay?</h3>
+                <h3 className="text-xs font-medium uppercase tracking-[0.12em] text-[var(--muted)] mb-4">How would you like to pay?</h3>
 
                 <button
                   onClick={handlePayFast}
                   disabled={payfastLoading}
-                  className="w-full bg-[#111827] text-white rounded-[16px] p-5 text-left hover:bg-[#1f2937] transition-colors cursor-pointer disabled:opacity-60 mb-3 group"
+                  className="panel-dark w-full bg-[var(--ink)] text-[var(--paper)] rounded-[16px] p-5 text-left hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-60 mb-3 group"
                 >
                   <div className="flex items-center justify-between">
                     <div>
@@ -484,7 +484,7 @@ export default function CheckoutForm() {
                       </div>
                       <div className="text-xs text-white/60 mt-0.5">Credit / debit card, instant EFT — secure and instant</div>
                     </div>
-                    <span className="text-xs bg-[#dfe344] text-[#111827] font-semibold px-2 py-0.5 rounded-full">Recommended</span>
+                    <span className="text-xs bg-[#dfe344] text-[var(--ink)] font-semibold px-2 py-0.5 rounded-full">Recommended</span>
                   </div>
                 </button>
 
@@ -495,7 +495,7 @@ export default function CheckoutForm() {
 
               <button
                 onClick={() => setStep(3)}
-                className="text-sm text-[#6B6B66] hover:text-[#111827] transition-colors cursor-pointer"
+                className="text-sm text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer"
               >
                 ← Back to delivery
               </button>
@@ -505,7 +505,7 @@ export default function CheckoutForm() {
 
         {/* Order summary sidebar */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-[20px] p-6 sticky top-24">
+          <div className="bg-[var(--surface)] rounded-[20px] p-6 sticky top-24">
             <h2 className="font-display font-light text-lg mb-4">
               {count} {count === 1 ? 'item' : 'items'}
             </h2>
@@ -514,7 +514,7 @@ export default function CheckoutForm() {
                 <li key={item.id} className="flex justify-between gap-3 text-sm">
                   <div className="flex-1 min-w-0">
                     <p className="truncate">{item.title}</p>
-                    <p className="text-[10px] text-[#9ca3af]">SKU {item.sku} · qty {item.qty}</p>
+                    <p className="text-[10px] text-[var(--muted-2)]">SKU {item.sku} · qty {item.qty}</p>
                   </div>
                   <span className="flex-shrink-0 font-medium">
                     {item.price ? `R${(item.price * item.qty).toFixed(0)}` : '—'}
@@ -522,19 +522,19 @@ export default function CheckoutForm() {
                 </li>
               ))}
             </ul>
-            <div className="border-t border-black/8 pt-4 space-y-2 text-sm">
-              <div className="flex justify-between text-[#6B6B66]">
+            <div className="border-t border-[var(--line-2)] pt-4 space-y-2 text-sm">
+              <div className="flex justify-between text-[var(--muted)]">
                 <span>Subtotal</span><span>R{subtotal.toFixed(0)}</span>
               </div>
-              <div className="flex justify-between text-[#6B6B66]">
+              <div className="flex justify-between text-[var(--muted)]">
                 <span>VAT (incl.)</span><span>R{vatContent}</span>
               </div>
-              <div className="flex justify-between text-[#6B6B66]">
+              <div className="flex justify-between text-[var(--muted)]">
                 <span>Delivery</span>
                 <span>{selectedOption ? (deliveryRand === 0 ? 'Free' : `R${deliveryRand.toFixed(0)}`) : 'Select at checkout'}</span>
               </div>
             </div>
-            <div className="border-t border-black/8 mt-4 pt-4 flex justify-between items-baseline">
+            <div className="border-t border-[var(--line-2)] mt-4 pt-4 flex justify-between items-baseline">
               <span className="font-medium">Total</span>
               <span className="font-display text-2xl">R{totalRand.toFixed(0)}</span>
             </div>

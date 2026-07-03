@@ -81,10 +81,10 @@ export default function QuotePage() {
   }
 
   const inputCls = (key: string) =>
-    `w-full px-4 py-3 rounded-[12px] border bg-white text-sm outline-none transition-colors ${errors[key] ? 'border-red-400' : 'border-black/15 focus:border-[#111827]'}`
+    `w-full px-4 py-3 rounded-[12px] border bg-[var(--surface)] text-sm outline-none transition-colors ${errors[key] ? 'border-red-400' : 'border-[var(--line-4)] focus:border-[var(--ink)]'}`
 
   return (
-    <div className="min-h-screen bg-[#F5F4F0] text-[#111827]">
+    <div className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
       <style>{`
         .font-display { font-family: var(--font-fraunces), Georgia, serif; font-optical-sizing: auto; }
         .font-display-italic { font-family: var(--font-fraunces), Georgia, serif; font-style: italic; }
@@ -92,61 +92,61 @@ export default function QuotePage() {
       <Navbar />
 
       <div className="mx-auto max-w-3xl px-4 sm:px-8 pt-32 pb-16">
-        <div className="mb-2 flex items-center gap-2 text-xs text-[#6B6B66]">
-          <Link href="/b2b" className="hover:text-[#111827] transition-colors">B2B</Link>
+        <div className="mb-2 flex items-center gap-2 text-xs text-[var(--muted)]">
+          <Link href="/b2b" className="hover:text-[var(--ink)] transition-colors">B2B</Link>
           <span>/</span>
-          <span className="text-[#111827]">Request a quote</span>
+          <span className="text-[var(--ink)]">Request a quote</span>
         </div>
 
         <div className="mb-10">
-          <div className="text-[11px] uppercase tracking-[0.22em] text-[#6B6B66] mb-3">Pricing</div>
+          <div className="text-[11px] uppercase tracking-[0.22em] text-[var(--muted)] mb-3">Pricing</div>
           <h1 className="font-display font-light text-4xl sm:text-5xl tracking-tight leading-[0.95]">
             Request a <span className="font-display-italic">quote</span>.
           </h1>
-          <p className="mt-4 text-sm text-[#6B6B66]">
+          <p className="mt-4 text-sm text-[var(--muted)]">
             Tell us what you need and we'll come back within 2 business hours.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} noValidate className="space-y-6">
           {/* Contact details */}
-          <div className="bg-white rounded-[20px] p-6 sm:p-7 space-y-5">
+          <div className="bg-[var(--surface)] rounded-[20px] p-6 sm:p-7 space-y-5">
             <h2 className="font-display text-lg font-light">Your details</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
-                <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[#374151] mb-1.5">Company name</label>
+                <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[var(--ink-2)] mb-1.5">Company name</label>
                 <input type="text" value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Acme Office Supplies" className={inputCls('company')} />
                 {errors.company && <p className="text-xs text-red-500 mt-1">{errors.company}</p>}
               </div>
               <div>
-                <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[#374151] mb-1.5">Contact name</label>
+                <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[var(--ink-2)] mb-1.5">Contact name</label>
                 <input type="text" value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Jane Smith" className={inputCls('contact')} />
                 {errors.contact && <p className="text-xs text-red-500 mt-1">{errors.contact}</p>}
               </div>
               <div>
-                <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[#374151] mb-1.5">Work email</label>
+                <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[var(--ink-2)] mb-1.5">Work email</label>
                 <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="jane@acme.co.za" className={inputCls('email')} />
                 {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
               </div>
               <div>
-                <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[#374151] mb-1.5">Phone</label>
+                <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[var(--ink-2)] mb-1.5">Phone</label>
                 <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="011 234 5678" className={inputCls('phone')} />
                 {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[#374151] mb-1.5">
-                Delivery area <span className="normal-case text-[#9ca3af]">(optional)</span>
+              <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[var(--ink-2)] mb-1.5">
+                Delivery area <span className="normal-case text-[var(--muted-2)]">(optional)</span>
               </label>
               <input type="text" value={deliveryArea} onChange={(e) => setDeliveryArea(e.target.value)} placeholder="Randburg, Johannesburg" className={inputCls('deliveryArea')} />
             </div>
           </div>
 
           {/* Line items */}
-          <div className="bg-white rounded-[20px] p-6 sm:p-7">
+          <div className="bg-[var(--surface)] rounded-[20px] p-6 sm:p-7">
             <div className="flex items-center justify-between mb-5">
               <h2 className="font-display text-lg font-light">Items needed</h2>
-              <button type="button" onClick={addLine} className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6B6B66] hover:text-[#111827] transition-colors cursor-pointer">
+              <button type="button" onClick={addLine} className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
                 Add row
               </button>
@@ -156,9 +156,9 @@ export default function QuotePage() {
 
             {/* Header row */}
             <div className="hidden sm:grid grid-cols-12 gap-3 mb-2">
-              <div className="col-span-3 text-[10px] uppercase tracking-[0.15em] text-[#9ca3af]">SKU (optional)</div>
-              <div className="col-span-6 text-[10px] uppercase tracking-[0.15em] text-[#9ca3af]">Description / Product</div>
-              <div className="col-span-2 text-[10px] uppercase tracking-[0.15em] text-[#9ca3af]">Qty</div>
+              <div className="col-span-3 text-[10px] uppercase tracking-[0.15em] text-[var(--muted-2)]">SKU (optional)</div>
+              <div className="col-span-6 text-[10px] uppercase tracking-[0.15em] text-[var(--muted-2)]">Description / Product</div>
+              <div className="col-span-2 text-[10px] uppercase tracking-[0.15em] text-[var(--muted-2)]">Qty</div>
               <div className="col-span-1" />
             </div>
 
@@ -166,34 +166,34 @@ export default function QuotePage() {
               {items.map((item, idx) => (
                 <div key={item.id} className="grid grid-cols-12 gap-2 sm:gap-3 items-start">
                   <div className="col-span-12 sm:col-span-3">
-                    {idx === 0 && <label className="sm:hidden block text-[10px] uppercase tracking-[0.15em] text-[#9ca3af] mb-1">SKU</label>}
+                    {idx === 0 && <label className="sm:hidden block text-[10px] uppercase tracking-[0.15em] text-[var(--muted-2)] mb-1">SKU</label>}
                     <input
                       type="text"
                       value={item.sku}
                       onChange={(e) => updateLine(item.id, 'sku', e.target.value)}
                       placeholder="CRG-737"
-                      className="w-full px-3 py-2.5 rounded-[10px] border border-black/15 bg-[#F5F4F0] text-sm outline-none focus:border-[#111827] transition-colors"
+                      className="w-full px-3 py-2.5 rounded-[10px] border border-[var(--line-4)] bg-[var(--paper)] text-sm outline-none focus:border-[var(--ink)] transition-colors"
                     />
                   </div>
                   <div className="col-span-12 sm:col-span-6">
-                    {idx === 0 && <label className="sm:hidden block text-[10px] uppercase tracking-[0.15em] text-[#9ca3af] mb-1">Description</label>}
+                    {idx === 0 && <label className="sm:hidden block text-[10px] uppercase tracking-[0.15em] text-[var(--muted-2)] mb-1">Description</label>}
                     <input
                       type="text"
                       value={item.description}
                       onChange={(e) => updateLine(item.id, 'description', e.target.value)}
                       placeholder="Canon 737 Black Toner"
-                      className="w-full px-3 py-2.5 rounded-[10px] border border-black/15 bg-[#F5F4F0] text-sm outline-none focus:border-[#111827] transition-colors"
+                      className="w-full px-3 py-2.5 rounded-[10px] border border-[var(--line-4)] bg-[var(--paper)] text-sm outline-none focus:border-[var(--ink)] transition-colors"
                     />
                   </div>
                   <div className="col-span-10 sm:col-span-2">
-                    {idx === 0 && <label className="sm:hidden block text-[10px] uppercase tracking-[0.15em] text-[#9ca3af] mb-1">Qty</label>}
+                    {idx === 0 && <label className="sm:hidden block text-[10px] uppercase tracking-[0.15em] text-[var(--muted-2)] mb-1">Qty</label>}
                     <input
                       type="number"
                       min="1"
                       value={item.qty}
                       onChange={(e) => updateLine(item.id, 'qty', e.target.value)}
                       placeholder="1"
-                      className="w-full px-3 py-2.5 rounded-[10px] border border-black/15 bg-[#F5F4F0] text-sm outline-none focus:border-[#111827] transition-colors"
+                      className="w-full px-3 py-2.5 rounded-[10px] border border-[var(--line-4)] bg-[var(--paper)] text-sm outline-none focus:border-[var(--ink)] transition-colors"
                     />
                   </div>
                   <div className="col-span-2 sm:col-span-1 flex items-center justify-end pt-1 sm:pt-0">
@@ -201,7 +201,7 @@ export default function QuotePage() {
                       <button
                         type="button"
                         onClick={() => removeLine(item.id)}
-                        className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-red-50 hover:text-red-500 transition-colors text-[#9ca3af] cursor-pointer"
+                        className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-red-50 hover:text-red-500 transition-colors text-[var(--muted-2)] cursor-pointer"
                         aria-label="Remove row"
                       >
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -215,23 +215,23 @@ export default function QuotePage() {
             <button
               type="button"
               onClick={addLine}
-              className="mt-4 w-full py-2.5 rounded-[10px] border border-dashed border-black/15 text-xs text-[#6B6B66] hover:border-[#111827] hover:text-[#111827] transition-colors cursor-pointer"
+              className="mt-4 w-full py-2.5 rounded-[10px] border border-dashed border-[var(--line-4)] text-xs text-[var(--muted)] hover:border-[var(--ink)] hover:text-[var(--ink)] transition-colors cursor-pointer"
             >
               + Add another item
             </button>
           </div>
 
           {/* Notes */}
-          <div className="bg-white rounded-[20px] p-6 sm:p-7">
-            <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[#374151] mb-1.5">
-              Additional notes <span className="normal-case text-[#9ca3af]">(optional)</span>
+          <div className="bg-[var(--surface)] rounded-[20px] p-6 sm:p-7">
+            <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[var(--ink-2)] mb-1.5">
+              Additional notes <span className="normal-case text-[var(--muted-2)]">(optional)</span>
             </label>
             <textarea
               rows={3}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Delivery frequency, account terms, anything else we should know…"
-              className="w-full px-4 py-3 rounded-[12px] border border-black/15 bg-white text-sm outline-none focus:border-[#111827] transition-colors resize-none"
+              className="w-full px-4 py-3 rounded-[12px] border border-[var(--line-4)] bg-[var(--surface)] text-sm outline-none focus:border-[var(--ink)] transition-colors resize-none"
             />
           </div>
 
@@ -242,11 +242,11 @@ export default function QuotePage() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-[#111827] text-white rounded-full py-3.5 text-sm font-medium hover:bg-[#dfe344] hover:text-[#111827] transition-colors disabled:opacity-60 cursor-pointer"
+            className="w-full bg-[var(--ink)] text-[var(--paper)] rounded-full py-3.5 text-sm font-medium hover:bg-[#dfe344] hover:text-[var(--on-accent)] transition-colors disabled:opacity-60 cursor-pointer"
           >
             {submitting ? 'Sending quote request…' : 'Send quote request'}
           </button>
-          <p className="text-[11px] text-center text-[#9ca3af]">We respond within 2 business hours.</p>
+          <p className="text-[11px] text-center text-[var(--muted-2)]">We respond within 2 business hours.</p>
         </form>
       </div>
     </div>

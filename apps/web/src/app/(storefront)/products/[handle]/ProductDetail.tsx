@@ -38,7 +38,7 @@ const SWATCH: Record<string, string> = {
 }
 const swatchStyle = (label: string): React.CSSProperties => {
   const v = SWATCH[label.toLowerCase()]
-  if (!v) return { background: '#9ca3af' }
+  if (!v) return { background: 'var(--muted-2)' }
   return v.startsWith('linear') ? { background: v } : { background: v }
 }
 
@@ -95,7 +95,7 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
       <style>{`
         .font-display { font-family: var(--font-fraunces), Georgia, serif; font-optical-sizing: auto; }
         .font-display-italic { font-family: var(--font-fraunces), Georgia, serif; font-style: italic; }
-        .thumb-active { outline: 2px solid #111827; outline-offset: 2px; }
+        .thumb-active { outline: 2px solid var(--ink); outline-offset: 2px; }
         .lightbox-backdrop { position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; }
       `}</style>
 
@@ -128,10 +128,10 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
 
       <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 pt-28 pb-16">
         {/* Breadcrumb */}
-        <nav aria-label="Breadcrumb" className="mb-8 flex items-center gap-2 text-xs text-[#6B6B66]">
-          <Link href="/" className="hover:text-[#111827] transition-colors">Home</Link>
+        <nav aria-label="Breadcrumb" className="mb-8 flex items-center gap-2 text-xs text-[var(--muted)]">
+          <Link href="/" className="hover:text-[var(--ink)] transition-colors">Home</Link>
           <span>/</span>
-          <Link href="/products" className="hover:text-[#111827] transition-colors">
+          <Link href="/products" className="hover:text-[var(--ink)] transition-colors">
             {typeCategory?.name ?? 'Products'}
           </Link>
           {brandCategory && (
@@ -139,14 +139,14 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
               <span>/</span>
               <Link
                 href={`/products?category=${brandCategory.id}`}
-                className="hover:text-[#111827] transition-colors"
+                className="hover:text-[var(--ink)] transition-colors"
               >
                 {brandCategory.name}
               </Link>
             </>
           )}
           <span>/</span>
-          <span className="text-[#111827] truncate max-w-[180px]">{product.title}</span>
+          <span className="text-[var(--ink)] truncate max-w-[180px]">{product.title}</span>
         </nav>
 
         {/* Main PDP grid */}
@@ -160,7 +160,7 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
                   <button
                     key={i}
                     onClick={() => setActiveImage(i)}
-                    className={`w-14 h-14 rounded-[8px] bg-white overflow-hidden border border-black/10 ${i === activeImage ? 'thumb-active' : ''}`}
+                    className={`w-14 h-14 rounded-[8px] bg-[var(--surface)] overflow-hidden border border-[var(--line-3)] ${i === activeImage ? 'thumb-active' : ''}`}
                     aria-label={`View image ${i + 1}`}
                   >
                     <Image
@@ -177,7 +177,7 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
 
             {/* Main image */}
             <div
-              className="flex-1 bg-white rounded-[20px] flex items-center justify-center p-8 cursor-zoom-in min-h-[360px] sm:min-h-[440px]"
+              className="flex-1 bg-[var(--surface)] rounded-[20px] flex items-center justify-center p-8 cursor-zoom-in min-h-[360px] sm:min-h-[440px]"
               onClick={() => images.length > 0 && setLightboxOpen(true)}
             >
               {images[activeImage] ? (
@@ -202,7 +202,7 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
             {/* Generic badge */}
             <div className="inline-flex items-center gap-1.5 self-start mb-4 px-3 py-1 rounded-full bg-[#dfe344]/20 border border-[#dfe344]/40">
               <span className="w-1.5 h-1.5 rounded-full bg-[#dfe344]" />
-              <span className="text-[10px] uppercase tracking-[0.18em] font-medium text-[#111827]">
+              <span className="text-[10px] uppercase tracking-[0.18em] font-medium text-[var(--ink)]">
                 Quality Generic Replacement
               </span>
             </div>
@@ -211,8 +211,8 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
               {product.title}
             </h1>
 
-            <div className="flex items-center gap-3 mb-4 text-sm text-[#6B6B66]">
-              <span>SKU: <span className="font-mono text-[#111827]">{sku}</span></span>
+            <div className="flex items-center gap-3 mb-4 text-sm text-[var(--muted)]">
+              <span>SKU: <span className="font-mono text-[var(--ink)]">{sku}</span></span>
               <span>·</span>
               <span>{cartridgeType}</span>
               {brandCategory && (
@@ -228,16 +228,16 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
               {priceZar ? (
                 <div className="font-display text-4xl">
                   R{priceZar.toLocaleString('en-ZA')}
-                  <span className="text-base text-[#6B6B66] ml-2 font-sans font-normal">incl. VAT</span>
+                  <span className="text-base text-[var(--muted)] ml-2 font-sans font-normal">incl. VAT</span>
                 </div>
               ) : (
-                <div className="text-[#6B6B66] text-lg">Price on application</div>
+                <div className="text-[var(--muted)] text-lg">Price on application</div>
               )}
             </div>
 
             {/* Short description — legacy Woo descriptions arrive as raw HTML */}
             {product.description && (
-              <div className="text-sm text-[#4B4B46] leading-relaxed mb-6 max-w-md space-y-3">
+              <div className="text-sm text-[var(--ink-3)] leading-relaxed mb-6 max-w-md space-y-3">
                 {htmlToParagraphs(product.description).map((para, i) => (
                   <p key={i}>{para}</p>
                 ))}
@@ -248,10 +248,10 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
             {hasMultipleVariants && (
               <div className="mb-6">
                 <div className="flex items-baseline gap-2 mb-3">
-                  <span className="text-xs uppercase tracking-[0.16em] text-[#6B6B66]">
+                  <span className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">
                     {colourOption?.title ?? 'Variant'}
                   </span>
-                  <span className="text-sm text-[#111827] font-medium">{variant?.title ?? ''}</span>
+                  <span className="text-sm text-[var(--ink)] font-medium">{variant?.title ?? ''}</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {variants.map((v) => {
@@ -263,13 +263,13 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
                         onClick={() => setSelectedVariantId(v.id)}
                         className={`flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full border text-xs transition-colors ${
                           isSelected
-                            ? 'border-[#111827] bg-[#111827] text-white'
-                            : 'border-black/15 text-[#374151] hover:border-black/40'
+                            ? 'border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]'
+                            : 'border-[var(--line-4)] text-[var(--ink-2)] hover:border-[var(--line-7)]'
                         }`}
                         aria-pressed={isSelected}
                       >
                         <span
-                          className="w-4 h-4 rounded-full border border-black/10"
+                          className="w-4 h-4 rounded-full border border-[var(--line-3)]"
                           style={swatchStyle(label)}
                         />
                         <span>{label}</span>
@@ -282,10 +282,10 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
 
             {/* Qty + Add to cart */}
             <div className="flex items-center gap-3 mb-8">
-              <div className="flex items-center border border-black/15 rounded-full overflow-hidden">
+              <div className="flex items-center border border-[var(--line-4)] rounded-full overflow-hidden">
                 <button
                   onClick={() => setQty((q) => Math.max(1, q - 1))}
-                  className="w-10 h-10 flex items-center justify-center text-[#111827] hover:bg-black/5 transition-colors"
+                  className="w-10 h-10 flex items-center justify-center text-[var(--ink)] hover:bg-[var(--hover-1)] transition-colors"
                   aria-label="Decrease quantity"
                 >
                   −
@@ -293,7 +293,7 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
                 <span className="w-10 text-center text-sm font-medium tabular-nums">{qty}</span>
                 <button
                   onClick={() => setQty((q) => q + 1)}
-                  className="w-10 h-10 flex items-center justify-center text-[#111827] hover:bg-black/5 transition-colors"
+                  className="w-10 h-10 flex items-center justify-center text-[var(--ink)] hover:bg-[var(--hover-1)] transition-colors"
                   aria-label="Increase quantity"
                 >
                   +
@@ -305,8 +305,8 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
                 disabled={!variant}
                 className={`flex-1 h-10 rounded-full font-medium text-sm transition-all duration-200 ${
                   added
-                    ? 'bg-[#dfe344] text-[#111827]'
-                    : 'bg-[#111827] text-white hover:bg-[#41e0f5] hover:text-[#111827]'
+                    ? 'bg-[#dfe344] text-[var(--ink)]'
+                    : 'bg-[var(--ink)] text-[var(--paper)] hover:bg-[#41e0f5] hover:text-[var(--on-accent)]'
                 } disabled:opacity-40 disabled:cursor-not-allowed`}
               >
                 {added ? '✓ Added to cart' : 'Add to cart'}
@@ -321,7 +321,7 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
                 { icon: '⚡', label: 'Same-day dispatch on orders before noon' },
                 { icon: '🔒', label: 'Secure checkout with PayFast' },
               ].map(({ icon, label }) => (
-                <div key={label} className="flex items-start gap-2 text-xs text-[#4B4B46]">
+                <div key={label} className="flex items-start gap-2 text-xs text-[var(--ink-3)]">
                   <span className="mt-0.5">{icon}</span>
                   <span>{label}</span>
                 </div>
@@ -349,7 +349,7 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
                   <Link
                     key={p.id}
                     href={`/products/${p.handle}`}
-                    className="group relative bg-white rounded-[16px] p-4 overflow-hidden hover:-translate-y-1 transition-transform duration-300"
+                    className="group relative bg-[var(--surface)] rounded-[16px] p-4 overflow-hidden hover:-translate-y-1 transition-transform duration-300"
                   >
                     <div className="relative h-28 flex items-end justify-center mb-3">
                       {relatedImage ? (
@@ -379,9 +379,9 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
                     </div>
 
                     <h3 className="font-display text-sm leading-tight tracking-tight line-clamp-2 mb-1">{p.title}</h3>
-                    <div className="text-[10px] text-[#9ca3af] mb-3">SKU {relatedSku}</div>
+                    <div className="text-[10px] text-[var(--muted-2)] mb-3">SKU {relatedSku}</div>
                     <div className="font-display text-base">
-                      {relatedPrice ? `R${relatedPrice}` : <span className="text-[#9ca3af] text-sm">POA</span>}
+                      {relatedPrice ? `R${relatedPrice}` : <span className="text-[var(--muted-2)] text-sm">POA</span>}
                     </div>
                   </Link>
                 )

@@ -32,7 +32,7 @@ export function CookieBanner() {
       aria-live="polite"
       className="fixed bottom-4 left-4 right-4 z-[100] max-w-2xl mx-auto"
     >
-      <div className="bg-[#111827] text-white rounded-2xl shadow-2xl px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+      <div className="panel-dark bg-[var(--ink)] text-[var(--paper)] rounded-2xl shadow-2xl px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
         <div className="flex-1 min-w-0">
           <p className="text-sm leading-relaxed text-white/90">
             We use cookies to make the site work and to understand how you use it. By continuing you agree to our{' '}
@@ -55,7 +55,7 @@ export function CookieBanner() {
           </button>
           <button
             onClick={() => accept('all')}
-            className="text-xs px-4 py-2 rounded-full bg-[#dfe344] text-[#111827] font-semibold hover:bg-[#e8ec62] transition-colors cursor-pointer whitespace-nowrap"
+            className="text-xs px-4 py-2 rounded-full bg-[#dfe344] text-[var(--ink)] font-semibold hover:bg-[#e8ec62] transition-colors cursor-pointer whitespace-nowrap"
           >
             Accept all
           </button>

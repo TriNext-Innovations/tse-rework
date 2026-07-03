@@ -52,7 +52,7 @@ export function FinalizeOrder() {
   if (!PAYFAST_PROVIDER_ENABLED || state === 'idle') return null
 
   return (
-    <p className="text-sm text-[#374151] mb-4" role="status">
+    <p className="text-sm text-[var(--ink-2)] mb-4" role="status">
       {state === 'finalising' && 'Finalising your order…'}
       {state === 'done' && `Order #${orderNo} confirmed.`}
       {state === 'pending' && 'Payment received — we’re finalising your order and will email confirmation shortly.'}

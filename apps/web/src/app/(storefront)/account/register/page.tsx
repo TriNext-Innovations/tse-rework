@@ -47,12 +47,12 @@ export default function RegisterPage() {
     return {
       value: form[key],
       onChange: (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [key]: e.target.value }),
-      className: `w-full px-4 py-3 rounded-[12px] border bg-white text-sm outline-none transition-colors ${errors[key] ? 'border-red-400' : 'border-black/15 focus:border-[#111827]'}`,
+      className: `w-full px-4 py-3 rounded-[12px] border bg-[var(--surface)] text-sm outline-none transition-colors ${errors[key] ? 'border-red-400' : 'border-[var(--line-4)] focus:border-[var(--ink)]'}`,
     }
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F4F0] text-[#111827]">
+    <div className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
       <style>{`
         .font-display { font-family: var(--font-fraunces), Georgia, serif; font-optical-sizing: auto; }
         .font-display-italic { font-family: var(--font-fraunces), Georgia, serif; font-style: italic; }
@@ -61,13 +61,13 @@ export default function RegisterPage() {
 
       <div className="mx-auto max-w-md px-4 sm:px-6 pt-32 pb-20">
         <div className="text-center mb-10">
-          <div className="text-[11px] uppercase tracking-[0.22em] text-[#6B6B66] mb-3">My account</div>
+          <div className="text-[11px] uppercase tracking-[0.22em] text-[var(--muted)] mb-3">My account</div>
           <h1 className="font-display font-light text-4xl sm:text-5xl tracking-tight leading-[0.95]">
             Create an <span className="font-display-italic">account</span>.
           </h1>
-          <p className="mt-4 text-sm text-[#6B6B66]">
+          <p className="mt-4 text-sm text-[var(--muted)]">
             Already registered?{' '}
-            <Link href="/account/login" className="underline underline-offset-4 hover:text-[#111827] transition-colors">
+            <Link href="/account/login" className="underline underline-offset-4 hover:text-[var(--ink)] transition-colors">
               Sign in
             </Link>
           </p>
@@ -76,34 +76,34 @@ export default function RegisterPage() {
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-[#374151] mb-1.5 uppercase tracking-[0.12em]">First name</label>
+              <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">First name</label>
               <input type="text" autoComplete="given-name" placeholder="Jane" {...field('first_name')} />
               {errors.first_name && <p className="text-xs text-red-500 mt-1">{errors.first_name}</p>}
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#374151] mb-1.5 uppercase tracking-[0.12em]">Last name</label>
+              <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">Last name</label>
               <input type="text" autoComplete="family-name" placeholder="Smith" {...field('last_name')} />
               {errors.last_name && <p className="text-xs text-red-500 mt-1">{errors.last_name}</p>}
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-[#374151] mb-1.5 uppercase tracking-[0.12em]">Email address</label>
+            <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">Email address</label>
             <input type="email" autoComplete="email" placeholder="jane@example.com" {...field('email')} />
             {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
           </div>
           <div>
-            <label className="block text-xs font-medium text-[#374151] mb-1.5 uppercase tracking-[0.12em]">
-              Phone <span className="normal-case text-[#9ca3af]">(optional)</span>
+            <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">
+              Phone <span className="normal-case text-[var(--muted-2)]">(optional)</span>
             </label>
             <input type="tel" autoComplete="tel" placeholder="082 123 4567" {...field('phone')} />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[#374151] mb-1.5 uppercase tracking-[0.12em]">Password</label>
+            <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">Password</label>
             <input type="password" autoComplete="new-password" placeholder="Minimum 8 characters" {...field('password')} />
             {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
           </div>
           <div>
-            <label className="block text-xs font-medium text-[#374151] mb-1.5 uppercase tracking-[0.12em]">Confirm password</label>
+            <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">Confirm password</label>
             <input type="password" autoComplete="new-password" placeholder="••••••••" {...field('confirm')} />
             {errors.confirm && <p className="text-xs text-red-500 mt-1">{errors.confirm}</p>}
           </div>
@@ -112,7 +112,7 @@ export default function RegisterPage() {
             <p className="text-sm text-red-500 bg-red-50 rounded-[10px] px-4 py-3">{errors.general}</p>
           )}
 
-          <p className="text-[11px] text-[#6B6B66] leading-relaxed">
+          <p className="text-[11px] text-[var(--muted)] leading-relaxed">
             By creating an account you agree to our{' '}
             <Link href="/legal/privacy" className="underline underline-offset-2">privacy policy</Link>.
           </p>
@@ -120,7 +120,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#111827] text-white rounded-full py-3.5 text-sm font-medium hover:bg-[#41e0f5] hover:text-[#111827] transition-colors disabled:opacity-60 cursor-pointer"
+            className="w-full bg-[var(--ink)] text-[var(--paper)] rounded-full py-3.5 text-sm font-medium hover:bg-[#41e0f5] hover:text-[var(--on-accent)] transition-colors disabled:opacity-60 cursor-pointer"
           >
             {loading ? 'Creating account…' : 'Create account'}
           </button>

@@ -36,7 +36,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={cn(inter.variable, fraunces.variable)}>
+    <html lang="en" className={cn(inter.variable, fraunces.variable)} suppressHydrationWarning>
+      <head>
+        {/* Stamp the persisted theme before paint so dark mode doesn't flash light. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem('tse_theme');if(t==='dark')document.documentElement.dataset.theme='dark'}catch(e){}`,
+          }}
+        />
+      </head>
       <body>
         <AuthProvider>
           <CartProvider>{children}</CartProvider>
