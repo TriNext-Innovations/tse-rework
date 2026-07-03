@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Navbar } from '@/components/layout'
 import ProductDetail from './ProductDetail'
 import { TYPE_CATEGORY_NAMES as TYPE_CATS } from '@/lib/taxonomy'
+import { htmlToPlainText } from '@/lib/html-text'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const PUB_KEY  = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
@@ -75,9 +76,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const regionId = await getRegionId()
   const product  = await getProduct(handle, regionId)
   if (!product) return {}
+  const plain = product.description ? htmlToPlainText(product.description) : ''
   return {
     title: product.title,
-    description: product.description ?? `Quality generic ${product.title} — TSE Online`,
+    description: plain ? plain.slice(0, 160) : `Quality generic ${product.title} — TSE Online`,
   }
 }
 
@@ -106,7 +108,7 @@ export default async function ProductPage({ params }: Props) {
     '@type': 'Product',
     name: product.title,
     sku,
-    description: product.description ?? '',
+    description: product.description ? htmlToPlainText(product.description) : '',
     brand: { '@type': 'Brand', name: brandCategory?.name ?? 'TSE' },
     image: product.images?.[0]?.url,
     ...(priceZar && {
