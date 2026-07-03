@@ -9,7 +9,6 @@ export default function CartPageClient() {
 
   const subtotal = items.reduce((sum, i) => sum + (i.price ?? 0) * i.qty, 0)
   const vatContent = Math.round(subtotal * 15 / 115)
-  const freeDelivery = subtotal >= 500
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 pt-28 pb-16">
@@ -124,13 +123,9 @@ export default function CartPageClient() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[#6B6B66]">Delivery</span>
-                  <span className={freeDelivery ? 'text-green-600 font-medium' : ''}>
-                    {freeDelivery ? 'Free' : 'Calculated at checkout'}
-                  </span>
+                  <span>Calculated at checkout</span>
                 </div>
-                {!freeDelivery && (
-                  <p className="text-[10px] text-[#9ca3af]">Free delivery on orders over R500</p>
-                )}
+                <p className="text-[10px] text-[#9ca3af]">Collection from our Kya Sands warehouse is free</p>
               </div>
 
               <div className="border-t border-black/8 mt-4 pt-4 flex justify-between items-baseline">

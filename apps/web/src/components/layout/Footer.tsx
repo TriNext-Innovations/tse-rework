@@ -5,12 +5,12 @@ import { Logo } from './Logo'
 const BRANDS = [
   'HP', 'Canon', 'Epson', 'Brother', 'Samsung',
   'Lexmark', 'Xerox', 'Pantum', 'Ricoh', 'Kyocera',
-  'Konica Minolta', 'OKI', 'Olivetti',
+  'Konica Minolta', 'OKI',
 ]
 
 const SHOP_LINKS = [
-  { label: 'Inkjet cartridges', href: '/products' },
-  { label: 'Laser toner', href: '/products' },
+  { label: 'Inkjet cartridges', href: '/products?type=inkjet' },
+  { label: 'Laser toner', href: '/products?type=laser' },
   { label: 'All cartridges', href: '/products' },
   { label: 'Find my cartridge', href: '/compatibility' },
   { label: 'B2B & business pricing', href: '/b2b' },

@@ -1,7 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import StorefrontClient, { type TrendingProduct, type CompatModel } from '@/app/(storefront)/StorefrontClient'
+import StorefrontClient, {
+  type TrendingProduct,
+  type CompatModel,
+  type HeroProduct,
+} from '@/app/(storefront)/StorefrontClient'
 import { CartProvider, useCart } from '@/contexts/CartContext'
 import { installCartMock } from './helpers/medusaCartMock'
 import { useRouter } from 'next/navigation'
@@ -58,10 +62,19 @@ beforeEach(() => {
   } as any)
 })
 
+const mockHeroProduct: HeroProduct = {
+  id: 'prod_hero_737',
+  title: 'Canon 737',
+  handle: 'canon-ca737',
+  sku: 'CAN-737',
+  variantId: 'variant_hero_737',
+  price: 300,
+}
+
 function renderStorefront(products: TrendingProduct[] = [], models: CompatModel[] = mockCompatModels) {
   return render(
     <CartProvider>
-      <StorefrontClient trendingProducts={products} compatModels={models} />
+      <StorefrontClient trendingProducts={products} compatModels={models} heroProduct={mockHeroProduct} />
     </CartProvider>,
   )
 }
@@ -89,7 +102,7 @@ describe('StorefrontClient — hero', () => {
     expect(screen.getByText('Add to cart — R300')).toBeInTheDocument()
   })
 
-  it('adds canonical Canon 737 product when hero cart button is clicked', async () => {
+  it('adds the resolved hero product variant when hero cart button is clicked', async () => {
     let cartCount = 0
     function Observer() {
       const { count } = useCart()
@@ -98,12 +111,22 @@ describe('StorefrontClient — hero', () => {
     }
     render(
       <CartProvider>
-        <StorefrontClient trendingProducts={[]} compatModels={[]} />
+        <StorefrontClient trendingProducts={[]} compatModels={[]} heroProduct={mockHeroProduct} />
         <Observer />
       </CartProvider>,
     )
     await userEvent.click(screen.getByText('Add to cart — R300'))
     await waitFor(() => expect(cartCount).toBe(1))
+  })
+
+  it('falls back to the product page when no hero product resolved', async () => {
+    render(
+      <CartProvider>
+        <StorefrontClient trendingProducts={[]} compatModels={[]} />
+      </CartProvider>,
+    )
+    await userEvent.click(screen.getByText('Add to cart — R300'))
+    expect(mockPush).toHaveBeenCalledWith('/products/canon-ca737')
   })
 
   it('mousemove on hero section updates gradient position', () => {
@@ -365,20 +388,20 @@ describe('StorefrontClient — bento grid', () => {
     expect(screen.getByText(/Same print/)).toBeInTheDocument()
   })
 
-  it('Inkjet bento card navigates to /products', async () => {
+  it('Inkjet bento card navigates to the inkjet-filtered catalogue', async () => {
     renderStorefront()
     await userEvent.click(screen.getByText('Inkjet'))
-    expect(mockPush).toHaveBeenCalledWith('/products')
+    expect(mockPush).toHaveBeenCalledWith('/products?type=inkjet')
   })
 
-  it('brand compatibility pills navigate to /products', async () => {
+  it('brand compatibility pills navigate to the brand-filtered catalogue', async () => {
     renderStorefront()
     // Find brand pills in the bento section (not the marquee)
     const allHpButtons = screen.getAllByText('HP')
     // Click the button version (not a span in the marquee)
     const hpPill = allHpButtons.find((el) => el.tagName === 'BUTTON')
     if (hpPill) await userEvent.click(hpPill)
-    expect(mockPush).toHaveBeenCalledWith('/products')
+    expect(mockPush).toHaveBeenCalledWith('/products?brand=HP')
   })
 })
 

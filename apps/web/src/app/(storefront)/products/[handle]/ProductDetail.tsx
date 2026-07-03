@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useCart } from '@/contexts/CartContext'
 import { cartridgeTypeLabel } from '@/lib/taxonomy'
+import { htmlToParagraphs } from '@/lib/html-text'
 
 type Category = { id: string; name: string; handle: string }
 type ProductImage = { url: string }
@@ -234,11 +235,13 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
               )}
             </div>
 
-            {/* Short description */}
+            {/* Short description — legacy Woo descriptions arrive as raw HTML */}
             {product.description && (
-              <p className="text-sm text-[#4B4B46] leading-relaxed mb-6 max-w-md">
-                {product.description}
-              </p>
+              <div className="text-sm text-[#4B4B46] leading-relaxed mb-6 max-w-md space-y-3">
+                {htmlToParagraphs(product.description).map((para, i) => (
+                  <p key={i}>{para}</p>
+                ))}
+              </div>
             )}
 
             {/* Variant selector */}
@@ -314,9 +317,9 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
             <div className="grid grid-cols-2 gap-3">
               {[
                 { icon: '✓', label: 'Guaranteed to work or your money back' },
-                { icon: '🚚', label: 'Free delivery on orders over R500' },
-                { icon: '⚡', label: 'Same-day dispatch before 2 pm' },
-                { icon: '🔒', label: 'Secure checkout — PayFast & Ozow' },
+                { icon: '🚚', label: 'Nationwide courier — next-day JHB/PTA' },
+                { icon: '⚡', label: 'Same-day dispatch on orders before noon' },
+                { icon: '🔒', label: 'Secure checkout with PayFast' },
               ].map(({ icon, label }) => (
                 <div key={label} className="flex items-start gap-2 text-xs text-[#4B4B46]">
                   <span className="mt-0.5">{icon}</span>

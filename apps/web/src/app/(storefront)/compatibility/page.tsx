@@ -12,7 +12,7 @@ const PUB_KEY  = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
 const BRAND_CHIPS = [
   'HP', 'Canon', 'Epson', 'Brother', 'Samsung',
   'Lexmark', 'Xerox', 'Pantum', 'Ricoh', 'Kyocera',
-  'Konica Minolta', 'OKI', 'Olivetti',
+  'Konica Minolta', 'OKI',
 ]
 
 export const metadata: Metadata = {
