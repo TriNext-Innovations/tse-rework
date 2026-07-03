@@ -36,7 +36,7 @@ async function fetchCompatModels(): Promise<Array<{ brand: string; model: string
 async function fetchHeroProduct(regionId: string): Promise<HeroProduct | null> {
   try {
     const products = await fetchProducts(
-      `${BACKEND}/store/products?handle=${HERO_HANDLE}${regionId ? `&region_id=${regionId}` : ''}&fields=id,title,handle,variants.id,variants.sku,variants.calculated_price.calculated_amount`
+      `${BACKEND}/store/products?handle=${HERO_HANDLE}${regionId ? `&region_id=${regionId}` : ''}&fields=id,title,handle,+images.url,variants.id,variants.sku,variants.calculated_price.calculated_amount`
     )
     const p = products[0]
     const v = p?.variants?.[0]
@@ -48,6 +48,7 @@ async function fetchHeroProduct(regionId: string): Promise<HeroProduct | null> {
       sku: v.sku ?? '',
       variantId: v.id,
       price: v.calculated_price?.calculated_amount ?? null,
+      image: p.images?.[0]?.url ?? null,
     }
   } catch {
     return null
