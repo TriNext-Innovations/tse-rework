@@ -113,8 +113,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const count = items.reduce((sum, i) => sum + i.qty, 0)
   const total = items.reduce((sum, i) => sum + (i.price ?? 0) * i.qty, 0)
 
-  // Lazily create the Medusa cart, add the variant, and open the drawer. The
-  // returned cart (server-computed prices/totals) becomes the new state.
+  // Lazily create the Medusa cart and add the variant. The returned cart
+  // (server-computed prices/totals) becomes the new state. Adding does NOT
+  // open the drawer — the header cart count updates as the only feedback, so
+  // the shopper isn't interrupted; they open the cart themselves when ready.
   const addItem = useCallback(
     async (item: AddToCartInput, quantity = 1) => {
       setPending(true)
@@ -126,7 +128,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           quantity,
         )
         setCart(updated)
-        setIsOpen(true)
       } catch (err) {
         console.error('[cart] add failed:', err)
       } finally {

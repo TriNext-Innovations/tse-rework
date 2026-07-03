@@ -139,15 +139,24 @@ describe('CartProvider', () => {
 
   it('shows items in drawer when cart has products', async () => {
     renderCart()
-    await userEvent.click(screen.getByText('Add HP')) // adding opens the drawer
+    await userEvent.click(screen.getByText('Add HP'))
+    await userEvent.click(screen.getByText('Open')) // adding does not auto-open; open it explicitly
     expect(await screen.findAllByText(/SKU HP-123/)).not.toHaveLength(0)
   })
 
   it('shows subtotal and checkout button when items present', async () => {
     renderCart()
     await userEvent.click(screen.getByText('Add HP'))
+    await userEvent.click(screen.getByText('Open'))
     expect(await screen.findByText('Subtotal')).toBeInTheDocument()
     expect(screen.getByText(/Checkout/)).toBeInTheDocument()
+  })
+
+  it('adding an item does not open the cart drawer', async () => {
+    renderCart()
+    await userEvent.click(screen.getByText('Add HP'))
+    await waitFor(() => expect(screen.getByTestId('count').textContent).toBe('1'))
+    expect(screen.getByTestId('is-open').textContent).toBe('false')
   })
 
   it('can remove item from drawer', async () => {
