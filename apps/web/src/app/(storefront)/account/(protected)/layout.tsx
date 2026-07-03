@@ -23,8 +23,8 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
 
   if (loading || !customer) {
     return (
-      <div className="min-h-screen bg-[#F5F4F0] flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-black/20 border-t-[#111827] rounded-full animate-spin" />
+      <div className="min-h-screen bg-[var(--paper)] flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-[var(--line-5)] border-t-[var(--ink)] rounded-full animate-spin" />
       </div>
     )
   }
@@ -32,7 +32,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   const displayName = [customer.first_name, customer.last_name].filter(Boolean).join(' ') || customer.email
 
   return (
-    <div className="min-h-screen bg-[#F5F4F0] text-[#111827]">
+    <div className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
       <style>{`
         .font-display { font-family: var(--font-fraunces), Georgia, serif; font-optical-sizing: auto; }
         .font-display-italic { font-family: var(--font-fraunces), Georgia, serif; font-style: italic; }
@@ -40,24 +40,24 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
       <Navbar />
 
       <div className="mx-auto max-w-6xl px-4 sm:px-8 lg:px-12 pt-28 pb-16">
-        <div className="mb-8 flex items-center gap-2 text-xs text-[#6B6B66]">
-          <Link href="/" className="hover:text-[#111827] transition-colors">Home</Link>
+        <div className="mb-8 flex items-center gap-2 text-xs text-[var(--muted)]">
+          <Link href="/" className="hover:text-[var(--ink)] transition-colors">Home</Link>
           <span>/</span>
-          <span className="text-[#111827]">Account</span>
+          <span className="text-[var(--ink)]">Account</span>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-10">
           {/* Sidebar */}
           <aside className="lg:col-span-1">
-            <div className="bg-white rounded-[20px] p-5">
-              <div className="mb-5 pb-5 border-b border-black/8">
-                <div className="text-[10px] uppercase tracking-[0.18em] text-[#6B6B66] mb-1">Signed in as</div>
+            <div className="bg-[var(--surface)] rounded-[20px] p-5">
+              <div className="mb-5 pb-5 border-b border-[var(--line-2)]">
+                <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--muted)] mb-1">Signed in as</div>
                 <div className="font-medium text-sm truncate">{displayName}</div>
-                <div className="text-xs text-[#6B6B66] truncate">{customer.email}</div>
+                <div className="text-xs text-[var(--muted)] truncate">{customer.email}</div>
                 {customer.groups && customer.groups.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-1">
                     {customer.groups.map((g) => (
-                      <span key={g.id} className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.15em] px-2 py-0.5 rounded-full bg-[#dfe344]/20 text-[#111827]">
+                      <span key={g.id} className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.15em] px-2 py-0.5 rounded-full bg-[#dfe344]/20 text-[var(--ink)]">
                         {g.name}
                       </span>
                     ))}
@@ -73,8 +73,8 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
                       href={href}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors ${
                         active
-                          ? 'bg-[#F5F4F0] text-[#111827] font-medium'
-                          : 'text-[#374151] hover:bg-[#F5F4F0] hover:text-[#111827]'
+                          ? 'bg-[var(--paper)] text-[var(--ink)] font-medium'
+                          : 'text-[var(--ink-2)] hover:bg-[var(--paper)] hover:text-[var(--ink)]'
                       }`}
                     >
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -88,7 +88,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
                 })}
                 <button
                   onClick={() => { logout(); router.push('/') }}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-[#6B6B66] hover:bg-red-50 hover:text-red-600 transition-colors mt-2 pt-4 border-t border-black/8 cursor-pointer"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-[var(--muted)] hover:bg-red-50 hover:text-red-600 transition-colors mt-2 pt-4 border-t border-[var(--line-2)] cursor-pointer"
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />

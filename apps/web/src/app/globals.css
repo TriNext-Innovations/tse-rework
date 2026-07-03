@@ -179,3 +179,103 @@
     font-size: 16px;
   }
 }
+
+/*
+ * ─── STOREFRONT LIGHT/DARK THEME ─────────────────────────────────────────────
+ * Site-wide theme variables. Light is the default and matches the original
+ * hardcoded palette exactly; dark is applied via html[data-theme="dark"],
+ * toggled from the Navbar and persisted in localStorage ("tse_theme").
+ * Brand accents (#dfe344 lime, #41e0f5 cyan, #ee75e9 pink) stay identical in
+ * both themes. The footer keeps its fixed dark panel in both themes.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+:root {
+  --paper: #f5f4f0;    /* page background */
+  --paper-2: #edeae2;  /* recessed panels / cards */
+  --surface: #ffffff;  /* raised surfaces: modals, dropdowns, inputs */
+  --ink: #111827;      /* headings / primary text */
+  --ink-2: #374151;    /* body text */
+  --ink-3: #4b4b46;    /* long-form copy */
+  --muted: #6b6b66;    /* secondary text */
+  --muted-2: #9ca3af;  /* placeholders / faint text */
+  --line-1: rgba(0, 0, 0, 0.05);
+  --line-2: rgba(0, 0, 0, 0.08);
+  --line-3: rgba(0, 0, 0, 0.10);
+  --line-4: rgba(0, 0, 0, 0.15);
+  --line-5: rgba(0, 0, 0, 0.20);
+  --line-6: rgba(0, 0, 0, 0.30);
+  --line-7: rgba(0, 0, 0, 0.40);
+  --hover-1: rgba(0, 0, 0, 0.05);
+  --hover-2: rgba(0, 0, 0, 0.08);
+  --hover-3: rgba(0, 0, 0, 0.10);
+  /* Homepage accent aliases (kept from the storefront hero design) */
+  --magenta: #41e0f5;
+  --magenta-soft: #d9f8fc;
+  --cyan: #41e0f5;
+  --lime: #dfe344;
+  --glow: #ee75e9;
+  --on-accent: #111827;
+  --grain-blend: multiply;
+  --grain-opacity: 0.06;
+  --nav-glass-bg: rgba(255, 255, 255, 0.19);
+  --nav-glass-border: rgba(255, 255, 255, 0.3);
+}
+
+:root[data-theme='dark'] {
+  --paper: #12151a;
+  --paper-2: #1a1f26;
+  --surface: #20262e;
+  --ink: #f2f3f0;
+  --ink-2: #cfd4da;
+  --ink-3: #c2c8cf;
+  --muted: #9aa0a8;
+  --muted-2: #6f7681;
+  --line-1: rgba(255, 255, 255, 0.07);
+  --line-2: rgba(255, 255, 255, 0.10);
+  --line-3: rgba(255, 255, 255, 0.12);
+  --line-4: rgba(255, 255, 255, 0.17);
+  --line-5: rgba(255, 255, 255, 0.22);
+  --line-6: rgba(255, 255, 255, 0.32);
+  --line-7: rgba(255, 255, 255, 0.42);
+  --hover-1: rgba(255, 255, 255, 0.06);
+  --hover-2: rgba(255, 255, 255, 0.09);
+  --hover-3: rgba(255, 255, 255, 0.11);
+  --magenta-soft: #0e3a42;
+  --grain-blend: screen;
+  --grain-opacity: 0.08;
+  --nav-glass-bg: rgba(22, 27, 34, 0.55);
+  --nav-glass-border: rgba(255, 255, 255, 0.08);
+}
+
+/*
+ * Decorative dark panels (hero showcase card, finder CTA, dark category cards,
+ * B2B CTA band, cookie toast, PayFast card) are meant to read as dark-navy with
+ * light text in BOTH themes — like the footer. This class re-pins the light
+ * palette locally, so the panel and its whole subtree keep their original
+ * dark-on-light-text look regardless of the active theme. Brand accents are
+ * theme-independent already, so they pass through unchanged.
+ */
+.panel-dark {
+  --paper: #f5f4f0;
+  --paper-2: #edeae2;
+  --surface: #ffffff;
+  --ink: #111827;
+  --ink-2: #374151;
+  --ink-3: #4b4b46;
+  --muted: #6b6b66;
+  --muted-2: #9ca3af;
+  --line-1: rgba(0, 0, 0, 0.05);
+  --line-2: rgba(0, 0, 0, 0.08);
+  --line-3: rgba(0, 0, 0, 0.10);
+  --line-4: rgba(0, 0, 0, 0.15);
+  --line-5: rgba(0, 0, 0, 0.20);
+  --line-6: rgba(0, 0, 0, 0.30);
+  --line-7: rgba(0, 0, 0, 0.40);
+  --hover-1: rgba(0, 0, 0, 0.05);
+  --hover-2: rgba(0, 0, 0, 0.08);
+  --hover-3: rgba(0, 0, 0, 0.10);
+}
+
+/* Keep native form controls (dropdowns, date pickers) legible per theme */
+:root { color-scheme: light; }
+:root[data-theme='dark'] { color-scheme: dark; }

@@ -165,35 +165,6 @@ describe('StorefrontClient — brand marquee', () => {
   })
 })
 
-describe('StorefrontClient — theme switcher', () => {
-  it('defaults to editorial theme', () => {
-    renderStorefront()
-    const root = document.querySelector('[data-theme]')
-    expect(root?.getAttribute('data-theme')).toBe('editorial')
-  })
-
-  it('switches to brand theme when brand button is clicked', async () => {
-    renderStorefront()
-    const brandBtn = screen.getByRole('radio', { name: /brand/i })
-    await userEvent.click(brandBtn)
-    const root = document.querySelector('[data-theme]')
-    expect(root?.getAttribute('data-theme')).toBe('brand')
-  })
-
-  it('switches back to editorial theme', async () => {
-    renderStorefront()
-    await userEvent.click(screen.getByRole('radio', { name: /brand/i }))
-    await userEvent.click(screen.getByRole('radio', { name: /editorial/i }))
-    expect(document.querySelector('[data-theme]')?.getAttribute('data-theme')).toBe('editorial')
-  })
-
-  it('editorial radio is checked by default', () => {
-    renderStorefront()
-    expect(screen.getByRole('radio', { name: /editorial/i })).toHaveAttribute('aria-checked', 'true')
-    expect(screen.getByRole('radio', { name: /brand/i })).toHaveAttribute('aria-checked', 'false')
-  })
-})
-
 describe('StorefrontClient — FAQ accordion', () => {
   it('renders all 4 FAQ questions', () => {
     renderStorefront()

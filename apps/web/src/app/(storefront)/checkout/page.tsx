@@ -25,7 +25,7 @@ async function getCategories(): Promise<any[]> {
 export default async function CheckoutPage() {
   const categories = await getCategories()
   return (
-    <div className="min-h-screen bg-[#F5F4F0] text-[#111827]">
+    <div className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
       <Navbar categories={categories} />
       <CheckoutForm />
     </div>
