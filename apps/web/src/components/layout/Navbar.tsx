@@ -25,7 +25,6 @@ const FALLBACK_BRANDS: BrandEntry[] = [
   { name: 'Kyocera', ids: ['Kyocera'] },
   { name: 'Konica Minolta', ids: ['Konica Minolta'] },
   { name: 'OKI', ids: ['OKI'] },
-  { name: 'Olivetti', ids: ['Olivetti'] },
 ]
 
 type NavbarProps = {

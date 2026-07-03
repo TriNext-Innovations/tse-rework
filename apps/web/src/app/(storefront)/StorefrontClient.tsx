@@ -22,6 +22,17 @@ export type TrendingProduct = {
 
 export type CompatModel = { brand: string; model: string; cartridge_count: number }
 
+// The real Medusa product behind the hero "Bestseller" card, resolved
+// server-side so the add-to-cart targets a purchasable variant.
+export type HeroProduct = {
+  id: string
+  title: string
+  handle: string
+  sku: string
+  variantId: string
+  price: number | null
+}
+
 const faqs = [
   { q: 'Will a generic cartridge work in my printer?', a: "Yes. Our compatibles are engineered to spec for each printer model and meet or exceed OEM page yield. If it doesn't print as well as the original — we replace it." },
   { q: 'How does delivery work?', a: 'Order before noon and we deliver next day in Johannesburg and Pretoria via our own drivers (COD available). Nationwide courier ships same day on prepayment.' },
@@ -33,10 +44,14 @@ const faqs = [
 export default function StorefrontClient({
   trendingProducts,
   compatModels,
+  heroProduct = null,
 }: {
   trendingProducts: TrendingProduct[]
   compatModels: CompatModel[]
+  heroProduct?: HeroProduct | null
 }) {
+  const heroPrice = heroProduct?.price ?? 300
+  const heroSku = heroProduct?.sku ?? 'CAN-737'
   // Brands sorted alphabetically; models grouped per brand keeping the
   // DB ordering (which is by cartridge_count DESC) so the most-supported
   // printers appear first in the datalist.
@@ -272,7 +287,7 @@ export default function StorefrontClient({
                 <div className="text-[11px] uppercase tracking-widest text-[var(--muted)] mt-2">Yrs in business</div>
               </div>
               <div data-reveal>
-                <div className="font-display text-3xl sm:text-4xl font-light leading-none">13</div>
+                <div className="font-display text-3xl sm:text-4xl font-light leading-none">12</div>
                 <div className="text-[11px] uppercase tracking-widest text-[var(--muted)] mt-2">Brands</div>
               </div>
               <div data-reveal>
@@ -325,19 +340,29 @@ export default function StorefrontClient({
                   <div>
                     <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--paper)]/60 mb-1">Canon · Compatible</div>
                     <div className="font-display text-xl sm:text-2xl leading-tight">737 Black Toner</div>
-                    <div className="text-[11px] text-[var(--paper)]/50 mt-1">SKU CRG-737 · Up to 2,400 pages</div>
+                    <div className="text-[11px] text-[var(--paper)]/50 mt-1">SKU {heroSku} · Up to 2,400 pages</div>
                   </div>
                   <div className="text-right">
                     <div className="text-[10px] uppercase tracking-widest text-[var(--paper)]/50">From</div>
-                    <div className="font-display text-3xl sm:text-4xl">R300</div>
+                    <div className="font-display text-3xl sm:text-4xl">R{heroPrice}</div>
                   </div>
                 </div>
 
                 <button
-                  onClick={() => addItem({ id: 'canon-crg-737', title: 'Canon 737 Black Toner', sku: 'CRG-737', price: 300 })}
+                  onClick={() =>
+                    heroProduct
+                      ? addItem({
+                          id: heroProduct.id,
+                          title: heroProduct.title,
+                          sku: heroProduct.sku,
+                          price: heroProduct.price,
+                          variantId: heroProduct.variantId,
+                        })
+                      : router.push('/products/canon-ca737')
+                  }
                   className="relative mt-6 w-full bg-[var(--paper)] hover:bg-[var(--magenta)] text-[var(--ink)] hover:text-[var(--on-accent)] rounded-full py-3 text-sm font-medium transition-colors duration-300 cursor-pointer"
                 >
-                  Add to cart — R300
+                  Add to cart — R{heroPrice}
                 </button>
               </div>
             </div>
@@ -458,24 +483,24 @@ export default function StorefrontClient({
               </p>
             </article>
 
-            <article data-reveal onClick={() => router.push('/products')} className="bento-card sm:col-span-2 bg-[var(--magenta)] text-[var(--on-accent)] rounded-[24px] p-6 relative overflow-hidden min-h-[180px] flex flex-col justify-between cursor-pointer">
+            <article data-reveal onClick={() => router.push('/products?type=inkjet')} className="bento-card sm:col-span-2 bg-[var(--magenta)] text-[var(--on-accent)] rounded-[24px] p-6 relative overflow-hidden min-h-[180px] flex flex-col justify-between cursor-pointer">
               <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--on-accent)]/70">Category</div>
               <div>
                 <div className="font-display font-light text-4xl sm:text-5xl leading-none">Inkjet</div>
                 <div className="mt-1 text-xs text-[var(--on-accent)]/80">For HP, Canon, Epson, Brother</div>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span>120+ SKUs</span>
+                <span>170+ SKUs</span>
                 <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[var(--on-accent)] text-[var(--magenta)]">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </span>
               </div>
             </article>
 
-            <article data-reveal onClick={() => router.push('/products')} className="bento-card sm:col-span-1 bg-[var(--ink-2)] text-[var(--paper)] rounded-[24px] p-5 relative overflow-hidden min-h-[180px] flex flex-col justify-between cursor-pointer">
+            <article data-reveal onClick={() => router.push('/products?type=laser')} className="bento-card sm:col-span-1 bg-[var(--ink-2)] text-[var(--paper)] rounded-[24px] p-5 relative overflow-hidden min-h-[180px] flex flex-col justify-between cursor-pointer">
               <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--paper)]/60">Category</div>
               <div className="font-display font-light text-3xl leading-none">Laser</div>
-              <div className="text-[10px] text-[var(--paper)]/70">200+ SKUs</div>
+              <div className="text-[10px] text-[var(--paper)]/70">380+ SKUs</div>
             </article>
 
             <article id="delivery" data-reveal className="bento-card sm:col-span-3 bg-[var(--paper-2)] rounded-[24px] p-7 relative overflow-hidden min-h-[180px]">
@@ -499,7 +524,7 @@ export default function StorefrontClient({
                 {brands.map((b) => (
                   <button
                     key={b}
-                    onClick={() => router.push('/products')}
+                    onClick={() => router.push(`/products?brand=${encodeURIComponent(b)}`)}
                     className="text-[11px] font-medium px-2.5 py-1 border border-[var(--ink)]/10 hover:border-[var(--magenta)] hover:text-[var(--magenta)] rounded-full transition-colors cursor-pointer"
                   >
                     {b}
@@ -507,7 +532,7 @@ export default function StorefrontClient({
                 ))}
               </div>
               <div className="mt-5 font-display text-2xl">
-                <span className="font-display-italic text-[var(--magenta)]">13</span> brands · <span className="text-[var(--muted)]">320+ models</span>
+                <span className="font-display-italic text-[var(--magenta)]">{brands.length || 12}</span> brands · <span className="text-[var(--muted)]">660+ models</span>
               </div>
             </article>
           </div>
