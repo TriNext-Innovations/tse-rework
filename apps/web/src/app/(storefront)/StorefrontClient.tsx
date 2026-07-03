@@ -29,6 +29,7 @@ export type HeroProduct = {
   sku: string
   variantId: string
   price: number | null
+  image: string | null
 }
 
 const faqs = [
@@ -247,17 +248,29 @@ export default function StorefrontClient({
 
                 <div className="relative flex justify-center py-6">
                   <div className="animate-float relative">
-                    <div className="w-40 h-56 sm:w-48 sm:h-64 rounded-[14px] bg-gradient-to-br from-[#1a1a1a] via-[#2a2a2a] to-[#0A0A0A] shadow-[0_30px_60px_-20px_rgba(238,117,233,0.45)] relative overflow-hidden">
-                      <div className="absolute top-0 left-0 right-0 h-3 bg-[var(--magenta)]" />
-                      <div className="absolute top-6 left-4 right-4 text-[9px] uppercase tracking-[0.2em] text-[var(--paper)]/60">TSE Compatible</div>
-                      <div className="absolute top-12 left-4 font-display text-[var(--paper)] text-2xl leading-none">Canon</div>
-                      <div className="absolute top-[78px] left-4 font-display-italic text-[var(--magenta)] text-3xl leading-none">737</div>
-                      <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
-                        <div className="text-[9px] uppercase tracking-[0.2em] text-[var(--paper)]/60">Black<br/>Toner</div>
-                        <div className="w-6 h-6 rounded-full border border-[var(--paper)]/30" />
+                    {heroProduct?.image ? (
+                      <Image
+                        src={heroProduct.image}
+                        alt={heroProduct.title}
+                        width={280}
+                        height={360}
+                        priority
+                        sizes="(max-width: 640px) 60vw, 240px"
+                        className="w-40 h-56 sm:w-48 sm:h-64 object-contain drop-shadow-[0_30px_60px_rgba(238,117,233,0.45)]"
+                      />
+                    ) : (
+                      <div className="w-40 h-56 sm:w-48 sm:h-64 rounded-[14px] bg-gradient-to-br from-[#1a1a1a] via-[#2a2a2a] to-[#0A0A0A] shadow-[0_30px_60px_-20px_rgba(238,117,233,0.45)] relative overflow-hidden">
+                        <div className="absolute top-0 left-0 right-0 h-3 bg-[var(--magenta)]" />
+                        <div className="absolute top-6 left-4 right-4 text-[9px] uppercase tracking-[0.2em] text-[var(--paper)]/60">TSE Compatible</div>
+                        <div className="absolute top-12 left-4 font-display text-[var(--paper)] text-2xl leading-none">Canon</div>
+                        <div className="absolute top-[78px] left-4 font-display-italic text-[var(--magenta)] text-3xl leading-none">737</div>
+                        <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
+                          <div className="text-[9px] uppercase tracking-[0.2em] text-[var(--paper)]/60">Black<br/>Toner</div>
+                          <div className="w-6 h-6 rounded-full border border-[var(--paper)]/30" />
+                        </div>
+                        <div className="absolute inset-x-6 top-1/2 -translate-y-1/2 h-px bg-[var(--paper)]/15" />
                       </div>
-                      <div className="absolute inset-x-6 top-1/2 -translate-y-1/2 h-px bg-[var(--paper)]/15" />
-                    </div>
+                    )}
                   </div>
                 </div>
 
