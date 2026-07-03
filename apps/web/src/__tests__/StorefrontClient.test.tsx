@@ -69,6 +69,7 @@ const mockHeroProduct: HeroProduct = {
   sku: 'CAN-737',
   variantId: 'variant_hero_737',
   price: 300,
+  image: null,
 }
 
 function renderStorefront(products: TrendingProduct[] = [], models: CompatModel[] = mockCompatModels) {
@@ -100,6 +101,26 @@ describe('StorefrontClient — hero', () => {
   it('renders the hero "Add to cart" button', () => {
     renderStorefront()
     expect(screen.getByText('Add to cart — R300')).toBeInTheDocument()
+  })
+
+  it('renders the real hero product image when one is resolved', () => {
+    render(
+      <CartProvider>
+        <StorefrontClient
+          trendingProducts={[]}
+          compatModels={[]}
+          heroProduct={{ ...mockHeroProduct, image: 'https://example.r2.dev/canon-737.jpg' }}
+        />
+      </CartProvider>,
+    )
+    const img = screen.getByAltText('Canon 737')
+    expect(img).toHaveAttribute('src', 'https://example.r2.dev/canon-737.jpg')
+  })
+
+  it('falls back to the drawn cartridge card when the hero product has no image', () => {
+    renderStorefront() // mockHeroProduct.image is null
+    expect(screen.getByText('TSE Compatible')).toBeInTheDocument()
+    expect(screen.queryByAltText('Canon 737')).toBeNull()
   })
 
   it('adds the resolved hero product variant when hero cart button is clicked', async () => {
