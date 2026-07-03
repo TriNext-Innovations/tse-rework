@@ -27,7 +27,7 @@ async function getCategories(): Promise<any[]> {
 export default async function OrderConfirmedPage() {
   const categories = await getCategories()
   return (
-    <div className="min-h-screen bg-[#F5F4F0] text-[#111827]">
+    <div className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
       <style>{`
         .font-display { font-family: var(--font-fraunces), Georgia, serif; font-optical-sizing: auto; }
         .font-display-italic { font-family: var(--font-fraunces), Georgia, serif; font-style: italic; }
@@ -36,7 +36,7 @@ export default async function OrderConfirmedPage() {
 
       <div className="mx-auto max-w-lg px-4 sm:px-8 pt-28 pb-16 text-center">
         <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#dfe344]/20 mb-8">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#111827" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M20 6 9 17l-5-5" />
           </svg>
         </div>
@@ -53,11 +53,11 @@ export default async function OrderConfirmedPage() {
 
         <FinalizeOrder />
 
-        <p className="text-[#4B4B46] text-base mb-8 leading-relaxed">
+        <p className="text-[var(--ink-3)] text-base mb-8 leading-relaxed">
           Your order has been sent to our team via WhatsApp. We&apos;ll confirm stock availability and arrange payment and delivery within 1 business hour.
         </p>
 
-        <div className="bg-white rounded-[20px] p-6 text-left mb-8 space-y-4">
+        <div className="bg-[var(--surface)] rounded-[20px] p-6 text-left mb-8 space-y-4">
           {[
             { icon: '📬', heading: 'Confirmation', body: "You'll receive an email and/or WhatsApp confirming your order and estimated delivery time." },
             { icon: '🚚', heading: 'Delivery', body: 'Orders confirmed before noon are delivered next business day to JHB & PTA. Other areas may vary.' },
@@ -67,7 +67,7 @@ export default async function OrderConfirmedPage() {
               <span className="text-xl">{icon}</span>
               <div>
                 <p className="text-sm font-medium">{heading}</p>
-                <p className="text-xs text-[#6B6B66] mt-0.5 leading-relaxed">{body}</p>
+                <p className="text-xs text-[var(--muted)] mt-0.5 leading-relaxed">{body}</p>
               </div>
             </div>
           ))}
@@ -76,7 +76,7 @@ export default async function OrderConfirmedPage() {
         <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
           <Link
             href="/products"
-            className="inline-flex items-center justify-center px-6 py-3 rounded-full bg-[#111827] text-white text-sm font-medium hover:bg-[#41e0f5] hover:text-[#111827] transition-colors"
+            className="inline-flex items-center justify-center px-6 py-3 rounded-full bg-[var(--ink)] text-[var(--paper)] text-sm font-medium hover:bg-[#41e0f5] hover:text-[var(--on-accent)] transition-colors"
           >
             Continue shopping
           </Link>
@@ -84,19 +84,19 @@ export default async function OrderConfirmedPage() {
             href={siteConfig.whatsapp.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center px-6 py-3 rounded-full border border-black/15 text-sm text-[#374151] hover:border-black/40 transition-colors"
+            className="inline-flex items-center justify-center px-6 py-3 rounded-full border border-[var(--line-4)] text-sm text-[var(--ink-2)] hover:border-[var(--line-7)] transition-colors"
           >
             WhatsApp us
           </a>
         </div>
 
-        <p className="text-xs text-[#9ca3af]">
+        <p className="text-xs text-[var(--muted-2)]">
           Need help?{' '}
-          <a href={siteConfig.whatsapp.tel} className="underline underline-offset-2 hover:text-[#111827] transition-colors">
+          <a href={siteConfig.whatsapp.tel} className="underline underline-offset-2 hover:text-[var(--ink)] transition-colors">
             Call {siteConfig.whatsapp.display}
           </a>
           {' '}or{' '}
-          <a href={siteConfig.email.mailto} className="underline underline-offset-2 hover:text-[#111827] transition-colors">
+          <a href={siteConfig.email.mailto} className="underline underline-offset-2 hover:text-[var(--ink)] transition-colors">
             email us
           </a>
         </p>

@@ -8,8 +8,6 @@ import Image from 'next/image'
 import { Navbar } from '@/components/layout'
 import { useCart } from '@/contexts/CartContext'
 
-type Theme = 'editorial' | 'brand'
-
 export type TrendingProduct = {
   id: string
   title: string
@@ -79,7 +77,6 @@ export default function StorefrontClient({
 
   const [openFaq, setOpenFaq] = useState<number | null>(0)
   const [mouse, setMouse] = useState({ x: -1000, y: -1000 })
-  const [theme, setTheme] = useState<Theme>('editorial')
   const [finderBrand, setFinderBrand] = useState(brands[0] ?? '')
   const [finderModel, setFinderModel] = useState('')
 
@@ -131,38 +128,8 @@ export default function StorefrontClient({
   }, [])
 
   return (
-    <div data-theme={theme} className="storefront font-[var(--font-inter)] text-[var(--ink)] bg-[var(--paper)] min-h-screen overflow-x-hidden transition-colors duration-500">
+    <div className="storefront font-[var(--font-inter)] text-[var(--ink)] bg-[var(--paper)] min-h-screen overflow-x-hidden transition-colors duration-500">
       <style>{`
-        .storefront[data-theme="editorial"] {
-          --paper: #F5F4F0;
-          --paper-2: #EDEAE2;
-          --ink: #111827;
-          --ink-2: #374151;
-          --magenta: #41e0f5;
-          --magenta-soft: #d9f8fc;
-          --cyan: #41e0f5;
-          --lime: #dfe344;
-          --glow: #ee75e9;
-          --muted: #6B6B66;
-          --on-accent: #111827;
-          --grain-blend: multiply;
-          --grain-opacity: 0.06;
-        }
-        .storefront[data-theme="brand"] {
-          --paper: #374151;
-          --paper-2: #4b5563;
-          --ink: #f3f0e8;
-          --ink-2: #e5e7eb;
-          --magenta: #dfe344;
-          --magenta-soft: #2a2d12;
-          --cyan: #41e0f5;
-          --lime: #dfe344;
-          --glow: #dfe344;
-          --muted: #9ca3af;
-          --on-accent: #111827;
-          --grain-blend: screen;
-          --grain-opacity: 0.08;
-        }
         .font-display { font-family: var(--font-fraunces), Georgia, serif; font-optical-sizing: auto; font-variation-settings: 'SOFT' 50, 'WONK' 0; }
         .font-display-italic { font-family: var(--font-fraunces), Georgia, serif; font-style: italic; }
         .grain {
@@ -196,49 +163,7 @@ export default function StorefrontClient({
       `}</style>
 
       {/* ─────────────── FLOATING NAV ─────────────── */}
-      <Navbar
-        right={
-          <div
-            role="radiogroup"
-            aria-label="Colour theme"
-            className="relative hidden sm:flex items-center bg-[var(--ink)]/5 border border-[var(--ink)]/10 rounded-full p-0.5 text-[11px] font-medium overflow-hidden"
-          >
-            <span
-              aria-hidden
-              className="absolute top-0.5 bottom-0.5 w-[calc(50%-2px)] rounded-full bg-[var(--ink)] shadow-[0_4px_14px_-4px_rgba(0,0,0,0.4)] transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)]"
-              style={{ transform: theme === 'editorial' ? 'translateX(2px)' : 'translateX(calc(100% + 0px))' }}
-            />
-            <button
-              type="button"
-              role="radio"
-              aria-checked={theme === 'editorial'}
-              onClick={() => setTheme('editorial')}
-              className="relative z-10 inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 cursor-pointer transition-colors duration-300"
-            >
-              <span className="flex gap-[3px]">
-                <span className="w-2 h-2 rounded-full bg-[#F5F4F0] border border-black/10" />
-                <span className="w-2 h-2 rounded-full bg-[#111827]" />
-                <span className="w-2 h-2 rounded-full bg-[#41e0f5]" />
-              </span>
-              <span className={`hidden lg:inline transition-colors duration-300 ${theme === 'editorial' ? 'text-[var(--paper)]' : 'text-[var(--muted)]'}`}>Editorial</span>
-            </button>
-            <button
-              type="button"
-              role="radio"
-              aria-checked={theme === 'brand'}
-              onClick={() => setTheme('brand')}
-              className="relative z-10 inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 cursor-pointer transition-colors duration-300"
-            >
-              <span className="flex gap-[3px]">
-                <span className="w-2 h-2 rounded-full bg-[#04060b]" />
-                <span className="w-2 h-2 rounded-full bg-[#dfe344]" />
-                <span className="w-2 h-2 rounded-full bg-[#41e0f5]" />
-              </span>
-              <span className={`hidden lg:inline transition-colors duration-300 ${theme === 'brand' ? 'text-[var(--paper)]' : 'text-[var(--muted)]'}`}>Brand</span>
-            </button>
-          </div>
-        }
-      />
+      <Navbar />
 
       {/* ─────────────── HERO ─────────────── */}
       <section id="top" ref={heroRef} className="relative pt-32 sm:pt-36 pb-16 sm:pb-24 px-4 sm:px-8 lg:px-12 overflow-hidden">
@@ -311,7 +236,7 @@ export default function StorefrontClient({
                 </div>
               </div>
 
-              <div className="relative bg-[var(--ink)] text-[var(--paper)] rounded-[28px] p-6 sm:p-8 overflow-hidden">
+              <div className="panel-dark relative bg-[var(--ink)] text-[var(--paper)] rounded-[28px] p-6 sm:p-8 overflow-hidden">
                 <div className="absolute -bottom-12 -right-12 w-64 h-64 rounded-full bg-[var(--glow)] opacity-30 blur-3xl" />
                 <div className="relative flex items-start justify-between mb-8">
                   <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-[var(--paper)]/70">
@@ -401,7 +326,7 @@ export default function StorefrontClient({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-6 grid-rows-[auto] gap-3 sm:gap-4 auto-rows-[minmax(140px,_auto)]">
-            <article id="finder" data-reveal className="bento-card sm:col-span-3 sm:row-span-2 bg-[var(--ink)] text-[var(--paper)] rounded-[24px] p-7 sm:p-10 relative overflow-hidden flex flex-col justify-between min-h-[360px]">
+            <article id="finder" data-reveal className="panel-dark bento-card sm:col-span-3 sm:row-span-2 bg-[var(--ink)] text-[var(--paper)] rounded-[24px] p-7 sm:p-10 relative overflow-hidden flex flex-col justify-between min-h-[360px]">
               <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[var(--glow)] opacity-30 blur-3xl" />
               <div className="absolute top-7 right-7 text-[10px] uppercase tracking-[0.22em] text-[var(--paper)]/50">Compatibility Finder</div>
               <div className="relative">
@@ -497,7 +422,7 @@ export default function StorefrontClient({
               </div>
             </article>
 
-            <article data-reveal onClick={() => router.push('/products?type=laser')} className="bento-card sm:col-span-1 bg-[var(--ink-2)] text-[var(--paper)] rounded-[24px] p-5 relative overflow-hidden min-h-[180px] flex flex-col justify-between cursor-pointer">
+            <article data-reveal onClick={() => router.push('/products?type=laser')} className="panel-dark bento-card sm:col-span-1 bg-[var(--ink-2)] text-[var(--paper)] rounded-[24px] p-5 relative overflow-hidden min-h-[180px] flex flex-col justify-between cursor-pointer">
               <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--paper)]/60">Category</div>
               <div className="font-display font-light text-3xl leading-none">Laser</div>
               <div className="text-[10px] text-[var(--paper)]/70">380+ SKUs</div>

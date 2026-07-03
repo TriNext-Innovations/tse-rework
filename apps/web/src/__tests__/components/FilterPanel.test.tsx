@@ -99,8 +99,8 @@ describe('FilterPanel', () => {
     setParams('brand=HP')
     render(<FilterPanel categories={mockCategories} />)
     const hp = screen.getByText('HP')
-    expect(hp.className).toContain('bg-[#111827]')
-    expect(hp.className).toContain('text-white')
+    expect(hp.className).toContain('bg-[var(--ink)]')
+    expect(hp.className).toContain('text-[var(--paper)]')
   })
 
   it('clicking the active brand again deselects it (removes brand param)', async () => {

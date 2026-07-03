@@ -175,7 +175,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
     : ''
 
   return (
-    <div className="min-h-screen bg-[#F5F4F0] text-[#111827] font-[var(--font-inter)]">
+    <div className="min-h-screen bg-[var(--paper)] text-[var(--ink)] font-[var(--font-inter)]">
       <style>{`
         .font-display { font-family: var(--font-fraunces), Georgia, serif; font-optical-sizing: auto; }
         .font-display-italic { font-family: var(--font-fraunces), Georgia, serif; font-style: italic; }
@@ -195,7 +195,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
               <>All <span className="font-display-italic">cartridges</span></>
             )}
           </h1>
-          <p className="mt-2 text-sm text-[#6B6B66]">{total} {total === 1 ? 'product' : 'products'}</p>
+          <p className="mt-2 text-sm text-[var(--muted)]">{total} {total === 1 ? 'product' : 'products'}</p>
         </div>
 
         <div className="flex gap-8 lg:gap-12">
@@ -223,7 +223,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
             )}
 
             {products.length === 0 ? (
-              <div className="text-center py-24 text-[#6B6B66]">
+              <div className="text-center py-24 text-[var(--muted)]">
                 {isSearch ? `No results for "${q}".` : 'No products found.'}
               </div>
             ) : (
@@ -241,7 +241,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
                     <Link
                       key={p.id}
                       href={`/products/${p.handle}`}
-                      className="group relative bg-white rounded-[16px] p-4 overflow-hidden hover:-translate-y-1 transition-transform duration-300"
+                      className="group relative bg-[var(--surface)] rounded-[16px] p-4 overflow-hidden hover:-translate-y-1 transition-transform duration-300"
                     >
                       {/* Product image */}
                       <div className="relative h-28 flex items-end justify-center mb-3">
@@ -272,13 +272,13 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
                         )}
                       </div>
 
-                      <div className="text-[9px] uppercase tracking-[0.16em] text-[#6B6B66] mb-1">{type}</div>
+                      <div className="text-[9px] uppercase tracking-[0.16em] text-[var(--muted)] mb-1">{type}</div>
                       <h2 className="font-display text-sm leading-tight tracking-tight line-clamp-2 mb-1">{p.title}</h2>
-                      <div className="text-[10px] text-[#9ca3af] mb-3">SKU {sku}</div>
+                      <div className="text-[10px] text-[var(--muted-2)] mb-3">SKU {sku}</div>
 
                       <div className="flex items-end justify-between">
                         <div className="font-display text-lg">
-                          {priceZar ? `R${priceZar}` : <span className="text-[#9ca3af] text-sm">POA</span>}
+                          {priceZar ? `R${priceZar}` : <span className="text-[var(--muted-2)] text-sm">POA</span>}
                         </div>
                         <AddToCartButton id={p.id} title={p.title} sku={sku} price={priceZar} variantId={variant?.id} thumbnail={imageUrl} />
                       </div>
@@ -303,15 +303,15 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
               return (
                 <div className="mt-10 flex items-center justify-center gap-2">
                   {page > 1 && (
-                    <Link href={pageHref(page - 1)} className="px-4 py-2 rounded-full border border-black/15 text-sm hover:border-black/40 transition-colors">
+                    <Link href={pageHref(page - 1)} className="px-4 py-2 rounded-full border border-[var(--line-4)] text-sm hover:border-[var(--line-7)] transition-colors">
                       ← Prev
                     </Link>
                   )}
-                  <span className="text-sm text-[#6B6B66] px-2">
+                  <span className="text-sm text-[var(--muted)] px-2">
                     Page {page} of {totalPages}
                   </span>
                   {page < totalPages && (
-                    <Link href={pageHref(page + 1)} className="px-4 py-2 rounded-full border border-black/15 text-sm hover:border-black/40 transition-colors">
+                    <Link href={pageHref(page + 1)} className="px-4 py-2 rounded-full border border-[var(--line-4)] text-sm hover:border-[var(--line-7)] transition-colors">
                       Next →
                     </Link>
                   )}

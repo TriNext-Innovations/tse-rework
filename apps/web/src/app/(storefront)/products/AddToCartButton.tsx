@@ -31,7 +31,7 @@ export function AddToCartButton({ id, title, sku, price, variantId, thumbnail }:
           thumbnail,
         })
       }}
-      className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#111827] text-white group-hover:bg-[#41e0f5] group-hover:text-[#111827] transition-colors duration-200 cursor-pointer"
+      className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[var(--ink)] text-[var(--paper)] group-hover:bg-[#41e0f5] group-hover:text-[var(--on-accent)] transition-colors duration-200 cursor-pointer"
     >
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 5v14M5 12h14" />

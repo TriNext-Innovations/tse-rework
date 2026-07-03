@@ -183,7 +183,7 @@ export function AddressAutocomplete({
         }}
       />
       {open && suggestions.length > 0 && (
-        <ul className="absolute z-20 mt-1 w-full bg-white rounded-[12px] border border-black/10 shadow-xl overflow-hidden max-h-64 overflow-y-auto">
+        <ul className="absolute z-20 mt-1 w-full bg-[var(--surface)] rounded-[12px] border border-[var(--line-3)] shadow-xl overflow-hidden max-h-64 overflow-y-auto">
           {suggestions.map((s, i) => (
             <li key={i}>
               <button
@@ -191,7 +191,7 @@ export function AddressAutocomplete({
                 onMouseDown={(e) => { e.preventDefault(); if (blurTimer.current) clearTimeout(blurTimer.current) }}
                 onClick={() => choose(s)}
                 onMouseEnter={() => setCursor(i)}
-                className={`w-full text-left px-4 py-2.5 text-sm transition-colors cursor-pointer ${cursor === i ? 'bg-[#F5F4F0]' : 'hover:bg-[#F5F4F0]'}`}
+                className={`w-full text-left px-4 py-2.5 text-sm transition-colors cursor-pointer ${cursor === i ? 'bg-[var(--paper)]' : 'hover:bg-[var(--paper)]'}`}
               >
                 {label(s)}
               </button>

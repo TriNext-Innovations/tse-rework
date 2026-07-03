@@ -92,12 +92,12 @@ export default function B2BPage() {
       value: form[key],
       onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
         setForm({ ...form, [key]: e.target.value }),
-      className: `w-full px-4 py-3 rounded-[12px] border bg-white text-sm outline-none transition-colors ${errors[key] ? 'border-red-400' : 'border-black/15 focus:border-[#111827]'}`,
+      className: `w-full px-4 py-3 rounded-[12px] border bg-[var(--surface)] text-sm outline-none transition-colors ${errors[key] ? 'border-red-400' : 'border-[var(--line-4)] focus:border-[var(--ink)]'}`,
     }
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F4F0] text-[#111827]">
+    <div className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
       <style>{`
         .font-display { font-family: var(--font-fraunces), Georgia, serif; font-optical-sizing: auto; }
         .font-display-italic { font-family: var(--font-fraunces), Georgia, serif; font-style: italic; }
@@ -108,17 +108,17 @@ export default function B2BPage() {
       <section className="px-4 sm:px-8 lg:px-12 pt-32 pb-16 relative overflow-hidden">
         <div className="mx-auto max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-10 items-end">
           <div className="lg:col-span-7">
-            <div className="text-[11px] uppercase tracking-[0.22em] text-[#6B6B66] mb-4">Business accounts</div>
+            <div className="text-[11px] uppercase tracking-[0.22em] text-[var(--muted)] mb-4">Business accounts</div>
             <h1 className="font-display font-light text-[13vw] sm:text-[9vw] lg:text-[7vw] leading-[0.9] tracking-[-0.03em]">
               Print smarter.<br />
               <span className="font-display-italic text-[#41e0f5]">Pay less.</span>
             </h1>
-            <p className="mt-8 max-w-xl text-[15px] text-[#374151] leading-relaxed">
+            <p className="mt-8 max-w-xl text-[15px] text-[var(--ink-2)] leading-relaxed">
               Volume pricing for offices, IT resellers, print shops, and schools.
               Get up to 25% off all cartridges — with same next-day delivery to Johannesburg and Pretoria.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <a href="#apply" className="inline-flex items-center gap-2 bg-[#111827] text-white rounded-full pl-6 pr-2 py-2.5 text-sm font-semibold hover:bg-[#dfe344] hover:text-[#111827] transition-colors">
+              <a href="#apply" className="inline-flex items-center gap-2 bg-[var(--ink)] text-[var(--paper)] rounded-full pl-6 pr-2 py-2.5 text-sm font-semibold hover:bg-[#dfe344] hover:text-[var(--on-accent)] transition-colors">
                 Apply for B2B pricing
                 <span className="inline-flex items-center justify-center w-9 h-9 bg-white/20 rounded-full">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
@@ -135,9 +135,9 @@ export default function B2BPage() {
               { stat: '<2h', label: 'Quote turnaround' },
               { stat: 'COD', label: 'JHB/PTA option' },
             ].map(({ stat, label }) => (
-              <div key={label} className="bg-white rounded-[20px] p-5 text-center">
+              <div key={label} className="bg-[var(--surface)] rounded-[20px] p-5 text-center">
                 <div className="font-display text-3xl font-light">{stat}</div>
-                <div className="text-[10px] uppercase tracking-[0.18em] text-[#6B6B66] mt-2">{label}</div>
+                <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--muted)] mt-2">{label}</div>
               </div>
             ))}
           </div>
@@ -147,7 +147,7 @@ export default function B2BPage() {
       {/* ── Pricing tiers ── */}
       <section className="px-4 sm:px-8 lg:px-12 py-16">
         <div className="mx-auto max-w-7xl">
-          <div className="text-[11px] uppercase tracking-[0.22em] text-[#6B6B66] mb-3">Pricing tiers</div>
+          <div className="text-[11px] uppercase tracking-[0.22em] text-[var(--muted)] mb-3">Pricing tiers</div>
           <h2 className="font-display font-light text-4xl sm:text-5xl tracking-tight leading-[0.95] mb-10">
             Which tier fits <span className="font-display-italic">your business?</span>
           </h2>
@@ -157,35 +157,35 @@ export default function B2BPage() {
                 key={tier.name}
                 className={`rounded-[24px] p-7 flex flex-col ${
                   tier.highlight
-                    ? 'bg-[#111827] text-white'
-                    : 'bg-white text-[#111827]'
+                    ? 'panel-dark bg-[var(--ink)] text-[var(--paper)]'
+                    : 'bg-[var(--surface)] text-[var(--ink)] border border-[var(--line-2)]'
                 }`}
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="text-[10px] uppercase tracking-[0.2em] opacity-60">{tier.name}</div>
                   {tier.discount && (
-                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${tier.highlight ? 'bg-[#dfe344] text-[#111827]' : 'bg-[#dfe344]/20 text-[#111827]'}`}>
+                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${tier.highlight ? 'bg-[#dfe344] text-[var(--ink)]' : 'bg-[#dfe344]/20 text-[var(--ink)]'}`}>
                       {tier.discount}
                     </span>
                   )}
                 </div>
-                <p className={`text-sm leading-relaxed mb-5 flex-1 ${tier.highlight ? 'text-white/70' : 'text-[#374151]'}`}>
+                <p className={`text-sm leading-relaxed mb-5 flex-1 ${tier.highlight ? 'text-white/70' : 'text-[var(--ink-2)]'}`}>
                   {tier.desc}
                 </p>
                 <ul className="space-y-1.5 mb-6">
                   {tier.for.map((f) => (
-                    <li key={f} className={`flex items-center gap-2 text-xs ${tier.highlight ? 'text-white/60' : 'text-[#6B6B66]'}`}>
+                    <li key={f} className={`flex items-center gap-2 text-xs ${tier.highlight ? 'text-white/60' : 'text-[var(--muted)]'}`}>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6 9 17l-5-5"/></svg>
                       {f}
                     </li>
                   ))}
                 </ul>
                 {tier.cta ? (
-                  <a href="#apply" className={`text-center text-sm font-medium py-3 rounded-full transition-colors ${tier.highlight ? 'bg-white text-[#111827] hover:bg-[#dfe344]' : 'border border-black/15 hover:border-[#111827]'}`}>
+                  <a href="#apply" className={`text-center text-sm font-medium py-3 rounded-full transition-colors ${tier.highlight ? 'bg-[var(--surface)] text-[var(--ink)] hover:bg-[#dfe344]' : 'border border-[var(--line-4)] hover:border-[var(--ink)]'}`}>
                     {tier.cta}
                   </a>
                 ) : (
-                  <Link href="/products" className="text-center text-sm text-[#6B6B66] hover:text-[#111827] transition-colors py-3 rounded-full border border-black/10 hover:border-black/30">
+                  <Link href="/products" className="text-center text-sm text-[var(--muted)] hover:text-[var(--ink)] transition-colors py-3 rounded-full border border-[var(--line-3)] hover:border-[var(--line-6)]">
                     Shop now
                   </Link>
                 )}
@@ -198,40 +198,40 @@ export default function B2BPage() {
       {/* ── Application form ── */}
       <section id="apply" className="px-4 sm:px-8 lg:px-12 py-16 scroll-mt-24">
         <div className="mx-auto max-w-3xl">
-          <div className="text-[11px] uppercase tracking-[0.22em] text-[#6B6B66] mb-3">Apply</div>
+          <div className="text-[11px] uppercase tracking-[0.22em] text-[var(--muted)] mb-3">Apply</div>
           <h2 className="font-display font-light text-4xl sm:text-5xl tracking-tight leading-[0.95] mb-3">
             Get started in <span className="font-display-italic">minutes</span>.
           </h2>
-          <p className="text-sm text-[#6B6B66] mb-10">
+          <p className="text-sm text-[var(--muted)] mb-10">
             Fill in the form — we'll review your application and contact you within 1 business day.
           </p>
 
-          <form onSubmit={handleSubmit} noValidate className="bg-white rounded-[24px] p-6 sm:p-8 space-y-5">
+          <form onSubmit={handleSubmit} noValidate className="bg-[var(--surface)] rounded-[24px] p-6 sm:p-8 space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
-                <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[#374151] mb-1.5">Company name</label>
+                <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[var(--ink-2)] mb-1.5">Company name</label>
                 <input type="text" placeholder="Acme Office Supplies" {...f('company_name')} />
                 {errors.company_name && <p className="text-xs text-red-500 mt-1">{errors.company_name}</p>}
               </div>
               <div>
-                <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[#374151] mb-1.5">Contact name</label>
+                <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[var(--ink-2)] mb-1.5">Contact name</label>
                 <input type="text" placeholder="Jane Smith" {...f('contact_name')} />
                 {errors.contact_name && <p className="text-xs text-red-500 mt-1">{errors.contact_name}</p>}
               </div>
               <div>
-                <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[#374151] mb-1.5">Work email</label>
+                <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[var(--ink-2)] mb-1.5">Work email</label>
                 <input type="email" placeholder="jane@acme.co.za" {...f('email')} />
                 {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
               </div>
               <div>
-                <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[#374151] mb-1.5">Phone</label>
+                <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[var(--ink-2)] mb-1.5">Phone</label>
                 <input type="tel" placeholder="011 234 5678" {...f('phone')} />
                 {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
-                <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[#374151] mb-1.5">Business type</label>
+                <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[var(--ink-2)] mb-1.5">Business type</label>
                 <select {...f('business_type')}>
                   <option value="">Select type</option>
                   <option>IT Reseller</option>
@@ -244,7 +244,7 @@ export default function B2BPage() {
                 {errors.business_type && <p className="text-xs text-red-500 mt-1">{errors.business_type}</p>}
               </div>
               <div>
-                <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[#374151] mb-1.5">Est. monthly spend</label>
+                <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[var(--ink-2)] mb-1.5">Est. monthly spend</label>
                 <select {...f('monthly_volume')}>
                   <option value="">Select range</option>
                   <option>R500 – R2 000</option>
@@ -256,15 +256,15 @@ export default function B2BPage() {
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[#374151] mb-1.5">
-                Message <span className="normal-case text-[#9ca3af]">(optional)</span>
+              <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[var(--ink-2)] mb-1.5">
+                Message <span className="normal-case text-[var(--muted-2)]">(optional)</span>
               </label>
               <textarea
                 rows={3}
                 placeholder="Which printers do you use? Any specific SKUs you need regularly?"
                 value={form.message}
                 onChange={(e) => setForm({ ...form, message: e.target.value })}
-                className="w-full px-4 py-3 rounded-[12px] border border-black/15 bg-white text-sm outline-none focus:border-[#111827] transition-colors resize-none"
+                className="w-full px-4 py-3 rounded-[12px] border border-[var(--line-4)] bg-[var(--surface)] text-sm outline-none focus:border-[var(--ink)] transition-colors resize-none"
               />
             </div>
 
@@ -275,11 +275,11 @@ export default function B2BPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full bg-[#111827] text-white rounded-full py-3.5 text-sm font-medium hover:bg-[#dfe344] hover:text-[#111827] transition-colors disabled:opacity-60 cursor-pointer"
+              className="w-full bg-[var(--ink)] text-[var(--paper)] rounded-full py-3.5 text-sm font-medium hover:bg-[#dfe344] hover:text-[var(--on-accent)] transition-colors disabled:opacity-60 cursor-pointer"
             >
               {submitting ? 'Sending application…' : 'Submit application'}
             </button>
-            <p className="text-[11px] text-[#9ca3af] text-center">
+            <p className="text-[11px] text-[var(--muted-2)] text-center">
               We respond within 1 business day. No spam, ever.
             </p>
           </form>
@@ -299,7 +299,7 @@ export default function B2BPage() {
               <div key={step} className="border-t-2 border-[#dfe344] pt-5">
                 <div className="font-display text-5xl font-light text-[#dfe344] leading-none mb-4">{step}</div>
                 <h3 className="font-display text-xl font-light mb-2">{title}</h3>
-                <p className="text-sm text-[#374151] leading-relaxed">{body}</p>
+                <p className="text-sm text-[var(--ink-2)] leading-relaxed">{body}</p>
               </div>
             ))}
           </div>
@@ -308,14 +308,14 @@ export default function B2BPage() {
 
       {/* ── CTA band ── */}
       <section className="px-4 sm:px-8 lg:px-12 py-12">
-        <div className="mx-auto max-w-7xl bg-[#111827] text-white rounded-[28px] p-8 sm:p-12 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+        <div className="panel-dark mx-auto max-w-7xl bg-[var(--ink)] text-[var(--paper)] rounded-[28px] p-8 sm:p-12 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
           <div className="lg:col-span-8">
             <h3 className="font-display font-light text-3xl sm:text-4xl leading-tight">
               Need pricing fast? <span className="font-display-italic text-[#dfe344]">Call us.</span>
             </h3>
           </div>
           <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-3 lg:items-end">
-            <a href={siteConfig.phone.tel} className="inline-flex items-center justify-center gap-2 bg-white text-[#111827] hover:bg-[#dfe344] rounded-full px-5 py-3 text-sm font-medium transition-colors">
+            <a href={siteConfig.phone.tel} className="inline-flex items-center justify-center gap-2 bg-[var(--surface)] text-[var(--ink)] hover:bg-[#dfe344] rounded-full px-5 py-3 text-sm font-medium transition-colors">
               {siteConfig.phone.display}
             </a>
             <Link href="/b2b/quote" className="inline-flex items-center justify-center gap-2 border border-white/30 hover:bg-white/10 rounded-full px-5 py-3 text-sm transition-colors">

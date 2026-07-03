@@ -53,30 +53,30 @@ export default function ProfilePage() {
   }
 
   function inputClass(hasError = false) {
-    return `w-full px-4 py-3 rounded-[12px] border bg-white text-sm outline-none transition-colors ${hasError ? 'border-red-400' : 'border-black/15 focus:border-[#111827]'}`
+    return `w-full px-4 py-3 rounded-[12px] border bg-[var(--surface)] text-sm outline-none transition-colors ${hasError ? 'border-red-400' : 'border-[var(--line-4)] focus:border-[var(--ink)]'}`
   }
 
   return (
     <div>
       <h2 className="font-display font-light text-3xl mb-6">Profile</h2>
 
-      <div className="bg-white rounded-[20px] p-6 sm:p-8">
+      <div className="bg-[var(--surface)] rounded-[20px] p-6 sm:p-8">
         <form onSubmit={handleSave} className="space-y-5">
           {/* Email (read-only) */}
           <div>
-            <label className="block text-xs font-medium text-[#374151] mb-1.5 uppercase tracking-[0.12em]">Email address</label>
+            <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">Email address</label>
             <input
               type="email"
               value={customer?.email ?? ''}
               disabled
-              className="w-full px-4 py-3 rounded-[12px] border border-black/10 bg-[#F5F4F0] text-sm text-[#6B6B66] cursor-not-allowed"
+              className="w-full px-4 py-3 rounded-[12px] border border-[var(--line-3)] bg-[var(--paper)] text-sm text-[var(--muted)] cursor-not-allowed"
             />
-            <p className="text-[11px] text-[#9ca3af] mt-1">Email cannot be changed. Contact us if you need to update it.</p>
+            <p className="text-[11px] text-[var(--muted-2)] mt-1">Email cannot be changed. Contact us if you need to update it.</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-[#374151] mb-1.5 uppercase tracking-[0.12em]">First name</label>
+              <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">First name</label>
               <input
                 type="text"
                 autoComplete="given-name"
@@ -86,7 +86,7 @@ export default function ProfilePage() {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#374151] mb-1.5 uppercase tracking-[0.12em]">Last name</label>
+              <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">Last name</label>
               <input
                 type="text"
                 autoComplete="family-name"
@@ -98,8 +98,8 @@ export default function ProfilePage() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[#374151] mb-1.5 uppercase tracking-[0.12em]">
-              Phone <span className="normal-case text-[#9ca3af]">(optional)</span>
+            <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">
+              Phone <span className="normal-case text-[var(--muted-2)]">(optional)</span>
             </label>
             <input
               type="tel"
@@ -119,7 +119,7 @@ export default function ProfilePage() {
             <button
               type="submit"
               disabled={saving}
-              className="bg-[#111827] text-white rounded-full px-6 py-3 text-sm font-medium hover:bg-[#41e0f5] hover:text-[#111827] transition-colors disabled:opacity-60 cursor-pointer"
+              className="bg-[var(--ink)] text-[var(--paper)] rounded-full px-6 py-3 text-sm font-medium hover:bg-[#41e0f5] hover:text-[var(--on-accent)] transition-colors disabled:opacity-60 cursor-pointer"
             >
               {saving ? 'Saving…' : 'Save changes'}
             </button>

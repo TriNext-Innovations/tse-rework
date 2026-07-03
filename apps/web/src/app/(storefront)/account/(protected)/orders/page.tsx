@@ -50,22 +50,22 @@ export default function OrdersPage() {
 
       {loading && (
         <div className="flex items-center justify-center py-20">
-          <div className="w-6 h-6 border-2 border-black/20 border-t-[#111827] rounded-full animate-spin" />
+          <div className="w-6 h-6 border-2 border-[var(--line-5)] border-t-[var(--ink)] rounded-full animate-spin" />
         </div>
       )}
 
       {!loading && orders.length === 0 && (
-        <div className="bg-white rounded-[20px] p-10 text-center">
+        <div className="bg-[var(--surface)] rounded-[20px] p-10 text-center">
           <div className="text-4xl mb-4">📦</div>
           <h3 className="font-display text-xl font-light mb-2">No orders yet</h3>
-          <p className="text-sm text-[#6B6B66] max-w-xs mx-auto mb-6 leading-relaxed">
+          <p className="text-sm text-[var(--muted)] max-w-xs mx-auto mb-6 leading-relaxed">
             Orders placed via WhatsApp or PayFast will appear here once your account is linked.
             For previous orders, call{' '}
             <a href={siteConfig.phone.tel} className="underline">{siteConfig.phone.display}</a>.
           </p>
           <Link
             href="/products"
-            className="inline-flex items-center gap-2 bg-[#111827] text-white rounded-full px-6 py-3 text-sm font-medium hover:bg-[#41e0f5] hover:text-[#111827] transition-colors"
+            className="inline-flex items-center gap-2 bg-[var(--ink)] text-[var(--paper)] rounded-full px-6 py-3 text-sm font-medium hover:bg-[#41e0f5] hover:text-[var(--on-accent)] transition-colors"
           >
             Shop cartridges
           </Link>
@@ -75,17 +75,17 @@ export default function OrdersPage() {
       {!loading && orders.length > 0 && (
         <div className="space-y-4">
           {orders.map((order) => {
-            const badge = STATUS_BADGE[order.status] ?? { label: order.status, class: 'bg-black/5 text-[#374151] border-black/10' }
+            const badge = STATUS_BADGE[order.status] ?? { label: order.status, class: 'bg-[var(--hover-1)] text-[var(--ink-2)] border-[var(--line-3)]' }
             const date = new Date(order.created_at).toLocaleDateString('en-ZA', {
               day: 'numeric', month: 'long', year: 'numeric',
             })
             const total = order.total.toFixed(0)
             return (
-              <div key={order.id} className="bg-white rounded-[20px] p-6">
+              <div key={order.id} className="bg-[var(--surface)] rounded-[20px] p-6">
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div>
                     <div className="font-medium text-sm">Order #{order.display_id}</div>
-                    <div className="text-xs text-[#6B6B66] mt-0.5">{date}</div>
+                    <div className="text-xs text-[var(--muted)] mt-0.5">{date}</div>
                   </div>
                   <span className={`text-[10px] font-medium uppercase tracking-[0.15em] px-2.5 py-1 rounded-full border ${badge.class}`}>
                     {badge.label}
@@ -94,13 +94,13 @@ export default function OrdersPage() {
                 <ul className="space-y-1.5 mb-4">
                   {(order.items ?? []).map((item) => (
                     <li key={item.id} className="flex justify-between text-sm">
-                      <span className="text-[#374151]">{item.quantity}× {item.title}</span>
-                      <span className="text-[#6B6B66]">R{(item.unit_price * item.quantity).toFixed(0)}</span>
+                      <span className="text-[var(--ink-2)]">{item.quantity}× {item.title}</span>
+                      <span className="text-[var(--muted)]">R{(item.unit_price * item.quantity).toFixed(0)}</span>
                     </li>
                   ))}
                 </ul>
-                <div className="border-t border-black/8 pt-4 flex justify-between items-center">
-                  <span className="text-sm text-[#6B6B66]">Total</span>
+                <div className="border-t border-[var(--line-2)] pt-4 flex justify-between items-center">
+                  <span className="text-sm text-[var(--muted)]">Total</span>
                   <span className="font-display text-xl">R{total}</span>
                 </div>
               </div>

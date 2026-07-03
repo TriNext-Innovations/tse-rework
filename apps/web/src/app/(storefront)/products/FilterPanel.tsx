@@ -70,8 +70,8 @@ export function FilterPanel({ categories, onNavigate }: { categories: Category[]
 
   const pill =
     'text-[11px] font-medium px-3 py-1.5 rounded-full border transition-colors duration-200 cursor-pointer text-left'
-  const active = 'bg-[#111827] text-white border-[#111827]'
-  const inactive = 'border-black/15 text-[#374151] hover:border-black/40 hover:text-[#111827]'
+  const active = 'bg-[var(--ink)] text-[var(--paper)] border-[var(--ink)]'
+  const inactive = 'border-[var(--line-4)] text-[var(--ink-2)] hover:border-[var(--line-7)] hover:text-[var(--ink)]'
 
   return (
     <div className={`transition-opacity duration-200 ${pending ? 'opacity-50 pointer-events-none' : ''}`}>
@@ -84,7 +84,7 @@ export function FilterPanel({ categories, onNavigate }: { categories: Category[]
         </button>
       </div>
 
-      <div className="text-[9px] uppercase tracking-[0.22em] text-[#6B6B66] mb-2 px-1">Type</div>
+      <div className="text-[9px] uppercase tracking-[0.22em] text-[var(--muted)] mb-2 px-1">Type</div>
       <div className="flex flex-wrap gap-1.5 mb-6">
         {TYPES.map((t) => (
           <button
@@ -97,7 +97,7 @@ export function FilterPanel({ categories, onNavigate }: { categories: Category[]
         ))}
       </div>
 
-      <div className="text-[9px] uppercase tracking-[0.22em] text-[#6B6B66] mb-2 px-1">Brand</div>
+      <div className="text-[9px] uppercase tracking-[0.22em] text-[var(--muted)] mb-2 px-1">Brand</div>
       <div className="flex flex-col gap-1">
         {brands.map((name) => (
           <button

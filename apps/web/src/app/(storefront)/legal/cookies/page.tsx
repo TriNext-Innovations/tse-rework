@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function CookiesPage() {
   return (
-    <div className="min-h-screen bg-[#F5F4F0] text-[#111827]">
+    <div className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
       <style>{`
         .font-display { font-family: var(--font-fraunces), Georgia, serif; font-optical-sizing: auto; }
         .font-display-italic { font-family: var(--font-fraunces), Georgia, serif; font-style: italic; }
@@ -29,16 +29,16 @@ export default function CookiesPage() {
 
       <div className="mx-auto max-w-3xl px-4 sm:px-8 pt-28 pb-20">
         <div className="mb-10">
-          <div className="text-[11px] uppercase tracking-[0.22em] text-[#6B6B66] mb-3">Legal</div>
+          <div className="text-[11px] uppercase tracking-[0.22em] text-[var(--muted)] mb-3">Legal</div>
           <h1 className="font-display font-light text-4xl sm:text-5xl tracking-tight leading-[0.95]">
             Cookie <span className="font-display-italic">Policy</span>
           </h1>
-          <p className="mt-4 text-sm text-[#6B6B66]">
+          <p className="mt-4 text-sm text-[var(--muted)]">
             Last updated: {new Date().toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' })}
           </p>
         </div>
 
-        <div className="prose text-[#374151] text-[15px]">
+        <div className="prose text-[var(--ink-2)] text-[15px]">
           <p>
             This policy explains how <strong>tse-cartridges.co.za</strong> uses cookies and similar technologies,
             and how you can control them.
@@ -101,8 +101,8 @@ export default function CookiesPage() {
           </p>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-black/10 text-sm text-[#6B6B66]">
-          <Link href="/" className="hover:text-[#111827] transition-colors">← Back to store</Link>
+        <div className="mt-12 pt-8 border-t border-[var(--line-3)] text-sm text-[var(--muted)]">
+          <Link href="/" className="hover:text-[var(--ink)] transition-colors">← Back to store</Link>
         </div>
       </div>
     </div>

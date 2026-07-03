@@ -100,7 +100,7 @@ export default function AddressesPage() {
   const addresses: CustomerAddress[] = customer?.addresses ?? []
 
   function inputClass(err?: string) {
-    return `w-full px-4 py-3 rounded-[12px] border bg-white text-sm outline-none transition-colors ${err ? 'border-red-400' : 'border-black/15 focus:border-[#111827]'}`
+    return `w-full px-4 py-3 rounded-[12px] border bg-[var(--surface)] text-sm outline-none transition-colors ${err ? 'border-red-400' : 'border-[var(--line-4)] focus:border-[var(--ink)]'}`
   }
 
   return (
@@ -110,7 +110,7 @@ export default function AddressesPage() {
         {!showForm && (
           <button
             onClick={() => { setShowForm(true); setApiError(''); setErrors({}) }}
-            className="inline-flex items-center gap-2 bg-[#111827] text-white rounded-full px-4 py-2 text-sm font-medium hover:bg-[#41e0f5] hover:text-[#111827] transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 bg-[var(--ink)] text-[var(--paper)] rounded-full px-4 py-2 text-sm font-medium hover:bg-[#41e0f5] hover:text-[var(--on-accent)] transition-colors cursor-pointer"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
             Add address
@@ -120,13 +120,13 @@ export default function AddressesPage() {
 
       {/* Address list */}
       {addresses.length === 0 && !showForm && (
-        <div className="bg-white rounded-[20px] p-8 text-center">
+        <div className="bg-[var(--surface)] rounded-[20px] p-8 text-center">
           <div className="text-3xl mb-3">📍</div>
           <h3 className="font-display text-lg font-light mb-2">No saved addresses</h3>
-          <p className="text-sm text-[#6B6B66] mb-5">Add a delivery address to speed up checkout next time.</p>
+          <p className="text-sm text-[var(--muted)] mb-5">Add a delivery address to speed up checkout next time.</p>
           <button
             onClick={() => setShowForm(true)}
-            className="inline-flex items-center gap-2 bg-[#111827] text-white rounded-full px-5 py-2.5 text-sm font-medium hover:bg-[#41e0f5] hover:text-[#111827] transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 bg-[var(--ink)] text-[var(--paper)] rounded-full px-5 py-2.5 text-sm font-medium hover:bg-[#41e0f5] hover:text-[var(--on-accent)] transition-colors cursor-pointer"
           >
             Add address
           </button>
@@ -136,21 +136,21 @@ export default function AddressesPage() {
       {addresses.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           {addresses.map((addr) => (
-            <div key={addr.id} className="bg-white rounded-[20px] p-5 relative">
+            <div key={addr.id} className="bg-[var(--surface)] rounded-[20px] p-5 relative">
               <div className="text-sm space-y-0.5">
                 {(addr.first_name || addr.last_name) && (
                   <div className="font-medium">{[addr.first_name, addr.last_name].filter(Boolean).join(' ')}</div>
                 )}
-                <div className="text-[#374151]">{addr.address_1}</div>
-                {addr.address_2 && <div className="text-[#374151]">{addr.address_2}</div>}
-                <div className="text-[#374151]">{addr.city}</div>
-                {addr.province && <div className="text-[#6B6B66]">{addr.province} {addr.postal_code}</div>}
-                {addr.phone && <div className="text-[#6B6B66] text-xs mt-1">{addr.phone}</div>}
+                <div className="text-[var(--ink-2)]">{addr.address_1}</div>
+                {addr.address_2 && <div className="text-[var(--ink-2)]">{addr.address_2}</div>}
+                <div className="text-[var(--ink-2)]">{addr.city}</div>
+                {addr.province && <div className="text-[var(--muted)]">{addr.province} {addr.postal_code}</div>}
+                {addr.phone && <div className="text-[var(--muted)] text-xs mt-1">{addr.phone}</div>}
               </div>
               <button
                 onClick={() => handleDelete(addr.id)}
                 disabled={deleting === addr.id}
-                className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-full hover:bg-red-50 hover:text-red-500 transition-colors text-[#9ca3af] cursor-pointer disabled:opacity-40"
+                className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-full hover:bg-red-50 hover:text-red-500 transition-colors text-[var(--muted-2)] cursor-pointer disabled:opacity-40"
                 aria-label="Delete address"
               >
                 {deleting === addr.id ? (
@@ -166,12 +166,12 @@ export default function AddressesPage() {
 
       {/* Add address form */}
       {showForm && (
-        <div className="bg-white rounded-[20px] p-6 sm:p-8">
+        <div className="bg-[var(--surface)] rounded-[20px] p-6 sm:p-8">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-display text-xl font-light">New address</h3>
             <button
               onClick={() => { setShowForm(false); setForm(EMPTY); setErrors({}) }}
-              className="text-[#6B6B66] hover:text-[#111827] transition-colors cursor-pointer"
+              className="text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
@@ -180,33 +180,33 @@ export default function AddressesPage() {
           <form onSubmit={handleAdd} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-[#374151] mb-1.5 uppercase tracking-[0.12em]">First name</label>
+                <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">First name</label>
                 <input type="text" value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} className={inputClass()} placeholder={customer?.first_name ?? ''} />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#374151] mb-1.5 uppercase tracking-[0.12em]">Last name</label>
+                <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">Last name</label>
                 <input type="text" value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} className={inputClass()} placeholder={customer?.last_name ?? ''} />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#374151] mb-1.5 uppercase tracking-[0.12em]">Street address</label>
+              <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">Street address</label>
               <input type="text" autoComplete="address-line1" placeholder="12 Acacia Street" value={form.address_1} onChange={(e) => setForm({ ...form, address_1: e.target.value })} className={inputClass(errors.address_1)} />
               {errors.address_1 && <p className="text-xs text-red-500 mt-1">{errors.address_1}</p>}
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#374151] mb-1.5 uppercase tracking-[0.12em]">
-                Address line 2 <span className="normal-case text-[#9ca3af]">(optional)</span>
+              <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">
+                Address line 2 <span className="normal-case text-[var(--muted-2)]">(optional)</span>
               </label>
               <input type="text" autoComplete="address-line2" placeholder="Unit 4, Complex name" value={form.address_2} onChange={(e) => setForm({ ...form, address_2: e.target.value })} className={inputClass()} />
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-medium text-[#374151] mb-1.5 uppercase tracking-[0.12em]">City</label>
+                <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">City</label>
                 <input type="text" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className={inputClass(errors.city)} placeholder="Johannesburg" />
                 {errors.city && <p className="text-xs text-red-500 mt-1">{errors.city}</p>}
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#374151] mb-1.5 uppercase tracking-[0.12em]">Province</label>
+                <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">Province</label>
                 <select value={form.province} onChange={(e) => setForm({ ...form, province: e.target.value })} className={inputClass(errors.province)}>
                   <option value="">Select</option>
                   {SA_PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -214,14 +214,14 @@ export default function AddressesPage() {
                 {errors.province && <p className="text-xs text-red-500 mt-1">{errors.province}</p>}
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#374151] mb-1.5 uppercase tracking-[0.12em]">Postal code</label>
+                <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">Postal code</label>
                 <input type="text" maxLength={4} placeholder="2194" value={form.postal_code} onChange={(e) => setForm({ ...form, postal_code: e.target.value })} className={inputClass(errors.postal_code)} />
                 {errors.postal_code && <p className="text-xs text-red-500 mt-1">{errors.postal_code}</p>}
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#374151] mb-1.5 uppercase tracking-[0.12em]">
-                Phone <span className="normal-case text-[#9ca3af]">(optional)</span>
+              <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">
+                Phone <span className="normal-case text-[var(--muted-2)]">(optional)</span>
               </label>
               <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className={inputClass()} placeholder="082 123 4567" />
             </div>
@@ -234,14 +234,14 @@ export default function AddressesPage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="bg-[#111827] text-white rounded-full px-6 py-3 text-sm font-medium hover:bg-[#41e0f5] hover:text-[#111827] transition-colors disabled:opacity-60 cursor-pointer"
+                className="bg-[var(--ink)] text-[var(--paper)] rounded-full px-6 py-3 text-sm font-medium hover:bg-[#41e0f5] hover:text-[var(--on-accent)] transition-colors disabled:opacity-60 cursor-pointer"
               >
                 {saving ? 'Saving…' : 'Save address'}
               </button>
               <button
                 type="button"
                 onClick={() => { setShowForm(false); setForm(EMPTY); setErrors({}) }}
-                className="px-6 py-3 rounded-full border border-black/15 text-sm text-[#374151] hover:border-black/40 transition-colors cursor-pointer"
+                className="px-6 py-3 rounded-full border border-[var(--line-4)] text-sm text-[var(--ink-2)] hover:border-[var(--line-7)] transition-colors cursor-pointer"
               >
                 Cancel
               </button>

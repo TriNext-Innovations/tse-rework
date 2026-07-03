@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { siteConfig } from '@/lib/site-config'
 import { Logo } from './Logo'
 import { CartButton } from '@/components/CartButton'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { useAuth } from '@/contexts/AuthContext'
 import { SearchModal } from '@/components/SearchModal'
 import { TYPE_CATEGORY_NAMES } from '@/lib/taxonomy'
@@ -97,11 +98,11 @@ const { customer, loading: authLoading } = useAuth()
     <>
       <style>{`
         .navbar-glass {
-          background: rgba(255,255,255,0.19);
+          background: var(--nav-glass-bg, rgba(255,255,255,0.19));
           backdrop-filter: blur(7px);
           -webkit-backdrop-filter: blur(7px);
           border-radius: 9999px;
-          border: 1px solid rgba(255,255,255,0.3);
+          border: 1px solid var(--nav-glass-border, rgba(255,255,255,0.3));
           box-shadow: 0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -1px 0 rgba(255,255,255,0.1);
           overflow: visible;
           /* Intentionally no position here. The Tailwind "fixed" utility on the
@@ -125,7 +126,7 @@ const { customer, loading: authLoading } = useAuth()
           padding: 6px 12px;
           font-size: 0.875rem;
           font-weight: 500;
-          color: var(--ink-2, #374151);
+          color: var(--ink-2, var(--ink-2));
           transition: color 0.2s;
           border-radius: 9999px;
         }
@@ -140,7 +141,7 @@ const { customer, loading: authLoading } = useAuth()
           transition: transform 0.35s cubic-bezier(.22,1,.36,1);
         }
         .nav-link:hover::after { transform: scaleX(1); }
-        .nav-link:hover { color: #111827; }
+        .nav-link:hover { color: var(--ink); }
 
         /* Mega-menu panel */
         .mega-panel {
@@ -148,9 +149,9 @@ const { customer, loading: authLoading } = useAuth()
           top: calc(100% + 12px);
           left: 50%;
           transform: translateX(-50%);
-          background: #fff;
+          background: var(--surface);
           border-radius: 20px;
-          box-shadow: 0 20px 60px -10px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.06);
+          box-shadow: 0 20px 60px -10px rgba(0,0,0,0.35), 0 0 0 1px var(--line-2);
           padding: 20px;
           width: 420px;
           z-index: 50;
@@ -172,7 +173,7 @@ const { customer, loading: authLoading } = useAuth()
         .mobile-drawer {
           position: fixed; top: 0; right: 0; bottom: 0;
           width: min(320px, 88vw);
-          background: #F5F4F0;
+          background: var(--paper);
           z-index: 61;
           display: flex;
           flex-direction: column;
@@ -189,7 +190,7 @@ const { customer, loading: authLoading } = useAuth()
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 pl-1 flex-shrink-0">
           <Logo width={80} variant="color" linked={false} />
-          <span className="hidden lg:inline text-[10px] uppercase tracking-[0.18em] text-[#6B6B66] ml-1">Est. 1987</span>
+          <span className="hidden lg:inline text-[10px] uppercase tracking-[0.18em] text-[var(--muted)] ml-1">Est. 1987</span>
         </Link>
 
         {/* Desktop nav */}
@@ -220,7 +221,7 @@ const { customer, loading: authLoading } = useAuth()
 
             {shopOpen && (
               <div className="mega-panel" role="menu" onMouseEnter={openShop} onMouseLeave={scheduleClose}>
-                <div className="text-[9px] uppercase tracking-[0.2em] text-[#9ca3af] mb-3 px-1">Shop by brand</div>
+                <div className="text-[9px] uppercase tracking-[0.2em] text-[var(--muted-2)] mb-3 px-1">Shop by brand</div>
                 <div className="grid grid-cols-3 gap-1">
                   {brands.map((b) => (
                     <Link
@@ -228,17 +229,17 @@ const { customer, loading: authLoading } = useAuth()
                       href={brandHref(b)}
                       role="menuitem"
                       onClick={() => setShopOpen(false)}
-                      className="text-[13px] px-3 py-2 rounded-xl hover:bg-[#F5F4F0] hover:text-[#41e0f5] transition-colors font-medium text-[#374151]"
+                      className="text-[13px] px-3 py-2 rounded-xl hover:bg-[var(--paper)] hover:text-[#41e0f5] transition-colors font-medium text-[var(--ink-2)]"
                     >
                       {b.name}
                     </Link>
                   ))}
                 </div>
-                <div className="mt-3 pt-3 border-t border-black/8">
+                <div className="mt-3 pt-3 border-t border-[var(--line-2)]">
                   <Link
                     href="/products"
                     onClick={() => setShopOpen(false)}
-                    className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-[#F5F4F0] hover:bg-[#111827] hover:text-white transition-colors text-[13px] font-medium group"
+                    className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-[var(--paper)] hover:bg-[var(--ink)] hover:text-[var(--paper)] transition-colors text-[13px] font-medium group"
                   >
                     <span>View all cartridges</span>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -257,10 +258,12 @@ const { customer, loading: authLoading } = useAuth()
         <div className="flex items-center gap-1.5 flex-shrink-0">
           {right}
 
+          <div className="hidden sm:block"><ThemeToggle /></div>
+
           <button
             aria-label="Search products"
             onClick={() => setSearchOpen(true)}
-            className="hidden sm:inline-flex items-center justify-center w-9 h-9 rounded-full hover:bg-black/8 transition-colors"
+            className="hidden sm:inline-flex items-center justify-center w-9 h-9 rounded-full hover:bg-[var(--hover-2)] transition-colors"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
@@ -271,7 +274,7 @@ const { customer, loading: authLoading } = useAuth()
             <Link
               href={customer ? '/account/orders' : '/account/login'}
               aria-label={customer ? 'My account' : 'Sign in'}
-              className="hidden sm:inline-flex items-center justify-center w-9 h-9 rounded-full hover:bg-black/8 transition-colors relative"
+              className="hidden sm:inline-flex items-center justify-center w-9 h-9 rounded-full hover:bg-[var(--hover-2)] transition-colors relative"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -290,7 +293,7 @@ const { customer, loading: authLoading } = useAuth()
             aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={mobileOpen}
             onClick={() => setMobileOpen(true)}
-            className="md:hidden inline-flex items-center justify-center w-9 h-9 rounded-full hover:bg-black/8 transition-colors"
+            className="md:hidden inline-flex items-center justify-center w-9 h-9 rounded-full hover:bg-[var(--hover-2)] transition-colors"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="3" y1="6" x2="21" y2="6" />
@@ -311,12 +314,12 @@ const { customer, loading: authLoading } = useAuth()
           />
           <div className="mobile-drawer" role="dialog" aria-modal="true" aria-label="Navigation menu">
             {/* Drawer header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-black/8">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--line-2)]">
               <Logo width={72} variant="color" linked={false} />
               <button
                 onClick={() => setMobileOpen(false)}
                 aria-label="Close menu"
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-black/8 transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--hover-2)] transition-colors"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M18 6 6 18M6 6l12 12" />
@@ -328,7 +331,7 @@ const { customer, loading: authLoading } = useAuth()
             <nav className="flex-1 overflow-y-auto p-4 space-y-0.5">
               <button
                 onClick={() => { setMobileOpen(false); setSearchOpen(true) }}
-                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white text-sm font-medium transition-colors text-[#374151] cursor-pointer"
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[var(--surface)] text-sm font-medium transition-colors text-[var(--ink-2)] cursor-pointer"
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                 Search cartridges
@@ -336,7 +339,7 @@ const { customer, loading: authLoading } = useAuth()
               <Link
                 href="/products"
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white text-sm font-semibold transition-colors"
+                className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[var(--surface)] text-sm font-semibold transition-colors"
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
                 All cartridges
@@ -344,7 +347,7 @@ const { customer, loading: authLoading } = useAuth()
               <a
                 href="/#finder"
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white text-sm font-medium transition-colors text-[#374151]"
+                className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[var(--surface)] text-sm font-medium transition-colors text-[var(--ink-2)]"
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                 Find by printer
@@ -352,7 +355,7 @@ const { customer, loading: authLoading } = useAuth()
               <a
                 href="/#delivery"
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white text-sm font-medium transition-colors text-[#374151]"
+                className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[var(--surface)] text-sm font-medium transition-colors text-[var(--ink-2)]"
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
                 Delivery info
@@ -360,7 +363,7 @@ const { customer, loading: authLoading } = useAuth()
               <Link
                 href="/b2b"
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-white text-sm font-medium transition-colors text-[#374151]"
+                className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[var(--surface)] text-sm font-medium transition-colors text-[var(--ink-2)]"
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                 B2B pricing
@@ -370,7 +373,7 @@ const { customer, loading: authLoading } = useAuth()
               <div className="pt-2">
                 <button
                   onClick={() => setBrandsExpanded((v) => !v)}
-                  className="w-full flex items-center justify-between px-3 py-3 rounded-xl hover:bg-white text-sm font-medium transition-colors text-[#374151]"
+                  className="w-full flex items-center justify-between px-3 py-3 rounded-xl hover:bg-[var(--surface)] text-sm font-medium transition-colors text-[var(--ink-2)]"
                   aria-expanded={brandsExpanded}
                 >
                   <span className="flex items-center gap-3">
@@ -392,7 +395,7 @@ const { customer, loading: authLoading } = useAuth()
                         key={b.name}
                         href={brandHref(b)}
                         onClick={() => setMobileOpen(false)}
-                        className="px-3 py-2.5 rounded-lg text-[13px] text-[#374151] hover:bg-white hover:text-[#41e0f5] transition-colors font-medium"
+                        className="px-3 py-2.5 rounded-lg text-[13px] text-[var(--ink-2)] hover:bg-[var(--surface)] hover:text-[#41e0f5] transition-colors font-medium"
                       >
                         {b.name}
                       </Link>
@@ -403,30 +406,34 @@ const { customer, loading: authLoading } = useAuth()
             </nav>
 
             {/* Drawer footer — contact */}
-            <div className="px-5 py-5 border-t border-black/8 space-y-2.5">
+            <div className="px-5 py-5 border-t border-[var(--line-2)] space-y-2.5">
               <Link
                 href={customer ? '/account/orders' : '/account/login'}
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-2.5 text-sm font-medium text-[#111827] hover:text-[#41e0f5] transition-colors"
+                className="flex items-center gap-2.5 text-sm font-medium text-[var(--ink)] hover:text-[#41e0f5] transition-colors"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 {customer ? `My account — ${customer.first_name ?? customer.email}` : 'Sign in'}
               </Link>
               <a
                 href={siteConfig.phone.tel}
-                className="flex items-center gap-2.5 text-sm text-[#6B6B66] hover:text-[#111827] transition-colors"
+                className="flex items-center gap-2.5 text-sm text-[var(--muted)] hover:text-[var(--ink)] transition-colors"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                 {siteConfig.phone.display}
               </a>
               <a
                 href={siteConfig.email.mailto}
-                className="flex items-center gap-2.5 text-sm text-[#6B6B66] hover:text-[#111827] transition-colors"
+                className="flex items-center gap-2.5 text-sm text-[var(--muted)] hover:text-[var(--ink)] transition-colors"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
                 {siteConfig.email.sales}
               </a>
-              <p className="text-[11px] text-[#9ca3af] pt-1">Mon–Fri · Kya Sands, JHB</p>
+              <p className="text-[11px] text-[var(--muted-2)] pt-1">Mon–Fri · Kya Sands, JHB</p>
+              <div className="flex items-center justify-between pt-3 mt-1 border-t border-[var(--line-2)]">
+                <span className="text-sm text-[var(--muted)]">Appearance</span>
+                <ThemeToggle />
+              </div>
             </div>
           </div>
         </>

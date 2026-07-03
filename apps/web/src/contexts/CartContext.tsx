@@ -195,24 +195,24 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       >
         <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
         <div
-          className={`absolute right-0 top-0 bottom-0 w-full max-w-sm bg-[#F5F4F0] shadow-2xl flex flex-col transition-transform duration-300 ease-[cubic-bezier(.22,1,.36,1)] ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+          className={`absolute right-0 top-0 bottom-0 w-full max-w-sm bg-[var(--paper)] shadow-2xl flex flex-col transition-transform duration-300 ease-[cubic-bezier(.22,1,.36,1)] ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
           role="dialog"
           aria-modal="true"
           aria-label="Shopping cart"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-5 border-b border-black/10">
+          <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--line-3)]">
             <div>
               <h2 className="font-light text-2xl tracking-tight" style={{ fontFamily: 'var(--font-fraunces, Georgia, serif)' }}>
                 Cart
               </h2>
-              <p className="text-xs text-[#6B6B66] mt-0.5">
+              <p className="text-xs text-[var(--muted)] mt-0.5">
                 {count} {count === 1 ? 'item' : 'items'}
               </p>
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/5 transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[var(--hover-1)] transition-colors cursor-pointer"
               aria-label="Close cart"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -230,7 +230,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                   <p className="text-lg font-light" style={{ fontFamily: 'var(--font-fraunces, Georgia, serif)' }}>
                     Your cart is empty
                   </p>
-                  <p className="text-sm text-[#6B6B66] mt-1">Add some cartridges to get started</p>
+                  <p className="text-sm text-[var(--muted)] mt-1">Add some cartridges to get started</p>
                 </div>
                 <button
                   onClick={() => setIsOpen(false)}
@@ -242,7 +242,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             ) : (
               <ul className="space-y-1">
                 {items.map((item) => (
-                  <li key={item.id} className="flex items-start gap-4 py-4 border-b border-black/8 last:border-0">
+                  <li key={item.id} className="flex items-start gap-4 py-4 border-b border-[var(--line-2)] last:border-0">
                     <div className="w-12 h-16 rounded-[6px] bg-gradient-to-br from-[#0A0A0A] to-[#2A2A2A] flex-shrink-0 relative overflow-hidden">
                       {item.thumbnail ? (
                         <Image src={item.thumbnail} alt={item.title} width={48} height={64} className="w-full h-full object-contain p-1" />
@@ -255,18 +255,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium leading-tight line-clamp-2">{item.title}</p>
-                      <p className="text-[10px] text-[#6B6B66] mt-0.5">SKU {item.sku}</p>
+                      <p className="text-[10px] text-[var(--muted)] mt-0.5">SKU {item.sku}</p>
                       <div className="flex items-center gap-2 mt-2">
-                        <div className="flex items-center border border-black/15 rounded-full overflow-hidden">
+                        <div className="flex items-center border border-[var(--line-4)] rounded-full overflow-hidden">
                           <button
                             onClick={() => updateQty(item.id, item.qty - 1)}
-                            className="w-6 h-6 flex items-center justify-center text-[#111827] hover:bg-black/5 transition-colors text-sm"
+                            className="w-6 h-6 flex items-center justify-center text-[var(--ink)] hover:bg-[var(--hover-1)] transition-colors text-sm"
                             aria-label="Decrease quantity"
                           >−</button>
                           <span className="w-6 text-center text-xs font-medium tabular-nums">{item.qty}</span>
                           <button
                             onClick={() => updateQty(item.id, item.qty + 1)}
-                            className="w-6 h-6 flex items-center justify-center text-[#111827] hover:bg-black/5 transition-colors text-sm"
+                            className="w-6 h-6 flex items-center justify-center text-[var(--ink)] hover:bg-[var(--hover-1)] transition-colors text-sm"
                             aria-label="Increase quantity"
                           >+</button>
                         </div>
@@ -277,7 +277,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                     </div>
                     <button
                       onClick={() => removeItem(item.id)}
-                      className="w-6 h-6 rounded-full flex items-center justify-center hover:bg-black/10 transition-colors flex-shrink-0 text-[#6B6B66] cursor-pointer mt-0.5"
+                      className="w-6 h-6 rounded-full flex items-center justify-center hover:bg-[var(--hover-3)] transition-colors flex-shrink-0 text-[var(--muted)] cursor-pointer mt-0.5"
                       aria-label="Remove item"
                     >
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -292,9 +292,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
           {/* Footer */}
           {items.length > 0 && (
-            <div className="px-6 py-5 border-t border-black/10 space-y-3">
+            <div className="px-6 py-5 border-t border-[var(--line-3)] space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-[#6B6B66]">Subtotal</span>
+                <span className="text-sm text-[var(--muted)]">Subtotal</span>
                 <span className="text-xl font-light" style={{ fontFamily: 'var(--font-fraunces, Georgia, serif)' }}>
                   R{total.toFixed(0)}
                 </span>
@@ -302,18 +302,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               <Link
                 href="/checkout"
                 onClick={() => setIsOpen(false)}
-                className="w-full block text-center bg-[#111827] text-white rounded-full py-3.5 text-sm font-medium hover:bg-[#41e0f5] hover:text-[#111827] transition-colors duration-300 cursor-pointer"
+                className="w-full block text-center bg-[var(--ink)] text-[var(--paper)] rounded-full py-3.5 text-sm font-medium hover:bg-[#41e0f5] hover:text-[var(--on-accent)] transition-colors duration-300 cursor-pointer"
               >
                 Checkout — R{total.toFixed(0)}
               </Link>
               <Link
                 href="/cart"
                 onClick={() => setIsOpen(false)}
-                className="w-full block text-center text-sm text-[#6B6B66] hover:text-[#111827] transition-colors"
+                className="w-full block text-center text-sm text-[var(--muted)] hover:text-[var(--ink)] transition-colors"
               >
                 View Cart
               </Link>
-              <p className="text-[10px] text-center text-[#6B6B66]">COD available · JHB &amp; PTA next day</p>
+              <p className="text-[10px] text-center text-[var(--muted)]">COD available · JHB &amp; PTA next day</p>
             </div>
           )}
         </div>
