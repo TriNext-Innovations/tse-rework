@@ -183,7 +183,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
 
       <Navbar categories={allCategories} />
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 pt-28 pb-10">
+      <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 pt-32 pb-10">
         {/* Page heading */}
         <div className="mb-8">
           <h1 className="font-display font-light text-4xl sm:text-5xl tracking-tight leading-[0.95]">
