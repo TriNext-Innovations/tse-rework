@@ -11,7 +11,7 @@ export default function CartPageClient() {
   const vatContent = Math.round(subtotal * 15 / 115)
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 pt-28 pb-16">
+    <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 pt-32 pb-16">
       <style>{`
         .font-display { font-family: var(--font-fraunces), Georgia, serif; font-optical-sizing: auto; }
         .font-display-italic { font-family: var(--font-fraunces), Georgia, serif; font-style: italic; }

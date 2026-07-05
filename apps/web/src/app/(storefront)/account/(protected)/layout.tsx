@@ -39,7 +39,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
       `}</style>
       <Navbar />
 
-      <div className="mx-auto max-w-6xl px-4 sm:px-8 lg:px-12 pt-28 pb-16">
+      <div className="mx-auto max-w-6xl px-4 sm:px-8 lg:px-12 pt-32 pb-16">
         <div className="mb-8 flex items-center gap-2 text-xs text-[var(--muted)]">
           <Link href="/" className="hover:text-[var(--ink)] transition-colors">Home</Link>
           <span>/</span>
