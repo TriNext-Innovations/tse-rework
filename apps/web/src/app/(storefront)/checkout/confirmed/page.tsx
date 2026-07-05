@@ -34,7 +34,7 @@ export default async function OrderConfirmedPage() {
       `}</style>
       <Navbar categories={categories} />
 
-      <div className="mx-auto max-w-lg px-4 sm:px-8 pt-28 pb-16 text-center">
+      <div className="mx-auto max-w-lg px-4 sm:px-8 pt-32 pb-16 text-center">
         <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#dfe344]/20 mb-8">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M20 6 9 17l-5-5" />
