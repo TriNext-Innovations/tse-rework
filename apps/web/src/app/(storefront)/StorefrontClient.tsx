@@ -339,7 +339,7 @@ export default function StorefrontClient({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-6 grid-rows-[auto] gap-3 sm:gap-4 auto-rows-[minmax(140px,_auto)]">
-            <article id="finder" data-reveal className="panel-dark bento-card sm:col-span-3 sm:row-span-2 bg-[var(--ink)] text-[var(--paper)] rounded-[24px] p-7 sm:p-10 relative overflow-hidden flex flex-col justify-between min-h-[360px]">
+            <article id="finder" data-reveal className="panel-dark bento-card sm:col-span-3 sm:row-span-2 scroll-mt-34 bg-[var(--ink)] text-[var(--paper)] rounded-[24px] p-7 sm:p-10 relative overflow-hidden flex flex-col justify-between min-h-[360px]">
               <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[var(--glow)] opacity-30 blur-3xl" />
               <div className="absolute top-7 right-7 text-[10px] uppercase tracking-[0.22em] text-[var(--paper)]/50">Compatibility Finder</div>
               <div className="relative">
@@ -428,7 +428,7 @@ export default function StorefrontClient({
                 <div className="mt-1 text-xs text-[var(--on-accent)]/80">For HP, Canon, Epson, Brother</div>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span>170+ SKUs</span>
+                {/* <span>170+ SKUs</span> */}
                 <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[var(--on-accent)] text-[var(--magenta)]">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </span>
@@ -437,21 +437,25 @@ export default function StorefrontClient({
 
             <article data-reveal onClick={() => router.push('/products?type=laser')} className="panel-dark bento-card sm:col-span-1 bg-[var(--ink-2)] text-[var(--paper)] rounded-[24px] p-5 relative overflow-hidden min-h-[180px] flex flex-col justify-between cursor-pointer">
               <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--paper)]/60">Category</div>
-              <div className="font-display font-light text-3xl leading-none">Laser</div>
-              <div className="text-[10px] text-[var(--paper)]/70">380+ SKUs</div>
+              <div className="font-display font-light text-3xl leading-none">Laser</div> 
+              <div className="mt-1 text-xs text-[var(--on-accent)]/80">For HP, Canon, Epson, Brother</div>
+              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[var(--on-accent)] text-[var(--magenta)]">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </span>
+              {/* <div className="text-[10px] text-[var(--paper)]/70">380+ SKUs</div> */}
             </article>
 
-            <article id="delivery" data-reveal className="bento-card sm:col-span-3 bg-[var(--paper-2)] rounded-[24px] p-7 relative overflow-hidden min-h-[180px]">
+            <article id="delivery" data-reveal className="bento-card sm:col-span-3 scroll-mt-34 bg-[var(--paper-2)] rounded-[24px] p-7 relative overflow-hidden min-h-[180px]">
               <div className="flex items-start justify-between">
                 <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">Delivery</div>
                 <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">02</div>
               </div>
               <p className="mt-4 font-display font-light text-3xl sm:text-4xl leading-[1.05] tracking-tight">
                 Order by <span className="font-display-italic">noon</span>,<br />
-                on your desk <span className="text-[var(--magenta)]">tomorrow</span>.
+                in your printer <span className="text-[var(--magenta)]">tomorrow</span>.
               </p>
               <div className="mt-5 flex flex-wrap items-center gap-4 text-xs text-[var(--ink-2)]">
-                <span className="inline-flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-[var(--magenta)]" /> JHB / PTA — own drivers, COD</span>
+                <span className="inline-flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-[var(--magenta)]" /> Warehouse — pickup</span>
                 <span className="inline-flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-[var(--ink)]" /> Nationwide — courier</span>
               </div>
             </article>
