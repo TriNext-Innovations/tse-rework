@@ -21,7 +21,7 @@
     "@tse/types": "workspace:*",
     "@tse/ui": "workspace:*",
     "lottie-react": "^2.4.1",
-    "lucide-react": "^1.22.0",
+    "lucide-react": "^1.23.0",
     "meilisearch": "^0.58.0",
     "next": "16.2.9",
     "react": "^19.2.7",
