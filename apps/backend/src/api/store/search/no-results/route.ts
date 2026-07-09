@@ -24,7 +24,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     return res.status(200).json({ ok: true, skipped: true })
   }
 
-  const adminEmail = process.env.ADMIN_EMAIL ?? 'sales@tse.co.za'
+  // TODO(claus): consolidate ADMIN_EMAIL into TSE_NOTIFY_EMAIL once prod env is confirmed clean
+  const adminEmail = process.env.ADMIN_EMAIL ?? process.env.TSE_NOTIFY_EMAIL ?? 'orders@tse-cartridges.co.za'
 
   try {
     await sendEmail({

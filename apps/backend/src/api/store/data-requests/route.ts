@@ -22,7 +22,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
   // Send notification to TSE team via Resend
   const resendKey = process.env.RESEND_API_KEY
-  const from = process.env.RESEND_FROM_EMAIL ?? 'sales@tse.co.za'
+  const from = process.env.RESEND_FROM_EMAIL ?? 'orders@tse-cartridges.co.za'
 
   if (resendKey) {
     const labels: Record<string, string> = {
@@ -37,7 +37,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         from,
-        to: ['sales@tse.co.za'],
+        to: [process.env.TSE_NOTIFY_EMAIL ?? 'orders@tse-cartridges.co.za'],
         subject: `POPIA Data Request — ${labels[type]}`,
         html: `
           <h2 style="font-family:sans-serif">POPIA Data Request Received</h2>

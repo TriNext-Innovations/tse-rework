@@ -19,7 +19,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   }
 
   const resendKey = process.env.RESEND_API_KEY
-  const from = process.env.RESEND_FROM_EMAIL ?? 'sales@tse.co.za'
+  const from = process.env.RESEND_FROM_EMAIL ?? 'orders@tse-cartridges.co.za'
 
   if (resendKey) {
     await fetch('https://api.resend.com/emails', {
@@ -27,7 +27,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         from,
-        to: ['sales@tse.co.za'],
+        to: [process.env.TSE_NOTIFY_EMAIL ?? 'orders@tse-cartridges.co.za'],
         subject: `🏢 New B2B Application — ${company_name}`,
         html: `
           <h2 style="font-family:sans-serif">New B2B Account Application</h2>
