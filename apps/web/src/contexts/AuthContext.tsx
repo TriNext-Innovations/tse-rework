@@ -41,6 +41,18 @@ type RegisterInput = {
   phone?: string
 }
 
+export type NewAddressInput = {
+  first_name?: string
+  last_name?: string
+  phone?: string
+  address_1: string
+  address_2?: string
+  city: string
+  province: string
+  postal_code: string
+  is_default_shipping?: boolean
+}
+
 type AuthContextType = {
   customer: Customer | null
   token: string | null
@@ -51,6 +63,8 @@ type AuthContextType = {
   refreshCustomer: () => Promise<void>
   requestPasswordReset: (email: string) => Promise<string | null>
   resetPassword: (token: string, password: string) => Promise<string | null>
+  addAddress: (input: NewAddressInput) => Promise<string | null>
+  setDefaultAddress: (addressId: string) => Promise<string | null>
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -70,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchCustomer = useCallback(async (tok: string): Promise<Customer | null> => {
     try {
-      const res = await fetch(`${BACKEND}/store/customers/me?fields=*groups`, {
+      const res = await fetch(`${BACKEND}/store/customers/me?fields=*groups,*addresses`, {
         headers: storeHeaders(tok),
         cache: 'no-store',
       })
@@ -167,6 +181,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (c) setCustomer(c)
   }
 
+  // Create a saved address on the customer profile. Medusa clears any previous
+  // default when is_default_shipping is set, so callers don't have to.
+  async function addAddress(input: NewAddressInput): Promise<string | null> {
+    if (!token) return 'Not signed in'
+    try {
+      const res = await fetch(`${BACKEND}/store/customers/me/addresses`, {
+        method: 'POST',
+        headers: storeHeaders(token),
+        body: JSON.stringify({
+          first_name: input.first_name || customer?.first_name || undefined,
+          last_name: input.last_name || customer?.last_name || undefined,
+          phone: input.phone || customer?.phone || undefined,
+          address_1: input.address_1,
+          address_2: input.address_2 || undefined,
+          city: input.city,
+          province: input.province,
+          postal_code: input.postal_code,
+          country_code: 'ZA',
+          ...(input.is_default_shipping ? { is_default_shipping: true } : {}),
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        return data.message ?? 'Failed to save address'
+      }
+      const c = await fetchCustomer(token)
+      if (c) setCustomer(c)
+      return null
+    } catch {
+      return 'Network error — please try again'
+    }
+  }
+
+  async function setDefaultAddress(addressId: string): Promise<string | null> {
+    if (!token) return 'Not signed in'
+    try {
+      const res = await fetch(`${BACKEND}/store/customers/me/addresses/${addressId}`, {
+        method: 'POST',
+        headers: storeHeaders(token),
+        body: JSON.stringify({ is_default_shipping: true }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        return data.message ?? 'Failed to set default address'
+      }
+      const c = await fetchCustomer(token)
+      if (c) setCustomer(c)
+      return null
+    } catch {
+      return 'Network error — please try again'
+    }
+  }
+
   async function requestPasswordReset(email: string): Promise<string | null> {
     try {
       const res = await fetch(`${BACKEND}/auth/customer/emailpass/reset-password`, {
@@ -205,7 +272,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ customer, token, loading, login, register, logout, refreshCustomer, requestPasswordReset, resetPassword }}>
+    <AuthContext.Provider value={{ customer, token, loading, login, register, logout, refreshCustomer, requestPasswordReset, resetPassword, addAddress, setDefaultAddress }}>
       {children}
     </AuthContext.Provider>
   )

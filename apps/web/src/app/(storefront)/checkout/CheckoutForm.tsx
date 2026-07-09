@@ -1,9 +1,10 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useCart } from '@/contexts/CartContext'
-import { AddressAutocomplete } from './AddressAutocomplete'
+import { useAuth, type CustomerAddress } from '@/contexts/AuthContext'
+import { AddressAutocomplete } from '@/components/AddressAutocomplete'
 import {
   setCartContact,
   listShippingOptions,
@@ -34,8 +35,20 @@ function inputClass(error?: string) {
   return `w-full px-4 py-3 rounded-[12px] border bg-[var(--surface)] text-sm outline-none transition-colors ${error ? 'border-red-400' : 'border-[var(--line-4)] focus:border-[var(--ink)]'}`
 }
 
+// Map a saved customer address onto the checkout form shape.
+function toAddressForm(a: CustomerAddress): AddressForm {
+  return {
+    line1: a.address_1,
+    suburb: a.address_2 ?? '',
+    city: a.city,
+    province: a.province ?? '',
+    postalCode: a.postal_code ?? '',
+  }
+}
+
 export default function CheckoutForm() {
   const { items, count, clearCart, cartId } = useCart()
+  const { customer, register, addAddress } = useAuth()
   const [step, setStep] = useState(1)
   const [contact, setContact] = useState<ContactForm>(EMPTY_CONTACT)
   const [address, setAddress] = useState<AddressForm>(EMPTY_ADDRESS)
@@ -43,6 +56,41 @@ export default function CheckoutForm() {
   const [addressErrors, setAddressErrors] = useState<Partial<AddressForm>>({})
   const [payfastLoading, setPayfastLoading] = useState(false)
   const [payfastError, setPayfastError] = useState('')
+
+  // Saved-address picker: a saved address id, or 'new' for the manual form.
+  const savedAddresses = customer?.addresses ?? []
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
+
+  // Guest "create account" option (step 1)
+  const [createAccount, setCreateAccount] = useState(false)
+  const [accountPassword, setAccountPassword] = useState('')
+  const [accountConfirm, setAccountConfirm] = useState('')
+  const [accountError, setAccountError] = useState('')
+  const [accountLoading, setAccountLoading] = useState(false)
+
+  // Prefill from the signed-in customer once it loads — only fields the
+  // shopper hasn't already typed into, so we never clobber their input.
+  useEffect(() => {
+    if (!customer) return
+    setContact((c) => ({
+      name: c.name || [customer.first_name, customer.last_name].filter(Boolean).join(' '),
+      email: c.email || customer.email,
+      phone: c.phone || customer.phone || '',
+    }))
+    const addrs = customer.addresses ?? []
+    const preferred = addrs.find((a) => a.is_default_shipping) ?? addrs[0]
+    if (preferred) {
+      setSelectedAddressId((sel) => sel ?? preferred.id)
+      setAddress((a) => (a === EMPTY_ADDRESS || !a.line1 ? toAddressForm(preferred) : a))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customer?.id])
+
+  function chooseSavedAddress(a: CustomerAddress) {
+    setSelectedAddressId(a.id)
+    setAddress(toAddressForm(a))
+    setAddressErrors({})
+  }
 
   // Delivery state (the cart itself is the session Medusa cart from context)
   const [options, setOptions] = useState<ShippingOption[]>([])
@@ -85,6 +133,29 @@ export default function CheckoutForm() {
     return Object.keys(errs).length === 0
   }
 
+  // Step-1 continue: optionally create the account first (guest + checkbox),
+  // then move to the address step.
+  async function continueFromContact() {
+    if (!validateContact()) return
+    setAccountError('')
+    if (createAccount && !customer) {
+      if (accountPassword.length < 8) { setAccountError('Password: minimum 8 characters'); return }
+      if (accountPassword !== accountConfirm) { setAccountError('Passwords do not match'); return }
+      setAccountLoading(true)
+      const nameParts = contact.name.trim().split(/\s+/)
+      const err = await register({
+        email: contact.email.trim(),
+        password: accountPassword,
+        first_name: nameParts[0] ?? contact.name,
+        last_name: nameParts.slice(1).join(' ') || '-',
+        phone: contact.phone.replace(/\s/g, '') || undefined,
+      })
+      setAccountLoading(false)
+      if (err) { setAccountError(err); return }
+    }
+    setStep(2)
+  }
+
   // Set the address/email on the existing session cart, then load
   // admin-configured shipping options (Collect / Courier Guy Economy +
   // Overnight) with live prices.
@@ -115,6 +186,22 @@ export default function CheckoutForm() {
         setOptionsError('No delivery options are available for this address. Please check your details.')
         return
       }
+
+      // Persist a newly typed address to the signed-in customer's address book
+      // (first one becomes the default). Failures are non-blocking — the cart
+      // already has the address; the account copy is a convenience.
+      if (customer && (selectedAddressId === 'new' || savedAddresses.length === 0)) {
+        addAddress({
+          address_1: address.line1,
+          address_2: address.suburb || undefined,
+          city: address.city,
+          province: address.province,
+          postal_code: address.postalCode,
+          phone: contact.phone.replace(/\s/g, '') || undefined,
+          is_default_shipping: savedAddresses.length === 0,
+        }).catch(() => {})
+      }
+
       setOptions(opts)
       setStep(3)
     } catch (err: any) {
@@ -252,6 +339,11 @@ export default function CheckoutForm() {
           {step === 1 && (
             <div>
               <h1 className="font-display font-light text-3xl mb-8">Contact info</h1>
+              {customer && (
+                <p className="text-xs text-[var(--muted)] -mt-5 mb-6">
+                  Signed in as <span className="text-[var(--ink)]">{customer.email}</span> — details filled in for you.
+                </p>
+              )}
               <div className="space-y-4">
                 {([
                   { key: 'name', label: 'Full name', type: 'text', placeholder: 'Jane Smith', ac: 'name' },
@@ -274,11 +366,58 @@ export default function CheckoutForm() {
                   </div>
                 ))}
               </div>
+
+              {/* Guest: offer to create an account with these details */}
+              {!customer && (
+                <div className="mt-6 bg-[var(--surface)] rounded-[16px] p-5">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={createAccount}
+                      onChange={(e) => { setCreateAccount(e.target.checked); setAccountError('') }}
+                      className="mt-0.5 w-4 h-4 accent-[var(--ink)] cursor-pointer"
+                    />
+                    <span className="text-sm">
+                      <span className="font-medium">Create an account</span>
+                      <span className="block text-xs text-[var(--muted)] mt-0.5">
+                        Save your details and track orders. Already have one?{' '}
+                        <Link href="/account/login?next=/checkout" className="underline underline-offset-2 hover:text-[var(--ink)]">Sign in</Link>
+                      </span>
+                    </span>
+                  </label>
+                  {createAccount && (
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <div>
+                        <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">Password</label>
+                        <input
+                          type="password" autoComplete="new-password" placeholder="Min 8 characters"
+                          value={accountPassword}
+                          onChange={(e) => setAccountPassword(e.target.value)}
+                          className={inputClass(accountError || undefined)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">Confirm</label>
+                        <input
+                          type="password" autoComplete="new-password" placeholder="••••••••"
+                          value={accountConfirm}
+                          onChange={(e) => setAccountConfirm(e.target.value)}
+                          className={inputClass(accountError || undefined)}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {accountError && <p className="text-xs text-red-500 mt-2">{accountError}</p>}
+                </div>
+              )}
+
               <button
-                onClick={() => validateContact() && setStep(2)}
-                className="mt-8 w-full bg-[var(--ink)] text-[var(--paper)] rounded-full py-3.5 text-sm font-medium hover:bg-[#41e0f5] hover:text-[var(--on-accent)] transition-colors cursor-pointer"
+                onClick={continueFromContact}
+                disabled={accountLoading}
+                className="mt-8 w-full bg-[var(--ink)] text-[var(--paper)] rounded-full py-3.5 text-sm font-medium hover:bg-[#41e0f5] hover:text-[var(--on-accent)] transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
               >
-                Continue to address →
+                {accountLoading && <span className="inline-block w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                {accountLoading ? 'Creating account…' : 'Continue to address →'}
               </button>
             </div>
           )}
@@ -287,6 +426,53 @@ export default function CheckoutForm() {
           {step === 2 && (
             <div>
               <h1 className="font-display font-light text-3xl mb-8">Delivery address</h1>
+
+              {/* Saved addresses (signed-in): default preselected, swap by tapping */}
+              {savedAddresses.length > 0 && (
+                <div className="space-y-3 mb-6">
+                  {savedAddresses.map((a) => {
+                    const selected = selectedAddressId === a.id
+                    return (
+                      <button
+                        key={a.id}
+                        type="button"
+                        onClick={() => chooseSavedAddress(a)}
+                        className={`w-full text-left rounded-[16px] p-4 border transition-colors cursor-pointer flex items-start gap-3 ${
+                          selected ? 'border-[var(--ink)] bg-[var(--paper)]' : 'border-[var(--line-4)] hover:border-[var(--line-6)]'
+                        }`}
+                      >
+                        <span className={`mt-0.5 w-4 h-4 rounded-full border flex-shrink-0 flex items-center justify-center ${selected ? 'border-[var(--ink)]' : 'border-[var(--line-6)]'}`}>
+                          {selected && <span className="w-2 h-2 rounded-full bg-[var(--ink)]" />}
+                        </span>
+                        <span className="text-sm min-w-0">
+                          <span className="flex items-center gap-2">
+                            <span className="font-medium truncate">{a.address_1}</span>
+                            {a.is_default_shipping && (
+                              <span className="text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#dfe344] text-[#111827] px-2 py-0.5 rounded-full flex-shrink-0">
+                                Default
+                              </span>
+                            )}
+                          </span>
+                          <span className="block text-[var(--muted)]">
+                            {[a.address_2, a.city, a.province, a.postal_code].filter(Boolean).join(', ')}
+                          </span>
+                        </span>
+                      </button>
+                    )
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => { setSelectedAddressId('new'); setAddress(EMPTY_ADDRESS); setAddressErrors({}) }}
+                    className={`w-full text-left rounded-[16px] p-4 border border-dashed transition-colors cursor-pointer text-sm ${
+                      selectedAddressId === 'new' ? 'border-[var(--ink)] text-[var(--ink)]' : 'border-[var(--line-4)] text-[var(--muted)] hover:border-[var(--line-6)]'
+                    }`}
+                  >
+                    + Use a different address
+                  </button>
+                </div>
+              )}
+
+              {(savedAddresses.length === 0 || selectedAddressId === 'new') && (
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">Street address</label>
@@ -357,6 +543,7 @@ export default function CheckoutForm() {
                   </div>
                 </div>
               </div>
+              )}
               {optionsError && <p className="text-xs text-red-500 mt-4">{optionsError}</p>}
               <div className="flex gap-3 mt-8">
                 <button
