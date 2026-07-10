@@ -23,8 +23,8 @@
   },
   "pnpm": {
     "overrides": {
-      "@medusajs/admin-sdk": "2.15.3",
-      "@medusajs/admin-shared": "2.15.3",
+      "@medusajs/admin-sdk": "2.17.2",
+      "@medusajs/admin-shared": "2.17.2",
       "axios": ">=1.16.1",
       "@aws-sdk/client-dynamodb": ">=3.1049.0",
       "protobufjs": ">=7.6.0",
