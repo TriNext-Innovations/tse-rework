@@ -12,6 +12,10 @@ function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const passwordReset = searchParams.get('reset') === '1'
+  // Post-login destination (e.g. /checkout). Internal paths only — a value
+  // like "//evil.com" or "https://…" must not become an open redirect.
+  const rawNext = searchParams.get('next') ?? ''
+  const nextPath = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/account/orders'
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -26,7 +30,7 @@ function LoginContent() {
     const err = await login(email.trim(), password)
     setLoading(false)
     if (err) { setError(err); return }
-    router.push('/account/orders')
+    router.push(nextPath)
   }
 
   return (

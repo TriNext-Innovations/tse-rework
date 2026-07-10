@@ -53,6 +53,13 @@ export default function PrivacyPage() {
             <strong>Phone:</strong> {siteConfig.phone.display} / {siteConfig.whatsapp.display}<br />
             <strong>Email:</strong> <a href={siteConfig.email.mailto}>{siteConfig.email.sales}</a>
           </p>
+          <p>
+            Our <strong>Information Officer</strong> is <strong>Leon van der Watt</strong>, registered with the
+            Information Regulator (South Africa) under registration number <strong>2026-061608</strong>. You can
+            verify this registration on the Regulator&apos;s{' '}
+            <a href="https://eservices.inforegulator.org.za" target="_blank" rel="noopener noreferrer">eServices Portal</a>.
+            To reach the Information Officer directly, use the contact details above.
+          </p>
 
           <h2>2. What personal information we collect</h2>
           <table>
@@ -107,7 +114,8 @@ export default function PrivacyPage() {
             </li>
           </ul>
           <p>
-            To exercise your rights, email <a href={siteConfig.email.mailto}>{siteConfig.email.sales}</a> or call {siteConfig.phone.display}.
+            To exercise your rights, email our Information Officer at{' '}
+            <a href={siteConfig.email.mailto}>{siteConfig.email.sales}</a> or call {siteConfig.phone.display}.
             We will respond within 30 days.
           </p>
 

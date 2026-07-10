@@ -22,12 +22,13 @@ const EMPTY: AddressForm = {
 }
 
 export default function AddressesPage() {
-  const { customer, token, refreshCustomer } = useAuth()
+  const { customer, token, refreshCustomer, setDefaultAddress } = useAuth()
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState<AddressForm>(EMPTY)
   const [errors, setErrors] = useState<Partial<AddressForm>>({})
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [settingDefault, setSettingDefault] = useState<string | null>(null)
   const [apiError, setApiError] = useState('')
 
   function validate(): boolean {
@@ -67,6 +68,8 @@ export default function AddressesPage() {
           province: form.province,
           postal_code: form.postal_code.trim(),
           country_code: 'ZA',
+          // First address on the account becomes the default automatically.
+          ...(addresses.length === 0 ? { is_default_shipping: true } : {}),
         }),
       })
       if (!res.ok) {
@@ -82,6 +85,14 @@ export default function AddressesPage() {
     } finally {
       setSaving(false)
     }
+  }
+
+  async function handleSetDefault(addressId: string) {
+    setSettingDefault(addressId)
+    setApiError('')
+    const err = await setDefaultAddress(addressId)
+    if (err) setApiError(err)
+    setSettingDefault(null)
   }
 
   async function handleDelete(addressId: string) {
@@ -138,6 +149,11 @@ export default function AddressesPage() {
           {addresses.map((addr) => (
             <div key={addr.id} className="bg-[var(--surface)] rounded-[20px] p-5 relative">
               <div className="text-sm space-y-0.5">
+                {addr.is_default_shipping && (
+                  <span className="inline-block text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#dfe344] text-[#111827] px-2 py-0.5 rounded-full mb-1.5">
+                    Default
+                  </span>
+                )}
                 {(addr.first_name || addr.last_name) && (
                   <div className="font-medium">{[addr.first_name, addr.last_name].filter(Boolean).join(' ')}</div>
                 )}
@@ -147,6 +163,15 @@ export default function AddressesPage() {
                 {addr.province && <div className="text-[var(--muted)]">{addr.province} {addr.postal_code}</div>}
                 {addr.phone && <div className="text-[var(--muted)] text-xs mt-1">{addr.phone}</div>}
               </div>
+              {!addr.is_default_shipping && (
+                <button
+                  onClick={() => handleSetDefault(addr.id)}
+                  disabled={settingDefault === addr.id}
+                  className="mt-3 text-xs text-[var(--muted)] underline underline-offset-2 hover:text-[var(--ink)] transition-colors cursor-pointer disabled:opacity-40"
+                >
+                  {settingDefault === addr.id ? 'Setting default…' : 'Make default'}
+                </button>
+              )}
               <button
                 onClick={() => handleDelete(addr.id)}
                 disabled={deleting === addr.id}
