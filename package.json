@@ -17,8 +17,8 @@
   },
   "devDependencies": {
     "prettier": "^3.2.5",
-    "turbo": "^2.9.14",
     "tsx": "^4.22.4",
+    "turbo": "^2.9.14",
     "typescript": "^6.0.3"
   },
   "pnpm": {
@@ -38,6 +38,9 @@
       "@mikro-orm/knex": ">=6.6.14",
       "@opentelemetry/sdk-node": ">=0.217.0",
       "i18next-http-backend": ">=3.0.5"
+    },
+    "patchedDependencies": {
+      "@medusajs/dashboard@2.17.2": "patches/@medusajs__dashboard@2.17.2.patch"
     }
   },
   "workspaces": [

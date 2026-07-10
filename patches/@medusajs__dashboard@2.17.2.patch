@@ -1,0 +1,22 @@
+diff --git a/dist/product-list-RLLMI5YH.mjs b/dist/product-list-RLLMI5YH.mjs
+index e540f2552ab36d5fcaa439c018422c4a53159328..a98e2d3ff1e076c64d446502786b84b70435429a 100644
+--- a/dist/product-list-RLLMI5YH.mjs
++++ b/dist/product-list-RLLMI5YH.mjs
+@@ -193,7 +193,7 @@ var ProductListTable = () => {
+         }
+       }
+     ),
+-    /* @__PURE__ */ jsx(Outlet, {})
++    null /* patched(TSE #223): composer renders the route Outlet; this duplicate double-mounted create/import/export modals */
+   ] });
+ };
+ var ProductActions = ({ product }) => {
+@@ -431,7 +431,7 @@ var ConfigurableProductListTable = () => {
+         ]
+       }
+     ),
+-    /* @__PURE__ */ jsx2(Outlet2, {})
++    null /* patched(TSE #223): composer renders the route Outlet; this duplicate double-mounted create/import/export modals */
+   ] });
+ };
+ 

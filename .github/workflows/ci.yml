@@ -126,3 +126,11 @@ jobs:
         env:
           NEXT_PUBLIC_MEDUSA_BACKEND_URL: http://localhost:9000
           NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: test-key
+
+      # Mirrors the prod Dockerfile's `medusa build` — catches admin-bundle
+      # breakage (e.g. medusa version skew vs root pnpm overrides) pre-merge
+      # instead of during the deploy on main.
+      - name: Build backend (medusa)
+        run: pnpm --filter @tse/backend build
+        env:
+          NODE_OPTIONS: --max-old-space-size=3072
