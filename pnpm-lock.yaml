@@ -70,8 +70,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/types
       meilisearch:
-        specifier: ^0.58.0
-        version: 0.58.0
+        specifier: ^0.59.0
+        version: 0.59.0
       react:
         specifier: ^19.2.7
         version: 19.2.7
@@ -128,8 +128,8 @@ importers:
         specifier: ^1.23.0
         version: 1.23.0(react@19.2.7)
       meilisearch:
-        specifier: ^0.58.0
-        version: 0.58.0
+        specifier: ^0.59.0
+        version: 0.59.0
       next:
         specifier: 16.2.10
         version: 16.2.10(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -6193,8 +6193,8 @@ packages:
     resolution: {integrity: sha512-dq+qelQ9akHpcOl/gUVRTxVIOkAJ1wR3QAvb4RsVjS8oVoFjDGTc679wJYmUmknUF5HwMLOgb5O+a3KxfWapPQ==}
     engines: {node: '>= 0.6'}
 
-  meilisearch@0.58.0:
-    resolution: {integrity: sha512-MXFlU+JVG2I3tDI4brS3UHxEv2fjOROP24TPP16c8dGHTulb1kxMgXvKP0x4ImvUcsVVJFi4QXP0JNDS/TaWaw==}
+  meilisearch@0.59.0:
+    resolution: {integrity: sha512-9KxasX98+qYhOVa4PPeaX/yY/ukM9DMuJlUJRgJVwrdCkWw+mkkiIh6EJmYyCxU8nXhj0VEzdYr3dNUJT1BQow==}
     engines: {node: ^20.19.0 || >=22.12.0}
 
   merge-descriptors@1.0.3:
@@ -15572,7 +15572,7 @@ snapshots:
 
   media-typer@0.3.0: {}
 
-  meilisearch@0.58.0: {}
+  meilisearch@0.59.0: {}
 
   merge-descriptors@1.0.3: {}
 
