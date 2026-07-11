@@ -184,9 +184,6 @@ services:
       PAYFAST_PASSPHRASE: ${PAYFAST_PASSPHRASE}
       PAYFAST_SANDBOX: ${PAYFAST_SANDBOX:-false}
       PAYFAST_CAPTURE_SECRET: ${PAYFAST_CAPTURE_SECRET}
-      ZEPTOMAIL_TOKEN: ${ZEPTOMAIL_TOKEN}
-      EMAIL_FROM: ${EMAIL_FROM:-sales@tse-cartridges.co.za}
-      EMAIL_REPLY_TO: ${EMAIL_REPLY_TO:-sales@tse.co.za}
     ports:
       - "3001:3000"
     deploy:

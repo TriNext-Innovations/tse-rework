@@ -146,7 +146,7 @@ services:
       EMAIL_FROM: ${EMAIL_FROM:-sales@tse-cartridges.co.za}
       EMAIL_REPLY_TO: ${EMAIL_REPLY_TO:-sales@tse.co.za}
       # Team inbox for the backend new-order notification (#135)
-      TSE_NOTIFY_EMAIL: ${TSE_NOTIFY_EMAIL:-}
+      TSE_NOTIFY_EMAIL: ${TSE_NOTIFY_EMAIL:-sales@tse.co.za}
       PAYFAST_MERCHANT_ID: ${PAYFAST_MERCHANT_ID}
       PAYFAST_MERCHANT_KEY: ${PAYFAST_MERCHANT_KEY}
       PAYFAST_PASSPHRASE: ${PAYFAST_PASSPHRASE}
@@ -240,9 +240,6 @@ services:
       PAYFAST_PASSPHRASE: ${PAYFAST_PASSPHRASE}
       PAYFAST_SANDBOX: ${PAYFAST_SANDBOX:-true}
       PAYFAST_CAPTURE_SECRET: ${PAYFAST_CAPTURE_SECRET}
-      ZEPTOMAIL_TOKEN: ${ZEPTOMAIL_TOKEN}
-      EMAIL_FROM: ${EMAIL_FROM:-sales@tse-cartridges.co.za}
-      EMAIL_REPLY_TO: ${EMAIL_REPLY_TO:-sales@tse.co.za}
     # Loopback-only — nginx proxies dev. → web:3000 over the compose network.
     ports:
       - "127.0.0.1:3000:3000"

@@ -1,6 +1,30 @@
 import { MedusaRequest, MedusaResponse } from '@medusajs/framework/http'
 import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
 import { createOrderFromPending, createOrderFromCart, PendingPayload } from '../../../../lib/payfast-order'
+import { sendEmail } from '../../../../lib/email'
+
+// #135: money arrived but no order could be created — the team must reconcile
+// manually, so this alert replaces the storefront ITN's customer-email fallback.
+async function alertCaptureFailure(mPaymentId: string, payfast: any, reason: string) {
+  const teamEmail = process.env.TSE_NOTIFY_EMAIL || 'sales@tse.co.za'
+  await sendEmail({
+    to: teamEmail,
+    subject: `⚠️ PayFast payment without order — ${mPaymentId}`,
+    html: `
+      <h2 style="font-family:sans-serif">Payment captured but order creation failed</h2>
+      <table style="font-family:sans-serif;border-collapse:collapse">
+        <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Our ref</strong></td><td style="padding:6px 10px;border:1px solid #eee">${mPaymentId}</td></tr>
+        <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>PayFast ref</strong></td><td style="padding:6px 10px;border:1px solid #eee">${payfast?.pf_payment_id ?? '—'}</td></tr>
+        <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Amount</strong></td><td style="padding:6px 10px;border:1px solid #eee">R ${payfast?.amount_gross ?? '—'}</td></tr>
+        <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Reason</strong></td><td style="padding:6px 10px;border:1px solid #eee">${reason}</td></tr>
+      </table>
+      <p style="font-family:sans-serif;color:#666;font-size:13px">
+        The customer has paid but received no confirmation. Look up the payment in the PayFast
+        dashboard, contact the customer, and create the order manually in Medusa admin.
+      </p>
+    `,
+  }).catch((err) => console.error(`[payfast-capture] failed to send failure alert for ${mPaymentId}:`, err?.message))
+}
 
 function authorized(req: MedusaRequest): boolean {
   const secret = process.env.PAYFAST_CAPTURE_SECRET
@@ -32,6 +56,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   if (!row) {
     // No stored cart — accept (don't make PayFast retry) but flag it.
     console.warn(`[payfast-capture] no pending cart for ${m_payment_id}`)
+    await alertCaptureFailure(m_payment_id, payfast, 'no pending cart stored for this payment reference')
     return res.json({ ok: true, order_id: null, note: 'no pending cart' })
   }
 
@@ -54,6 +79,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     return res.json({ ok: true, order_id: order.id, display_id: order.display_id })
   } catch (err: any) {
     console.error(`[payfast-capture] failed to create order for ${m_payment_id}:`, err.message)
+    await alertCaptureFailure(m_payment_id, payfast, `order creation failed: ${err.message}`)
     return res.status(500).json({ error: 'order creation failed' })
   }
 }
