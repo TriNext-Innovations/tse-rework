@@ -153,7 +153,7 @@ class PayfastProviderService extends AbstractPaymentProvider<PayfastOptions> {
       merchant_id: this.options_.merchantId,
       merchant_key: this.options_.merchantKey,
       return_url: `${origin}/checkout/confirmed`,
-      cancel_url: `${origin}/checkout`,
+      cancel_url: `${origin}/checkout/cancelled?ref=${encodeURIComponent(sessionId)}`,
       // The webhook route resolves the provider as `pp_{path-segment}`, and this
       // provider registers as `pp_payfast_payfast` (identifier `payfast` + config
       // id `payfast`) — so the path must be `payfast_payfast`, not `payfast`.

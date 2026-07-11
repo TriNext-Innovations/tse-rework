@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
     merchant_id: MERCHANT_ID,
     merchant_key: MERCHANT_KEY,
     return_url: `${origin}/checkout/confirmed`,
-    cancel_url: `${origin}/checkout`,
+    cancel_url: `${origin}/checkout/cancelled?ref=${encodeURIComponent(m_payment_id)}`,
     notify_url: `${origin}/api/payfast/itn`,
     name_first,
     ...(name_last ? { name_last } : {}),
