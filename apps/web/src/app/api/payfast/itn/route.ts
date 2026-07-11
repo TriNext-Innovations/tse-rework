@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
-import { sendEmail, emailConfigured } from '@/lib/email'
 
 const MERCHANT_ID = process.env.PAYFAST_MERCHANT_ID ?? ''
 const PASSPHRASE = process.env.PAYFAST_PASSPHRASE ?? ''
-const TSE_NOTIFY_EMAIL = 'sales@tse.co.za'
 
 // PayFast production IP ranges (for validation in production)
 const PAYFAST_IPS = new Set([
@@ -20,60 +18,6 @@ function verifySignature(data: Record<string, string>): boolean {
   const toHash = PASSPHRASE ? `${query}&passphrase=${encodeURIComponent(PASSPHRASE).replace(/%20/g, '+')}` : query
   const expected = crypto.createHash('md5').update(toHash).digest('hex')
   return expected === signature
-}
-
-async function notifyTeam(data: Record<string, string>) {
-  if (!emailConfigured()) return
-
-  await sendEmail({
-    to: TSE_NOTIFY_EMAIL,
-    replyTo: data.email_address || undefined,
-    subject: `💳 Online Payment Received — ${data.item_name ?? 'TSE Order'}`,
-    html: `
-      <h2 style="font-family:sans-serif">New online payment received</h2>
-      <table style="font-family:sans-serif;border-collapse:collapse;width:100%">
-        <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>PayFast ref</strong></td><td style="padding:6px 10px;border:1px solid #eee">${data.pf_payment_id ?? '—'}</td></tr>
-        <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Our ref</strong></td><td style="padding:6px 10px;border:1px solid #eee">${data.m_payment_id ?? '—'}</td></tr>
-        <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Customer</strong></td><td style="padding:6px 10px;border:1px solid #eee">${data.name_first ?? ''} ${data.name_last ?? ''}</td></tr>
-        <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Email</strong></td><td style="padding:6px 10px;border:1px solid #eee">${data.email_address ?? '—'}</td></tr>
-        <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Phone</strong></td><td style="padding:6px 10px;border:1px solid #eee">${data.custom_str2 ?? '—'}</td></tr>
-        <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Delivery address</strong></td><td style="padding:6px 10px;border:1px solid #eee">${data.custom_str1 ?? '—'}</td></tr>
-        <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Order</strong></td><td style="padding:6px 10px;border:1px solid #eee">${data.item_name ?? '—'}</td></tr>
-        <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Amount</strong></td><td style="padding:6px 10px;border:1px solid #eee">R ${data.amount_gross ?? '0'}</td></tr>
-        <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Status</strong></td><td style="padding:6px 10px;border:1px solid #eee">${data.payment_status ?? '—'}</td></tr>
-      </table>
-      <p style="font-family:sans-serif;margin-top:16px;color:#666;font-size:13px">
-        Process this order in Medusa admin or contact the customer to arrange delivery.
-      </p>
-    `,
-  }).catch((err) => console.error('[PayFast ITN] team notify failed:', err))
-}
-
-async function notifyCustomer(data: Record<string, string>) {
-  if (!emailConfigured() || !data.email_address) return
-
-  await sendEmail({
-    to: data.email_address,
-    subject: `Order confirmed — TSE Online`,
-    html: `
-      <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
-        <h2 style="color:#111827">Thank you, ${data.name_first ?? 'valued customer'}!</h2>
-        <p style="color:#374151">Your payment of <strong>R ${data.amount_gross ?? '0'}</strong> has been received.</p>
-        <p style="color:#374151">
-          <strong>Order:</strong> ${data.item_name ?? '—'}<br/>
-          <strong>Our reference:</strong> ${data.m_payment_id ?? '—'}<br/>
-          <strong>PayFast ref:</strong> ${data.pf_payment_id ?? '—'}
-        </p>
-        <p style="color:#374151">We'll be in touch within 1 business hour to confirm your delivery time.</p>
-        <p style="color:#374151">
-          Questions? Call <strong>011 708 2304</strong> or WhatsApp <strong>079 873 3558</strong>.
-        </p>
-        <p style="font-size:13px;color:#9ca3af;margin-top:24px">
-          TSE — Technical Systems Engineering · Kya Sands, Johannesburg
-        </p>
-      </div>
-    `,
-  }).catch((err) => console.error('[PayFast ITN] customer notify failed:', err))
 }
 
 export async function POST(req: NextRequest) {
@@ -109,13 +53,13 @@ export async function POST(req: NextRequest) {
 
   if (status === 'COMPLETE') {
     // Turn the stored cart into a real Medusa order (idempotent on m_payment_id).
-    // Creating the order fires order.placed, which sends the customer
-    // confirmation — so only fall back to notifyCustomer if capture produced
-    // no order. The team always gets a heads-up.
+    // All email is backend-owned (#135): order.placed sends the customer
+    // confirmation + team alert, and the capture endpoint alerts the team when
+    // it cannot create an order.
     const orderCreated = await captureOrder(data)
-    const tasks = [notifyTeam(data)]
-    if (!orderCreated) tasks.push(notifyCustomer(data))
-    await Promise.allSettled(tasks)
+    if (!orderCreated) {
+      console.error('[PayFast ITN] payment COMPLETE but no order created:', data.m_payment_id)
+    }
   } else {
     console.warn('[PayFast ITN] Non-complete status:', status, data.m_payment_id)
   }

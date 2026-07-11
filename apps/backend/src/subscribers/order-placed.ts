@@ -86,27 +86,25 @@ export default async function orderPlacedHandler({
     console.error(`[order-placed] failed to send email for order ${data.id}:`, err.message)
   }
 
-  // #135: the team notification is now owned by the backend (was duplicated in
-  // the storefront PayFast ITN). Both customer + team emails originate here.
-  const teamEmail = process.env.TSE_NOTIFY_EMAIL
-  if (teamEmail) {
-    const customerName = addr ? [addr.first_name, addr.last_name].filter(Boolean).join(' ') : 'Customer'
-    const teamHtml = `
-      <h2 style="font-family:sans-serif">New order #${order.display_id ?? order.id}</h2>
-      <table style="font-family:sans-serif;border-collapse:collapse">
-        <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Customer</strong></td><td style="padding:6px 10px;border:1px solid #eee">${customerName}</td></tr>
-        <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Email</strong></td><td style="padding:6px 10px;border:1px solid #eee">${email}</td></tr>
-        <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Total</strong></td><td style="padding:6px 10px;border:1px solid #eee">${formatPrice(order.total ?? 0, currency)}</td></tr>
-        <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Delivery</strong></td><td style="padding:6px 10px;border:1px solid #eee">${shippingMethod?.name ?? 'Standard Courier'}</td></tr>
-      </table>
-      <p style="font-family:sans-serif;color:#666;font-size:13px">Process this order in Medusa admin.</p>
-    `
-    try {
-      await sendEmail({ to: teamEmail, subject: `🛒 New order #${order.display_id ?? order.id}`, html: teamHtml })
-      console.log(`[order-placed] team notification sent for order ${data.id}`)
-    } catch (err: any) {
-      console.error(`[order-placed] failed to send team email for order ${data.id}:`, err.message)
-    }
+  // #135: the team notification is owned by the backend (was duplicated in the
+  // storefront PayFast ITN). Defaults on — prod doesn't set TSE_NOTIFY_EMAIL.
+  const teamEmail = process.env.TSE_NOTIFY_EMAIL || 'sales@tse.co.za'
+  const customerName = addr ? [addr.first_name, addr.last_name].filter(Boolean).join(' ') : 'Customer'
+  const teamHtml = `
+    <h2 style="font-family:sans-serif">New order #${order.display_id ?? order.id}</h2>
+    <table style="font-family:sans-serif;border-collapse:collapse">
+      <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Customer</strong></td><td style="padding:6px 10px;border:1px solid #eee">${customerName}</td></tr>
+      <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Email</strong></td><td style="padding:6px 10px;border:1px solid #eee">${email}</td></tr>
+      <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Total</strong></td><td style="padding:6px 10px;border:1px solid #eee">${formatPrice(order.total ?? 0, currency)}</td></tr>
+      <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Delivery</strong></td><td style="padding:6px 10px;border:1px solid #eee">${shippingMethod?.name ?? 'Standard Courier'}</td></tr>
+    </table>
+    <p style="font-family:sans-serif;color:#666;font-size:13px">Process this order in Medusa admin.</p>
+  `
+  try {
+    await sendEmail({ to: teamEmail, subject: `🛒 New order #${order.display_id ?? order.id}`, html: teamHtml, replyTo: email })
+    console.log(`[order-placed] team notification sent for order ${data.id}`)
+  } catch (err: any) {
+    console.error(`[order-placed] failed to send team email for order ${data.id}:`, err.message)
   }
 }
 
