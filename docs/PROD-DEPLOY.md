@@ -16,7 +16,7 @@ Before touching the server, confirm all of these. Skipping any one of them turns
 |---|---|---|
 | 1 | Linux VPS reachable, Docker + Docker Compose installed | `ssh linuxuser@<host>` then `docker --version && docker compose version` |
 | 2 | Project cloned at `/opt/tse-ui` on the box, git remote pointing at GitHub | `cd /opt/tse-ui && git remote -v` |
-| 3 | `.env` populated on the server (POSTGRES_PASSWORD, JWT_SECRET, COOKIE_SECRET, MEDUSA_ADMIN_*, OZOW/PayFast/Resend/Aramex/TCG keys for the env) | `grep -c "=" .env` should match the count in `.env.example` |
+| 3 | `.env` populated on the server (POSTGRES_PASSWORD, JWT_SECRET, COOKIE_SECRET, MEDUSA_ADMIN_*, OZOW/PayFast/ZeptoMail/Aramex/TCG keys for the env) | `grep -c "=" .env` should match the count in `.env.example` |
 | 4 | Both DNS records resolve to the server's public IP | `for h in dev.tse-cartridges.co.za api.dev.tse-cartridges.co.za; do echo "$h -> $(dig +short $h \| tail -1)"; done` |
 | 5 | Firewall allows inbound 80 and 443 from `0.0.0.0/0` (certbot validates over plaintext HTTP) | `curl -I http://<server-ip>` from outside the VPS — should reach nginx, not time out |
 | 6 | No other process on the host is bound to 80 / 443 / 5432 / 6379 / 9000 / 3000 | `sudo ss -tlnp \| grep -E ':(80\|443\|5432\|6379\|9000\|3000)\s'` |
@@ -257,7 +257,7 @@ Each service's required env vars (already in `.env.example`):
 | Service | Required env |
 |---|---|
 | `medusa-migrate`, `medusa` | `DATABASE_URL` (with `?sslmode=disable`), `REDIS_URL`, `JWT_SECRET`, `COOKIE_SECRET` |
-| `medusa` only | `MEDUSA_ADMIN_EMAIL`, `MEDUSA_ADMIN_PASSWORD`, `MEDUSA_BACKEND_URL`, CORS triplet, `RESEND_*`, `PAYFAST_*`, `OZOW_*`, `TCG_API_KEY`, `ARAMEX_*` |
+| `medusa` only | `MEDUSA_ADMIN_EMAIL`, `MEDUSA_ADMIN_PASSWORD`, `MEDUSA_BACKEND_URL`, CORS triplet, `ZEPTOMAIL_TOKEN`, `EMAIL_FROM`, `EMAIL_REPLY_TO`, `PAYFAST_*`, `OZOW_*`, `TCG_API_KEY`, `ARAMEX_*` |
 | `web` | `NEXT_PUBLIC_MEDUSA_URL`, `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY`, `NEXT_PUBLIC_SANITY_*`, `NEXT_PUBLIC_SITE_URL` |
 
 `STORE_CORS` must include the storefront origin `https://tse-cartridges.co.za`. `AUTH_CORS`
@@ -310,5 +310,5 @@ a plain recreate keeps the old baked URL. Medusa only needs a recreate for the r
 
 ### 9.5 External config still owed
 - **PayFast merchant dashboard** — return/notify/cancel URLs updated to the apex.
-- **Resend** — sending domain `tse-cartridges.co.za` DKIM/SPF verified.
+- **ZeptoMail** — sending domain `tse-cartridges.co.za` DKIM/SPF verified in the ZeptoMail console.
 - Once apex is proven, add a 301 `dev.*` → apex and retire the dev blocks.

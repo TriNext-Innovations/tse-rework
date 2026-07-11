@@ -1,3 +1,5 @@
+// TODO(claus): duplicate of apps/backend/src/lib/email.ts — goes away when the
+// PayFast ITN moves into the backend (#135) and the storefront stops sending email.
 const API_URL = process.env.ZEPTOMAIL_API_URL ?? 'https://api.zeptomail.com/v1.1/email'
 const FROM_NAME = 'TSE Cartridges'
 

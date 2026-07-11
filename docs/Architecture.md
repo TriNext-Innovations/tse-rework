@@ -35,7 +35,7 @@ tse-online/
 | CMS                | Sanity                  | Sanity Cloud               |
 | Automation engine  | n8n                     | Vultr JHB / Coolify        |
 | CDN / DNS          | Cloudflare              | Cloudflare (JHB PoP)       |
-| Transactional mail | Resend Free             | Resend                     |
+| Transactional mail | ZeptoMail (Zoho)        | ZeptoMail                  |
 | Payments           | PayFast + Ozow          | External (SA-hosted)       |
 | Social API         | Meta Graph API          | External                   |
 | AI (captions)      | Anthropic Claude API    | External                   |
@@ -135,7 +135,7 @@ apps/backend/src/
 │   ├── create-quote.ts
 │   └── bulk-order.ts
 ├── subscribers/                # Event-driven side effects
-│   ├── order-placed.ts         # Trigger Resend confirmation email
+│   ├── order-placed.ts         # Trigger ZeptoMail confirmation email
 │   ├── product-updated.ts      # Trigger n8n on product.created
 │   └── inventory-restocked.ts  # Trigger n8n on restock (0 → >0)
 └── medusa-config.ts
@@ -219,9 +219,10 @@ SANITY_API_TOKEN=
 MEILISEARCH_HOST=
 MEILISEARCH_API_KEY=
 
-# Resend
-RESEND_API_KEY=
-RESEND_FROM_EMAIL=orders@tseonline.co.za
+# ZeptoMail
+ZEPTOMAIL_TOKEN=
+EMAIL_FROM=sales@tse-cartridges.co.za
+EMAIL_REPLY_TO=sales@tse.co.za
 
 # Anthropic (caption generation)
 ANTHROPIC_API_KEY=

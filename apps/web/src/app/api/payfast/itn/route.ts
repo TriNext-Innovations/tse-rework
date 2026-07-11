@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
+import { sendEmail, emailConfigured } from '@/lib/email'
 
 const MERCHANT_ID = process.env.PAYFAST_MERCHANT_ID ?? ''
 const PASSPHRASE = process.env.PAYFAST_PASSPHRASE ?? ''
-const RESEND_API_KEY = process.env.RESEND_API_KEY ?? ''
-const RESEND_FROM = process.env.RESEND_FROM_EMAIL ?? 'sales@tse.co.za'
 const TSE_NOTIFY_EMAIL = 'sales@tse.co.za'
 
 // PayFast production IP ranges (for validation in production)
@@ -24,11 +23,11 @@ function verifySignature(data: Record<string, string>): boolean {
 }
 
 async function notifyTeam(data: Record<string, string>) {
-  if (!RESEND_API_KEY) return
+  if (!emailConfigured()) return
 
-  const body = {
-    from: RESEND_FROM,
-    to: [TSE_NOTIFY_EMAIL],
+  await sendEmail({
+    to: TSE_NOTIFY_EMAIL,
+    replyTo: data.email_address || undefined,
     subject: `💳 Online Payment Received — ${data.item_name ?? 'TSE Order'}`,
     html: `
       <h2 style="font-family:sans-serif">New online payment received</h2>
@@ -47,21 +46,14 @@ async function notifyTeam(data: Record<string, string>) {
         Process this order in Medusa admin or contact the customer to arrange delivery.
       </p>
     `,
-  }
-
-  await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  })
+  }).catch((err) => console.error('[PayFast ITN] team notify failed:', err))
 }
 
 async function notifyCustomer(data: Record<string, string>) {
-  if (!RESEND_API_KEY || !data.email_address) return
+  if (!emailConfigured() || !data.email_address) return
 
-  const body = {
-    from: RESEND_FROM,
-    to: [data.email_address],
+  await sendEmail({
+    to: data.email_address,
     subject: `Order confirmed — TSE Online`,
     html: `
       <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
@@ -81,13 +73,7 @@ async function notifyCustomer(data: Record<string, string>) {
         </p>
       </div>
     `,
-  }
-
-  await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  })
+  }).catch((err) => console.error('[PayFast ITN] customer notify failed:', err))
 }
 
 export async function POST(req: NextRequest) {
