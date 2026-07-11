@@ -1,4 +1,5 @@
 import type { MedusaRequest, MedusaResponse } from '@medusajs/framework/http'
+import { sendEmail, emailConfigured } from '../../../../lib/email'
 
 type ApplyBody = {
   company_name: string
@@ -18,53 +19,40 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     return res.status(400).json({ error: 'company_name, contact_name, email and phone are required' })
   }
 
-  const resendKey = process.env.RESEND_API_KEY
-  const from = process.env.RESEND_FROM_EMAIL ?? 'sales@tse.co.za'
-
-  if (resendKey) {
-    await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        from,
-        to: ['sales@tse.co.za'],
-        subject: `🏢 New B2B Application — ${company_name}`,
-        html: `
-          <h2 style="font-family:sans-serif">New B2B Account Application</h2>
-          <table style="font-family:sans-serif;border-collapse:collapse;width:100%">
-            <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Company</strong></td><td style="padding:6px 10px;border:1px solid #eee">${company_name}</td></tr>
-            <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Contact</strong></td><td style="padding:6px 10px;border:1px solid #eee">${contact_name}</td></tr>
-            <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Email</strong></td><td style="padding:6px 10px;border:1px solid #eee">${email}</td></tr>
-            <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Phone</strong></td><td style="padding:6px 10px;border:1px solid #eee">${phone}</td></tr>
-            <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Business type</strong></td><td style="padding:6px 10px;border:1px solid #eee">${business_type}</td></tr>
-            <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Monthly volume</strong></td><td style="padding:6px 10px;border:1px solid #eee">${monthly_volume}</td></tr>
-            ${message ? `<tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Message</strong></td><td style="padding:6px 10px;border:1px solid #eee">${message}</td></tr>` : ''}
-          </table>
-          <p style="font-family:sans-serif;color:#666;font-size:13px;margin-top:16px">
-            Reply directly to <a href="mailto:${email}">${email}</a> to approve and assign pricing tier in Medusa admin.
-          </p>
-        `,
-        reply_to: email,
-      }),
+  if (emailConfigured()) {
+    await sendEmail({
+      to: 'sales@tse.co.za',
+      subject: `🏢 New B2B Application — ${company_name}`,
+      html: `
+        <h2 style="font-family:sans-serif">New B2B Account Application</h2>
+        <table style="font-family:sans-serif;border-collapse:collapse;width:100%">
+          <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Company</strong></td><td style="padding:6px 10px;border:1px solid #eee">${company_name}</td></tr>
+          <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Contact</strong></td><td style="padding:6px 10px;border:1px solid #eee">${contact_name}</td></tr>
+          <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Email</strong></td><td style="padding:6px 10px;border:1px solid #eee">${email}</td></tr>
+          <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Phone</strong></td><td style="padding:6px 10px;border:1px solid #eee">${phone}</td></tr>
+          <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Business type</strong></td><td style="padding:6px 10px;border:1px solid #eee">${business_type}</td></tr>
+          <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Monthly volume</strong></td><td style="padding:6px 10px;border:1px solid #eee">${monthly_volume}</td></tr>
+          ${message ? `<tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Message</strong></td><td style="padding:6px 10px;border:1px solid #eee">${message}</td></tr>` : ''}
+        </table>
+        <p style="font-family:sans-serif;color:#666;font-size:13px;margin-top:16px">
+          Reply directly to <a href="mailto:${email}">${email}</a> to approve and assign pricing tier in Medusa admin.
+        </p>
+      `,
+      replyTo: email,
     }).catch(() => null)
 
     // Acknowledge to applicant
-    await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        from,
-        to: [email],
-        subject: 'B2B application received — TSE',
-        html: `
-          <div style="font-family:sans-serif;max-width:480px">
-            <h2>Hi ${contact_name},</h2>
-            <p>We've received your B2B application for <strong>${company_name}</strong>. Our team will review it and get back to you within 1 business day.</p>
-            <p>Questions? Call <strong>011 708 2304</strong> or WhatsApp <strong>079 873 3558</strong>.</p>
-            <p style="font-size:13px;color:#9ca3af">TSE — Technical Systems Engineering · Kya Sands, Johannesburg</p>
-          </div>
-        `,
-      }),
+    await sendEmail({
+      to: email,
+      subject: 'B2B application received — TSE',
+      html: `
+        <div style="font-family:sans-serif;max-width:480px">
+          <h2>Hi ${contact_name},</h2>
+          <p>We've received your B2B application for <strong>${company_name}</strong>. Our team will review it and get back to you within 1 business day.</p>
+          <p>Questions? Call <strong>011 708 2304</strong> or WhatsApp <strong>079 873 3558</strong>.</p>
+          <p style="font-size:13px;color:#9ca3af">TSE — Technical Systems Engineering · Kya Sands, Johannesburg</p>
+        </div>
+      `,
     }).catch(() => null)
   }
 

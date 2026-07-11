@@ -93,13 +93,14 @@ export default function PrivacyPage() {
             <tbody>
               <tr><td>PayFast</td><td>Online payment processing</td><td>South Africa</td></tr>
               <tr><td>The Courier Guy</td><td>Courier delivery</td><td>South Africa</td></tr>
-              <tr><td>Resend</td><td>Transactional email delivery</td><td>United States / EU</td></tr>
+              <tr><td>ZeptoMail (Zoho Corporation)</td><td>Transactional email delivery</td><td>United States</td></tr>
               <tr><td>Cloudflare</td><td>CDN / DNS / DDoS protection (in-transit only, no persistence)</td><td>Global (JHB PoP)</td></tr>
             </tbody>
           </table>
           <p>
-            Resend processes email addresses outside South Africa. This transfer is covered by section 72(1)(c) of POPIA
-            (necessary for performance of your contract) and is governed by a Data Processing Agreement with Resend.
+            ZeptoMail (Zoho Corporation) processes email addresses outside South Africa. This transfer is covered by
+            section 72(1)(c) of POPIA (necessary for performance of your contract) and is governed by Zoho&apos;s Data
+            Processing Addendum.
             All compute infrastructure (website, database, API) is hosted in Johannesburg by Vultr.
           </p>
 
