@@ -18,6 +18,10 @@ updates:
           - "turbo"
           - "typescript"
           - "@types/*"
+    ignore:
+      # Runtime is Node 20 (node:20-alpine images) — typings must not lead it.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     labels:
       - "dependencies"
       - "automerge"
@@ -47,6 +51,10 @@ updates:
         patterns:
           - "tailwindcss"
           - "@tailwindcss/*"
+    ignore:
+      # Runtime is Node 20 (node:20-alpine images) — typings must not lead it.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     labels:
       - "dependencies"
       - "automerge"
@@ -63,6 +71,10 @@ updates:
       medusa:
         patterns:
           - "@medusajs/*"
+    ignore:
+      # Runtime is Node 20 (node:20-alpine images) — typings must not lead it.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     labels:
       - "dependencies"
       - "automerge"
