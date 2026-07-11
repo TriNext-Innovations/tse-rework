@@ -57,11 +57,27 @@ jobs:
             echo "▶ Waiting for services to stabilise (30s)"
             sleep 30
 
-            echo "▶ Health check — Medusa"
+            # Recreated web/medusa containers get new docker-network IPs, but
+            # nginx's static upstreams resolve them once at load — reload so it
+            # re-resolves, otherwise the public site 502s while checks pass.
+            echo "▶ Reloading nginx to pick up new container IPs"
+            docker compose exec -T nginx nginx -s reload
+
+            echo "▶ Health check — Medusa (direct)"
             curl -sf http://localhost:9000/health || { echo "✗ Medusa health check failed"; exit 1; }
 
-            echo "▶ Health check — Next.js"
+            echo "▶ Health check — Next.js (direct)"
             curl -sf http://localhost:3000/api/health || { echo "✗ Next.js health check failed"; exit 1; }
+
+            # Through nginx via the public URLs — this is what customers hit; a
+            # 502 here must fail the deploy instead of passing silently.
+            echo "▶ Health check — storefront via nginx"
+            curl -sfo /dev/null --retry 3 --retry-delay 5 --retry-all-errors https://tse-cartridges.co.za \
+              || { echo "✗ Public storefront check failed (nginx path)"; exit 1; }
+
+            echo "▶ Health check — API via nginx"
+            curl -sfo /dev/null --retry 3 --retry-delay 5 --retry-all-errors https://api.tse-cartridges.co.za/health \
+              || { echo "✗ Public API check failed (nginx path)"; exit 1; }
 
             echo "✓ Deploy complete"
 
@@ -82,7 +98,11 @@ jobs:
             # Re-start whatever was running before the failed build
             docker compose up -d
 
+            echo "▶ Reloading nginx after rollback"
+            docker compose exec -T nginx nginx -s reload || echo "⚠ nginx reload failed"
+
             echo "▶ Post-rollback health checks"
             sleep 15
             curl -sf http://localhost:9000/health || echo "⚠ Medusa still unhealthy after rollback"
             curl -sf http://localhost:3000/api/health || echo "⚠ Next.js still unhealthy after rollback"
+            curl -sfo /dev/null https://tse-cartridges.co.za || echo "⚠ Public storefront still unhealthy after rollback"
