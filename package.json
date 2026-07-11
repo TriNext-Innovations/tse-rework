@@ -16,7 +16,7 @@
     "clean": "turbo clean"
   },
   "devDependencies": {
-    "prettier": "^3.2.5",
+    "prettier": "^3.9.5",
     "tsx": "^4.22.4",
     "turbo": "^2.9.14",
     "typescript": "^6.0.3"
