@@ -125,9 +125,9 @@ export function Footer() {
               </li>
               <li className="pt-3 border-t border-white/8">
                 <span className="text-white/35 text-[10px] uppercase tracking-[0.15em] block mb-2">Hours</span>
-                <span>Mon–Thu · 8am–5pm</span>
+                <span>Mon–Thu · 8am–4:30pm</span>
               </li>
-              <li>Fri · 8am–4pm</li>
+              <li>Fri · 8am–3pm</li>
               <li className="text-white/40 text-xs leading-relaxed pt-2">
                 Order before noon for same-day dispatch. Next-day delivery JHB/PTA.
               </li>
