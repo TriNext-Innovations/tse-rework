@@ -79,6 +79,12 @@ jobs:
             curl -sfo /dev/null --retry 3 --retry-delay 5 --retry-all-errors https://api.tse-cartridges.co.za/health \
               || { echo "✗ Public API check failed (nginx path)"; exit 1; }
 
+            # /products is SSR against Medusa+Postgres, so this one curl proves
+            # the whole read path (nginx → next → medusa → db) end to end.
+            echo "▶ Health check — product listing via nginx (SSR → Medusa → DB)"
+            curl -sfo /dev/null --retry 3 --retry-delay 5 --retry-all-errors https://tse-cartridges.co.za/products \
+              || { echo "✗ Product listing check failed"; exit 1; }
+
             echo "✓ Deploy complete"
 
       - name: Notify on failure (rollback prompt)

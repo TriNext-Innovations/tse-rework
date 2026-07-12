@@ -17,7 +17,8 @@ export default defineConfig({
     { name: 'mobile', use: { ...devices['iPhone 13'] } },
   ],
   webServer: {
-    command: 'pnpm dev',
+    // CI builds first, so serve the production build there; dev server locally.
+    command: process.env.CI ? 'pnpm start' : 'pnpm dev',
     port: 3000,
     reuseExistingServer: !process.env.CI,
     env: {
