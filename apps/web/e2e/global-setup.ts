@@ -28,7 +28,7 @@ function product(n: number, title: string, handle: string, cat: number, price: n
     title,
     handle,
     variants: [{ id: `variant_${n}`, sku: `SKU-${n}`, calculated_price: { calculated_amount: price } }],
-    categories: [CATEGORIES[cat]],
+    categories: [CATEGORIES[cat]!],
     images: [],
     metadata: { cartridge_type: 'toner' },
   }
@@ -120,7 +120,7 @@ async function handler(req: IncomingMessage, res: ServerResponse) {
   // Cart line-item routes (most specific first)
   const lineMatch = path.match(/^\/store\/carts\/([^/]+)\/line-items(?:\/([^/]+))?$/)
   if (lineMatch) {
-    const cart = carts.get(lineMatch[1])
+    const cart = carts.get(lineMatch[1]!)
     if (!cart) return send(404, { error: 'cart not found' })
     if (req.method === 'POST' && !lineMatch[2]) {
       const body = await readBody(req)
@@ -149,7 +149,7 @@ async function handler(req: IncomingMessage, res: ServerResponse) {
       return send(200, { cart })
     }
     if (cartMatch[1]) {
-      const cart = carts.get(cartMatch[1])
+      const cart = carts.get(cartMatch[1]!)
       if (!cart) return send(404, { error: 'cart not found' })
       if (req.method === 'POST') { await readBody(req); return send(200, { cart }) }
       return send(200, { cart })
