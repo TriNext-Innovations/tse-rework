@@ -1,0 +1,75 @@
+name: Release PR
+
+# Keeps a rolling develop → main release PR open with a changelog. A human
+# merges it with one click (that push triggers deploy.yml normally).
+# Exception: when everything since main is Dependabot's, the release ships
+# itself — wait for the PR checks, merge, then explicitly dispatch the deploy
+# (a GITHUB_TOKEN merge push does NOT trigger push-event workflows).
+
+on:
+  push:
+    branches: [develop]
+
+concurrency:
+  group: release-pr
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  release-pr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Create or refresh the release PR
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git fetch origin main --quiet
+          COMMITS=$(git log origin/main..HEAD --no-merges --pretty='- %s')
+          if [ -z "$COMMITS" ]; then
+            echo "develop and main are level — nothing to release"
+            echo "pr=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          BODY=$(printf '**Changes since main:**\n\n%s\n\nMerging this PR deploys to production (auto-rollback + public health checks guard it).\n\n🤖 Rolling release PR — auto-updated on every develop push.' "$COMMITS")
+
+          PR=$(gh pr list --base main --head develop --state open --json number --jq '.[0].number')
+          if [ -z "$PR" ]; then
+            URL=$(gh pr create --base main --head develop \
+              --title "release: develop → main" \
+              --body "$BODY")
+            PR=$(basename "$URL")
+          else
+            gh pr edit "$PR" --body "$BODY"
+          fi
+          echo "pr=$PR" >> "$GITHUB_OUTPUT"
+
+          AUTHORS=$(git log origin/main..HEAD --no-merges --pretty='%an' | sort -u)
+          if [ "$AUTHORS" = "dependabot[bot]" ]; then
+            echo "deps_only=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "deps_only=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Auto-ship Dependabot-only releases
+        if: steps.pr.outputs.deps_only == 'true' && steps.pr.outputs.pr != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR=${{ steps.pr.outputs.pr }}
+          echo "Release is Dependabot-only — waiting for checks on PR #$PR"
+          gh pr checks "$PR" --watch --required --interval 30
+          gh pr merge "$PR" --merge
+          echo "Merged — dispatching production deploy"
+          gh workflow run deploy.yml --ref main

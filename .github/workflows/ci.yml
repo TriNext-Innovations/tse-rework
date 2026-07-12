@@ -51,11 +51,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: unit   # only run E2E if unit tests pass
-    # Non-blocking: E2E needs a live backend + committed visual baselines that CI
-    # doesn't yet provide. Runs and reports, but doesn't fail the pipeline.
-    # TODO(e2e): stand up Medusa+Postgres (or mock the API), commit snapshot
-    # baselines, fix stale selectors, then remove continue-on-error.
-    continue-on-error: true
+    # Blocking since 2026-07-12: runs against the stateful mock Medusa API in
+    # e2e/global-setup.ts — deterministic, no DB, covers homepage/cart/products.
 
     steps:
       - uses: actions/checkout@v7
@@ -94,14 +91,6 @@ jobs:
           path: apps/web/playwright-report/
           retention-days: 7
 
-      - name: Upload Playwright snapshots
-        uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: playwright-snapshots
-          path: apps/web/e2e/__snapshots__/
-          retention-days: 7
-
   build:
     name: Production build
     runs-on: ubuntu-latest
@@ -134,3 +123,26 @@ jobs:
         run: pnpm --filter @tse/backend build
         env:
           NODE_OPTIONS: --max-old-space-size=3072
+
+  # Release gate: build the actual prod images so Dockerfile/context breakage
+  # (e.g. the patches/ COPY incident) fails the release PR, not the deploy.
+  docker:
+    name: Docker images
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: unit
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build backend image
+        run: docker build -f apps/backend/Dockerfile --build-arg MEDUSA_BACKEND_URL=https://api.tse-cartridges.co.za .
+
+      - name: Build web image
+        run: >
+          docker build -f apps/web/Dockerfile
+          --build-arg NEXT_PUBLIC_MEDUSA_BACKEND_URL=https://api.tse-cartridges.co.za
+          --build-arg NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=test-key
+          --build-arg NEXT_PUBLIC_SITE_URL=https://tse-cartridges.co.za
+          .
