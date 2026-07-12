@@ -261,12 +261,43 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  # ── Bugsink — self-hosted Sentry-compatible error tracking ────────────────
+  # Server-side SDKs post over the compose network (SENTRY_DSN =
+  # http://<key>@bugsink:8000/<project>); browser events arrive via the nginx
+  # `/bugsink/api/` path on the api host. UI is loopback-only — reach it with
+  # `ssh -L 8100:localhost:8100 linuxuser@<vm>` → http://localhost:8100.
+  bugsink:
+    image: bugsink/bugsink:latest
+    restart: unless-stopped
+    environment:
+      SECRET_KEY: ${BUGSINK_SECRET_KEY}
+      # Matches how the UI is actually reached (SSH tunnel) so login/CSRF work.
+      BASE_URL: http://localhost:8100
+      SINGLE_TEAM: "True"
+      USER_REGISTRATION: CB_ADMINS
+      # Set once in .env for first boot (email:password), remove afterwards.
+      CREATE_SUPERUSER: ${BUGSINK_SUPERUSER:-}
+    ports:
+      - "127.0.0.1:8100:8000"
+    volumes:
+      - bugsink_data:/data
+    deploy:
+      resources:
+        limits:
+          memory: 400m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   nginx:
     image: nginx:alpine
     restart: unless-stopped
     depends_on:
       - web
       - medusa
+      - bugsink
     ports:
       - "80:80"
       - "443:443"
@@ -296,3 +327,4 @@ volumes:
   meilisearch_data:
   certbot_certs:
   certbot_www:
+  bugsink_data:
