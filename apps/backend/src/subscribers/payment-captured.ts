@@ -34,12 +34,16 @@ export default async function paymentCapturedHandler({
       return
     }
 
-    const { data: carts } = await query.graph({
-      entity: 'cart',
-      filters: { payment_collection_id: collectionId } as any,
-      fields: ['id', 'completed_at'],
+    // Cart ↔ PaymentCollection is a module link (pivot `cart_payment_collection`),
+    // NOT a scalar column on cart — filtering `cart` by `payment_collection_id`
+    // throws "not existing property Cart.payment_collection_id". Traverse the
+    // link from the payment_collection side instead.
+    const { data: collections } = await query.graph({
+      entity: 'payment_collection',
+      filters: { id: collectionId },
+      fields: ['id', 'cart.id', 'cart.completed_at'],
     })
-    const cart = carts?.[0] as any
+    const cart = (collections?.[0] as any)?.cart
     if (!cart) {
       console.warn(`[payment-captured] no cart for payment collection ${collectionId}`)
       return

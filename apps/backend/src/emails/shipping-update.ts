@@ -35,10 +35,7 @@ export function shippingUpdateHtml(d: ShippingUpdateData): string {
                 <tr>
                   <td>
                     <span style="font-size:22px;font-weight:800;color:#dfe344;letter-spacing:-0.5px;">TSE</span>
-                    <span style="font-size:14px;color:#9CA3AF;margin-left:8px;">The Stationery Exchange</span>
-                  </td>
-                  <td align="right">
-                    <span style="font-size:12px;color:#6B7280;">EST. 1992</span>
+                    <span style="font-size:14px;color:#9CA3AF;margin-left:8px;">Technical Systems Engineering</span>
                   </td>
                 </tr>
               </table>
@@ -115,7 +112,7 @@ export function shippingUpdateHtml(d: ShippingUpdateData): string {
 
               <!-- Help -->
               <p style="margin:0;font-size:13px;color:#6B7280;text-align:center;">
-                Questions? Email us at <a href="mailto:support@tse-cartridges.co.za" style="color:#374151;">support@tse-cartridges.co.za</a> or call 011 555 1234.
+                Questions? Email us at <a href="mailto:sales@tse.co.za" style="color:#374151;">sales@tse.co.za</a> or call 011 708 2304.
               </p>
 
             </td>
@@ -125,7 +122,7 @@ export function shippingUpdateHtml(d: ShippingUpdateData): string {
           <tr>
             <td style="padding:24px 32px;text-align:center;">
               <p style="margin:0;font-size:12px;color:#9CA3AF;">
-                The Stationery Exchange · Kya Sands, Johannesburg · Est. 1992<br/>
+                TSE — Technical Systems Engineering · Kya Sands, Johannesburg<br/>
                 Generic cartridges &amp; toner at unbeatable prices.
               </p>
             </td>
