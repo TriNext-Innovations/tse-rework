@@ -1,5 +1,5 @@
 import type { MedusaRequest, MedusaResponse } from '@medusajs/framework/http'
-import { sendEmail } from '../../../../lib/email'
+import { sendEmail, salesEmail, salesCc } from '../../../../lib/email'
 
 // Deduplicate per query — don't spam admin for the same term within 24 hours
 const seen = new Map<string, number>()
@@ -24,11 +24,12 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     return res.status(200).json({ ok: true, skipped: true })
   }
 
-  const adminEmail = process.env.ADMIN_EMAIL ?? 'sales@tse.co.za'
+  const adminEmail = process.env.ADMIN_EMAIL ?? salesEmail()
 
   try {
     await sendEmail({
       to: adminEmail,
+      cc: salesCc(),
       subject: `🔍 No search results — "${query.trim()}"`,
       html: `
         <div style="font-family:sans-serif;max-width:480px">

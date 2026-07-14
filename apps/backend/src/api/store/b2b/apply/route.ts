@@ -1,5 +1,5 @@
 import type { MedusaRequest, MedusaResponse } from '@medusajs/framework/http'
-import { sendEmail, emailConfigured } from '../../../../lib/email'
+import { sendEmail, emailConfigured, salesEmail, salesCc } from '../../../../lib/email'
 
 type ApplyBody = {
   company_name: string
@@ -21,7 +21,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
   if (emailConfigured()) {
     await sendEmail({
-      to: 'sales@tse.co.za',
+      to: salesEmail(),
+      cc: salesCc(),
       subject: `🏢 New B2B Application — ${company_name}`,
       html: `
         <h2 style="font-family:sans-serif">New B2B Account Application</h2>

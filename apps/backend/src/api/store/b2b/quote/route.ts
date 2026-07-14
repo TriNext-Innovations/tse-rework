@@ -1,5 +1,5 @@
 import type { MedusaRequest, MedusaResponse } from '@medusajs/framework/http'
-import { sendEmail, emailConfigured } from '../../../../lib/email'
+import { sendEmail, emailConfigured, salesEmail, salesCc } from '../../../../lib/email'
 
 type QuoteItem = { sku: string; description: string; qty: number }
 
@@ -30,7 +30,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       .join('')
 
     await sendEmail({
-      to: 'sales@tse.co.za',
+      to: salesEmail(),
+      cc: salesCc(),
       subject: `📋 Quote Request — ${company_name}`,
       html: `
         <h2 style="font-family:sans-serif">Quote Request</h2>

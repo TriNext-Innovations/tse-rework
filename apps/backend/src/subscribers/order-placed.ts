@@ -1,6 +1,6 @@
 import { type SubscriberArgs, type SubscriberConfig } from '@medusajs/framework'
 import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
-import { sendEmail } from '../lib/email'
+import { sendEmail, salesEmail, salesCc } from '../lib/email'
 import { orderConfirmationHtml } from '../emails/order-confirmation'
 
 function formatPrice(amount: number, currency: string): string {
@@ -102,8 +102,8 @@ export default async function orderPlacedHandler({
   }
 
   // #135: the team notification is owned by the backend (was duplicated in the
-  // storefront PayFast ITN). Defaults on — prod doesn't set TSE_NOTIFY_EMAIL.
-  const teamEmail = process.env.TSE_NOTIFY_EMAIL || 'sales@tse.co.za'
+  // storefront PayFast ITN). Recipient driven by SALES_EMAIL since #271.
+  const teamEmail = salesEmail()
   const customerName = addr ? [addr.first_name, addr.last_name].filter(Boolean).join(' ') : 'Customer'
   const teamHtml = `
     <h2 style="font-family:sans-serif">New order #${order.display_id ?? order.id}</h2>
@@ -116,7 +116,7 @@ export default async function orderPlacedHandler({
     <p style="font-family:sans-serif;color:#666;font-size:13px">Process this order in Medusa admin.</p>
   `
   try {
-    await sendEmail({ to: teamEmail, subject: `🛒 New order #${order.display_id ?? order.id}`, html: teamHtml, replyTo: email })
+    await sendEmail({ to: teamEmail, cc: salesCc(), subject: `🛒 New order #${order.display_id ?? order.id}`, html: teamHtml, replyTo: email })
     console.log(`[order-placed] team notification sent for order ${data.id}`)
   } catch (err: any) {
     console.error(`[order-placed] failed to send team email for order ${data.id}:`, err.message)
