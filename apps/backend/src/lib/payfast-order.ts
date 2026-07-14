@@ -127,7 +127,7 @@ export type CartPendingPayload = {
 
 // Build the order from a real Medusa cart (items + chosen shipping method +
 // address). Used by the cart-based checkout; the chosen shipping option already
-// carries the live courier price and the shiplogic `data` needed to book a
+// carries the live courier price and the Courier Guy `data` needed to book a
 // waybill from the order later.
 export async function createOrderFromCart(
   container: MedusaContainer,

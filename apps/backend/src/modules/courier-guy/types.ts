@@ -1,37 +1,37 @@
-// ShipLogic (The Courier Guy) API + provider types.
+// The Courier Guy API + provider types.
 // API contract verified against the ShipLogic REST API (the platform that
 // powers The Courier Guy). Base URL: https://api.shiplogic.com/
 
-/** Service levels exposed by ShipLogic. We offer ECO + OVN at checkout. */
-export type ShipLogicServiceCode = 'ECO' | 'OVN' | 'OVNX' | 'ECOX' | 'LSE' | 'CTC'
+/** Service levels exposed by the API. We offer ECO + OVN at checkout. */
+export type CourierGuyServiceCode = 'ECO' | 'OVN' | 'OVNX' | 'ECOX' | 'LSE' | 'CTC'
 
-export type ShipLogicAddressType =
+export type CourierGuyAddressType =
   | 'residential'
   | 'business'
   | 'counter'
   | 'locker'
   | 'unknown'
 
-export type ShipLogicAddress = {
+export type CourierGuyAddress = {
   street_address: string
   local_area?: string
   city: string
   zone: string // province
   country: string // 2-letter ISO, e.g. "ZA"
   code: string // postal code
-  type?: ShipLogicAddressType
+  type?: CourierGuyAddressType
   company?: string
   lat?: number
   lng?: number
 }
 
-export type ShipLogicContact = {
+export type CourierGuyContact = {
   name: string
   mobile_number?: string
   email?: string
 }
 
-export type ShipLogicParcel = {
+export type CourierGuyParcel = {
   submitted_length_cm: number
   submitted_width_cm: number
   submitted_height_cm: number
@@ -39,14 +39,14 @@ export type ShipLogicParcel = {
   parcel_description?: string
 }
 
-export type ShipLogicRateRequest = {
-  collection_address: ShipLogicAddress
-  delivery_address: ShipLogicAddress
-  parcels: ShipLogicParcel[]
+export type CourierGuyRateRequest = {
+  collection_address: CourierGuyAddress
+  delivery_address: CourierGuyAddress
+  parcels: CourierGuyParcel[]
   declared_value?: number
 }
 
-export type ShipLogicRate = {
+export type CourierGuyRate = {
   rate: number
   service_level: {
     id: number
@@ -58,17 +58,17 @@ export type ShipLogicRate = {
   }
 }
 
-export type ShipLogicRatesResponse = {
-  rates?: ShipLogicRate[]
+export type CourierGuyRatesResponse = {
+  rates?: CourierGuyRate[]
 }
 
-export type ShipLogicShipmentRequest = {
-  collection_address: ShipLogicAddress
-  collection_contact: ShipLogicContact
-  delivery_address: ShipLogicAddress
-  delivery_contact: ShipLogicContact
-  parcels: ShipLogicParcel[]
-  service_level_code: ShipLogicServiceCode
+export type CourierGuyShipmentRequest = {
+  collection_address: CourierGuyAddress
+  collection_contact: CourierGuyContact
+  delivery_address: CourierGuyAddress
+  delivery_contact: CourierGuyContact
+  parcels: CourierGuyParcel[]
+  service_level_code: CourierGuyServiceCode
   declared_value?: number
   customer_reference?: string
   special_instructions_collection?: string
@@ -76,7 +76,7 @@ export type ShipLogicShipmentRequest = {
   mute_notifications?: boolean
 }
 
-export type ShipLogicShipmentResponse = {
+export type CourierGuyShipmentResponse = {
   id: number
   short_tracking_reference?: string
   custom_tracking_reference?: string
@@ -87,18 +87,18 @@ export type ShipLogicShipmentResponse = {
 }
 
 /** Options passed to the provider from medusa-config.ts. */
-export type ShipLogicOptions = {
+export type CourierGuyOptions = {
   apiKey: string
   /** Override the API base URL (defaults to https://api.shiplogic.com). */
   baseUrl?: string
   /** Warehouse / collection address goods ship from. */
-  collectionAddress: ShipLogicAddress
+  collectionAddress: CourierGuyAddress
   /** Contact at the collection address (shown to the driver). */
-  collectionContact: ShipLogicContact
+  collectionContact: CourierGuyContact
   /** Fallback parcel used when a variant has no weight/dimensions. */
-  defaultParcel: ShipLogicParcel
+  defaultParcel: CourierGuyParcel
   /**
-   * Whether ShipLogic rates already include VAT. When true, Medusa infers
+   * Whether the courier's rates already include VAT. When true, Medusa infers
    * tax from the rate instead of adding it on top. Verify against the TCG
    * account's VAT configuration. Defaults to true.
    */
@@ -108,14 +108,14 @@ export type ShipLogicOptions = {
 }
 
 /** Stored on the shipping option's `data` (from getFulfillmentOptions). */
-export type ShipLogicOptionData = {
+export type CourierGuyOptionData = {
   id: string
-  service_level_code: ShipLogicServiceCode
+  service_level_code: CourierGuyServiceCode
   name: string
 }
 
 /** Stored on the fulfillment's `data` after a waybill is created. */
-export type ShipLogicFulfillmentData = {
+export type CourierGuyFulfillmentData = {
   shipment_id: number
   tracking_reference: string
   service_level_code: string
