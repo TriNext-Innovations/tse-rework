@@ -8,6 +8,8 @@ const PASSPHRASE = process.env.PAYFAST_PASSPHRASE ?? ''
 const PAYFAST_IPS = new Set([
   '197.97.145.144', '41.74.179.194', '196.33.227.144',
   '196.33.227.145', '196.33.227.146', '196.33.227.147',
+  // Observed live ITN source since 2026-07 (AWS af-south-1, PR #275) — may drift.
+  '13.245.74.88',
 ])
 
 function verifySignature(data: Record<string, string>): boolean {
@@ -26,7 +28,14 @@ export async function POST(req: NextRequest) {
   // the host is behind a proxy (e.g. Cloudflare rewrites the source to an edge
   // IP) or when PayFast's own ranges drift. Log a mismatch, don't reject on it.
   const sandbox = process.env.PAYFAST_SANDBOX === 'true'
-  const rawIp = req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip') ?? ''
+  // Behind Cloudflare the first x-forwarded-for entry is client-suppliable (CF
+  // appends rather than replaces), so prefer CF-Connecting-IP — set by the edge
+  // itself — before falling back to XFF for non-proxied setups (#262).
+  const rawIp =
+    req.headers.get('cf-connecting-ip') ??
+    req.headers.get('x-forwarded-for') ??
+    req.headers.get('x-real-ip') ??
+    ''
   const ip = rawIp.split(',')[0]?.trim() ?? ''
   if (process.env.NODE_ENV === 'production' && !sandbox && ip && !PAYFAST_IPS.has(ip)) {
     console.warn('[PayFast ITN] non-allowlisted IP (advisory; verifying by signature):', ip)
