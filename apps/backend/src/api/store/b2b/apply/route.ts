@@ -35,7 +35,9 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
           ${message ? `<tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Message</strong></td><td style="padding:6px 10px;border:1px solid #eee">${message}</td></tr>` : ''}
         </table>
         <p style="font-family:sans-serif;color:#666;font-size:13px;margin-top:16px">
-          Reply directly to <a href="mailto:${email}">${email}</a> to approve and assign pricing tier in Medusa admin.
+          Reply directly to <a href="mailto:${email}">${email}</a> to approve. To grant B2B pricing,
+          add the customer to the <strong>B2B Approved</strong> group in Medusa admin — the per-order
+          threshold discounts (10% ≥ R10k, 15% ≥ R25k) then apply automatically.
         </p>
       `,
       replyTo: email,
