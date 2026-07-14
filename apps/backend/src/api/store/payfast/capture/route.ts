@@ -1,14 +1,14 @@
 import { MedusaRequest, MedusaResponse } from '@medusajs/framework/http'
 import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
 import { createOrderFromPending, createOrderFromCart, PendingPayload } from '../../../../lib/payfast-order'
-import { sendEmail } from '../../../../lib/email'
+import { sendEmail, salesEmail, salesCc } from '../../../../lib/email'
 
 // #135: money arrived but no order could be created — the team must reconcile
 // manually, so this alert replaces the storefront ITN's customer-email fallback.
 async function alertCaptureFailure(mPaymentId: string, payfast: any, reason: string) {
-  const teamEmail = process.env.TSE_NOTIFY_EMAIL || 'sales@tse.co.za'
   await sendEmail({
-    to: teamEmail,
+    to: salesEmail(),
+    cc: salesCc(),
     subject: `⚠️ PayFast payment without order — ${mPaymentId}`,
     html: `
       <h2 style="font-family:sans-serif">Payment captured but order creation failed</h2>

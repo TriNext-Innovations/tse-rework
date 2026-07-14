@@ -1,5 +1,5 @@
 import type { MedusaRequest, MedusaResponse } from '@medusajs/framework/http'
-import { sendEmail, emailConfigured } from '../../../lib/email'
+import { sendEmail, emailConfigured, salesEmail, salesCc } from '../../../lib/email'
 
 type DataRequestBody = {
   type: 'access' | 'correction' | 'deletion' | 'objection'
@@ -30,7 +30,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     }
 
     await sendEmail({
-      to: 'sales@tse.co.za',
+      to: salesEmail(),
+      cc: salesCc(),
       subject: `POPIA Data Request — ${labels[type]}`,
       html: `
         <h2 style="font-family:sans-serif">POPIA Data Request Received</h2>
