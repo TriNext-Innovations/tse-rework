@@ -1,5 +1,5 @@
 import { type SubscriberArgs, type SubscriberConfig } from '@medusajs/framework'
-import { Modules } from '@medusajs/framework/utils'
+import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
 import { sendEmail } from '../lib/email'
 import { orderConfirmationHtml } from '../emails/order-confirmation'
 
@@ -23,13 +23,28 @@ export default async function orderPlacedHandler({
   event: { data },
   container,
 }: SubscriberArgs<{ id: string }>) {
-  const orderService = container.resolve(Modules.ORDER) as any
+  // Fetch via the Query graph, NOT the order module's retrieveOrder: the
+  // monetary totals (total/subtotal/shipping_total/tax_total) are computed
+  // fields that only hydrate through the graph. retrieveOrder leaves them
+  // undefined, which rendered every order email — customer invoice + team
+  // alert — with a R0,00 total.
+  const query = container.resolve(ContainerRegistrationKeys.QUERY)
 
   let order: any
   try {
-    order = await orderService.retrieveOrder(data.id, {
-      relations: ['items', 'shipping_address', 'shipping_methods'],
+    const { data: orders } = await query.graph({
+      entity: 'order',
+      filters: { id: data.id },
+      fields: [
+        'id', 'display_id', 'email', 'currency_code', 'created_at',
+        'total', 'subtotal', 'shipping_total', 'tax_total',
+        'items.*',
+        'shipping_address.*',
+        'shipping_methods.*',
+      ],
     })
+    order = orders?.[0]
+    if (!order) throw new Error('order not found')
   } catch (err: any) {
     console.error(`[order-placed] failed to retrieve order ${data.id}:`, err.message)
     return
