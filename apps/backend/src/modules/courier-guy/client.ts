@@ -1,30 +1,33 @@
 import type {
-  ShipLogicRateRequest,
-  ShipLogicRatesResponse,
-  ShipLogicShipmentRequest,
-  ShipLogicShipmentResponse,
+  CourierGuyRateRequest,
+  CourierGuyRatesResponse,
+  CourierGuyShipmentRequest,
+  CourierGuyShipmentResponse,
 } from './types'
 
+// The Courier Guy's rate/waybill API is served by the ShipLogic platform, so
+// the host stays api.shiplogic.com even though the integration is named after
+// the courier.
 const DEFAULT_BASE_URL = 'https://api.shiplogic.com'
 
-export class ShipLogicError extends Error {
+export class CourierGuyError extends Error {
   constructor(
     message: string,
     public readonly status?: number,
     public readonly body?: string,
   ) {
     super(message)
-    this.name = 'ShipLogicError'
+    this.name = 'CourierGuyError'
   }
 }
 
 /**
- * Minimal ShipLogic (The Courier Guy) REST client.
+ * Minimal The Courier Guy REST client (ShipLogic-powered API).
  *
- * ShipLogic uses a single host for sandbox and production — the environment is
+ * The API uses a single host for sandbox and production — the environment is
  * determined by the API token, not the URL. Auth is a bearer token.
  */
-export class ShipLogicClient {
+export class CourierGuyClient {
   private readonly baseUrl: string
 
   constructor(
@@ -37,15 +40,15 @@ export class ShipLogicClient {
   }
 
   /** POST /rates — live shipping quotes for a collection→delivery route. */
-  async getRates(request: ShipLogicRateRequest): Promise<ShipLogicRatesResponse> {
-    return this.request<ShipLogicRatesResponse>('POST', '/rates', request)
+  async getRates(request: CourierGuyRateRequest): Promise<CourierGuyRatesResponse> {
+    return this.request<CourierGuyRatesResponse>('POST', '/rates', request)
   }
 
   /** POST /shipments — book a shipment and generate a waybill. */
   async createShipment(
-    request: ShipLogicShipmentRequest,
-  ): Promise<ShipLogicShipmentResponse> {
-    return this.request<ShipLogicShipmentResponse>('POST', '/shipments', request)
+    request: CourierGuyShipmentRequest,
+  ): Promise<CourierGuyShipmentResponse> {
+    return this.request<CourierGuyShipmentResponse>('POST', '/shipments', request)
   }
 
   /** GET /shipments/label — PDF label URL for a shipment. */
@@ -89,15 +92,15 @@ export class ShipLogicClient {
         body: body !== undefined ? JSON.stringify(body) : undefined,
       })
     } catch (err: any) {
-      throw new ShipLogicError(`ShipLogic request failed: ${err?.message ?? err}`)
+      throw new CourierGuyError(`Courier Guy request failed: ${err?.message ?? err}`)
     }
 
     const text = await res.text()
 
     if (!res.ok) {
       const message = extractMessage(text) ?? res.statusText
-      throw new ShipLogicError(
-        `ShipLogic ${method} ${path} failed (${res.status}): ${message}`,
+      throw new CourierGuyError(
+        `Courier Guy ${method} ${path} failed (${res.status}): ${message}`,
         res.status,
         text,
       )
@@ -110,8 +113,8 @@ export class ShipLogicClient {
     try {
       return JSON.parse(text) as T
     } catch {
-      throw new ShipLogicError(
-        `ShipLogic returned non-JSON response: ${text.slice(0, 200)}`,
+      throw new CourierGuyError(
+        `Courier Guy returned non-JSON response: ${text.slice(0, 200)}`,
         res.status,
         text,
       )

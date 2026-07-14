@@ -67,9 +67,11 @@ export default defineConfig({
         providers: [
           // Keep the manual provider for the JHB/PTA own-delivery (COD) option.
           { resolve: '@medusajs/fulfillment-manual', id: 'manual' },
-          // The Courier Guy (ShipLogic) — live rates + waybill creation.
+          // The Courier Guy — live rates + waybill creation (ShipLogic-powered API).
+          // NB: `id` stays 'shiplogic' so the persisted provider id
+          // (`shiplogic_shiplogic`) on existing shipping options/waybills is unchanged.
           {
-            resolve: './src/modules/shiplogic',
+            resolve: './src/modules/courier-guy',
             id: 'shiplogic',
             options: {
               apiKey: process.env.TCG_API_KEY,

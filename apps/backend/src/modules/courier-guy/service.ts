@@ -9,15 +9,15 @@ import type {
   FulfillmentOrderDTO,
   Logger,
 } from '@medusajs/framework/types'
-import { ShipLogicClient } from './client'
+import { CourierGuyClient } from './client'
 import type {
-  ShipLogicAddress,
-  ShipLogicContact,
-  ShipLogicFulfillmentData,
-  ShipLogicOptionData,
-  ShipLogicOptions,
-  ShipLogicParcel,
-  ShipLogicServiceCode,
+  CourierGuyAddress,
+  CourierGuyContact,
+  CourierGuyFulfillmentData,
+  CourierGuyOptionData,
+  CourierGuyOptions,
+  CourierGuyParcel,
+  CourierGuyServiceCode,
 } from './types'
 
 type InjectedDependencies = {
@@ -25,7 +25,7 @@ type InjectedDependencies = {
 }
 
 /** Service levels we expose at checkout. */
-const SERVICE_LEVELS: { code: ShipLogicServiceCode; name: string }[] = [
+const SERVICE_LEVELS: { code: CourierGuyServiceCode; name: string }[] = [
   { code: 'ECO', name: 'The Courier Guy — Economy' },
   { code: 'OVN', name: 'The Courier Guy — Overnight' },
 ]
@@ -55,30 +55,38 @@ function selectRate(rates: any[], tier: string): any | undefined {
   return [...pool].sort((a, b) => a.rate - b.rate)[0]
 }
 
-class ShipLogicFulfillmentProviderService extends AbstractFulfillmentProviderService {
+class CourierGuyFulfillmentProviderService extends AbstractFulfillmentProviderService {
+  // ⚠️ DO NOT rename. This identifier composes the persisted fulfillment
+  // provider id (`shiplogic_shiplogic`) that prod shipping options and booked
+  // waybills reference. The module was renamed to "courier-guy" for clarity
+  // (#TCG-rename), but changing this string would orphan existing DB rows
+  // without a data migration. Keep it `shiplogic`.
   static override identifier = 'shiplogic'
 
   protected readonly logger_: Logger
-  protected readonly options_: ShipLogicOptions
-  protected readonly client_: ShipLogicClient
+  protected readonly options_: CourierGuyOptions
+  protected readonly client_: CourierGuyClient
 
-  constructor({ logger }: InjectedDependencies, options: ShipLogicOptions) {
+  constructor({ logger }: InjectedDependencies, options: CourierGuyOptions) {
     super()
     this.logger_ = logger
     this.options_ = options
 
     if (!options?.apiKey) {
       this.logger_.warn(
-        '[shiplogic] no apiKey configured — rate quoting and shipment creation will fail',
+        '[courier-guy] no apiKey configured — rate quoting and shipment creation will fail',
       )
     }
 
-    this.client_ = new ShipLogicClient(options.apiKey, options.baseUrl)
+    this.client_ = new CourierGuyClient(options.apiKey, options.baseUrl)
   }
 
   override async getFulfillmentOptions(): Promise<FulfillmentOption[]> {
     return SERVICE_LEVELS.map(
       (s): FulfillmentOption => ({
+        // Kept as `shiplogic-*` (not renamed): this id is persisted in existing
+        // prod shipping options' `data`. Only `service_level_code` is read back,
+        // so the prefix is cosmetic — but renaming buys nothing and risks a mismatch.
         id: `shiplogic-${s.code.toLowerCase()}`,
         service_level_code: s.code,
         name: s.name,
@@ -92,7 +100,7 @@ class ShipLogicFulfillmentProviderService extends AbstractFulfillmentProviderSer
     _context: Record<string, unknown>,
   ): Promise<Record<string, unknown>> {
     // Persist the service level onto the shipping method so createFulfillment
-    // knows which ShipLogic service to book.
+    // knows which CourierGuy service to book.
     return {
       ...data,
       service_level_code: optionData.service_level_code,
@@ -104,7 +112,7 @@ class ShipLogicFulfillmentProviderService extends AbstractFulfillmentProviderSer
   }
 
   override async canCalculate(): Promise<boolean> {
-    // Prices are always quoted live from ShipLogic.
+    // Prices are always quoted live from CourierGuy.
     return true
   }
 
@@ -113,20 +121,20 @@ class ShipLogicFulfillmentProviderService extends AbstractFulfillmentProviderSer
     _data: CalculateShippingOptionPriceDTO['data'],
     context: CalculateShippingOptionPriceDTO['context'],
   ): Promise<CalculatedShippingOptionPrice> {
-    const serviceCode = (optionData as ShipLogicOptionData)?.service_level_code
+    const serviceCode = (optionData as CourierGuyOptionData)?.service_level_code
     const address = (context as any)?.shipping_address
     const items = ((context as any)?.items ?? []) as any[]
 
     if (!serviceCode) {
       throw new MedusaError(
         MedusaError.Types.INVALID_DATA,
-        '[shiplogic] shipping option is missing service_level_code',
+        '[courier-guy] shipping option is missing service_level_code',
       )
     }
     if (!address) {
       throw new MedusaError(
         MedusaError.Types.INVALID_DATA,
-        '[shiplogic] cannot quote a rate without a shipping address',
+        '[courier-guy] cannot quote a rate without a shipping address',
       )
     }
 
@@ -135,12 +143,12 @@ class ShipLogicFulfillmentProviderService extends AbstractFulfillmentProviderSer
     try {
       const res = await this.client_.getRates({
         collection_address: this.options_.collectionAddress,
-        delivery_address: this.toShipLogicAddress(address),
+        delivery_address: this.toCourierGuyAddress(address),
         parcels,
       })
       rates = res.rates ?? []
     } catch (err: any) {
-      this.logger_.error(`[shiplogic] rate request failed: ${err?.message ?? err}`)
+      this.logger_.error(`[courier-guy] rate request failed: ${err?.message ?? err}`)
       throw new MedusaError(
         MedusaError.Types.UNEXPECTED_STATE,
         'Could not retrieve a Courier Guy shipping rate. Please try again.',
@@ -151,7 +159,7 @@ class ShipLogicFulfillmentProviderService extends AbstractFulfillmentProviderSer
     if (!match) {
       throw new MedusaError(
         MedusaError.Types.NOT_FOUND,
-        `[shiplogic] no deliverable Courier Guy rate for this delivery address`,
+        `[courier-guy] no deliverable Courier Guy rate for this delivery address`,
       )
     }
 
@@ -168,17 +176,17 @@ class ShipLogicFulfillmentProviderService extends AbstractFulfillmentProviderSer
     order: Partial<FulfillmentOrderDTO> | undefined,
     _fulfillment: Record<string, unknown>,
   ): Promise<CreateFulfillmentResult> {
-    const serviceCode = (data?.service_level_code as ShipLogicServiceCode) ?? 'ECO'
+    const serviceCode = (data?.service_level_code as CourierGuyServiceCode) ?? 'ECO'
     const address = (order as any)?.shipping_address
 
     if (!address) {
       throw new MedusaError(
         MedusaError.Types.INVALID_DATA,
-        '[shiplogic] cannot create a shipment without a shipping address',
+        '[courier-guy] cannot create a shipment without a shipping address',
       )
     }
 
-    const deliveryContact: ShipLogicContact = {
+    const deliveryContact: CourierGuyContact = {
       name:
         [address.first_name, address.last_name].filter(Boolean).join(' ') ||
         'Customer',
@@ -196,24 +204,24 @@ class ShipLogicFulfillmentProviderService extends AbstractFulfillmentProviderSer
     try {
       const { rates } = await this.client_.getRates({
         collection_address: this.options_.collectionAddress,
-        delivery_address: this.toShipLogicAddress(address),
+        delivery_address: this.toCourierGuyAddress(address),
         parcels,
       })
       const picked = selectRate(rates ?? [], serviceCode)
       if (picked?.service_level?.code) bookingCode = picked.service_level.code
     } catch (err: any) {
       this.logger_.warn(
-        `[shiplogic] could not resolve service code at fulfillment, using ${serviceCode}: ${err?.message ?? err}`,
+        `[courier-guy] could not resolve service code at fulfillment, using ${serviceCode}: ${err?.message ?? err}`,
       )
     }
 
     const shipment = await this.client_.createShipment({
       collection_address: this.options_.collectionAddress,
       collection_contact: this.options_.collectionContact,
-      delivery_address: this.toShipLogicAddress(address),
+      delivery_address: this.toCourierGuyAddress(address),
       delivery_contact: deliveryContact,
       parcels,
-      service_level_code: bookingCode as ShipLogicServiceCode,
+      service_level_code: bookingCode as CourierGuyServiceCode,
       customer_reference: (order as any)?.display_id
         ? `TSE-${(order as any).display_id}`
         : undefined,
@@ -228,14 +236,14 @@ class ShipLogicFulfillmentProviderService extends AbstractFulfillmentProviderSer
       labelUrl = await this.client_.getLabelUrl(shipment.id)
     } catch (err: any) {
       this.logger_.warn(
-        `[shiplogic] could not fetch label for shipment ${shipment.id}: ${err?.message ?? err}`,
+        `[courier-guy] could not fetch label for shipment ${shipment.id}: ${err?.message ?? err}`,
       )
     }
 
-    const fulfillmentData: ShipLogicFulfillmentData = {
+    const fulfillmentData: CourierGuyFulfillmentData = {
       shipment_id: shipment.id,
       tracking_reference: trackingReference,
-      service_level_code: bookingCode as ShipLogicServiceCode,
+      service_level_code: bookingCode as CourierGuyServiceCode,
       label_url: labelUrl ?? undefined,
     }
 
@@ -254,14 +262,14 @@ class ShipLogicFulfillmentProviderService extends AbstractFulfillmentProviderSer
   }
 
   override async cancelFulfillment(data: Record<string, unknown>): Promise<any> {
-    const trackingReference = (data as ShipLogicFulfillmentData)?.tracking_reference
+    const trackingReference = (data as CourierGuyFulfillmentData)?.tracking_reference
     if (!trackingReference) return {}
 
     try {
       await this.client_.cancelShipment(trackingReference)
     } catch (err: any) {
       this.logger_.error(
-        `[shiplogic] failed to cancel shipment ${trackingReference}: ${err?.message ?? err}`,
+        `[courier-guy] failed to cancel shipment ${trackingReference}: ${err?.message ?? err}`,
       )
       throw err
     }
@@ -275,7 +283,7 @@ class ShipLogicFulfillmentProviderService extends AbstractFulfillmentProviderSer
 
   // ─── helpers ──────────────────────────────────────────────────────────────
 
-  private toShipLogicAddress(addr: any): ShipLogicAddress {
+  private toCourierGuyAddress(addr: any): CourierGuyAddress {
     const street = [addr.address_1, addr.address_2].filter(Boolean).join(', ')
     return {
       street_address: street || addr.address_1 || '',
@@ -294,9 +302,9 @@ class ShipLogicFulfillmentProviderService extends AbstractFulfillmentProviderSer
    * (Medusa stores weight in grams), otherwise the configured default parcel —
    * cartridges rarely carry dimensions, so the default covers most carts.
    */
-  private buildParcels(items: any[]): ShipLogicParcel[] {
+  private buildParcels(items: any[]): CourierGuyParcel[] {
     const def = this.options_.defaultParcel
-    const parcels: ShipLogicParcel[] = []
+    const parcels: CourierGuyParcel[] = []
 
     for (const item of items) {
       const qty = Math.max(1, Number(item?.quantity ?? 1))
@@ -327,4 +335,4 @@ class ShipLogicFulfillmentProviderService extends AbstractFulfillmentProviderSer
   }
 }
 
-export default ShipLogicFulfillmentProviderService
+export default CourierGuyFulfillmentProviderService
