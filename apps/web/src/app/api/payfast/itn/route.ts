@@ -21,16 +21,15 @@ function verifySignature(data: Record<string, string>): boolean {
 }
 
 export async function POST(req: NextRequest) {
-  // Validate source IP against PayFast's published ranges. The allowlist is the
-  // *production* range only — sandbox ITNs come from different hosts, so skip
-  // the check in sandbox (the signature check below still authenticates it).
-  // Mirrors the Medusa provider, which guards the same check with `!sandbox`.
+  // Source IP is ADVISORY only — the signature + merchant_id checks below are the
+  // real authentication. A hard IP gate here silently drops legitimate ITNs once
+  // the host is behind a proxy (e.g. Cloudflare rewrites the source to an edge
+  // IP) or when PayFast's own ranges drift. Log a mismatch, don't reject on it.
   const sandbox = process.env.PAYFAST_SANDBOX === 'true'
   const rawIp = req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip') ?? ''
   const ip = rawIp.split(',')[0]?.trim() ?? ''
-  if (process.env.NODE_ENV === 'production' && !sandbox && !PAYFAST_IPS.has(ip)) {
-    console.error('[PayFast ITN] Request from unlisted IP:', ip)
-    return new NextResponse('FORBIDDEN', { status: 403 })
+  if (process.env.NODE_ENV === 'production' && !sandbox && ip && !PAYFAST_IPS.has(ip)) {
+    console.warn('[PayFast ITN] non-allowlisted IP (advisory; verifying by signature):', ip)
   }
 
   const formData = await req.formData()

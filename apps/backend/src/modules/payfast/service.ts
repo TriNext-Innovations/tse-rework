@@ -282,15 +282,21 @@ class PayfastProviderService extends AbstractPaymentProvider<PayfastOptions> {
     const body = (webhookData.data ?? {}) as Record<string, string>
     const headers = (webhookData.headers ?? {}) as Record<string, string>
 
-    // Source IP check (best-effort — behind a proxy use x-forwarded-for).
+    // Source IP is ADVISORY only — do not reject on it. The signature +
+    // merchant_id checks below are the cryptographic authentication. The
+    // hardcoded allowlist broke live ITNs once api.tse-cartridges.co.za went
+    // behind Cloudflare's proxy (the source IP became a Cloudflare edge, not a
+    // PayFast IP), and PayFast's own ranges drift — so a hard IP gate silently
+    // drops legitimate, signed notifications. We log a mismatch for visibility.
     const fwd = headers['x-forwarded-for'] ?? headers['x-real-ip'] ?? ''
     const ip = String(fwd).split(',')[0]?.trim()
     const isProd = !this.options_.sandbox
     if (isProd && ip && !PAYFAST_IPS.has(ip)) {
-      return { action: 'failed' }
+      this.logger_?.warn(`[payfast] ITN from non-allowlisted IP ${ip} (advisory; verifying by signature)`)
     }
 
     if (body.merchant_id && body.merchant_id !== this.options_.merchantId) {
+      this.logger_?.error(`[payfast] ITN merchant_id mismatch (${body.merchant_id}) — rejecting`)
       return { action: 'failed' }
     }
     // Prefer the raw body for signature (preserves order); fall back to the
@@ -299,6 +305,7 @@ class PayfastProviderService extends AbstractPaymentProvider<PayfastOptions> {
       ? this.verifyRawSignature((webhookData as any).rawData)
       : this.verifySignature(body)
     if (!verified) {
+      this.logger_?.error(`[payfast] ITN signature verification failed for session ${body.m_payment_id ?? '?'} — rejecting`)
       return { action: 'failed' }
     }
 
