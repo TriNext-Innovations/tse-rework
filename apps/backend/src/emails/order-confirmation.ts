@@ -66,6 +66,9 @@ export function orderConfirmationHtml(d: OrderConfirmationData): string {
                     <span style="font-size:22px;font-weight:800;color:#dfe344;letter-spacing:-0.5px;">TSE</span>
                     <span style="font-size:14px;color:#9CA3AF;margin-left:8px;">Technical Systems Engineering</span>
                   </td>
+                  <td align="right">
+                    <span style="font-size:12px;color:#6B7280;">EST. 1987</span>
+                  </td>
                 </tr>
               </table>
             </td>
@@ -164,7 +167,7 @@ export function orderConfirmationHtml(d: OrderConfirmationData): string {
           <tr>
             <td style="padding:24px 32px;text-align:center;">
               <p style="margin:0;font-size:12px;color:#9CA3AF;">
-                TSE — Technical Systems Engineering · Kya Sands, Johannesburg<br/>
+                TSE — Technical Systems Engineering · Kya Sands, Johannesburg · Est. 1987<br/>
                 Generic cartridges &amp; toner at unbeatable prices.
               </p>
             </td>
