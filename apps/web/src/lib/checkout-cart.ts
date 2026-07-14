@@ -56,6 +56,7 @@ export type MedusaLineItem = {
 export type MedusaCart = {
   id: string
   email?: string | null
+  completed_at?: string | null
   item_total?: number // rands
   total?: number // rands
   items?: MedusaLineItem[]
@@ -128,11 +129,15 @@ export async function createEmptyCart(): Promise<MedusaCart> {
 }
 
 // Fetch a cart by id. Returns null if it no longer exists or is completed (so
-// the caller can recreate it), rather than throwing.
+// the caller can recreate it), rather than throwing. The completed check must
+// be explicit: Medusa returns completed carts with 200 + their line items, so
+// without it the paid cart "ghosts" back into the drawer after the PayFast
+// redirect (the provider flow keeps cart_id through the redirect on purpose).
 export async function getCart(cartId: string): Promise<MedusaCart | null> {
   try {
     const { cart } = await api<{ cart: MedusaCart }>(`/store/carts/${cartId}`)
-    return cart ?? null
+    if (!cart || cart.completed_at) return null
+    return cart
   } catch {
     return null
   }

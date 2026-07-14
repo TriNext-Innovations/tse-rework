@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useCart } from '@/contexts/CartContext'
 import { completeCart, PAYFAST_PROVIDER_ENABLED } from '@/lib/checkout-cart'
 
 type State = 'idle' | 'finalising' | 'done' | 'pending'
@@ -13,6 +14,7 @@ type State = 'idle' | 'finalising' | 'done' | 'pending'
  * so a timeout shows a soft "processing" message rather than an error.
  */
 export function FinalizeOrder() {
+  const { clearCart } = useCart()
   const [state, setState] = useState<State>('idle')
   const [orderNo, setOrderNo] = useState<string | number | null>(null)
 
@@ -30,9 +32,11 @@ export function FinalizeOrder() {
       for (let i = 0; i < 8 && !cancelled; i++) {
         const res = await completeCart(cartId!)
         if (res.type === 'order' && res.order) {
-          try {
-            localStorage.removeItem('tse_cart_id')
-          } catch {}
+          // Clear the cart via context, not just localStorage — the provider
+          // hydrates the (possibly still-uncompleted) cart on mount, so the
+          // in-memory drawer state must be dropped too or the paid items keep
+          // showing in the header/drawer for the rest of the session.
+          clearCart()
           if (!cancelled) {
             setOrderNo(res.order.display_id ?? res.order.id)
             setState('done')
@@ -47,6 +51,7 @@ export function FinalizeOrder() {
     return () => {
       cancelled = true
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   if (!PAYFAST_PROVIDER_ENABLED || state === 'idle') return null

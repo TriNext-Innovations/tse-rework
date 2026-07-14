@@ -54,14 +54,14 @@ export default async function OrderConfirmedPage() {
         <FinalizeOrder />
 
         <p className="text-[var(--ink-3)] text-base mb-8 leading-relaxed">
-          Your order has been sent to our team via WhatsApp. We&apos;ll confirm stock availability and arrange payment and delivery within 1 business hour.
+          Your payment was received securely via PayFast and your order is in our system. Our team will pack it and get it on its way.
         </p>
 
         <div className="bg-[var(--surface)] rounded-[20px] p-6 text-left mb-8 space-y-4">
           {[
-            { icon: '📬', heading: 'Confirmation', body: "You'll receive an email and/or WhatsApp confirming your order and estimated delivery time." },
-            { icon: '🚚', heading: 'Delivery', body: 'Orders confirmed before noon are delivered next business day to JHB & PTA. Other areas may vary.' },
-            { icon: '💳', heading: 'Payment', body: 'Our team will send you payment details (EFT or COD available for JHB/PTA).' },
+            { icon: '📬', heading: 'Confirmation', body: "A confirmation email with your order number and details is on its way to your inbox." },
+            { icon: '🚚', heading: 'Delivery', body: 'We dispatch with your chosen delivery method. Orders placed before noon are typically delivered next business day to JHB & PTA; other areas may vary.' },
+            { icon: '💳', heading: 'Payment', body: 'Paid in full online via PayFast — no further payment is needed.' },
           ].map(({ icon, heading, body }) => (
             <div key={heading} className="flex items-start gap-3">
               <span className="text-xl">{icon}</span>
