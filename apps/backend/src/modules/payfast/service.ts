@@ -30,6 +30,8 @@ import type { PayfastOptions, PayfastSessionData } from './types'
 const PAYFAST_IPS = new Set([
   '197.97.145.144', '41.74.179.194', '196.33.227.144',
   '196.33.227.145', '196.33.227.146', '196.33.227.147',
+  // Observed live ITN source since 2026-07 (AWS af-south-1, PR #275) — may drift.
+  '13.245.74.88',
 ])
 
 /**
@@ -288,7 +290,9 @@ class PayfastProviderService extends AbstractPaymentProvider<PayfastOptions> {
     // behind Cloudflare's proxy (the source IP became a Cloudflare edge, not a
     // PayFast IP), and PayFast's own ranges drift — so a hard IP gate silently
     // drops legitimate, signed notifications. We log a mismatch for visibility.
-    const fwd = headers['x-forwarded-for'] ?? headers['x-real-ip'] ?? ''
+    // Prefer CF-Connecting-IP (set by the Cloudflare edge itself); the first
+    // x-forwarded-for entry is client-suppliable since CF appends to it (#262).
+    const fwd = headers['cf-connecting-ip'] ?? headers['x-forwarded-for'] ?? headers['x-real-ip'] ?? ''
     const ip = String(fwd).split(',')[0]?.trim()
     const isProd = !this.options_.sandbox
     if (isProd && ip && !PAYFAST_IPS.has(ip)) {

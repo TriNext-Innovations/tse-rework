@@ -37,7 +37,7 @@ PAYFAST_PASSPHRASE=                   # leave blank unless set in the sandbox da
 PAYFAST_LIVE=false                    # → provider runs in sandbox mode (sandbox.payfast.co.za)
 MEDUSA_BACKEND_URL=https://<your-tunnel>   # so notify_url is publicly reachable
 STOREFRONT_URL=http://localhost:3000       # return/cancel URLs
-TSE_NOTIFY_EMAIL=you@example.com           # team notification (#135)
+SALES_EMAIL=you@example.com                # team notification (#135, #271)
 ```
 
 `payfastConfigured` in `medusa-config.ts` only registers the provider when
