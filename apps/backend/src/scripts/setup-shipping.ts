@@ -1,13 +1,22 @@
 /**
  * Client pre-go-live shipping model (#273):
- *   - The Courier Guy = flat R150 per order (replaces live ShipLogic rate
- *     quoting at checkout — the provider stays `shiplogic` so waybills still
- *     auto-create on fulfillment; only the price becomes flat).
+ *   - The Courier Guy = flat per-service-level rate (replaces live ShipLogic
+ *     rate quoting at checkout — the provider stays `shiplogic` so waybills
+ *     still auto-create on fulfillment; only the price becomes flat):
+ *       Economy (3–4 days)   R150
+ *       Overnight (next day) R200
+ *     Pricing Overnight above Economy keeps the faster service a deliberate
+ *     upsell; at one flat rate for both, every customer would rationally pick
+ *     Overnight and we'd absorb the next-day cost on every order.
  *   - Free shipping when the cart's goods total (incl VAT, excl shipping) is
  *     R2,000 or more — an automatic 100%-off-shipping promotion.
  *
- * Idempotent — safe to re-run: options already flat at R150 are skipped, and
- * the promotion is only created if the code doesn't exist yet.
+ * Rates are keyed on the fulfillment-option id persisted in shipping_option
+ * `data.id` (`shiplogic-eco` / `shiplogic-ovn`) — a stable key that survives
+ * option renames, unlike the display name.
+ *
+ * Idempotent — safe to re-run: options already flat at their target rate are
+ * skipped, and the promotion is only created if the code doesn't exist yet.
  *
  * Usage (from monorepo root):
  *   pnpm --filter @tse/backend exec medusa exec src/scripts/setup-shipping.ts
@@ -17,17 +26,28 @@ import { MedusaContainer } from '@medusajs/framework/types'
 import { ContainerRegistrationKeys, Modules } from '@medusajs/framework/utils'
 import { createPromotionsWorkflow, updateShippingOptionsWorkflow } from '@medusajs/medusa/core-flows'
 
-const FLAT_RATE_RAND = 150
+const FLAT_RATE_RAND_BY_OPTION: Record<string, number> = {
+  'shiplogic-eco': 150,
+  'shiplogic-ovn': 200,
+}
 const FREE_SHIPPING_THRESHOLD_RAND = 2000
 const PROMO_CODE = 'FREE-SHIPPING-OVER-R2000'
 
 export default async function setupShipping({ container }: { container: MedusaContainer }) {
   const query = container.resolve(ContainerRegistrationKeys.QUERY)
 
-  // ── 1. Courier Guy options → flat R150 ─────────────────────────────────────
+  // ── 1. Courier Guy options → flat per-service-level rate ───────────────────
   const { data: options } = await query.graph({
     entity: 'shipping_option',
-    fields: ['id', 'name', 'price_type', 'provider_id', 'prices.amount', 'prices.currency_code'],
+    fields: [
+      'id',
+      'name',
+      'price_type',
+      'provider_id',
+      'data',
+      'prices.amount',
+      'prices.currency_code',
+    ],
   })
 
   const shiplogicOptions = (options ?? []).filter((o: any) =>
@@ -39,18 +59,26 @@ export default async function setupShipping({ container }: { container: MedusaCo
       '[setup-shipping] no shiplogic shipping options found — create the Courier Guy option in Admin first, then re-run',
     )
   }
-  if (shiplogicOptions.length > 1) {
-    console.warn(
-      `[setup-shipping] ${shiplogicOptions.length} shiplogic options found — all will be flat R${FLAT_RATE_RAND}. ` +
-        'If only one Courier Guy option should show at checkout, disable the rest in Admin.',
-    )
-  }
 
   for (const option of shiplogicOptions) {
+    const fulfillmentOptionId = String((option.data as any)?.id ?? '')
+    const targetRate = FLAT_RATE_RAND_BY_OPTION[fulfillmentOptionId]
+
+    // Priced by service level, so an unrecognised option is left on live rates
+    // rather than guessed at — mispricing shipping is worse than not changing it.
+    if (targetRate === undefined) {
+      console.warn(
+        `[setup-shipping] "${option.name}" (${option.id}) has unknown fulfillment option id ` +
+          `"${fulfillmentOptionId}" — no rate configured, leaving as-is. ` +
+          `Known: ${Object.keys(FLAT_RATE_RAND_BY_OPTION).join(', ')}`,
+      )
+      continue
+    }
+
     const zarPrice = (option.prices ?? []).find((p: any) => p.currency_code === 'zar')
-    const alreadyFlat = option.price_type === 'flat' && Number(zarPrice?.amount) === FLAT_RATE_RAND
+    const alreadyFlat = option.price_type === 'flat' && Number(zarPrice?.amount) === targetRate
     if (alreadyFlat) {
-      console.log(`[setup-shipping] "${option.name}" already flat R${FLAT_RATE_RAND} — skipping`)
+      console.log(`[setup-shipping] "${option.name}" already flat R${targetRate} — skipping`)
       continue
     }
 
@@ -59,12 +87,12 @@ export default async function setupShipping({ container }: { container: MedusaCo
         {
           id: option.id,
           price_type: 'flat',
-          prices: [{ currency_code: 'zar', amount: FLAT_RATE_RAND }],
+          prices: [{ currency_code: 'zar', amount: targetRate }],
         },
       ],
     })
     console.log(
-      `[setup-shipping] "${option.name}" (${option.id}): ${option.price_type} → flat R${FLAT_RATE_RAND}`,
+      `[setup-shipping] "${option.name}" (${option.id}): ${option.price_type} → flat R${targetRate}`,
     )
   }
 

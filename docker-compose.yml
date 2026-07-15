@@ -145,8 +145,10 @@ services:
       ZEPTOMAIL_TOKEN: ${ZEPTOMAIL_TOKEN}
       EMAIL_FROM: ${EMAIL_FROM:-sales@tse-cartridges.co.za}
       EMAIL_REPLY_TO: ${EMAIL_REPLY_TO:-sales@tse.co.za}
-      # Team inbox for the backend new-order notification (#135)
-      TSE_NOTIFY_EMAIL: ${TSE_NOTIFY_EMAIL:-sales@tse.co.za}
+      # Team inbox for ALL backend notifications (#271, replaces TSE_NOTIFY_EMAIL).
+      # SALES_CC copies extra inboxes (comma-separated) on every team notification.
+      SALES_EMAIL: ${SALES_EMAIL:-sales@tse.co.za}
+      SALES_CC: ${SALES_CC:-}
       PAYFAST_MERCHANT_ID: ${PAYFAST_MERCHANT_ID}
       PAYFAST_MERCHANT_KEY: ${PAYFAST_MERCHANT_KEY}
       PAYFAST_PASSPHRASE: ${PAYFAST_PASSPHRASE}
