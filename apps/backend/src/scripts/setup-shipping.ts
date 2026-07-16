@@ -10,10 +10,11 @@
  *     Overnight and we'd absorb the next-day cost on every order.
  *   - Free shipping when the cart's goods total (incl VAT, excl shipping) is
  *     R2,000 or more — an automatic 100%-off-shipping promotion.
- *   - Pudo locker-to-locker pickup (#274 MVP): flat-priced option on the
- *     manual fulfillment provider — staff coordinate the destination locker
- *     with the customer after the order. R60 is a placeholder pending the
- *     client's price confirmation; adjust in Admin (re-runs won't clobber it).
+ *   - Pudo locker delivery (#274 MVP): warehouse → customer's chosen Pudo
+ *     locker, booked by the TSE team. Flat-priced option on the manual
+ *     fulfillment provider — staff coordinate the destination locker with the
+ *     customer after the order. R60 is a placeholder pending the client's
+ *     price confirmation; adjust in Admin (re-runs won't clobber it).
  *
  * Rates are keyed on the fulfillment-option id persisted in shipping_option
  * `data.id` (`shiplogic-eco` / `shiplogic-ovn`) — a stable key that survives
@@ -41,9 +42,9 @@ const FLAT_RATE_RAND_BY_OPTION: Record<string, number> = {
 const FREE_SHIPPING_THRESHOLD_RAND = 2000
 const PROMO_CODE = 'FREE-SHIPPING-OVER-R2000'
 
-const PUDO_NAME = 'Pudo Locker-to-Locker'
-// Placeholder pending client price confirmation (#274) — Pudo L2L is typically
-// ~R60. Staff can change it in Admin; existing options are never overwritten.
+const PUDO_NAME = 'Pudo Locker Delivery'
+// Placeholder pending client price confirmation (#274). Staff can change it
+// in Admin; existing options are never overwritten.
 const PUDO_FLAT_RATE_RAND = 60
 
 export default async function setupShipping({ container }: { container: MedusaContainer }) {
@@ -151,7 +152,7 @@ export default async function setupShipping({ container }: { container: MedusaCo
     )
   }
 
-  // ── 3. Pudo locker-to-locker pickup (#274 MVP) ─────────────────────────────
+  // ── 3. Pudo locker delivery — warehouse → customer's locker (#274 MVP) ─────
   const pudoExists = (options ?? []).some((o: any) =>
     String(o.name ?? '').toLowerCase().startsWith('pudo'),
   )
@@ -185,8 +186,8 @@ export default async function setupShipping({ container }: { container: MedusaCo
             provider_id: 'manual_manual',
             type: {
               label: 'Pudo',
-              code: 'pudo-l2l',
-              description: 'Locker-to-locker pickup via Pudo — we confirm your locker after checkout',
+              code: 'pudo-locker',
+              description: 'Delivered from our warehouse to your chosen Pudo locker — we confirm the locker with you after checkout',
             },
             prices: [{ currency_code: 'zar', amount: PUDO_FLAT_RATE_RAND }],
             rules: [
