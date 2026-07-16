@@ -129,10 +129,11 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      # service_started, not service_healthy: the meili image has no
-      # wget/curl so its healthcheck never passes, though search works.
+      # The meili healthcheck used to probe `localhost` (resolves ::1; Meili is
+      # IPv4-only) so it never passed and this was relaxed to service_started.
+      # Fixed to probe 127.0.0.1 — the health gate is trustworthy again.
       meilisearch:
-        condition: service_started
+        condition: service_healthy
     environment:
       DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/tse_medusa?sslmode=disable
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
