@@ -98,6 +98,7 @@ export default function CheckoutForm() {
   const [totals, setTotals] = useState<CartTotals | null>(null)
   const [optionsLoading, setOptionsLoading] = useState(false)
   const [optionsError, setOptionsError] = useState('')
+  const [optionsNotice, setOptionsNotice] = useState('')
 
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -166,6 +167,7 @@ export default function CheckoutForm() {
       return
     }
     setOptionsError('')
+    setOptionsNotice('')
     setOptionsLoading(true)
     setSelectedOptionId(null)
     setTotals(null)
@@ -181,10 +183,13 @@ export default function CheckoutForm() {
         province: address.province,
         postal_code: address.postalCode,
       })
-      const opts = await listShippingOptions(cartId)
+      const { options: opts, unavailable } = await listShippingOptions(cartId)
       if (opts.length === 0) {
         setOptionsError('No delivery options are available for this address. Please check your details.')
         return
+      }
+      if (unavailable.length > 0) {
+        setOptionsNotice(`Not available for this address: ${unavailable.join(', ')}.`)
       }
 
       // Persist a newly typed address to the signed-in customer's address book
@@ -598,6 +603,7 @@ export default function CheckoutForm() {
                   )
                 })}
               </div>
+              {optionsNotice && <p className="text-xs text-[#B45309] mt-4">{optionsNotice}</p>}
               {optionsError && <p className="text-xs text-red-500 mt-4">{optionsError}</p>}
               <div className="flex gap-3 mt-8">
                 <button
