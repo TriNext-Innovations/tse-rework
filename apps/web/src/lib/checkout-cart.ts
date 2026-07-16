@@ -253,11 +253,10 @@ export async function selectShippingMethod(cartId: string, optionId: string): Pr
   }
 }
 
-// ─── Canonical PayFast flow (Medusa payment provider, #130) ───────────────────
-// Gated behind NEXT_PUBLIC_PAYFAST_PROVIDER on the storefront — when off, the
-// legacy /api/payfast/initiate path is used instead.
+// ─── PayFast flow (Medusa payment provider, #130) ─────────────────────────────
+// The provider is the only payment path — the legacy storefront initiate/ITN
+// routes were removed after the prod cutover.
 
-export const PAYFAST_PROVIDER_ENABLED = process.env.NEXT_PUBLIC_PAYFAST_PROVIDER === 'true'
 // Medusa payment-provider id: `pp_<config-id>_<service-identifier>` = payfast/payfast.
 const PAYFAST_PROVIDER_ID = 'pp_payfast_payfast'
 

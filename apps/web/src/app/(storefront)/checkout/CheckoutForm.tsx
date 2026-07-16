@@ -10,7 +10,6 @@ import {
   listShippingOptions,
   selectShippingMethod,
   initPayfastSession,
-  PAYFAST_PROVIDER_ENABLED,
   type ShippingOption,
   type CartTotals,
 } from '@/lib/checkout-cart'
@@ -47,7 +46,7 @@ function toAddressForm(a: CustomerAddress): AddressForm {
 }
 
 export default function CheckoutForm() {
-  const { items, count, clearCart, cartId } = useCart()
+  const { items, count, cartId } = useCart()
   const { customer, register, addAddress } = useAuth()
   const [step, setStep] = useState(1)
   const [contact, setContact] = useState<ContactForm>(EMPTY_CONTACT)
@@ -253,28 +252,9 @@ export default function CheckoutForm() {
     setPayfastError('')
     setPayfastLoading(true)
     try {
-      if (PAYFAST_PROVIDER_ENABLED) {
-        // Canonical flow: Medusa payment provider signs the redirect params.
-        // Keep the cart_id so /checkout/confirmed can complete the cart → order.
-        const { url, params } = await initPayfastSession(cartId, { email: contact.email, name: contact.name })
-        submitToPayfast(url, params)
-        return
-      }
-
-      // Legacy flow: storefront API route signs + persists the pending cart;
-      // the ITN turns it into an order, so the local cart can be cleared now.
-      const res = await fetch('/api/payfast/initiate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cart_id: cartId, contact }),
-      })
-      if (!res.ok) {
-        const { error } = await res.json().catch(() => ({ error: 'Payment service unavailable' }))
-        setPayfastError(error ?? 'Could not initiate payment. Please try again.')
-        return
-      }
-      const { url, params } = await res.json()
-      clearCart()
+      // Medusa payment provider signs the redirect params. Keep the cart_id so
+      // /checkout/confirmed can complete the cart → order.
+      const { url, params } = await initPayfastSession(cartId, { email: contact.email, name: contact.name })
       submitToPayfast(url, params)
     } catch (err: any) {
       setPayfastError(err?.message ?? 'Network error — please try again.')
