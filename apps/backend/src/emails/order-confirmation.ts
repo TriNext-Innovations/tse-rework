@@ -11,6 +11,7 @@ export interface OrderConfirmationData {
   }>
   subtotal: string
   shippingCost: string
+  vatContent: string
   total: string
   shippingAddress: {
     name: string
@@ -123,6 +124,7 @@ export function orderConfirmationHtml(d: OrderConfirmationData): string {
               <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
                 ${row('Subtotal', d.subtotal)}
                 ${row('Shipping', d.shippingCost)}
+                ${row('VAT included (15%)', d.vatContent)}
                 <tr><td colspan="2" style="padding:4px 0;border-top:2px solid #111827;"></td></tr>
                 ${row('Total (incl. VAT)', d.total, true)}
               </table>
