@@ -157,6 +157,12 @@ class CourierGuyFulfillmentProviderService extends AbstractFulfillmentProviderSe
 
     const match = selectRate(rates, serviceCode)
     if (!match) {
+      // Warn (not just throw) — the storefront hides the option when this
+      // happens, so this log line is the only server-side trace of why an
+      // enabled shipping option didn't appear at checkout.
+      this.logger_.warn(
+        `[courier-guy] no deliverable ${serviceCode} rate to ${address?.city ?? '?'} ${address?.postal_code ?? ''} (${rates.length} rates returned)`,
+      )
       throw new MedusaError(
         MedusaError.Types.NOT_FOUND,
         `[courier-guy] no deliverable Courier Guy rate for this delivery address`,

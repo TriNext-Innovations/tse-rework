@@ -5,6 +5,8 @@
 // can't tamper with it. All calls use the public store API + publishable key,
 // matching the rest of the storefront.
 
+import * as Sentry from '@sentry/nextjs'
+
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
 
@@ -183,7 +185,13 @@ export async function setCartContact(cartId: string, email: string, address: Shi
 
 // ─── Shipping ─────────────────────────────────────────────────────────────────
 
-export async function listShippingOptions(cartId: string): Promise<ShippingOption[]> {
+export type ShippingOptionsResult = {
+  options: ShippingOption[]
+  /** Names of enabled options dropped because their live rate could not be quoted. */
+  unavailable: string[]
+}
+
+export async function listShippingOptions(cartId: string): Promise<ShippingOptionsResult> {
   const { shipping_options } = await api<{
     shipping_options: Array<{ id: string; name: string; amount?: number; price_type?: string; calculated_price?: { calculated_amount?: number } }>
   }>(`/store/shipping-options?cart_id=${encodeURIComponent(cartId)}`)
@@ -191,8 +199,10 @@ export async function listShippingOptions(cartId: string): Promise<ShippingOptio
   // The list endpoint only resolves prices for flat-rate options. Calculated
   // options (Courier Guy ECO/OVN) come back with calculated_price = null — their
   // live rate must be fetched per-option from the calculate endpoint, otherwise
-  // they fall back to 0 and render as "Free". Quote them in parallel; drop any
-  // option we can't price (e.g. courier returns no rate for the address).
+  // they fall back to 0 and render as "Free". Quote them in parallel; an option
+  // we can't price (e.g. courier returns no rate for the address) is excluded
+  // from the result, reported to error monitoring, and named in `unavailable`
+  // so the customer sees why it's missing.
   const results = await Promise.allSettled(
     shipping_options.map(async (o): Promise<ShippingOption> => {
       const priceType: ShippingOption['priceType'] = o.price_type === 'calculated' ? 'calculated' : 'flat'
@@ -211,7 +221,23 @@ export async function listShippingOptions(cartId: string): Promise<ShippingOptio
     }),
   )
 
-  return results.filter((r): r is PromiseFulfilledResult<ShippingOption> => r.status === 'fulfilled').map((r) => r.value)
+  const options: ShippingOption[] = []
+  const unavailable: string[] = []
+  results.forEach((r, i) => {
+    if (r.status === 'fulfilled') {
+      options.push(r.value)
+      return
+    }
+    const failed = shipping_options[i]
+    if (!failed) return
+    unavailable.push(failed.name)
+    Sentry.captureException(r.reason instanceof Error ? r.reason : new Error(String(r.reason)), {
+      tags: { checkout: 'shipping-quote' },
+      extra: { shipping_option_id: failed.id, shipping_option_name: failed.name, cart_id: cartId },
+    })
+  })
+
+  return { options, unavailable }
 }
 
 export async function selectShippingMethod(cartId: string, optionId: string): Promise<CartTotals> {
