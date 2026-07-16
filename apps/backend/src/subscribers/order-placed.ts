@@ -2,6 +2,7 @@ import { type SubscriberArgs, type SubscriberConfig } from '@medusajs/framework'
 import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
 import { sendEmail, salesEmail, salesCc } from '../lib/email'
 import { orderConfirmationHtml } from '../emails/order-confirmation'
+import { teamOrderNotificationHtml } from '../emails/team-order-notification'
 
 function formatPrice(amount: number, currency: string): string {
   return new Intl.NumberFormat('en-ZA', {
@@ -16,6 +17,18 @@ function formatDate(date: string | Date): string {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
+  })
+}
+
+// Team email carries the time too (staff triage same-day dispatch), in SAST.
+function formatDateTime(date: string | Date): string {
+  return new Date(date).toLocaleString('en-ZA', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Africa/Johannesburg',
   })
 }
 
@@ -41,6 +54,7 @@ export default async function orderPlacedHandler({
         'items.*',
         'shipping_address.*',
         'shipping_methods.*',
+        'payment_collections.status',
       ],
     })
     order = orders?.[0]
@@ -67,6 +81,10 @@ export default async function orderPlacedHandler({
     lineTotal: formatPrice(item.unit_price * item.quantity, currency),
   }))
 
+  // Prices are VAT-inclusive throughout, so the VAT content is backed out of
+  // the total (matching the storefront's 15/115 calculation).
+  const vatContent = formatPrice(((order.total ?? 0) * 15) / 115, currency)
+
   const html = orderConfirmationHtml({
     orderNumber: order.display_id ?? order.id,
     orderDate: formatDate(order.created_at),
@@ -77,6 +95,7 @@ export default async function orderPlacedHandler({
     items,
     subtotal: formatPrice(order.subtotal ?? 0, currency),
     shippingCost: formatPrice(order.shipping_total ?? 0, currency),
+    vatContent,
     total: formatPrice(order.total ?? 0, currency),
     shippingAddress: addr
       ? {
@@ -103,53 +122,46 @@ export default async function orderPlacedHandler({
 
   // #135: the team notification is owned by the backend (was duplicated in the
   // storefront PayFast ITN). Recipient driven by SALES_EMAIL since #271.
-  // Includes the picking list (SKU × qty) + delivery address — staff work from
-  // this email, not just Admin (client complaint: "can't see what was ordered").
+  // Full sales document — payment status, SKU picking list with unit prices,
+  // VAT content, delivery address and an Admin deep link — so staff can pick,
+  // invoice and dispatch without opening Admin.
   const teamEmail = salesEmail()
   const customerName = addr ? [addr.first_name, addr.last_name].filter(Boolean).join(' ') : 'Customer'
-  const teamItemRows = (order.items ?? [])
-    .map(
-      (item: any) => `
-      <tr>
-        <td style="padding:6px 10px;border:1px solid #eee;font-family:monospace">${item.variant_sku ?? '—'}</td>
-        <td style="padding:6px 10px;border:1px solid #eee">${item.title ?? item.product_title ?? 'Product'}</td>
-        <td style="padding:6px 10px;border:1px solid #eee;text-align:center">${item.quantity}</td>
-        <td style="padding:6px 10px;border:1px solid #eee;text-align:right">${formatPrice(item.unit_price * item.quantity, currency)}</td>
-      </tr>`,
-    )
-    .join('')
-  const addressLine = addr
-    ? [addr.address_1, addr.address_2, addr.city, addr.province, addr.postal_code].filter(Boolean).join(', ')
-    : '—'
-  const teamHtml = `
-    <h2 style="font-family:sans-serif">New order #${order.display_id ?? order.id}</h2>
-    <table style="font-family:sans-serif;border-collapse:collapse">
-      <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Customer</strong></td><td style="padding:6px 10px;border:1px solid #eee">${customerName}</td></tr>
-      <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Email</strong></td><td style="padding:6px 10px;border:1px solid #eee">${email}</td></tr>
-      <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Phone</strong></td><td style="padding:6px 10px;border:1px solid #eee">${addr?.phone ?? '—'}</td></tr>
-      <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Delivery</strong></td><td style="padding:6px 10px;border:1px solid #eee">${shippingMethod?.name ?? 'Standard Courier'}</td></tr>
-      <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Address</strong></td><td style="padding:6px 10px;border:1px solid #eee">${addressLine}</td></tr>
-    </table>
-    <h3 style="font-family:sans-serif;margin-bottom:4px">Items</h3>
-    <table style="font-family:sans-serif;border-collapse:collapse">
-      <tr>
-        <th style="padding:6px 10px;border:1px solid #eee;text-align:left">SKU</th>
-        <th style="padding:6px 10px;border:1px solid #eee;text-align:left">Product</th>
-        <th style="padding:6px 10px;border:1px solid #eee">Qty</th>
-        <th style="padding:6px 10px;border:1px solid #eee;text-align:right">Amount</th>
-      </tr>
-      ${teamItemRows}
-      <tr>
-        <td colspan="3" style="padding:6px 10px;border:1px solid #eee;text-align:right"><strong>Shipping</strong></td>
-        <td style="padding:6px 10px;border:1px solid #eee;text-align:right">${formatPrice(order.shipping_total ?? 0, currency)}</td>
-      </tr>
-      <tr>
-        <td colspan="3" style="padding:6px 10px;border:1px solid #eee;text-align:right"><strong>Total (incl. VAT)</strong></td>
-        <td style="padding:6px 10px;border:1px solid #eee;text-align:right"><strong>${formatPrice(order.total ?? 0, currency)}</strong></td>
-      </tr>
-    </table>
-    <p style="font-family:sans-serif;color:#666;font-size:13px">Process this order in Medusa admin.</p>
-  `
+  const paymentStatus =
+    (order.payment_collections ?? [])
+      .map((pc: any) => pc?.status)
+      .filter(Boolean)
+      .pop() ?? 'unknown'
+  const teamHtml = teamOrderNotificationHtml({
+    orderId: order.id,
+    orderNumber: order.display_id ?? order.id,
+    orderDate: formatDateTime(order.created_at),
+    paymentStatus,
+    customerName,
+    company: addr?.company || undefined,
+    email,
+    phone: addr?.phone ?? '',
+    items: (order.items ?? []).map((item: any) => ({
+      sku: item.variant_sku ?? '—',
+      title: item.title ?? item.product_title ?? 'Product',
+      quantity: item.quantity,
+      unitPrice: formatPrice(item.unit_price, currency),
+      lineTotal: formatPrice(item.unit_price * item.quantity, currency),
+    })),
+    subtotal: formatPrice(order.subtotal ?? 0, currency),
+    shippingCost: formatPrice(order.shipping_total ?? 0, currency),
+    vatContent,
+    total: formatPrice(order.total ?? 0, currency),
+    serviceName: shippingMethod?.name ?? 'Standard Courier',
+    addressLines: addr
+      ? [
+          [addr.address_1, addr.address_2].filter(Boolean).join(', '),
+          [addr.city, addr.province].filter(Boolean).join(', '),
+          addr.postal_code,
+        ].filter(Boolean)
+      : ['—'],
+    adminUrl: `${process.env.MEDUSA_BACKEND_URL ?? 'https://api.tse-cartridges.co.za'}/app/orders/${order.id}`,
+  })
   try {
     await sendEmail({ to: teamEmail, cc: salesCc(), subject: `🛒 New order #${order.display_id ?? order.id}`, html: teamHtml, replyTo: email })
     console.log(`[order-placed] team notification sent for order ${data.id}`)
