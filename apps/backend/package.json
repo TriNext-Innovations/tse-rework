@@ -19,9 +19,8 @@
     "migrate:woo": "medusa exec src/scripts/migrate-woo-archive.ts",
     "import:woo": "medusa exec src/scripts/import-woo-orders.ts",
     "import:woocommerce": "medusa exec src/scripts/import-woocommerce.ts",
-    "migrate:woo": "medusa exec src/scripts/migrate-woo-archive.ts",
-    "import:woo": "medusa exec src/scripts/import-woo-orders.ts",
-    "payfast:setup": "medusa exec src/scripts/setup-payfast.ts"
+    "payfast:setup": "medusa exec src/scripts/setup-payfast.ts",
+    "shipping:setup": "medusa exec src/scripts/setup-shipping.ts"
   },
   "dependencies": {
     "@medusajs/admin-sdk": "2.17.2",

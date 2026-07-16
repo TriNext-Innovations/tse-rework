@@ -10,6 +10,10 @@
  *     Overnight and we'd absorb the next-day cost on every order.
  *   - Free shipping when the cart's goods total (incl VAT, excl shipping) is
  *     R2,000 or more — an automatic 100%-off-shipping promotion.
+ *   - Pudo locker-to-locker pickup (#274 MVP): flat-priced option on the
+ *     manual fulfillment provider — staff coordinate the destination locker
+ *     with the customer after the order. R60 is a placeholder pending the
+ *     client's price confirmation; adjust in Admin (re-runs won't clobber it).
  *
  * Rates are keyed on the fulfillment-option id persisted in shipping_option
  * `data.id` (`shiplogic-eco` / `shiplogic-ovn`) — a stable key that survives
@@ -24,7 +28,11 @@
 
 import { MedusaContainer } from '@medusajs/framework/types'
 import { ContainerRegistrationKeys, Modules } from '@medusajs/framework/utils'
-import { createPromotionsWorkflow, updateShippingOptionsWorkflow } from '@medusajs/medusa/core-flows'
+import {
+  createPromotionsWorkflow,
+  createShippingOptionsWorkflow,
+  updateShippingOptionsWorkflow,
+} from '@medusajs/medusa/core-flows'
 
 const FLAT_RATE_RAND_BY_OPTION: Record<string, number> = {
   'shiplogic-eco': 150,
@@ -32,6 +40,11 @@ const FLAT_RATE_RAND_BY_OPTION: Record<string, number> = {
 }
 const FREE_SHIPPING_THRESHOLD_RAND = 2000
 const PROMO_CODE = 'FREE-SHIPPING-OVER-R2000'
+
+const PUDO_NAME = 'Pudo Locker-to-Locker'
+// Placeholder pending client price confirmation (#274) — Pudo L2L is typically
+// ~R60. Staff can change it in Admin; existing options are never overwritten.
+const PUDO_FLAT_RATE_RAND = 60
 
 export default async function setupShipping({ container }: { container: MedusaContainer }) {
   const query = container.resolve(ContainerRegistrationKeys.QUERY)
@@ -136,6 +149,58 @@ export default async function setupShipping({ container }: { container: MedusaCo
     console.log(
       `[setup-shipping] created automatic promotion ${PROMO_CODE} (100% off shipping at goods ≥ R${FREE_SHIPPING_THRESHOLD_RAND})`,
     )
+  }
+
+  // ── 3. Pudo locker-to-locker pickup (#274 MVP) ─────────────────────────────
+  const pudoExists = (options ?? []).some((o: any) =>
+    String(o.name ?? '').toLowerCase().startsWith('pudo'),
+  )
+
+  if (pudoExists) {
+    console.log(`[setup-shipping] "${PUDO_NAME}" already exists — skipping`)
+  } else {
+    // Reuse the zone + profile of an existing option so Pudo appears alongside
+    // the other methods at checkout. Prefer a manual-provider option (the
+    // own-delivery one) since Pudo is also staff-booked on the manual provider.
+    const { data: existingOptions } = await query.graph({
+      entity: 'shipping_option',
+      fields: ['id', 'provider_id', 'service_zone_id', 'shipping_profile_id'],
+    })
+    const template =
+      (existingOptions ?? []).find((o: any) => String(o.provider_id ?? '').includes('manual')) ??
+      (existingOptions ?? [])[0]
+
+    if (!template) {
+      console.warn(
+        '[setup-shipping] no existing shipping option to copy zone/profile from — create one in Admin first, then re-run',
+      )
+    } else {
+      await createShippingOptionsWorkflow(container).run({
+        input: [
+          {
+            name: PUDO_NAME,
+            price_type: 'flat',
+            service_zone_id: template.service_zone_id,
+            shipping_profile_id: template.shipping_profile_id,
+            provider_id: 'manual_manual',
+            type: {
+              label: 'Pudo',
+              code: 'pudo-l2l',
+              description: 'Locker-to-locker pickup via Pudo — we confirm your locker after checkout',
+            },
+            prices: [{ currency_code: 'zar', amount: PUDO_FLAT_RATE_RAND }],
+            rules: [
+              { attribute: 'enabled_in_store', operator: 'eq', value: 'true' },
+              { attribute: 'is_return', operator: 'eq', value: 'false' },
+            ],
+            data: { id: 'manual-fulfillment' },
+          },
+        ],
+      })
+      console.log(
+        `[setup-shipping] created "${PUDO_NAME}" — flat R${PUDO_FLAT_RATE_RAND}, manual fulfillment (staff book Pudo + coordinate the destination locker)`,
+      )
+    }
   }
 
   console.log('[setup-shipping] done.')
