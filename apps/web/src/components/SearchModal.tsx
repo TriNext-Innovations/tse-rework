@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Meilisearch } from 'meilisearch'
+import * as Sentry from '@sentry/nextjs'
 import { cartridgeTypeLabel } from '@/lib/taxonomy'
 
 const HOST = process.env.NEXT_PUBLIC_MEILISEARCH_HOST ?? ''
@@ -77,7 +78,12 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
           }).catch(() => null)
         }
       })
-      .catch(() => setHits([]))
+      .catch((err) => {
+        // A search failure renders as "no results" — report it so a Meili
+        // outage doesn't hide behind an empty state.
+        Sentry.captureException(err, { tags: { feature: 'search' }, extra: { query: debouncedQuery } })
+        setHits([])
+      })
       .finally(() => setLoading(false))
   }, [debouncedQuery])
 

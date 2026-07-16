@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import * as Sentry from '@sentry/nextjs'
 
 const KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ''
 
@@ -107,7 +108,11 @@ export function AddressAutocomplete({
     let active = true
     loadPlaces()
       .then((lib) => { if (active) { places.current = lib; setReady(true) } })
-      .catch(() => {})
+      .catch((err) => {
+        // The field degrades to manual entry — report it so a broken Maps key
+        // doesn't fail invisibly.
+        Sentry.captureException(err, { tags: { feature: 'address-autocomplete' } })
+      })
     return () => { active = false }
   }, [])
 
