@@ -103,15 +103,50 @@ export default async function orderPlacedHandler({
 
   // #135: the team notification is owned by the backend (was duplicated in the
   // storefront PayFast ITN). Recipient driven by SALES_EMAIL since #271.
+  // Includes the picking list (SKU × qty) + delivery address — staff work from
+  // this email, not just Admin (client complaint: "can't see what was ordered").
   const teamEmail = salesEmail()
   const customerName = addr ? [addr.first_name, addr.last_name].filter(Boolean).join(' ') : 'Customer'
+  const teamItemRows = (order.items ?? [])
+    .map(
+      (item: any) => `
+      <tr>
+        <td style="padding:6px 10px;border:1px solid #eee;font-family:monospace">${item.variant_sku ?? '—'}</td>
+        <td style="padding:6px 10px;border:1px solid #eee">${item.title ?? item.product_title ?? 'Product'}</td>
+        <td style="padding:6px 10px;border:1px solid #eee;text-align:center">${item.quantity}</td>
+        <td style="padding:6px 10px;border:1px solid #eee;text-align:right">${formatPrice(item.unit_price * item.quantity, currency)}</td>
+      </tr>`,
+    )
+    .join('')
+  const addressLine = addr
+    ? [addr.address_1, addr.address_2, addr.city, addr.province, addr.postal_code].filter(Boolean).join(', ')
+    : '—'
   const teamHtml = `
     <h2 style="font-family:sans-serif">New order #${order.display_id ?? order.id}</h2>
     <table style="font-family:sans-serif;border-collapse:collapse">
       <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Customer</strong></td><td style="padding:6px 10px;border:1px solid #eee">${customerName}</td></tr>
       <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Email</strong></td><td style="padding:6px 10px;border:1px solid #eee">${email}</td></tr>
-      <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Total</strong></td><td style="padding:6px 10px;border:1px solid #eee">${formatPrice(order.total ?? 0, currency)}</td></tr>
+      <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Phone</strong></td><td style="padding:6px 10px;border:1px solid #eee">${addr?.phone ?? '—'}</td></tr>
       <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Delivery</strong></td><td style="padding:6px 10px;border:1px solid #eee">${shippingMethod?.name ?? 'Standard Courier'}</td></tr>
+      <tr><td style="padding:6px 10px;border:1px solid #eee"><strong>Address</strong></td><td style="padding:6px 10px;border:1px solid #eee">${addressLine}</td></tr>
+    </table>
+    <h3 style="font-family:sans-serif;margin-bottom:4px">Items</h3>
+    <table style="font-family:sans-serif;border-collapse:collapse">
+      <tr>
+        <th style="padding:6px 10px;border:1px solid #eee;text-align:left">SKU</th>
+        <th style="padding:6px 10px;border:1px solid #eee;text-align:left">Product</th>
+        <th style="padding:6px 10px;border:1px solid #eee">Qty</th>
+        <th style="padding:6px 10px;border:1px solid #eee;text-align:right">Amount</th>
+      </tr>
+      ${teamItemRows}
+      <tr>
+        <td colspan="3" style="padding:6px 10px;border:1px solid #eee;text-align:right"><strong>Shipping</strong></td>
+        <td style="padding:6px 10px;border:1px solid #eee;text-align:right">${formatPrice(order.shipping_total ?? 0, currency)}</td>
+      </tr>
+      <tr>
+        <td colspan="3" style="padding:6px 10px;border:1px solid #eee;text-align:right"><strong>Total (incl. VAT)</strong></td>
+        <td style="padding:6px 10px;border:1px solid #eee;text-align:right"><strong>${formatPrice(order.total ?? 0, currency)}</strong></td>
+      </tr>
     </table>
     <p style="font-family:sans-serif;color:#666;font-size:13px">Process this order in Medusa admin.</p>
   `
