@@ -20,8 +20,10 @@
  * `data.id` (`shiplogic-eco` / `shiplogic-ovn`) — a stable key that survives
  * option renames, unlike the display name.
  *
- * Idempotent — safe to re-run: options already flat at their target rate are
- * skipped, and the promotion is only created if the code doesn't exist yet.
+ * Idempotent — safe to re-run, and Admin is authoritative: any option that is
+ * already flat is left alone (whatever its price — staff retune rates in
+ * Admin), only options still on live/calculated pricing are converted to the
+ * launch rate, and the promotion is only created if the code doesn't exist yet.
  *
  * Usage (from monorepo root):
  *   pnpm --filter @tse/backend exec medusa exec src/scripts/setup-shipping.ts
@@ -89,10 +91,14 @@ export default async function setupShipping({ container }: { container: MedusaCo
       continue
     }
 
-    const zarPrice = (option.prices ?? []).find((p: any) => p.currency_code === 'zar')
-    const alreadyFlat = option.price_type === 'flat' && Number(zarPrice?.amount) === targetRate
-    if (alreadyFlat) {
-      console.log(`[setup-shipping] "${option.name}" already flat R${targetRate} — skipping`)
+    // Admin is authoritative once an option is flat: staff retune the rand
+    // amount in the dashboard, so a re-run must never reset it to the launch
+    // rate. Only options still on live (calculated) pricing get converted.
+    if (option.price_type === 'flat') {
+      const zarPrice = (option.prices ?? []).find((p: any) => p.currency_code === 'zar')
+      console.log(
+        `[setup-shipping] "${option.name}" already flat (R${zarPrice?.amount ?? '?'}) — leaving Admin-set price as-is`,
+      )
       continue
     }
 
