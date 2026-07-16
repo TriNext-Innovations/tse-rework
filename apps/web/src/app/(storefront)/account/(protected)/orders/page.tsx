@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import * as Sentry from '@sentry/nextjs'
 import { siteConfig } from '@/lib/site-config'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -40,7 +41,12 @@ export default function OrdersPage() {
     )
       .then((r) => r.json())
       .then((d) => setOrders(d.orders ?? []))
-      .catch(() => setOrders([]))
+      .catch((err) => {
+        // A fetch failure renders as "no orders yet" — report it so an API
+        // outage doesn't masquerade as an empty account.
+        Sentry.captureException(err, { tags: { feature: 'account-orders' } })
+        setOrders([])
+      })
       .finally(() => setLoading(false))
   }, [token, customer])
 

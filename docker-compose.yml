@@ -39,7 +39,10 @@ services:
         limits:
           memory: 256m
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:7700/health || exit 1"]
+      # Probe 127.0.0.1, not localhost — busybox wget resolves localhost to ::1
+      # and Meilisearch listens IPv4-only, so the check fails while the service
+      # is healthy (same bug previously fixed on the web healthcheck).
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:7700/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -218,10 +221,6 @@ services:
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
         NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
         NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY:-}
-        # Route checkout through the Medusa PayFast provider (canonical flow).
-        # Default off — set NEXT_PUBLIC_PAYFAST_PROVIDER=true in the VM .env to
-        # activate (sandbox first). Baked into the client bundle at build time.
-        NEXT_PUBLIC_PAYFAST_PROVIDER: ${NEXT_PUBLIC_PAYFAST_PROVIDER:-false}
     restart: unless-stopped
     depends_on:
       medusa:
