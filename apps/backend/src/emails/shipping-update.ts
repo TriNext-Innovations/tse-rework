@@ -8,6 +8,8 @@ export interface ShippingUpdateData {
   shippingAddress: {
     name: string
     line1: string
+    // Complex/building + suburb, when the customer provided them.
+    line2?: string
     city: string
     province?: string
     postalCode?: string
@@ -98,7 +100,7 @@ export function shippingUpdateHtml(d: ShippingUpdateData): string {
               <p style="margin:0 0 28px;font-size:14px;color:#374151;line-height:1.7;">
                 ${d.shippingAddress.name}<br/>
                 ${d.shippingAddress.line1}<br/>
-                ${d.shippingAddress.city}${d.shippingAddress.province ? ', ' + d.shippingAddress.province : ''}${d.shippingAddress.postalCode ? ', ' + d.shippingAddress.postalCode : ''}
+                ${d.shippingAddress.line2 ? d.shippingAddress.line2 + '<br/>' : ''}${d.shippingAddress.city}${d.shippingAddress.province ? ', ' + d.shippingAddress.province : ''}${d.shippingAddress.postalCode ? ', ' + d.shippingAddress.postalCode : ''}
               </p>
 
               <!-- CTA -->
