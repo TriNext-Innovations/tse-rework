@@ -293,7 +293,9 @@ class CourierGuyFulfillmentProviderService extends AbstractFulfillmentProviderSe
     const street = [addr.address_1, addr.address_2].filter(Boolean).join(', ')
     return {
       street_address: street || addr.address_1 || '',
-      local_area: addr.province ?? '',
+      // address_2 holds the suburb (checkout convention). ShipLogic's
+      // local_area is the suburb — the province belongs in `zone` only.
+      local_area: addr.address_2 ?? '',
       city: addr.city ?? '',
       zone: addr.province ?? '',
       country: (addr.country_code ?? 'za').toUpperCase(),

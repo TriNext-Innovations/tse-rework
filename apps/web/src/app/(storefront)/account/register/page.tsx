@@ -20,7 +20,7 @@ export default function RegisterPage() {
     first_name: '', last_name: '', email: '', phone: '', password: '', confirm: '',
   })
   const [address, setAddress] = useState({
-    line1: '', suburb: '', city: '', province: '', postalCode: '',
+    line1: '', complex: '', suburb: '', city: '', province: '', postalCode: '',
   })
   const [errors, setErrors] = useState<Partial<typeof form & typeof address & { general: string }>>({})
   const [loading, setLoading] = useState(false)
@@ -66,6 +66,7 @@ export default function RegisterPage() {
       await addAddress({
         address_1: address.line1.trim(),
         address_2: address.suburb.trim() || undefined,
+        company: address.complex.trim() || undefined,
         city: address.city.trim(),
         province: address.province,
         postal_code: address.postalCode.trim(),
@@ -174,6 +175,14 @@ export default function RegisterPage() {
               </div>
               {addressStarted && (
                 <>
+                  <div>
+                    <input
+                      type="text" autoComplete="address-line2" placeholder="Complex / building / room no. (optional)"
+                      value={address.complex}
+                      onChange={(e) => setAddress({ ...address, complex: e.target.value })}
+                      className={inputClass()}
+                    />
+                  </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <input

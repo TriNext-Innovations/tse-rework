@@ -11,14 +11,16 @@ const SA_PROVINCES = [
   'Limpopo', 'Mpumalanga', 'Northern Cape', 'North West', 'Western Cape',
 ]
 
+// address_2 is the suburb (checkout convention); company is the complex/
+// building/room detail printed on the courier waybill.
 type AddressForm = {
   first_name: string; last_name: string; phone: string
-  address_1: string; address_2: string; city: string; province: string; postal_code: string
+  address_1: string; address_2: string; company: string; city: string; province: string; postal_code: string
 }
 
 const EMPTY: AddressForm = {
   first_name: '', last_name: '', phone: '',
-  address_1: '', address_2: '', city: '', province: '', postal_code: '',
+  address_1: '', address_2: '', company: '', city: '', province: '', postal_code: '',
 }
 
 export default function AddressesPage() {
@@ -64,6 +66,7 @@ export default function AddressesPage() {
           phone: form.phone.trim() || customer?.phone,
           address_1: form.address_1.trim(),
           address_2: form.address_2.trim() || undefined,
+          company: form.company.trim() || undefined,
           city: form.city.trim(),
           province: form.province,
           postal_code: form.postal_code.trim(),
@@ -158,6 +161,7 @@ export default function AddressesPage() {
                   <div className="font-medium">{[addr.first_name, addr.last_name].filter(Boolean).join(' ')}</div>
                 )}
                 <div className="text-[var(--ink-2)]">{addr.address_1}</div>
+                {addr.company && <div className="text-[var(--ink-2)]">{addr.company}</div>}
                 {addr.address_2 && <div className="text-[var(--ink-2)]">{addr.address_2}</div>}
                 <div className="text-[var(--ink-2)]">{addr.city}</div>
                 {addr.province && <div className="text-[var(--muted)]">{addr.province} {addr.postal_code}</div>}
@@ -220,9 +224,15 @@ export default function AddressesPage() {
             </div>
             <div>
               <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">
-                Address line 2 <span className="normal-case text-[var(--muted-2)]">(optional)</span>
+                Complex / building <span className="normal-case text-[var(--muted-2)]">(optional)</span>
               </label>
-              <input type="text" autoComplete="address-line2" placeholder="Unit 4, Complex name" value={form.address_2} onChange={(e) => setForm({ ...form, address_2: e.target.value })} className={inputClass()} />
+              <input type="text" autoComplete="address-line2" placeholder="Unit 4, Sunset Villas" value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} className={inputClass()} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">
+                Suburb <span className="normal-case text-[var(--muted-2)]">(optional)</span>
+              </label>
+              <input type="text" autoComplete="address-level3" placeholder="Randburg" value={form.address_2} onChange={(e) => setForm({ ...form, address_2: e.target.value })} className={inputClass()} />
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div>

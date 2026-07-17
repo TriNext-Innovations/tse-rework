@@ -67,6 +67,7 @@ export default async function orderShipmentCreatedHandler({
       ? {
           name: [addr.first_name, addr.last_name].filter(Boolean).join(' '),
           line1: addr.address_1 ?? '',
+          line2: [addr.company, addr.address_2].filter(Boolean).join(', ') || undefined,
           city: addr.city ?? '',
           province: addr.province ?? undefined,
           postalCode: addr.postal_code ?? undefined,

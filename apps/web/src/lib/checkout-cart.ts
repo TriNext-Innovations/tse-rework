@@ -21,6 +21,8 @@ export type ShippingAddressInput = {
   phone: string
   address_1: string
   address_2: string
+  // Complex / building / hotel room — printed on the courier waybill.
+  company: string
   city: string
   province: string
   postal_code: string
