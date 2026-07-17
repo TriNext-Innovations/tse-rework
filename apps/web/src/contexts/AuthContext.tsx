@@ -24,6 +24,8 @@ export type CustomerAddress = {
   last_name?: string | null
   address_1: string
   address_2?: string | null
+  // Complex / building / hotel room — printed on the courier waybill.
+  company?: string | null
   city: string
   province?: string | null
   postal_code?: string | null
@@ -47,6 +49,7 @@ export type NewAddressInput = {
   phone?: string
   address_1: string
   address_2?: string
+  company?: string
   city: string
   province: string
   postal_code: string
@@ -195,6 +198,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           phone: input.phone || customer?.phone || undefined,
           address_1: input.address_1,
           address_2: input.address_2 || undefined,
+          company: input.company || undefined,
           city: input.city,
           province: input.province,
           postal_code: input.postal_code,

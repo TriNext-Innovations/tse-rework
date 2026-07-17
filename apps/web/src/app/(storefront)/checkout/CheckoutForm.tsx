@@ -20,10 +20,10 @@ const SA_PROVINCES = [
 ]
 
 type ContactForm = { name: string; email: string; phone: string }
-type AddressForm = { line1: string; suburb: string; city: string; province: string; postalCode: string }
+type AddressForm = { line1: string; complex: string; suburb: string; city: string; province: string; postalCode: string }
 
 const EMPTY_CONTACT: ContactForm = { name: '', email: '', phone: '' }
-const EMPTY_ADDRESS: AddressForm = { line1: '', suburb: '', city: '', province: '', postalCode: '' }
+const EMPTY_ADDRESS: AddressForm = { line1: '', complex: '', suburb: '', city: '', province: '', postalCode: '' }
 
 function FieldError({ msg }: { msg?: string }) {
   if (!msg) return null
@@ -38,6 +38,7 @@ function inputClass(error?: string) {
 function toAddressForm(a: CustomerAddress): AddressForm {
   return {
     line1: a.address_1,
+    complex: a.company ?? '',
     suburb: a.address_2 ?? '',
     city: a.city,
     province: a.province ?? '',
@@ -178,6 +179,8 @@ export default function CheckoutForm() {
         phone: contact.phone.replace(/\s/g, ''),
         address_1: address.line1,
         address_2: address.suburb,
+        // Sent even when empty so re-editing the address can clear it.
+        company: address.complex.trim(),
         city: address.city,
         province: address.province,
         postal_code: address.postalCode,
@@ -198,6 +201,7 @@ export default function CheckoutForm() {
         addAddress({
           address_1: address.line1,
           address_2: address.suburb || undefined,
+          company: address.complex.trim() || undefined,
           city: address.city,
           province: address.province,
           postal_code: address.postalCode,
@@ -439,7 +443,7 @@ export default function CheckoutForm() {
                             )}
                           </span>
                           <span className="block text-[var(--muted)]">
-                            {[a.address_2, a.city, a.province, a.postal_code].filter(Boolean).join(', ')}
+                            {[a.company, a.address_2, a.city, a.province, a.postal_code].filter(Boolean).join(', ')}
                           </span>
                         </span>
                       </button>
@@ -479,6 +483,17 @@ export default function CheckoutForm() {
                     }
                   />
                   <FieldError msg={addressErrors.line1} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">
+                    Complex / building <span className="normal-case text-[var(--muted-2)]">(optional)</span>
+                  </label>
+                  <input
+                    type="text" autoComplete="address-line2" placeholder="Unit 5, Sunset Villas — or hotel name + room no."
+                    value={address.complex}
+                    onChange={(e) => setAddress({ ...address, complex: e.target.value })}
+                    className={inputClass()}
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -623,6 +638,7 @@ export default function CheckoutForm() {
                   <button onClick={() => setStep(2)} className="text-xs text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer">Edit</button>
                 </div>
                 <p className="text-sm">{address.line1}</p>
+                {address.complex && <p className="text-sm text-[var(--muted)]">{address.complex}</p>}
                 <p className="text-sm text-[var(--muted)]">{address.suburb}, {address.city}</p>
                 <p className="text-sm text-[var(--muted)]">{address.province} {address.postalCode}</p>
               </div>
