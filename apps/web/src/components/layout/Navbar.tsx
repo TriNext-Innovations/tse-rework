@@ -189,7 +189,7 @@ const { customer, loading: authLoading } = useAuth()
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 pl-1 flex-shrink-0">
-          <Logo width={80} variant="color" linked={false} />
+          <Logo width={80} linked={false} />
           <span className="hidden lg:inline text-[10px] uppercase tracking-[0.18em] text-[var(--muted)] ml-1">Est. 1987</span>
         </Link>
 
@@ -315,7 +315,7 @@ const { customer, loading: authLoading } = useAuth()
           <div className="mobile-drawer" role="dialog" aria-modal="true" aria-label="Navigation menu">
             {/* Drawer header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--line-2)]">
-              <Logo width={72} variant="color" linked={false} />
+              <Logo width={72} linked={false} />
               <button
                 onClick={() => setMobileOpen(false)}
                 aria-label="Close menu"
