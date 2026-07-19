@@ -70,7 +70,7 @@ export default async function CompatibilityPage({ searchParams }: Props) {
       <header className="sticky top-0 z-40 bg-[var(--paper)]/90 backdrop-blur-xl border-b border-[var(--line-2)] px-4 sm:px-8 lg:px-12">
         <div className="mx-auto max-w-7xl flex items-center justify-between h-14">
           <Link href="/">
-            <Logo width={72} variant="color" linked={false} />
+            <Logo width={72} linked={false} />
           </Link>
           <nav className="hidden md:flex items-center gap-5 text-sm text-[var(--ink-2)]">
             <Link href="/products" className="hover:text-[var(--ink)] transition-colors">Shop</Link>

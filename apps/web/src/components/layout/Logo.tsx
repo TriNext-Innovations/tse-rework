@@ -3,45 +3,81 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 type LogoVariant =
-  | 'color'      // full colour — for light backgrounds
-  | 'dark-bg'    // full colour on a dark pill — for dark/coloured nav backgrounds
-  | 'mono-white' // white silhouette — for solid dark backgrounds where the pill looks heavy
-  | 'mono-dark'  // dark silhouette — for light backgrounds where you want a single colour mark
+  | 'auto'       // follows the active theme — light logo on light, dark logo on dark (default)
+  | 'color'      // force the light-background logo, regardless of theme
+  | 'dark-bg'    // force the dark-background logo — for fixed dark panels (.panel-dark)
+  | 'mono-white' // white silhouette — fallback where colour is unwanted
+  | 'mono-dark'  // dark silhouette — fallback where colour is unwanted
 
 interface LogoProps {
   variant?: LogoVariant
-  /** Width in px — height scales at the logo's natural 2:1 aspect ratio */
+  /** Width in px — height scales at the logo's natural aspect ratio */
   width?: number
   /** Wraps in a <Link href="/"> when true (default) */
   linked?: boolean
   className?: string
 }
 
+const LIGHT_SRC = '/brand/logo-v2.svg'
+const DARK_SRC = '/brand/logo-v2-dark.svg'
+const ALT = 'TSE Online — Laserjet & Inkjet Cartridges'
+
+// Artwork viewBox is 235x127 (~1.85:1)
+const ASPECT = 235 / 127
+
+const variantSrc: Record<Exclude<LogoVariant, 'auto'>, string> = {
+  'color':      LIGHT_SRC,
+  'dark-bg':    DARK_SRC,
+  'mono-white': LIGHT_SRC,
+  'mono-dark':  LIGHT_SRC,
+}
+
 const variantStyles: Record<LogoVariant, string> = {
-  'color':      '[mix-blend-mode:multiply]',
-  'dark-bg':    'bg-white rounded-lg px-2 py-1',
+  'auto':       '',
+  'color':      '',
+  'dark-bg':    '',
   'mono-white': '[filter:brightness(0)_invert(1)]',
   'mono-dark':  '[filter:brightness(0)]',
 }
 
 export function Logo({
-  variant = 'color',
+  variant = 'auto',
   width = 120,
   linked = true,
   className,
 }: LogoProps) {
-  const height = Math.round(width / 2)
+  const height = Math.round(width / ASPECT)
+
+  const shared = {
+    width,
+    height,
+    priority: true,
+    alt: '',
+    'aria-hidden': true,
+  } as const
 
   const img = (
-    <span className={cn('inline-flex shrink-0', variantStyles[variant], className)}>
-      <Image
-        src="/brand/logo.png"
-        alt="TSE Online — Laserjet & Inkjet Cartridges"
-        width={width}
-        height={height}
-        priority
-        className="object-contain"
-      />
+    <span
+      role="img"
+      aria-label={ALT}
+      className={cn('inline-flex shrink-0', variantStyles[variant], className)}
+    >
+      {variant === 'auto' ? (
+        <>
+          <Image
+            src={LIGHT_SRC}
+            {...shared}
+            className="object-contain [[data-theme=dark]_&]:hidden"
+          />
+          <Image
+            src={DARK_SRC}
+            {...shared}
+            className="hidden object-contain [[data-theme=dark]_&]:inline-block"
+          />
+        </>
+      ) : (
+        <Image src={variantSrc[variant]} {...shared} className="object-contain" />
+      )}
     </span>
   )
 
