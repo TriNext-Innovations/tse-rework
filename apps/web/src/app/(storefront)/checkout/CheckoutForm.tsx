@@ -269,7 +269,7 @@ export default function CheckoutForm() {
 
   if (items.length === 0 && step < 4) {
     return (
-      <div className="text-center py-24 max-w-md mx-auto px-4">
+      <div className="text-center pt-40 pb-24 max-w-md mx-auto px-4">
         <h2 className="font-display font-light text-2xl mb-4">Your cart is empty</h2>
         <Link href="/products" className="text-sm text-[var(--muted)] hover:text-[var(--ink)] transition-colors">
           ← Go to shop
