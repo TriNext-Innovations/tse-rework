@@ -50,24 +50,50 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
 
-            echo "▶ Building and starting containers"
+            # ── Rolling deploy ─────────────────────────────────────────────
+            # Build everything FIRST while the old containers keep serving
+            # traffic, then recreate one app service at a time behind nginx.
+            # Downtime per service ≈ its container swap, not the whole build.
+
+            PROJECT=$(basename "$PWD")
+
+            echo "▶ Tagging currently-running images for rollback"
+            for svc in medusa web; do
+              id=$(docker compose images "$svc" --format json 2>/dev/null | grep -oP '"ID":"\K[^"]+' | head -1)
+              [ -n "$id" ] && docker tag "$id" "tse-rollback-$svc:latest" || echo "  (no running $svc image to tag)"
+            done
+
+            echo "▶ Pulling base images and building new images (site stays up)"
             docker compose pull --quiet
-            docker compose up --build -d --remove-orphans
+            docker compose build
 
-            echo "▶ Waiting for services to stabilise (30s)"
-            sleep 30
+            echo "▶ Running database migrations (gate — must exit 0)"
+            docker compose run --rm --no-deps medusa-migrate
 
-            # Recreated web/medusa containers get new docker-network IPs, but
-            # nginx's static upstreams resolve them once at load — reload so it
+            echo "▶ Rolling: medusa"
+            docker compose up -d --no-deps --no-build --wait --wait-timeout 420 medusa
+
+            # Recreated containers get new docker-network IPs, but nginx's
+            # static upstreams resolve them once at load — reload so it
             # re-resolves, otherwise the public site 502s while checks pass.
-            echo "▶ Reloading nginx to pick up new container IPs"
+            echo "▶ Reloading nginx (medusa IP changed)"
             docker compose exec -T nginx nginx -s reload
 
             echo "▶ Health check — Medusa (direct)"
             curl -sf http://localhost:9000/health || { echo "✗ Medusa health check failed"; exit 1; }
 
+            echo "▶ Rolling: web"
+            docker compose up -d --no-deps --no-build --wait --wait-timeout 180 web
+
+            echo "▶ Reloading nginx (web IP changed)"
+            docker compose exec -T nginx nginx -s reload
+
             echo "▶ Health check — Next.js (direct)"
             curl -sf http://localhost:3000/api/health || { echo "✗ Next.js health check failed"; exit 1; }
+
+            echo "▶ Syncing remaining services (nginx/bugsink/config changes)"
+            docker compose up -d --no-build --remove-orphans
+            docker compose exec -T nginx nginx -s reload
 
             # Through nginx via the public URLs — this is what customers hit; a
             # 502 here must fail the deploy instead of passing silently.
@@ -101,8 +127,16 @@ jobs:
             cd /opt/tse-ui
 
             echo "▶ Deploy failed — rolling back to previous images"
-            # Re-start whatever was running before the failed build
-            docker compose up -d
+            # Retag the pre-deploy images (saved as tse-rollback-*) back over
+            # the compose image names, so `up` restores what was serving
+            # traffic before the failed build — not the freshly broken build.
+            PROJECT=$(basename "$PWD")
+            for svc in medusa web; do
+              if docker image inspect "tse-rollback-$svc:latest" >/dev/null 2>&1; then
+                docker tag "tse-rollback-$svc:latest" "$PROJECT-$svc:latest" || true
+              fi
+            done
+            docker compose up -d --no-build
 
             echo "▶ Reloading nginx after rollback"
             docker compose exec -T nginx nginx -s reload || echo "⚠ nginx reload failed"
