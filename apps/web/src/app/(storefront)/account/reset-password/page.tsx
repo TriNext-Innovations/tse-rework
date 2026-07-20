@@ -6,11 +6,34 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Navbar } from '@/components/layout'
 import { useAuth } from '@/contexts/AuthContext'
 
+// Best-effort client-side read of the JWT payload — purely to decide whether
+// to show the form. Not a trust boundary: the signature isn't verified here,
+// and the backend independently enforces expiry + single-use on submit
+// (apps/backend — Medusa's validateToken middleware). This just avoids
+// showing a live-looking password form for a link that's already dead.
+function tokenLooksUsable(token: string): boolean {
+  try {
+    const payload = token.split('.')[1]
+    if (!payload) return false
+    // JWT payloads are base64url without padding — atob() requires padded
+    // standard base64, so both translate the alphabet and restore the '='.
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/')
+    const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4)
+    const json = JSON.parse(atob(padded))
+    if (json.purpose !== 'reset') return false
+    if (typeof json.exp !== 'number') return false
+    return json.exp * 1000 > Date.now()
+  } catch {
+    return false
+  }
+}
+
 function ResetPasswordContent() {
   const { resetPassword } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams.get('token') ?? ''
+  const tokenUsable = token.length > 0 && tokenLooksUsable(token)
 
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -29,7 +52,7 @@ function ResetPasswordContent() {
     router.push('/account/login?reset=1')
   }
 
-  if (!token) {
+  if (!tokenUsable) {
     return (
       <div className="mx-auto max-w-md px-4 sm:px-6 pt-32 pb-20 text-center space-y-4">
         <p className="text-sm text-[var(--muted)]">This reset link is invalid or has expired.</p>
