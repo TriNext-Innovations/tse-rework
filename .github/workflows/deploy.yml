@@ -13,7 +13,7 @@ jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
 
     steps:
       - name: Checkout
@@ -26,6 +26,13 @@ jobs:
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           port: ${{ secrets.VM_PORT || 22 }}
+          # Default command_timeout is 10m. The rolling sequence (build +
+          # migrate + medusa wait up to 420s + web wait up to 180s + health
+          # checks) can legitimately run past that — the action then kills
+          # the remote script mid-swap instead of letting it fail/rollback
+          # cleanly (hit on the first rolling deploy, 2026-07-20). 20m gives
+          # headroom under the job's 25m ceiling.
+          command_timeout: 20m
           script: |
             set -e
 
