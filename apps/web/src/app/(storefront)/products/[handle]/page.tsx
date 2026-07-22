@@ -77,9 +77,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const product  = await getProduct(handle, regionId)
   if (!product) return {}
   const plain = product.description ? htmlToPlainText(product.description) : ''
+  const title = product.title
+  const description = plain ? plain.slice(0, 160) : `Quality generic ${product.title} — TSE Online`
+  const url = `https://tse-cartridges.co.za/products/${handle}`
+  const image = product.images?.[0]?.url
   return {
-    title: product.title,
-    description: plain ? plain.slice(0, 160) : `Quality generic ${product.title} — TSE Online`,
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: 'website',
+      url,
+      title,
+      description,
+      ...(image && { images: [{ url: image }] }),
+    },
+    twitter: {
+      card: image ? 'summary_large_image' : 'summary',
+      title,
+      description,
+      ...(image && { images: [image] }),
+    },
   }
 }
 
@@ -122,11 +140,34 @@ export default async function ProductPage({ params }: Props) {
     }),
   }
 
+  const breadcrumbItems = [
+    { name: 'Home', url: 'https://tse-cartridges.co.za' },
+    { name: 'Products', url: 'https://tse-cartridges.co.za/products' },
+    ...(brandCategory
+      ? [{ name: brandCategory.name, url: `https://tse-cartridges.co.za/products?brand=${encodeURIComponent(brandCategory.name)}` }]
+      : []),
+    { name: product.title, url: `https://tse-cartridges.co.za/products/${handle}` },
+  ]
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: breadcrumbItems.map((item, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: item.name,
+      item: item.url,
+    })),
+  }
+
   return (
     <div className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
       <Navbar categories={allCategories} />
       <ProductDetail

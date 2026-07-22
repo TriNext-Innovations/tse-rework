@@ -15,11 +15,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]
 
   try {
-    const res = await fetch(
-      `${BACKEND}/store/products?limit=500&fields=handle,updated_at`,
-      { headers: { 'x-publishable-api-key': PUB_KEY }, next: { revalidate: 3600 } },
-    )
-    const { products = [] } = await res.json()
+    const products = await fetchAllProducts()
     const productPages: MetadataRoute.Sitemap = products.map((p: { handle: string; updated_at?: string }) => ({
       url: `${BASE}/products/${p.handle}`,
       lastModified: p.updated_at ? new Date(p.updated_at) : new Date(),
@@ -30,4 +26,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   } catch {
     return staticPages
   }
+}
+
+// A single capped fetch silently truncates once the catalog outgrows the
+// page size (hit this at exactly 300/500 published products) — page through
+// the full result set instead.
+async function fetchAllProducts(): Promise<{ handle: string; updated_at?: string }[]> {
+  const PAGE_SIZE = 200
+  const all: { handle: string; updated_at?: string }[] = []
+  let offset = 0
+  for (;;) {
+    const res = await fetch(
+      `${BACKEND}/store/products?limit=${PAGE_SIZE}&offset=${offset}&fields=handle,updated_at`,
+      { headers: { 'x-publishable-api-key': PUB_KEY }, next: { revalidate: 3600 } },
+    )
+    const { products = [], count = 0 } = await res.json()
+    all.push(...products)
+    offset += PAGE_SIZE
+    if (offset >= count || products.length === 0) break
+  }
+  return all
 }
