@@ -12,7 +12,11 @@ tse-online/
 │   ├── config/           # Shared Tailwind, ESLint, TS configs
 │   └── types/            # Shared TypeScript types
 ├── automation/
-│   └── n8n/              # Exported n8n workflow JSONs
+│   └── n8n/              # Empty (.gitkeep only) — n8n itself runs on
+│                          # separate infrastructure, not in this repo's
+│                          # docker-compose. This folder is only a place to
+│                          # version-control exported workflow JSON if that
+│                          # ever gets set up — nothing has been committed here yet.
 ├── docs/                 # This folder — all developer documentation
 ├── scripts/              # DB seed, migration helpers
 ├── .env.example
@@ -24,21 +28,36 @@ tse-online/
 
 ## Stack at a Glance
 
-| Layer              | Technology              | Hosted On                  |
-|--------------------|-------------------------|----------------------------|
-| Frontend           | Next.js 16 (App Router) | Vultr JHB / Coolify        |
-| Commerce backend   | Medusa.js v2            | Vultr JHB / Coolify        |
-| Database           | PostgreSQL (Supabase)   | Supabase Free              |
-| File storage       | Cloudflare R2           | Cloudflare                 |
-| Cache / queues     | Redis                   | Vultr JHB / Coolify        |
-| Search             | Meilisearch             | Vultr JHB / Coolify        |
-| CMS                | Sanity                  | Sanity Cloud               |
-| Automation engine  | n8n                     | Vultr JHB / Coolify        |
-| CDN / DNS          | Cloudflare              | Cloudflare (JHB PoP)       |
-| Transactional mail | ZeptoMail (Zoho)        | ZeptoMail                  |
-| Payments           | PayFast + Ozow          | External (SA-hosted)       |
-| Social API         | Meta Graph API          | External                   |
-| AI (captions)      | Anthropic Claude API    | External                   |
+> **Reconciled 2026-07-22 against the actual running system** — this table
+> drifted significantly from reality during build (see git history: the
+> Coolify/Supabase/Resend/n8n-on-same-VM plan documented below was never
+> actually built that way). Corrected against direct verification: prod SSH
+> access, `docker compose ps` on the box, and `grep` over `apps/`. Anything
+> still marked "unconfirmed" wasn't checked directly — verify before relying
+> on it.
+
+| Layer              | Technology                        | Hosted On                          |
+|--------------------|------------------------------------|-------------------------------------|
+| Frontend           | Next.js 16 (App Router)           | Single VM, plain Docker Compose     |
+| Commerce backend   | Medusa.js v2                      | Same VM                             |
+| Database           | PostgreSQL 16 (self-hosted Docker) | Same VM, **not** Supabase           |
+| File storage       | Cloudflare R2                     | Cloudflare                          |
+| Cache / queues     | Redis                             | Same VM                             |
+| Search             | Meilisearch                       | Same VM                             |
+| CMS                | *(none)*                          | Sanity was planned, never integrated — zero references anywhere in `apps/` |
+| Automation engine  | n8n                               | **Separate infrastructure**, managed outside this repo — deliberately isolated from the prod VM. Not deployed via this repo's docker-compose. |
+| CDN / DNS          | Cloudflare                        | Cloudflare (JHB PoP)                |
+| Transactional mail | ZeptoMail (Zoho)                  | ZeptoMail — **not** Resend (see `apps/backend/src/lib/email.ts`) |
+| Payments           | PayFast (live); Ozow (env vars reserved, no provider implemented in code) | External |
+| Social API         | Meta Graph API                    | External — status of the n8n-side integration unconfirmed from this repo |
+| AI (captions)      | Anthropic Claude API              | External                            |
+| Error tracking     | Bugsink (self-hosted, Sentry-compatible) | Same VM — not in the original plan at all |
+
+There is no Coolify anywhere in this stack — deploy is a plain
+`docker compose up --build -d` over SSH from GitHub Actions
+(`.github/workflows/deploy.yml`). See `docs/PROD-DEPLOY.md` for the real
+runbook and `README.md` for current status; both are kept live and are more
+trustworthy than the rest of this file for anything infra-related.
 
 ---
 
@@ -51,26 +70,30 @@ Browser / Mobile
 Cloudflare CDN (JHB PoP)   ← DNS + DDoS + SSL at edge
       │
       ▼
-Vultr JHB VPS  (all compute runs in South Africa)
-Coolify manages services below via Docker
+Single VM — plain Docker Compose (no Coolify; see docs/PROD-DEPLOY.md)
       │
       ├── Next.js 16  (port 3000)
       │     │
-      │     ├── Server Components ──► Medusa.js API (port 9000)
-      │     │                               │
-      │     │                    ┌──────────┴──────────┐
-      │     │                    │                     │
-      │     │               Supabase DB           Meilisearch
-      │     │            (PostgreSQL + RLS)      (port 7700)
-      │     │            Supabase Free — AWS US/EU
-      │     │
-      │     └── CMS content ──► Sanity Cloud (marketing content)
+      │     └── Server Components ──► Medusa.js API (port 9000)
+      │                                     │
+      │                          ┌──────────┴──────────┐
+      │                          │                      │
+      │                     PostgreSQL 16          Meilisearch
+      │                  (self-hosted Docker,       (port 7700)
+      │                   same VM — not Supabase)
       │
-      ├── Redis  (port 6379 — internal only)
-      └── n8n    (port 5678 — internal only)
-                    │
-                    ├── Anthropic API  (caption generation)
-                    └── Meta Graph API (Instagram / Facebook)
+      ├── Redis     (port 6379 — internal only)
+      └── Bugsink   (self-hosted, Sentry-compatible error tracking)
+
+n8n runs on separate infrastructure outside this repo's scope, isolated
+from the VM above. It calls Medusa's public Admin API
+(`api.tse-cartridges.co.za/admin/*`) rather than an internal Docker route —
+there's no loopback path in from external infra. Anthropic API and Meta
+Graph API integration status on the n8n side is not tracked in this repo.
+
+There is no CMS in production. Sanity was the original plan but was never
+integrated — confirm with the client whether it's still wanted before
+building anything that assumes it exists.
 ```
 
 ---
@@ -79,34 +102,33 @@ Coolify manages services below via Docker
 
 ### App Router Structure
 
+> Illustrative, not exhaustively verified leaf-by-leaf — but the two
+> API routes below were checked directly and don't exist. The only real
+> route under `apps/web/src/app/api/` today is `health/route.ts`. There is
+> no Sanity revalidation webhook (no CMS in production at all) and no
+> `webhooks/payfast` or `webhooks/medusa` route in the web app — PayFast's
+> ITN and any Medusa-side webhook handling live in `apps/backend`, not here.
+
 ```
 apps/web/src/app/
 ├── (storefront)/
-│   ├── layout.tsx              # Root layout with header/footer
+│   ├── layout.tsx
 │   ├── page.tsx                # Homepage
 │   ├── products/
 │   │   ├── page.tsx            # Catalogue listing (RSC)
 │   │   └── [handle]/page.tsx   # Product detail page
-│   ├── compatibility/
-│   │   └── page.tsx            # Cartridge compatibility wizard
+│   ├── compatibility/page.tsx  # Cartridge compatibility wizard
 │   ├── cart/page.tsx
 │   ├── checkout/page.tsx
-│   ├── account/
-│   │   ├── layout.tsx          # Protected layout (auth guard)
-│   │   ├── orders/page.tsx
-│   │   └── addresses/page.tsx
-│   └── b2b/
-│       ├── login/page.tsx
-│       ├── dashboard/page.tsx
-│       └── quote/page.tsx
+│   ├── account/                # orders, addresses, auth guard
+│   ├── b2b/                    # login, dashboard, quote
+│   └── legal/                  # privacy, cookies
 ├── api/
-│   ├── revalidate/route.ts     # Sanity webhook revalidation
-│   └── webhooks/
-│       ├── payfast/route.ts
-│       └── medusa/route.ts
-└── (legal)/
-    ├── privacy/page.tsx
-    └── cookies/page.tsx
+│   └── health/route.ts
+├── sitemap.ts
+├── robots.ts
+├── opengraph-image.tsx
+└── feed/google-merchant.xml/route.ts   # Google Merchant Center feed
 ```
 
 ### Key Patterns
@@ -125,63 +147,66 @@ Medusa.js v2 uses a modular architecture. Custom modules live in `src/modules/`.
 ```
 apps/backend/src/
 ├── modules/
-│   ├── compatibility/          # Cartridge compatibility data & API
-│   ├── b2b/                    # B2B customer groups & pricing
-│   └── courier/                # SA courier rate logic
+│   ├── compatibility/           # Cartridge compatibility data & API
+│   ├── courier-guy/             # The Courier Guy (ShipLogic) rate + waybill API
+│   └── payfast/                 # AbstractPaymentProvider for PayFast
 ├── api/
-│   ├── store/                  # Public storefront API extensions
-│   └── admin/                  # Admin panel API extensions
-├── workflows/                  # Medusa workflow definitions
-│   ├── create-quote.ts
-│   └── bulk-order.ts
-├── subscribers/                # Event-driven side effects
-│   ├── order-placed.ts         # Trigger ZeptoMail confirmation email
-│   ├── product-updated.ts      # Trigger n8n on product.created
-│   └── inventory-restocked.ts  # Trigger n8n on restock (0 → >0)
+│   ├── store/                   # b2b, compatibility, data-requests, payment-surveys, search
+│   └── admin/                   # Admin panel API extensions
+├── admin/widgets/                # e.g. customer-b2b-tier.tsx
+├── scripts/                     # setup-b2b-groups.ts, setup-b2b-pricing.ts, seed*, migrate*
+├── subscribers/                  # order-placed, order-shipment-created, password-reset,
+│                                  # payment-captured, search-sync
 └── medusa-config.ts
 ```
+
+There is no `apps/backend/src/workflows/` directory — confirmed absent.
+No `product-updated` / `inventory-restocked` subscribers either; nothing in
+this repo currently triggers n8n automatically. If/when that's wired up
+(see the marketing-automation retainer pillar), it'll need building.
 
 ### Custom Modules
 
 **Compatibility Module**
-Stores a `compatibility` table: `printer_brand`, `printer_model`, `cartridge_sku` (FK to Medusa product). The wizard queries this table via a custom `/store/compatibility` endpoint.
+Real, at `modules/compatibility/`. Backs the `/store/compatibility` endpoint the wizard queries.
 
-**B2B Module**
-Extends Medusa's customer groups with `pricing_tier` (ENUM: `standard`, `reseller`, `wholesale`). A custom price list is auto-applied at checkout based on the authenticated customer's group.
+**B2B pricing** *(not a custom module — corrected)*
+Implemented via Medusa's **native** customer groups + price lists, set up by `scripts/setup-b2b-groups.ts` and `scripts/setup-b2b-pricing.ts`, not a bespoke `pricing_tier` column or a `modules/b2b/` directory (neither exists). The admin side has a `customer-b2b-tier.tsx` widget. Quote requests are handled by the `api/store/b2b/quote` route directly — there's no separate `create-quote` workflow file.
 
-**Courier Module**
-Wraps the Courier Guy and Aramex APIs. Calculates rates based on order weight, destination province, and the 12:00 cutoff rule for next-day JHB/PTA delivery.
+**Courier module** *(renamed from what's documented)*
+Real module is `modules/courier-guy/` — The Courier Guy (ShipLogic) only. No Aramex integration found anywhere in `apps/backend/src` — if Aramex is still planned, it hasn't been built.
+
+**PayFast module**
+Real, at `modules/payfast/` — an `AbstractPaymentProvider` implementation, conditionally registered in `medusa-config.ts` only when merchant credentials are present. Ozow has reserved env vars (`OZOW_*` in `.env.example`, referenced in `PROD-DEPLOY.md`) but no provider module exists in code — treat it as not implemented, not as "done."
 
 ---
 
 ## Database Schema (key tables)
 
-All standard Medusa tables are inherited. Custom additions:
+All standard Medusa tables are inherited. The compatibility schema below is
+confirmed directly against prod (`printer_brand`, `printer_model`,
+`cartridge_compat` all exist as real tables) — this replaces a
+previously-documented flat `compatibility` table that was never actually
+built that way.
 
 ```sql
--- Cartridge compatibility
-CREATE TABLE compatibility (
-  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  brand       TEXT NOT NULL,           -- e.g. 'HP'
-  model       TEXT NOT NULL,           -- e.g. 'LaserJet Pro M404n'
-  sku         TEXT NOT NULL,           -- Medusa product variant SKU
-  oem         BOOLEAN DEFAULT false,   -- true = original, false = compatible
-  created_at  TIMESTAMPTZ DEFAULT NOW()
-);
-
--- B2B pricing tiers (extends Medusa customer_group)
-ALTER TABLE customer_group ADD COLUMN pricing_tier TEXT DEFAULT 'standard';
-
--- Quote requests
-CREATE TABLE quote_request (
-  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  customer_id  TEXT NOT NULL,
-  items        JSONB NOT NULL,         -- [{sku, qty}]
-  note         TEXT,
-  status       TEXT DEFAULT 'pending', -- pending | quoted | accepted | rejected
-  created_at   TIMESTAMPTZ DEFAULT NOW()
-);
+-- Cartridge compatibility — three tables, not one flat table
+printer_brand      (id, name, slug, ...)
+printer_model      (id, name, slug, brand_id FK, search_name, validated, ...)
+cartridge_compat   (id, sku, source, printer_model_id FK, ...)
+-- `source` tags the batch a compat row came from (e.g. 'gap-fill'), so
+-- imports stay auditable and reversible — see docs/data-model.md.
 ```
+
+**B2B pricing tier**: there is no `customer_group.pricing_tier` column.
+B2B pricing uses Medusa's native customer-group + price-list mechanism
+directly (see `scripts/setup-b2b-groups.ts` / `setup-b2b-pricing.ts`) — no
+custom schema addition.
+
+**Quote requests**: no `quote_request` table exists in the database
+(checked directly). The real quote feature lives at `api/store/b2b/quote`
+— how it actually persists or notifies wasn't traced as part of this pass;
+don't assume the schema above until someone reads that route.
 
 ---
 
@@ -190,14 +215,11 @@ CREATE TABLE quote_request (
 See `.env.example` for the full list. Critical vars:
 
 ```bash
-# Medusa
-DATABASE_URL=postgresql://...
-MEDUSA_BACKEND_URL=https://api.tseonline.co.za
-
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
+# Medusa — self-hosted Postgres, not Supabase (POSTGRES_PASSWORD backs this
+# for both the app and medusa-migrate; don't rotate without recreating the
+# postgres volume — see docs/PROD-DEPLOY.md)
+DATABASE_URL=postgresql://postgres:<POSTGRES_PASSWORD>@postgres:5432/tse_medusa
+MEDUSA_BACKEND_URL=https://api.tse-cartridges.co.za
 
 # PayFast
 PAYFAST_MERCHANT_ID=
@@ -210,10 +232,10 @@ OZOW_SITE_CODE=
 OZOW_PRIVATE_KEY=
 OZOW_API_KEY=
 
-# Sanity
-NEXT_PUBLIC_SANITY_PROJECT_ID=
-NEXT_PUBLIC_SANITY_DATASET=production
-SANITY_API_TOKEN=
+# Sanity — NOT in use. No CMS is integrated in production; these vars
+# don't exist in the real .env.example. Left here only as a reminder this
+# was the original plan — confirm with the client before building anything
+# against it.
 
 # Meilisearch
 MEILISEARCH_HOST=
@@ -240,31 +262,36 @@ N8N_WEBHOOK_SECRET=
 
 ## Deployment
 
-All production services run on a single **Vultr JHB VPS** (2 vCPU / 4 GB RAM / 80 GB SSD)
-managed by **Coolify**. Git-push to `main` → Coolify builds and deploys automatically.
+**No Coolify.** All production services run on a single VM via plain
+Docker Compose. Push to `main` → `.github/workflows/deploy.yml` SSHes in,
+runs `docker compose up --build -d`, health-checks Medusa and Next.js
+through nginx, rolls back on failure. See `docs/PROD-DEPLOY.md` for the
+real runbook — first-run sequence, TLS bootstrap gotcha, rolling-deploy
+detail — and `README.md` for current status.
 
-### Coolify — service layout
+### Service layout (docker-compose, not Coolify)
 
-| Service     | Internal port | Public URL                        |
-|-------------|--------------|-----------------------------------|
-| Next.js 16  | 3000         | `tseonline.co.za` (via Cloudflare)|
-| Medusa v2   | 9000         | `api.tseonline.co.za`             |
-| Redis       | 6379         | Internal only                     |
-| Meilisearch | 7700         | Internal only (Phase 2)           |
-| n8n         | 5678         | Internal only (Phase 5)           |
+| Service      | Internal port          | Public URL                              |
+|--------------|-------------------------|------------------------------------------|
+| Next.js 16   | 3000 (loopback only)   | `tse-cartridges.co.za` (via nginx + Cloudflare) |
+| Medusa v2    | 9000 (loopback only)   | `api.tse-cartridges.co.za`                |
+| Postgres     | 5432                    | Internal only — self-hosted, not Supabase |
+| Redis        | 6379                    | Internal only                             |
+| Meilisearch  | 7700                    | Internal only (proxied at `/meili` on the apex for client-side search) |
+| Bugsink      | —                       | Loopback-only UI (SSH tunnel); browser errors via an nginx path |
+| n8n          | —                       | **Not on this VM at all** — separate infrastructure |
 
-- Env vars managed in Coolify's environment panel (not in `.env` files on the server)
-- Auto-SSL via Let's Encrypt, managed by Coolify
-- Coolify automated backups cover the VPS (~R88/mo optional)
+- Env vars live in a plain `.env` file on the server (no Coolify panel)
+- TLS via Let's Encrypt/certbot, bootstrapped standalone before nginx starts (chicken-and-egg — see PROD-DEPLOY.md)
+- Backups: nightly `pg_dump` cron → local + Cloudflare R2 (see memory/ops notes) — not a Coolify VPS snapshot
 
-### Supabase
-- One project, `production` environment
-- Row Level Security (RLS) enabled on all tables
-- Migrations managed via `scripts/migrate.sh`
-- Cross-border (AWS US/EU) — covered by s.72 consent at signup + signed DPA (see BUILD-PLAN.md §10)
+### Database
+- Self-hosted PostgreSQL 16 in Docker, same VM — **not Supabase**
+- No cross-border transfer of the primary DB, and no Row Level Security setup (that was a Supabase-specific mechanism; doesn't apply here)
+- Migrations managed via `scripts/migrate.sh` / `medusa migrations run`
+- **If this changes the POPIA cross-border analysis in `BUILD-PLAN.md` §10** (which assumes Supabase US/EU hosting), that section needs a compliance re-review — flagging, not resolving, since that's a legal judgment call, not a technical fact
 
 ### Cloudflare
-- DNS: point `tseonline.co.za` and `api.tseonline.co.za` → Vultr VPS IP (orange-cloud proxied)
-- SSL/TLS mode: **Full (Strict)** — origin cert issued by Cloudflare or Let's Encrypt
-- VPS firewall: accept HTTP/HTTPS only from Cloudflare IP ranges (block direct VPS IP access)
-- Page rule: bypass cache on `/api/*` and `/store/*`
+- DNS: `tse-cartridges.co.za` and `api.tse-cartridges.co.za` → VM IP (orange-cloud proxied)
+- SSL/TLS mode: **Full (Strict)**
+- VM firewall: accept HTTP/HTTPS only from Cloudflare IP ranges

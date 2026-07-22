@@ -1,12 +1,32 @@
 # TSE Online — Build Plan & Architecture Scope
 
+> **Historical planning document — reconciled 2026-07-22.** The site went
+> live 2026-07-01 and the build described below is largely complete, on
+> infrastructure that diverged from what's planned here in specific,
+> confirmed ways: **no Coolify** (plain Docker Compose + GitHub Actions SSH
+> deploy instead), **no Supabase** (self-hosted Postgres on the same VM —
+> which also means the whole §10 POPIA cross-border analysis was written
+> against a DB hosting assumption that no longer holds and needs a real
+> compliance re-review, not a doc patch), **email is ZeptoMail, not
+> Resend**, **no Sanity CMS** (never integrated), **n8n runs on separate
+> infrastructure** the client set up themselves — not the dedicated Vultr
+> VM this document describes.
+>
+> Every section below that mentions Coolify, Supabase, Resend, Sanity, a
+> dedicated n8n VM, or the `tseonline.co.za` domain (§3, §4, §7, §8, §10,
+> §11 all have instances) is describing **the original plan, not what was
+> built**. This document is kept as a real record of what was decided and
+> why at the time — it was not rewritten line-by-line to match reality,
+> only flagged. For current infrastructure, use `docs/Architecture.md`,
+> `docs/PROD-DEPLOY.md`, and `README.md`.
+
 Companion to `docs/Architecture.md`. That document describes the **target system**;
 this one describes the **path to get there** — what is already in place, what
 is missing, and the order in which we will build it during the upcoming
 implementation phase.
 
 - **Project start:** April 2026
-- **Go-live target:** June 2026
+- **Go-live target:** June 2026 — **actual go-live: 2026-07-01**
 - **Branch for this scoping work:** `feature/setup`
 
 ---
@@ -67,7 +87,11 @@ let it rot into proposal fiction.
 
 ## 3. Target architecture
 
-### Chosen infrastructure stack
+> **Superseded — see the banner at the top of this file.** The diagram
+> below was the plan; it is not what actually got built. No Coolify, no
+> Supabase, no Sanity, and n8n is external infra, not a service on this VM.
+
+### Chosen infrastructure stack (as originally planned — not built this way)
 
 ```
 Browser
@@ -202,15 +226,24 @@ Maps to AI prompts 5 and 11.
 
 Maps to AI prompts 6, 9, 10, 12.
 
-- [ ] n8n workflow `social-posting-workflow.json` (Anthropic caption + Meta Graph)
-- [ ] `subscribers/product-updated.ts` triggers n8n on create/restock
-- [ ] `subscribers/cart-abandoned.ts` triggers n8n WhatsApp recovery
-- [ ] `social_posts` Supabase table + admin "Post Now" button
-- [ ] POPIA: `CookieBanner`, `(legal)/privacy`, `(legal)/cookies`,
-      `/store/data-requests` endpoint
-- [ ] `sitemap.ts`, `robots.ts`, security headers in `next.config.ts`
-- [ ] Sentry wired in both apps; UptimeRobot pinging `/health`
-- [ ] Run the full **Going Live Checklist** in `docs/DEVELOPER-GUIDE.md`
+**Status as of 2026-07-22:** POPIA/hardening items below shipped (with
+substitutions — Bugsink instead of Sentry, self-hosted instead of
+Supabase). The n8n/social-posting items were **not** built as part of this
+repo's work — n8n exists now, but on separate infrastructure the client
+set up independently, not via a `product-updated`/`cart-abandoned`
+subscriber calling it. If that automation gets built, it needs designing
+fresh against how n8n is actually reachable (Medusa's public Admin API,
+not an internal Docker route) — treat the two n8n line items below as
+not-started, not done-differently.
+
+- [ ] n8n workflow `social-posting-workflow.json` (Anthropic caption + Meta Graph) — not built
+- [ ] `subscribers/product-updated.ts` triggers n8n on create/restock — not built (no such subscriber exists)
+- [ ] `subscribers/cart-abandoned.ts` triggers n8n WhatsApp recovery — not built
+- [ ] `social_posts` Supabase table + admin "Post Now" button — not built; also would need to be a self-hosted-Postgres table now, not Supabase
+- [x] POPIA: `CookieBanner`, `legal/privacy`, `legal/cookies`, `/store/data-requests` endpoint — shipped
+- [x] `sitemap.ts`, `robots.ts` — shipped (sitemap pagination fixed 2026-07-22, see PR #334); security headers in `next.config.ts` unconfirmed, check directly
+- [x] Error tracking wired in both apps — **Bugsink (self-hosted), not Sentry**; UptimeRobot status unconfirmed
+- [ ] Run the full **Going Live Checklist** in `docs/DEVELOPER-GUIDE.md` — unconfirmed whether this ever happened as written
 
 **Exit criteria:** client signs off; new site goes live at `tse-cartridges.co.za` **side by side** with the existing WooCommerce site (`tse.co.za`). No hard cutover — both run in parallel; decommissioning the old site is a separate, later step once the new one is proven in production.
 
@@ -428,6 +461,13 @@ Sources used to verify the above:
 ---
 
 ## 11. Infrastructure costs
+
+> **Not re-verified.** These are the original launch estimates. Actual
+> current spend wasn't checked as part of this pass — the cost basis has
+> since changed (no Coolify, no Supabase, Bugsink added, n8n is a
+> separate bill not reflected here at all since it runs outside this
+> plan's infrastructure). Don't quote these numbers as current without
+> checking actual invoices/billing first.
 
 ### 11.1 Monthly recurring
 
