@@ -1,5 +1,16 @@
 # TSE Online — Monthly Retainer Scope
 
+> **Technical accuracy note (2026-07-22):** two service names below don't
+> match what's actually running — email is **ZeptoMail**, not Resend, and
+> **n8n runs on separate infrastructure the client set up independently**,
+> not bundled into the main VPS cost. Both are corrected inline below.
+> Pricing figures were **not** changed as part of this pass — that's a
+> commercial decision, not a technical fact, and isn't mine to alter
+> unilaterally. If the underlying cost basis has shifted (it likely has:
+> no Coolify, self-hosted DB instead of Supabase, Bugsink added, n8n's
+> real cost sitting outside this table entirely), that's worth a real
+> pricing review, not a silent doc edit.
+
 ## Overview
 
 The monthly retainer keeps TSE Online's platform running, growing, and
@@ -14,10 +25,11 @@ and **Retained Development**.
 
 | Service                  | Purpose                                         | Approx Cost     |
 |--------------------------|-------------------------------------------------|-----------------|
-| Vultr JHB VPS (4 GB)     | All compute — Next.js, Medusa, Redis, n8n       | ~R440/mo        |
-| Vultr automated backups  | Daily VPS snapshots                             | ~R88/mo         |
-| Supabase Free            | Managed PostgreSQL (500 MB — sufficient at launch) | R0           |
-| Resend Free              | Transactional email (3,000/mo, 100/day)         | R0              |
+| VPS (4 GB)               | All compute — Next.js, Medusa, Postgres, Redis, Meilisearch, Bugsink | ~R440/mo |
+| Automated backups        | Nightly DB dump → local + Cloudflare R2         | ~R88/mo         |
+| — *(Supabase not used)*  | Postgres is self-hosted on the same VM, not Supabase | R0 (folded into VPS cost above) |
+| ZeptoMail                | Transactional email — **not Resend**, corrected | check current Zoho plan |
+| n8n                      | **Separate infrastructure, not this VPS** — set up independently by the client, deliberately isolated for blast-radius containment | not reflected in this table |
 | Cloudflare Free          | CDN + DDoS + DNS (JHB PoP)                     | R0              |
 | Sentry Free              | Error monitoring (5,000 events/mo)              | R0              |
 | UptimeRobot Free         | Uptime checks + alerting (5-min intervals)      | R0              |
@@ -30,11 +42,11 @@ and **Retained Development**.
 
 ### What we do
 
-- Monitor uptime and performance daily via UptimeRobot + Coolify dashboards
+- Monitor uptime and performance (UptimeRobot status unconfirmed — verify it's actually configured)
 - Apply security patches and dependency updates weekly
-- Manage database backups (Coolify VPS snapshots + Supabase point-in-time recovery)
-- Review Coolify deployment logs and container health on Vultr JHB
-- Keep all API integrations (PayFast, Ozow, Meta) functional as their APIs evolve
+- Manage database backups (nightly `pg_dump` → local + Cloudflare R2 — there's no Coolify snapshot or Supabase PITR, since neither is in use)
+- Review deployment logs and container health directly via `docker compose logs` / SSH — there's no Coolify dashboard
+- Keep all API integrations (PayFast; Ozow once it's actually implemented; Meta) functional as their APIs evolve
 
 ---
 
@@ -43,6 +55,14 @@ and **Retained Development**.
 ### Instagram & Facebook Bot
 
 The automation engine (n8n + Claude API + Meta Graph API) runs on auto-pilot.
+
+*(Unverified from this repo: nothing in `apps/backend` triggers n8n — no
+`product-updated`/`cart-abandoned` subscribers exist. If this pillar is
+being actively billed, confirm the automation actually runs on the
+client's separate n8n instance before assuming this description is
+accurate — it may be built there and simply untracked here, or it may not
+be built at all.)*
+
 Each month we:
 
 - Review and optimise the Claude caption-generation prompt based on engagement data
@@ -96,12 +116,12 @@ Hours in excess of 8 are billed at **R450/hour** (agreed in advance).
 
 At all times, TSE Online has full ownership of:
 - The GitHub repository (we invite them as an owner)
-- The Vultr VPS (they are the account owner — we have admin access via Coolify)
-- The Coolify instance (runs on their VPS — full access handed over on cancellation)
-- The Supabase project (they are the owner, we are admins)
+- The VPS (they are the account owner — access is via direct SSH, not a Coolify panel; **no Coolify instance exists to hand over**)
 - The domain and DNS (their Cloudflare account)
-- The Sanity project (they are the owner)
+- Their separately-managed n8n instance
 - All Meta Business assets (Facebook Page, Instagram account)
+
+*(Removed: Coolify instance, Supabase project, Sanity project — none of these exist. Verify what n8n hosting/account ownership actually looks like before this line is relied on for a handover.)*
 
 If the retainer is cancelled, we hand over all credentials and documentation
 within 5 business days. The platform continues running — nothing breaks.
