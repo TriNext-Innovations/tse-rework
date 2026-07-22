@@ -20,17 +20,59 @@ const fraunces = Fraunces({
   display: 'swap',
 })
 
+const SITE_NAME = 'TSE Online'
+const DESCRIPTION =
+  "South Africa's printer cartridge specialist since 1987. Quality generic compatibles for HP, Canon, Epson, Brother, Samsung and more — next day delivery to JHB & PTA."
+
 export const metadata: Metadata = {
   title: {
     default: 'TSE Online — Printer Cartridges South Africa',
     template: '%s | TSE Online',
   },
-  description:
-    "South Africa's printer cartridge specialist since 1987. Quality generic compatibles for HP, Canon, Epson, Brother, Samsung and more — next day delivery to JHB & PTA.",
+  description: DESCRIPTION,
   metadataBase: new URL('https://tse-cartridges.co.za'),
   icons: {
     icon: '/icon.png',
     apple: '/apple-icon.png',
+  },
+  openGraph: {
+    type: 'website',
+    siteName: SITE_NAME,
+    locale: 'en_ZA',
+    url: 'https://tse-cartridges.co.za',
+    title: 'TSE Online — Printer Cartridges South Africa',
+    description: DESCRIPTION,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'TSE Online — Printer Cartridges South Africa',
+    description: DESCRIPTION,
+  },
+}
+
+const organizationJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: SITE_NAME,
+  url: 'https://tse-cartridges.co.za',
+  logo: 'https://tse-cartridges.co.za/brand/logo-v2.svg',
+  foundingDate: '1987',
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: 'Kya Sands, Johannesburg',
+    addressCountry: 'ZA',
+  },
+}
+
+const websiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: SITE_NAME,
+  url: 'https://tse-cartridges.co.za',
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: 'https://tse-cartridges.co.za/products?q={search_term_string}',
+    'query-input': 'required name=search_term_string',
   },
 }
 
@@ -46,6 +88,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
         <AuthProvider>
           <CartProvider>{children}</CartProvider>
         </AuthProvider>
