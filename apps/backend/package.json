@@ -33,7 +33,7 @@
     "@tse/types": "workspace:*",
     "meilisearch": "^0.59.0",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
     "@tse/config": "workspace:*",
