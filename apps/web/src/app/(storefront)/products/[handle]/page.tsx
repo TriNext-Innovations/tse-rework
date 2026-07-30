@@ -115,27 +115,46 @@ export default async function ProductPage({ params }: Props) {
     ? await getRelated(brandCategory.id, product.id, regionId)
     : []
 
-  const variant  = product.variants?.[0]
-  const sku      = variant?.sku ?? ''
-  const priceZar = variant?.calculated_price?.calculated_amount
-    ? Math.round(variant.calculated_price.calculated_amount)
-    : null
+  const canonical = `https://tse-cartridges.co.za/products/${handle}`
+
+  // One Offer per variant. The Merchant Center feed submits every variant as its
+  // own item against this single landing page, so publishing only variants[0]'s
+  // price made Google compare (say) hp-216a's R900 black against three colours
+  // fed at R1,000 — a price mismatch, which is a disapproval. Black-vs-colour and
+  // yield-tier splits are normal pricing here, not data errors.
+  const offers = (product.variants ?? [])
+    .filter((v: any) => typeof v.calculated_price?.calculated_amount === 'number')
+    .map((v: any) => ({
+      '@type': 'Offer',
+      ...(v.sku && { sku: v.sku }),
+      price: v.calculated_price.calculated_amount,
+      priceCurrency: (v.calculated_price.currency_code ?? 'zar').toUpperCase(),
+      availability: 'https://schema.org/InStock',
+      itemCondition: 'https://schema.org/NewCondition',
+      url: canonical,
+      seller: { '@type': 'Organization', name: 'TSE Online' },
+    }))
+  const prices = offers.map((o: any) => o.price)
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.title,
-    sku,
+    // Only meaningful as a product-level identifier when there's a single variant;
+    // otherwise each SKU is declared on its own Offer.
+    ...(offers.length === 1 && offers[0].sku && { sku: offers[0].sku }),
     description: product.description ? htmlToPlainText(product.description) : '',
     brand: { '@type': 'Brand', name: brandCategory?.name ?? 'TSE' },
     image: product.images?.[0]?.url,
-    ...(priceZar && {
+    ...(offers.length === 1 && { offers: offers[0] }),
+    ...(offers.length > 1 && {
       offers: {
-        '@type': 'Offer',
-        price: priceZar,
-        priceCurrency: 'ZAR',
-        availability: 'https://schema.org/InStock',
-        seller: { '@type': 'Organization', name: 'TSE Online' },
+        '@type': 'AggregateOffer',
+        priceCurrency: offers[0].priceCurrency,
+        lowPrice: Math.min(...prices),
+        highPrice: Math.max(...prices),
+        offerCount: offers.length,
+        offers,
       },
     }),
   }
