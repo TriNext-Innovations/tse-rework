@@ -59,6 +59,12 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '*.supabase.co', pathname: '/storage/v1/object/public/**' },
+      // Product images are moving off the pub-*.r2.dev endpoint (a Cloudflare
+      // development URL, rate-limited at their discretion) onto a custom domain
+      // bound to the same R2 bucket. Both are listed while the DB URLs migrate.
+      // Note: remotePatterns matches hostnames exactly, so the apex entry below
+      // does NOT cover images.* — it needs its own line or next/image 400s.
+      { protocol: 'https', hostname: 'images.tse-cartridges.co.za' },
       { protocol: 'https', hostname: '*.r2.dev' },
       { protocol: 'https', hostname: 'tse.co.za' },
       { protocol: 'https', hostname: 'www.tse.co.za' },
