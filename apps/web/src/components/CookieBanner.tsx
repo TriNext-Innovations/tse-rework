@@ -2,24 +2,17 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-
-const STORAGE_KEY = 'tse_cookie_consent'
+import { readConsent, writeConsent, type ConsentLevel } from '@/lib/consent'
 
 export function CookieBanner() {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    try {
-      if (!localStorage.getItem(STORAGE_KEY)) setVisible(true)
-    } catch {
-      // localStorage unavailable (SSR guard)
-    }
+    if (!readConsent()) setVisible(true)
   }, [])
 
-  function accept(level: 'all' | 'necessary') {
-    try {
-      localStorage.setItem(STORAGE_KEY, level)
-    } catch {}
+  function accept(level: ConsentLevel) {
+    writeConsent(level)
     setVisible(false)
   }
 
