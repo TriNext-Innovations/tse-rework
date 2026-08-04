@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import { CartProvider } from '@/contexts/CartContext'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { CookieBanner } from '@/components/CookieBanner'
+import { Analytics } from '@/components/Analytics'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -48,6 +49,12 @@ export const metadata: Metadata = {
     title: 'TSE Online — Printer Cartridges South Africa',
     description: DESCRIPTION,
   },
+  // Search Console is verified by DNS TXT on the Cloudflare zone, which covers
+  // every subdomain at once. This meta tag is only needed if someone adds a
+  // URL-prefix property later; unset, it emits nothing.
+  ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? { verification: { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION } }
+    : {}),
 }
 
 const organizationJsonLd = {
@@ -100,6 +107,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <CartProvider>{children}</CartProvider>
         </AuthProvider>
         <CookieBanner />
+        <Analytics />
       </body>
     </html>
   )
