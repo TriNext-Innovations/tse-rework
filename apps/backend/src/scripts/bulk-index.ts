@@ -13,6 +13,7 @@ import {
   productToDocument,
   getCompatPrintersBySku,
   compatiblePrintersForProduct,
+  pruneStaleDocuments,
   SEARCH_INDEX,
 } from '../lib/search'
 
@@ -45,6 +46,7 @@ export default async function bulkIndex({ container }: { container: MedusaContai
 
   let offset = 0
   let indexed = 0
+  const liveIds = new Set<string>()
 
   console.log('[bulk-index] starting product indexing…')
 
@@ -68,7 +70,10 @@ export default async function bulkIndex({ container }: { container: MedusaContai
     const docs = products.map((p: any) =>
       productToDocument(p, compatiblePrintersForProduct(p, bySku)),
     )
-    await client.index(SEARCH_INDEX).addDocuments(docs, { primaryKey: 'id' })
+    // Wait for each batch to land: the prune below reads the index back, and
+    // a doc still sitting in the task queue would read as absent.
+    await client.index(SEARCH_INDEX).addDocuments(docs, { primaryKey: 'id' }).waitTask()
+    for (const doc of docs) liveIds.add(doc.id)
 
     indexed += products.length
     offset += BATCH
@@ -76,4 +81,11 @@ export default async function bulkIndex({ container }: { container: MedusaContai
   }
 
   console.log(`[bulk-index] done — ${indexed} products indexed.`)
+
+  const pruned = await pruneStaleDocuments(client, liveIds)
+  console.log(
+    pruned.length > 0
+      ? `[bulk-index] pruned ${pruned.length} stale document(s): ${pruned.join(', ')}`
+      : '[bulk-index] no stale documents to prune.',
+  )
 }
