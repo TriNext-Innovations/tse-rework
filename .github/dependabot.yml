@@ -1,7 +1,20 @@
 version: 2
 
+# One npm entry only, deliberately.
+#
+# This is a pnpm workspace with a single root `pnpm-lock.yaml`. Dependabot can
+# only update a lockfile that lives in the directory it is pointed at, so
+# per-app entries (`/apps/web`, `/apps/backend`) raised PRs that edited
+# `apps/*/package.json` and nothing else — every one of them then failed CI at
+# `pnpm install --frozen-lockfile` with ERR_PNPM_OUTDATED_LOCKFILE. They could
+# not be rebased green; the config produced them broken. Ten PRs accumulated
+# that way between 11 July and 4 August.
+#
+# The root entry sees every workspace package, so the groups below still cover
+# apps/web, apps/backend and packages/* — they just arrive with a lockfile.
+
 updates:
-  # ── Root workspace ──────────────────────────────────────────────────────────
+  # ── Whole workspace (root lockfile) ─────────────────────────────────────────
   - package-ecosystem: npm
     directory: /
     schedule:
@@ -18,23 +31,6 @@ updates:
           - "turbo"
           - "typescript"
           - "@types/*"
-    ignore:
-      # Runtime is Node 20 (node:20-alpine images) — typings must not lead it.
-      - dependency-name: "@types/node"
-        update-types: ["version-update:semver-major"]
-    labels:
-      - "dependencies"
-      - "automerge"
-
-  # ── Web (Next.js storefront) ─────────────────────────────────────────────────
-  - package-ecosystem: npm
-    directory: /apps/web
-    schedule:
-      interval: weekly
-      day: monday
-      time: "06:00"
-      timezone: Africa/Johannesburg
-    groups:
       next:
         patterns:
           - "next"
@@ -55,26 +51,15 @@ updates:
       # Runtime is Node 20 (node:20-alpine images) — typings must not lead it.
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
-    labels:
-      - "dependencies"
-      - "automerge"
-
-  # ── Backend (Medusa) ─────────────────────────────────────────────────────────
-  - package-ecosystem: npm
-    directory: /apps/backend
-    schedule:
-      interval: weekly
-      day: monday
-      time: "06:00"
-      timezone: Africa/Johannesburg
-    groups:
-      medusa:
-        patterns:
-          - "@medusajs/*"
-    ignore:
-      # Runtime is Node 20 (node:20-alpine images) — typings must not lead it.
-      - dependency-name: "@types/node"
-        update-types: ["version-update:semver-major"]
+      # Medusa upgrades are never routine here: the @medusajs/dashboard patch is
+      # pinned to an exact version, the root overrides pin admin-sdk/admin-shared
+      # to match, and minor bumps have changed query load-strategy behaviour under
+      # the order and payment-capture subscribers. Minor is not safe to automerge,
+      # and semver-minor bumps would otherwise qualify. Bump these by hand.
+      - dependency-name: "@medusajs/*"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
     labels:
       - "dependencies"
       - "automerge"
