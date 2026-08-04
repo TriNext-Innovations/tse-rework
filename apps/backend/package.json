@@ -6,7 +6,7 @@
     "build": "medusa build",
     "dev": "medusa develop",
     "start": "medusa start",
-    "lint": "eslint src --ext .ts",
+    "lint": "eslint src",
     "type-check": "tsc --noEmit",
     "migrate": "medusa db:migrate",
     "migrate:compat": "medusa exec src/scripts/migrate-compatibility.ts",
