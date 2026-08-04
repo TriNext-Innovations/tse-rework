@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@v6.0.9
 
       - uses: actions/setup-node@v6
         with:
@@ -34,6 +34,11 @@ jobs:
 
       - name: Type check (backend)
         run: pnpm --filter @tse/backend type-check
+
+      # Nothing invoked turbo's `lint` task before, so linter upgrades were
+      # merging on a green tick that had never linted a single file.
+      - name: Lint
+        run: pnpm lint
 
       - name: Unit tests with coverage
         run: pnpm --filter @tse/web test:coverage
@@ -57,7 +62,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@v6.0.9
 
       - uses: actions/setup-node@v6
         with:
@@ -100,7 +105,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@v6.0.9
 
       - uses: actions/setup-node@v6
         with:
