@@ -4,6 +4,25 @@ import { TYPE_CATEGORY_NAMES as TYPE_CATS } from '@/lib/taxonomy'
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
 const SITE = 'https://tse-cartridges.co.za'
+
+// "Office & School Supplies > Printer Consumables > Toner & Inkjet Cartridges".
+// The whole catalogue is printer consumables, so one category covers it —
+// drum units included, as Google's taxonomy has no separate entry for them.
+const GOOGLE_PRODUCT_CATEGORY = 5109
+
+// Mirrors the live shipping model (`apps/backend/src/scripts/setup-shipping.ts`):
+// flat R150 Economy, and an automatic 100%-off-shipping promotion once the
+// goods total reaches R2,000. Feed shipping is per item ordered on its own, so
+// anything already at or above the threshold ships free by itself.
+const ECONOMY_SHIPPING_RAND = 150
+const FREE_SHIPPING_THRESHOLD_RAND = 2000
+
+// Medusa titles the sole variant of a single-variant product "Default Title";
+// our own seed script uses "Default Value". Neither is a real variant name and
+// neither belongs in a Shopping listing.
+const PLACEHOLDER_VARIANT_TITLES = new Set(['default title', 'default value'])
+
+const COLOUR_PATTERN = /\b(black|cyan|magenta|yellow|colour|color)\b/i
 const FIELDS =
   '+images,+categories.id,+categories.name,+variants.sku,+variants.title,+variants.calculated_price'
 
@@ -88,14 +107,35 @@ export async function GET() {
     const link = `${SITE}/products/${p.handle}`
     const description = p.description ? htmlToPlainText(p.description).slice(0, 5000) : p.title
 
-    return (p.variants ?? [])
-      .filter((v) => v.sku && typeof v.calculated_price?.calculated_amount === 'number')
-      .map((v) => {
-        const price = v.calculated_price!.calculated_amount as number
-        const currency = (v.calculated_price!.currency_code ?? 'zar').toUpperCase()
-        const title = v.title && v.title !== 'Default Value' ? `${p.title} — ${v.title}` : p.title
+    const sellable = (p.variants ?? []).filter(
+      (v) => v.sku && typeof v.calculated_price?.calculated_amount === 'number',
+    )
 
-        return `    <item>
+    // Variants of one product must share an item_group_id, or Google reads a
+    // four-colour cartridge set as four unrelated products competing with each
+    // other. A grouped item also has to carry a distinguishing attribute, so
+    // the variant name goes out as colour where it names one and size
+    // otherwise (that's the yield variants — "High yield" and friends).
+    const isVariantGroup = sellable.length > 1
+
+    return sellable.map((v) => {
+      const price = v.calculated_price!.calculated_amount as number
+      const currency = (v.calculated_price!.currency_code ?? 'zar').toUpperCase()
+      const variantName =
+        v.title && !PLACEHOLDER_VARIANT_TITLES.has(v.title.trim().toLowerCase())
+          ? v.title.trim()
+          : null
+      const title = variantName ? `${p.title} — ${variantName}` : p.title
+      const shipping = price >= FREE_SHIPPING_THRESHOLD_RAND ? 0 : ECONOMY_SHIPPING_RAND
+
+      const variantAttribute =
+        isVariantGroup && variantName
+          ? COLOUR_PATTERN.test(variantName)
+            ? `      <g:color>${escapeXml(variantName)}</g:color>\n`
+            : `      <g:size>${escapeXml(variantName)}</g:size>\n`
+          : ''
+
+      return `    <item>
       <g:id>${escapeXml(v.sku!)}</g:id>
       <title>${cdata(title)}</title>
       <description>${cdata(description)}</description>
@@ -106,8 +146,14 @@ export async function GET() {
       <g:brand>${escapeXml(brand)}</g:brand>
       <g:condition>new</g:condition>
       <g:identifier_exists>no</g:identifier_exists>
+      <g:google_product_category>${GOOGLE_PRODUCT_CATEGORY}</g:google_product_category>
+${isVariantGroup ? `      <g:item_group_id>${escapeXml(p.handle)}</g:item_group_id>\n` : ''}${variantAttribute}      <g:shipping>
+        <g:country>ZA</g:country>
+        <g:service>Economy</g:service>
+        <g:price>${shipping.toFixed(2)} ${currency}</g:price>
+      </g:shipping>
     </item>`
-      })
+    })
   })
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
