@@ -134,3 +134,37 @@ export async function deleteDocument(id: string): Promise<void> {
   const client = getSearchClient()
   await client.index(SEARCH_INDEX).deleteDocument(id)
 }
+
+/**
+ * Drop every document that a full re-index did not just write.
+ *
+ * addDocuments only ever upserts, so a product that is unpublished or deleted
+ * keeps its document — and stays searchable on the live site — until something
+ * removes it. That has bitten us twice (149 ghosts found 2026-07-30, 3 more on
+ * 2026-08-04), so a full run now prunes rather than leaving the index to drift.
+ *
+ * Only safe to call with the complete set of live ids from a finished run.
+ * Returns the ids removed.
+ */
+export async function pruneStaleDocuments(
+  client: Meilisearch,
+  liveIds: Set<string>,
+): Promise<string[]> {
+  const index = client.index(SEARCH_INDEX)
+  const PAGE = 1000
+  const stale: string[] = []
+
+  for (let offset = 0; ; offset += PAGE) {
+    const { results } = await index.getDocuments<{ id: string }>({
+      limit: PAGE,
+      offset,
+      fields: ['id'],
+    })
+    if (results.length === 0) break
+    for (const doc of results) if (!liveIds.has(doc.id)) stale.push(doc.id)
+    if (results.length < PAGE) break
+  }
+
+  if (stale.length > 0) await index.deleteDocuments(stale).waitTask()
+  return stale
+}
