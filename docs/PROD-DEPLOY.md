@@ -225,6 +225,73 @@ If `Dockerfile`, `docker-compose.yml`, `medusa-config.ts`, or any nginx config c
 
 If schema-impacting migrations were added, **always** run `medusa-migrate` to exit 0 before bringing the live `medusa` container back up. The compose `depends_on: service_completed_successfully` enforces this when starting from scratch but doesn't help on a rolling update.
 
+### 6.1 Break-glass: deploying manually when GitHub Actions is down
+
+Normal deploys run from `.github/workflows/deploy.yml` on push to `main`. When
+Actions is unavailable (it was down for hours on 2026-08-06 and the deploy
+never got a runner), use:
+
+```bash
+cd /opt/tse-ui
+git fetch origin && git checkout origin/main -- scripts/     # get the scripts first
+./scripts/prod-deploy.sh --check-only                        # rehearsal: touches NOTHING live
+./scripts/prod-deploy.sh                                     # the real thing
+```
+
+`--check-only` runs preflight, backup, checkout, build and the boot smoke test,
+then stops. It is safe to run at any time, including while the site is serving
+traffic, and is the fastest way to answer "would this deploy work?".
+
+**Do not hand-run the deploy steps, and never pipe a script into
+`ssh 'bash -s'`.** Bash then reads the script from stdin, and the first command
+that consumes stdin — `docker compose run` without `-T` — swallows the rest of
+the script. The deploy stops silently *mid-way* and still exits 0. That is how
+2026-08-06's first attempt built images and ran migrations but never swapped a
+container, while reporting success. Put the script on the box and run it as a
+file.
+
+**What makes this safer than the CI deploy:** it boots the newly built backend
+image and requires `/health` *before* any live container is swapped. Nothing in
+CI does this. `docker build` exit 0 proves nothing about boot, because medusa
+compiles `src/api/**` at **runtime** — see 3.x below. If the smoke test fails,
+the script exits non-zero having touched nothing.
+
+Rollback is automatic on any failure after the first container swap (it retags
+the `tse-rollback-*` images saved at the start of the run). To roll back by
+hand later:
+
+```bash
+cd /opt/tse-ui
+for s in medusa web; do docker tag tse-rollback-$s:latest tse-ui-$s:latest; done
+docker compose up -d --no-build && docker compose exec -T nginx nginx -s reload
+```
+
+### 6.2 A green build does not mean a working image
+
+Medusa compiles `src/api/**` **at runtime, on boot** — not during
+`medusa build`. So a broken import in an API route produces:
+
+| check | result |
+|---|---|
+| `tsc --noEmit` | ✅ passes |
+| `medusa build` | ✅ passes |
+| `docker build` | ✅ **image builds green** |
+| `docker run` | ❌ crash loop |
+
+On 2026-08-06 the backend Dockerfile copied `/app/node_modules` but not
+`/app/packages`. The `@tse/*` entries are pnpm workspace symlinks into
+`packages/`, so they dangled in the runtime image and the container crash-looped
+on `Cannot find module '@tse/types'`. Production API was 502 for ~3 minutes.
+
+The only honest check is starting the container:
+
+```bash
+SMOKE_DATABASE_URL=... SMOKE_REDIS_URL=... \
+  ./scripts/smoke-backend-image.sh <image> --network tse-ui_default
+```
+
+Adding a workspace package? Make sure the runtime image actually contains it.
+
 ---
 
 ## 7. Disaster recovery
