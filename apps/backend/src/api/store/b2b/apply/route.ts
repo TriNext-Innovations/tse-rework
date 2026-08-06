@@ -1,4 +1,5 @@
 import type { MedusaRequest, MedusaResponse } from '@medusajs/framework/http'
+import { B2B_GROUP_NAME, B2B_TIERS, b2bTierLabel } from '@tse/types'
 import { sendEmail, emailConfigured, salesEmail, salesCc } from '../../../../lib/email'
 
 type ApplyBody = {
@@ -37,8 +38,9 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         </table>
         <p style="font-family:sans-serif;color:#666;font-size:13px;margin-top:16px">
           Reply directly to <a href="mailto:${email}">${email}</a> to approve. To grant B2B pricing,
-          add the customer to the <strong>B2B Approved</strong> group in Medusa admin — the per-order
-          threshold discounts (10% ≥ R10k, 15% ≥ R25k) then apply automatically.
+          add the customer to the <strong>${B2B_GROUP_NAME}</strong> group in Medusa admin — the
+          per-order threshold discounts (${B2B_TIERS.map(b2bTierLabel).join('; ')}) then apply
+          automatically, on every order they place <em>while signed in</em>.
         </p>
       `,
       replyTo: email,

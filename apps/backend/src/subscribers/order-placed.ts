@@ -50,7 +50,7 @@ export default async function orderPlacedHandler({
       filters: { id: data.id },
       fields: [
         'id', 'display_id', 'email', 'currency_code', 'created_at',
-        'total', 'subtotal', 'shipping_total', 'tax_total',
+        'total', 'subtotal', 'shipping_total', 'tax_total', 'discount_total',
         'items.*',
         'shipping_address.*',
         'shipping_methods.*',
@@ -85,6 +85,13 @@ export default async function orderPlacedHandler({
   // the total (matching the storefront's 15/115 calculation).
   const vatContent = formatPrice(((order.total ?? 0) * 15) / 115, currency)
 
+  // Automatic promotions (the B2B threshold discount) sit between subtotal and
+  // total. Without its own row, Subtotal + Shipping ≠ Total on a document TSE
+  // and its customers treat as an invoice. Undefined when nothing was applied,
+  // so the row is omitted entirely for the majority of orders.
+  const discountAmount = order.discount_total ?? 0
+  const discount = discountAmount > 0 ? formatPrice(discountAmount, currency) : undefined
+
   const html = orderConfirmationHtml({
     orderNumber: order.display_id ?? order.id,
     orderDate: formatDate(order.created_at),
@@ -94,6 +101,7 @@ export default async function orderPlacedHandler({
     email,
     items,
     subtotal: formatPrice(order.subtotal ?? 0, currency),
+    discount,
     shippingCost: formatPrice(order.shipping_total ?? 0, currency),
     vatContent,
     total: formatPrice(order.total ?? 0, currency),
@@ -150,6 +158,7 @@ export default async function orderPlacedHandler({
       lineTotal: formatPrice(item.unit_price * item.quantity, currency),
     })),
     subtotal: formatPrice(order.subtotal ?? 0, currency),
+    discount,
     shippingCost: formatPrice(order.shipping_total ?? 0, currency),
     vatContent,
     total: formatPrice(order.total ?? 0, currency),

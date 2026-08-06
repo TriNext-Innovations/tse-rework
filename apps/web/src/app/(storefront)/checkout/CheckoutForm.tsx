@@ -47,7 +47,7 @@ function toAddressForm(a: CustomerAddress): AddressForm {
 }
 
 export default function CheckoutForm() {
-  const { items, count, cartId } = useCart()
+  const { items, count, cartId, goodsTotal, discountTotal } = useCart()
   const { customer, register, addAddress } = useAuth()
   const [step, setStep] = useState(1)
   const [contact, setContact] = useState<ContactForm>(EMPTY_CONTACT)
@@ -102,13 +102,17 @@ export default function CheckoutForm() {
 
   const formRef = useRef<HTMLFormElement>(null)
 
-  const subtotal = items.reduce((sum, i) => sum + (i.price ?? 0) * i.qty, 0)
+  const subtotal = goodsTotal
   const selectedOption = options.find((o) => o.id === selectedOptionId) ?? null
 
   // Prefer authoritative cart totals once a method is chosen; fall back to the
   // local subtotal (+ selected delivery) before the cart has computed.
   const deliveryRand = totals ? totals.shipping_total : selectedOption ? selectedOption.amount : 0
-  const totalRand = totals ? totals.total : subtotal + deliveryRand
+  // Automatic promotions (the B2B threshold discount) are applied by Medusa and
+  // land in the cart's discount_total. It has to be shown as its own line —
+  // otherwise Subtotal + Delivery ≠ Total and the money looks like it vanished.
+  const discountRand = totals ? totals.discount_total : discountTotal
+  const totalRand = totals ? totals.total : subtotal - discountRand + deliveryRand
   const vatContent = Math.round((totalRand * 15) / 115)
 
   function validateContact(): boolean {
@@ -715,6 +719,11 @@ export default function CheckoutForm() {
               <div className="flex justify-between text-[var(--muted)]">
                 <span>Subtotal</span><span>R{subtotal.toFixed(0)}</span>
               </div>
+              {discountRand > 0 && (
+                <div className="flex justify-between text-[#0f7a4a]">
+                  <span>Business discount</span><span>−R{discountRand.toFixed(0)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-[var(--muted)]">
                 <span>VAT (incl.)</span><span>R{vatContent}</span>
               </div>

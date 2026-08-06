@@ -53,6 +53,10 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  // @tse/types ships raw TS (main: src/index.ts) and is consumed straight from
+  // the workspace symlink. Under output:'standalone' it has to be transpiled
+  // explicitly or the B2B constants shared with the backend won't compile.
+  transpilePackages: ['@tse/types'],
   async headers() {
     return [{ source: '/(.*)', headers: securityHeaders }]
   },
