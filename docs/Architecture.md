@@ -171,7 +171,13 @@ this repo currently triggers n8n automatically. If/when that's wired up
 Real, at `modules/compatibility/`. Backs the `/store/compatibility` endpoint the wizard queries.
 
 **B2B pricing** *(not a custom module — corrected)*
-Implemented via Medusa's **native** customer groups + price lists, set up by `scripts/setup-b2b-groups.ts` and `scripts/setup-b2b-pricing.ts`, not a bespoke `pricing_tier` column or a `modules/b2b/` directory (neither exists). The admin side has a `customer-b2b-tier.tsx` widget. Quote requests are handled by the `api/store/b2b/quote` route directly — there's no separate `create-quote` workflow file.
+Implemented via Medusa's **native** customer groups + **automatic promotions**, set up by `scripts/setup-b2b-groups.ts` and `scripts/setup-b2b-pricing.ts`, not a bespoke `pricing_tier` column or a `modules/b2b/` directory (neither exists). Flat price lists were retired in #272.
+
+One group — `B2B Approved` — is the approval flag; the rate is decided **per order** by two mutually exclusive automatic promotions gated on `customer.groups.id` + `original_item_total` (goods incl VAT, excl shipping, pre-discount). The bands live in `packages/types/src/b2b.ts` and are the single source of truth shared by the setup script, the `customer-b2b-tier.tsx` admin widget, the storefront B2B page and the cart — change a threshold there and every surface follows.
+
+Because the rule is evaluated against the cart's **customer**, storefront cart calls must carry the customer JWT and a guest-created cart must be transferred on sign-in (`transferCartToCustomer` in `apps/web/src/lib/checkout-cart.ts`). An unauthenticated cart silently gets no discount.
+
+Quote requests are handled by the `api/store/b2b/quote` route directly — there's no separate `create-quote` workflow file.
 
 **Courier module** *(renamed from what's documented)*
 Real module is `modules/courier-guy/` — The Courier Guy (ShipLogic) only. No Aramex integration found anywhere in `apps/backend/src` — if Aramex is still planned, it hasn't been built.
@@ -198,10 +204,11 @@ cartridge_compat   (id, sku, source, printer_model_id FK, ...)
 -- imports stay auditable and reversible — see docs/data-model.md.
 ```
 
-**B2B pricing tier**: there is no `customer_group.pricing_tier` column.
-B2B pricing uses Medusa's native customer-group + price-list mechanism
-directly (see `scripts/setup-b2b-groups.ts` / `setup-b2b-pricing.ts`) — no
-custom schema addition.
+**B2B pricing tier**: there is no `customer_group.pricing_tier` column, and
+since #272 there are no B2B price lists either. One customer group
+(`B2B Approved`) plus two automatic threshold promotions, both created by
+`scripts/setup-b2b-groups.ts` / `setup-b2b-pricing.ts` from the bands in
+`packages/types/src/b2b.ts` — no custom schema addition.
 
 **Quote requests**: no `quote_request` table exists in the database
 (checked directly). The real quote feature lives at `api/store/b2b/quote`

@@ -15,6 +15,8 @@ export interface TeamOrderNotificationData {
     lineTotal: string
   }>
   subtotal: string
+  /** Promotion discount (e.g. the B2B threshold rate). Omitted when there is none. */
+  discount?: string
   shippingCost: string
   vatContent: string
   total: string
@@ -50,6 +52,14 @@ export function teamOrderNotificationHtml(d: TeamOrderNotificationData): string 
       <tr>
         <td colspan="4" style="${cell}text-align:right;${bold ? 'font-weight:700;' : ''}">${label}</td>
         <td style="${cell}text-align:right;${bold ? 'font-weight:700;' : ''}">${value}</td>
+      </tr>`
+
+  // Signed and coloured so staff invoicing off this email can see at a glance
+  // that the order was discounted, and by how much.
+  const discountRow = (label: string, value: string) => `
+      <tr>
+        <td colspan="4" style="${cell}text-align:right;color:#0F7A4A;">${label}</td>
+        <td style="${cell}text-align:right;color:#0F7A4A;">−${value}</td>
       </tr>`
 
   const paid = d.paymentStatus.toLowerCase()
@@ -117,6 +127,7 @@ export function teamOrderNotificationHtml(d: TeamOrderNotificationData): string 
             </tr>
             ${itemRows}
             ${totalRow('Subtotal', d.subtotal)}
+            ${d.discount ? discountRow('Business discount', d.discount) : ''}
             ${totalRow('Shipping', d.shippingCost)}
             ${totalRow('VAT included (15%)', d.vatContent)}
             ${totalRow('Total (incl. VAT)', d.total, true)}

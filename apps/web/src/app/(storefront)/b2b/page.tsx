@@ -2,37 +2,36 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { B2B_MAX_PERCENT, B2B_MIN_THRESHOLD_RAND, B2B_TIERS, formatRand } from '@tse/types'
 import { siteConfig } from '@/lib/site-config'
 import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/layout'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 
-const TIERS = [
+// The bands below are generated from the same constants the Medusa promotions
+// are built from (`@tse/types`), so this page can't advertise a discount the
+// store won't actually give. There is ONE account type — approval is what you
+// apply for; the rate is then decided per order by its size.
+const BANDS = [
   {
-    name: 'Standard',
+    range: `Under ${formatRand(B2B_MIN_THRESHOLD_RAND)}`,
     discount: null,
-    desc: 'No account required. Order online or by phone at regular pricing.',
-    for: ['Home users', 'Occasional buyers'],
-    cta: null,
+    desc: 'List price, same as everyone else. No account needed to order.',
     highlight: false,
   },
-  {
-    name: 'Reseller',
-    discount: '15% off',
-    desc: 'For IT resellers, office managers, and SMEs with regular monthly spend.',
-    for: ['IT resellers', 'Office managers', 'SMEs (R2 000+/mo)'],
-    cta: 'Apply for Reseller',
-    highlight: false,
-  },
-  {
-    name: 'Wholesale',
-    discount: '25% off',
-    desc: 'For print shops, large corporates, and distributors with high-volume needs.',
-    for: ['Print shops', 'Large corporates', 'Distributors (R5 000+/mo)'],
-    cta: 'Apply for Wholesale',
-    highlight: true,
-  },
+  ...B2B_TIERS.map((tier, i) => ({
+    range:
+      tier.maxRand === null
+        ? `${formatRand(tier.minRand)} and up`
+        : `${formatRand(tier.minRand)} – ${formatRand(tier.maxRand - 1)}`,
+    discount: `${tier.percent}% off`,
+    desc:
+      tier.maxRand === null
+        ? 'Bulk and stock-up orders. The best rate we do online.'
+        : 'The typical monthly top-up order for an office or a small reseller.',
+    highlight: i === B2B_TIERS.length - 1,
+  })),
 ]
 
 type Form = {
@@ -114,8 +113,10 @@ export default function B2BPage() {
               <span className="font-display-italic text-[#41e0f5]">Pay less.</span>
             </h1>
             <p className="mt-8 max-w-xl text-[15px] text-[var(--ink-2)] leading-relaxed">
-              Volume pricing for offices, IT resellers, print shops, and schools.
-              Get up to 25% off all cartridges — with same next-day delivery to Johannesburg and Pretoria.
+              Volume pricing for offices, IT resellers, print shops, and schools. Approved accounts
+              get {B2B_TIERS[0]!.percent}% off orders from {formatRand(B2B_MIN_THRESHOLD_RAND)} and{' '}
+              {B2B_MAX_PERCENT}% from {formatRand(B2B_TIERS[B2B_TIERS.length - 1]!.minRand)} — worked
+              out automatically at checkout, with next-day delivery to Johannesburg and Pretoria.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <a href="#apply" className="inline-flex items-center gap-2 bg-[var(--ink)] text-[var(--paper)] rounded-full pl-6 pr-2 py-2.5 text-sm font-semibold hover:bg-[#dfe344] hover:text-[var(--on-accent)] transition-colors">
@@ -131,7 +132,7 @@ export default function B2BPage() {
           </div>
           <div className="lg:col-span-5 grid grid-cols-3 gap-3">
             {[
-              { stat: '25%', label: 'Max discount' },
+              { stat: `${B2B_MAX_PERCENT}%`, label: 'Max discount' },
               { stat: '<2h', label: 'Quote turnaround' },
               { stat: 'COD', label: 'JHB/PTA option' },
             ].map(({ stat, label }) => (
@@ -147,48 +148,62 @@ export default function B2BPage() {
       {/* ── Pricing tiers ── */}
       <section className="px-4 sm:px-8 lg:px-12 py-16">
         <div className="mx-auto max-w-7xl">
-          <div className="text-[11px] uppercase tracking-[0.22em] text-[var(--muted)] mb-3">Pricing tiers</div>
-          <h2 className="font-display font-light text-4xl sm:text-5xl tracking-tight leading-[0.95] mb-10">
-            Which tier fits <span className="font-display-italic">your business?</span>
+          <div className="text-[11px] uppercase tracking-[0.22em] text-[var(--muted)] mb-3">Volume pricing</div>
+          <h2 className="font-display font-light text-4xl sm:text-5xl tracking-tight leading-[0.95] mb-4">
+            One account. <span className="font-display-italic">The order decides the rate.</span>
           </h2>
+          <p className="max-w-2xl text-sm text-[var(--ink-2)] leading-relaxed mb-10">
+            There are no membership levels to negotiate. Once your business account is approved,
+            every order is priced on its own size — so a big month earns the bigger discount without
+            you asking for it.
+          </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {TIERS.map((tier) => (
+            {BANDS.map((band) => (
               <div
-                key={tier.name}
+                key={band.range}
                 className={`rounded-[24px] p-7 flex flex-col ${
-                  tier.highlight
+                  band.highlight
                     ? 'panel-dark bg-[var(--ink)] text-[var(--paper)]'
                     : 'bg-[var(--surface)] text-[var(--ink)] border border-[var(--line-2)]'
                 }`}
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="text-[10px] uppercase tracking-[0.2em] opacity-60">{tier.name}</div>
-                  {tier.discount && (
-                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${tier.highlight ? 'bg-[#dfe344] text-[var(--ink)]' : 'bg-[#dfe344]/20 text-[var(--ink)]'}`}>
-                      {tier.discount}
+                <div className="text-[10px] uppercase tracking-[0.2em] opacity-60 mb-3">Order total</div>
+                <div className="font-display font-light text-2xl leading-tight mb-4">{band.range}</div>
+                <div className="mb-5">
+                  {band.discount ? (
+                    <span className={`text-sm font-semibold px-3 py-1.5 rounded-full ${band.highlight ? 'bg-[#dfe344] text-[var(--ink)]' : 'bg-[#dfe344]/20 text-[var(--ink)]'}`}>
+                      {band.discount}
+                    </span>
+                  ) : (
+                    <span className={`text-sm px-3 py-1.5 rounded-full border ${band.highlight ? 'border-white/25 text-white/60' : 'border-[var(--line-4)] text-[var(--muted)]'}`}>
+                      List price
                     </span>
                   )}
                 </div>
-                <p className={`text-sm leading-relaxed mb-5 flex-1 ${tier.highlight ? 'text-white/70' : 'text-[var(--ink-2)]'}`}>
-                  {tier.desc}
+                <p className={`text-sm leading-relaxed flex-1 ${band.highlight ? 'text-white/70' : 'text-[var(--ink-2)]'}`}>
+                  {band.desc}
                 </p>
-                <ul className="space-y-1.5 mb-6">
-                  {tier.for.map((f) => (
-                    <li key={f} className={`flex items-center gap-2 text-xs ${tier.highlight ? 'text-white/60' : 'text-[var(--muted)]'}`}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6 9 17l-5-5"/></svg>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                {tier.cta ? (
-                  <a href="#apply" className={`text-center text-sm font-medium py-3 rounded-full transition-colors ${tier.highlight ? 'bg-[var(--surface)] text-[var(--ink)] hover:bg-[#dfe344]' : 'border border-[var(--line-4)] hover:border-[var(--ink)]'}`}>
-                    {tier.cta}
-                  </a>
-                ) : (
-                  <Link href="/products" className="text-center text-sm text-[var(--muted)] hover:text-[var(--ink)] transition-colors py-3 rounded-full border border-[var(--line-3)] hover:border-[var(--line-6)]">
-                    Shop now
-                  </Link>
-                )}
+              </div>
+            ))}
+          </div>
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[
+              {
+                t: 'Measured on goods, incl. VAT',
+                b: 'The order total that counts is the cartridges themselves — delivery is excluded, and VAT is already in the price you see.',
+              },
+              {
+                t: 'One rate per order',
+                b: 'The bands do not stack. Cross a threshold and the whole order moves up to the better rate.',
+              },
+              {
+                t: 'Sign in to get it',
+                b: 'The discount is tied to your approved account, so check out signed in — a guest checkout pays list price.',
+              },
+            ].map(({ t, b }) => (
+              <div key={t} className="border-t border-[var(--line-3)] pt-4">
+                <h3 className="text-sm font-medium mb-1.5">{t}</h3>
+                <p className="text-xs text-[var(--muted)] leading-relaxed">{b}</p>
               </div>
             ))}
           </div>
@@ -293,8 +308,8 @@ export default function B2BPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[
               { step: '01', title: 'Apply', body: 'Fill in the form above. We review every application manually — usually same business day.' },
-              { step: '02', title: 'Get approved', body: "We set up your account with the right pricing tier. You'll shop at your discount automatically." },
-              { step: '03', title: 'Order and save', body: 'Order online, by phone, or WhatsApp. Next-day delivery JHB/PTA — COD available for our own drivers.' },
+              { step: '02', title: 'Get approved', body: 'We approve the account against your email address. Nothing to install, no code to remember — the discount is attached to the account itself.' },
+              { step: '03', title: 'Order and save', body: `Sign in, fill the cart, and the ${B2B_TIERS[0]!.percent}% or ${B2B_MAX_PERCENT}% comes off at checkout on its own. Next-day delivery JHB/PTA — COD available for our own drivers.` },
             ].map(({ step, title, body }) => (
               <div key={step} className="border-t-2 border-[#dfe344] pt-5">
                 <div className="font-display text-5xl font-light text-[#dfe344] leading-none mb-4">{step}</div>

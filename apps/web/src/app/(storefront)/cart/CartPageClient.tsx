@@ -2,13 +2,23 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import { B2B_GROUP_NAME, formatRand, nextB2BTier } from '@tse/types'
 import { useCart } from '@/contexts/CartContext'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function CartPageClient() {
-  const { items, count, updateQty, removeItem } = useCart()
+  const { items, count, updateQty, removeItem, goodsTotal, discountTotal } = useCart()
+  const { customer } = useAuth()
 
-  const subtotal = items.reduce((sum, i) => sum + (i.price ?? 0) * i.qty, 0)
-  const vatContent = Math.round(subtotal * 15 / 115)
+  const subtotal = goodsTotal
+  const payable = subtotal - discountTotal
+  const vatContent = Math.round((payable * 15) / 115)
+
+  // Only approved accounts see the upsell — dangling a discount in front of a
+  // retail shopper who can't earn it would be a lie. Thresholds come from the
+  // same constants the Medusa promotions are built from.
+  const isB2B = Boolean(customer?.groups?.some((g) => g.name === B2B_GROUP_NAME))
+  const nextTier = isB2B ? nextB2BTier(subtotal) : null
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 pt-32 pb-16">
@@ -117,6 +127,12 @@ export default function CartPageClient() {
                   <span className="text-[var(--muted)]">Subtotal ({count} {count === 1 ? 'item' : 'items'})</span>
                   <span>R{subtotal.toFixed(0)}</span>
                 </div>
+                {discountTotal > 0 && (
+                  <div className="flex justify-between text-[#0f7a4a]">
+                    <span>Business discount</span>
+                    <span>−R{discountTotal.toFixed(0)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-[var(--muted)]">
                   <span>VAT (incl.)</span>
                   <span>R{vatContent}</span>
@@ -128,9 +144,19 @@ export default function CartPageClient() {
                 <p className="text-[10px] text-[var(--muted-2)]">Collection from our Kya Sands warehouse is free</p>
               </div>
 
+              {nextTier && (
+                <div className="mt-4 rounded-[12px] bg-[#dfe344]/15 border border-[#dfe344]/40 px-4 py-3">
+                  <p className="text-xs leading-relaxed">
+                    Add <strong>{formatRand(nextTier.shortfallRand)}</strong> more and this order
+                    qualifies for <strong>{nextTier.tier.percent}% off</strong> — applied
+                    automatically at checkout.
+                  </p>
+                </div>
+              )}
+
               <div className="border-t border-[var(--line-2)] mt-4 pt-4 flex justify-between items-baseline">
                 <span className="font-medium">Total</span>
-                <span className="font-display text-2xl">R{subtotal.toFixed(0)}</span>
+                <span className="font-display text-2xl">R{payable.toFixed(0)}</span>
               </div>
 
               <Link

@@ -1,13 +1,10 @@
 /**
- * B2B per-order threshold discounts (#272). Two automatic promotions,
- * restricted to the "B2B Approved" customer group, over MUTUALLY EXCLUSIVE
- * goods-total ranges so only one ever applies (auto-upgrade, no stacking):
- *
- *   goods incl VAT, excl shipping     discount
- *   ────────────────────────────────  ────────
- *   < R10,000                         none
- *   R10,000 – R24,999                 10%
- *   ≥ R25,000                         15%
+ * B2B per-order threshold discounts (#272). One automatic promotion per band in
+ * `B2B_TIERS`, restricted to the `B2B_GROUP_NAME` customer group, over MUTUALLY
+ * EXCLUSIVE goods-total ranges so only one ever applies (auto-upgrade, no
+ * stacking). The bands themselves live in `@tse/types` — the storefront's B2B
+ * page, cart nudge and the admin widget read the same constants, so this script
+ * and the copy customers see can't drift apart.
  *
  * Threshold basis = `original_item_total`: the cart's goods total incl VAT,
  * excl shipping, BEFORE promotion discounts. Using the pre-discount total is
@@ -18,7 +15,7 @@
  * Replaces the retired flat Reseller (15%) / Wholesale (25%) price lists.
  * Idempotent — promotions are only created if their code doesn't exist.
  *
- * Prereq: run setup-b2b-groups.ts first (creates "B2B Approved").
+ * Prereq: run setup-b2b-groups.ts first (creates the group).
  *
  * Usage (from monorepo root):
  *   pnpm --filter @tse/backend exec medusa exec src/scripts/setup-b2b-pricing.ts
@@ -27,15 +24,7 @@
 import { MedusaContainer } from '@medusajs/framework/types'
 import { Modules, PromotionRuleOperator } from '@medusajs/framework/utils'
 import { createPromotionsWorkflow } from '@medusajs/medusa/core-flows'
-import { B2B_GROUP_NAME } from './setup-b2b-groups'
-
-const TIER_10_MIN_RAND = 10_000
-const TIER_15_MIN_RAND = 25_000
-
-export const B2B_PROMO_CODES = {
-  tier10: 'B2B-TIER-10PCT',
-  tier15: 'B2B-TIER-15PCT',
-} as const
+import { B2B_GROUP_NAME, B2B_TIERS, b2bTierLabel } from '@tse/types'
 
 export default async function setupB2BPricing({ container }: { container: MedusaContainer }) {
   const customerService = container.resolve(Modules.CUSTOMER) as any
@@ -51,33 +40,27 @@ export default async function setupB2BPricing({ container }: { container: Medusa
   // customer.groups.id + original_item_total are both resolved from the cart
   // compute context at promotion-evaluation time (Medusa 2.17 evaluates any
   // rule attribute path against the cart, even ones the Admin UI can't build).
-  const tiers = [
-    {
-      code: B2B_PROMO_CODES.tier10,
-      value: 10,
-      label: `10% (R${TIER_10_MIN_RAND.toLocaleString()}–R${(TIER_15_MIN_RAND - 1).toLocaleString()})`,
-      rules: [
-        { attribute: 'customer.groups.id', operator: PromotionRuleOperator.IN, values: [group.id] },
-        { attribute: 'original_item_total', operator: PromotionRuleOperator.GTE, values: [String(TIER_10_MIN_RAND)] },
-        { attribute: 'original_item_total', operator: PromotionRuleOperator.LT, values: [String(TIER_15_MIN_RAND)] },
-      ],
-    },
-    {
-      code: B2B_PROMO_CODES.tier15,
-      value: 15,
-      label: `15% (≥ R${TIER_15_MIN_RAND.toLocaleString()})`,
-      rules: [
-        { attribute: 'customer.groups.id', operator: PromotionRuleOperator.IN, values: [group.id] },
-        { attribute: 'original_item_total', operator: PromotionRuleOperator.GTE, values: [String(TIER_15_MIN_RAND)] },
-      ],
-    },
-  ]
-
-  for (const tier of tiers) {
+  for (const tier of B2B_TIERS) {
     const existing = await promotionService.listPromotions({ code: [tier.code] }).catch(() => [])
     if (existing.length > 0) {
       console.log(`[setup-b2b-pricing] ${tier.code} already exists — skipping`)
       continue
+    }
+
+    const rules: Array<{ attribute: string; operator: PromotionRuleOperator; values: string[] }> = [
+      { attribute: 'customer.groups.id', operator: PromotionRuleOperator.IN, values: [group.id] },
+      {
+        attribute: 'original_item_total',
+        operator: PromotionRuleOperator.GTE,
+        values: [String(tier.minRand)],
+      },
+    ]
+    if (tier.maxRand !== null) {
+      rules.push({
+        attribute: 'original_item_total',
+        operator: PromotionRuleOperator.LT,
+        values: [String(tier.maxRand)],
+      })
     }
 
     await createPromotionsWorkflow(container).run({
@@ -92,15 +75,15 @@ export default async function setupB2BPricing({ container }: { container: Medusa
               type: 'percentage',
               target_type: 'order',
               allocation: 'across',
-              value: tier.value,
+              value: tier.percent,
               currency_code: 'zar',
             },
-            rules: tier.rules,
+            rules,
           },
         ],
       },
     })
-    console.log(`[setup-b2b-pricing] created automatic promotion ${tier.code} — ${tier.label}`)
+    console.log(`[setup-b2b-pricing] created automatic promotion ${tier.code} — ${b2bTierLabel(tier)}`)
   }
 
   console.log('[setup-b2b-pricing] done.')
