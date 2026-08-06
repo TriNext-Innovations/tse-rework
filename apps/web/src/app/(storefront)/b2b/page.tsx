@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/layout'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
+const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
 
 // The bands below are generated from the same constants the Medusa promotions
 // are built from (`@tse/types`), so this page can't advertise a discount the
@@ -70,7 +71,7 @@ export default function B2BPage() {
     try {
       const res = await fetch(`${BACKEND}/store/b2b/apply`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-publishable-api-key': PUB_KEY },
         body: JSON.stringify(form),
       })
       if (!res.ok) {
