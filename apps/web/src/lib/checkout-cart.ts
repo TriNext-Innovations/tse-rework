@@ -10,9 +10,41 @@ import * as Sentry from '@sentry/nextjs'
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
 
-const HEADERS = {
-  'Content-Type': 'application/json',
-  'x-publishable-api-key': PUB_KEY,
+// Owned here rather than in AuthContext so this module stays importable from
+// AuthContext (which calls transferCartToCustomer on sign-in) without a cycle.
+export const AUTH_TOKEN_KEY = 'tse_auth_token'
+
+// Sign-in/sign-out broadcast. Lives here, not in AuthContext, so the cart can
+// react to auth without importing it — CartProvider is nested inside
+// AuthProvider, and a back-reference would make the two mutually dependent.
+export const AUTH_CHANGED_EVENT = 'tse:auth-changed'
+
+export function announceAuthChange(): void {
+  try {
+    window.dispatchEvent(new Event(AUTH_CHANGED_EVENT))
+  } catch {}
+}
+
+function authToken(): string | null {
+  try {
+    return localStorage.getItem(AUTH_TOKEN_KEY)
+  } catch {
+    return null
+  }
+}
+
+// Cart calls MUST carry the customer's JWT when they have one. Medusa resolves
+// `customer.groups.id` from the cart's associated customer at promotion-
+// evaluation time, so an unauthenticated cart is a guest cart and the B2B
+// threshold promotions (which are gated on group membership) silently never
+// apply — the shopper is quietly charged full price. See `@tse/types`/b2b.
+function headers(): Record<string, string> {
+  const tok = authToken()
+  return {
+    'Content-Type': 'application/json',
+    'x-publishable-api-key': PUB_KEY,
+    ...(tok ? { Authorization: `Bearer ${tok}` } : {}),
+  }
 }
 
 export type ShippingAddressInput = {
@@ -38,7 +70,11 @@ export type ShippingOption = {
 
 export type CartTotals = {
   id: string
-  item_total: number // rands
+  item_total: number // rands — goods AFTER discount, excl shipping
+  /** Goods total BEFORE discount — the basis the B2B thresholds are measured on. */
+  original_item_total: number // rands
+  /** Sum of all applied promotions, incl. the automatic B2B threshold discount. */
+  discount_total: number // rands
   shipping_total: number // rands
   total: number // rands
 }
@@ -61,7 +97,12 @@ export type MedusaCart = {
   id: string
   email?: string | null
   completed_at?: string | null
-  item_total?: number // rands
+  /** Null while the cart is a guest cart — no customer, so no B2B discount. */
+  customer_id?: string | null
+  item_total?: number // rands — goods AFTER discount, excl shipping
+  original_item_total?: number // rands — goods BEFORE discount
+  discount_total?: number // rands
+  shipping_total?: number // rands
   total?: number // rands
   items?: MedusaLineItem[]
 }
@@ -76,7 +117,7 @@ export type AddItemInput = {
 }
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BACKEND}${path}`, { ...init, headers: { ...HEADERS, ...(init?.headers ?? {}) } })
+  const res = await fetch(`${BACKEND}${path}`, { ...init, headers: { ...headers(), ...(init?.headers ?? {}) } })
   if (!res.ok) {
     const body = await res.text().catch(() => '')
     throw new Error(`Medusa ${init?.method ?? 'GET'} ${path} failed (${res.status}): ${body.slice(0, 200)}`)
@@ -143,6 +184,24 @@ export async function getCart(cartId: string): Promise<MedusaCart | null> {
     if (!cart || cart.completed_at) return null
     return cart
   } catch {
+    return null
+  }
+}
+
+// Associate an existing (guest-created) cart with the now signed-in customer.
+// A cart created before sign-in has customer_id = null, and Medusa evaluates
+// promotion rules against the cart's customer — so without this the B2B group
+// rule fails and the shopper keeps paying list price for the rest of the
+// session. Called on login/register; safe to call when already associated.
+export async function transferCartToCustomer(cartId: string): Promise<MedusaCart | null> {
+  if (!authToken()) return null
+  try {
+    const { cart } = await api<{ cart: MedusaCart }>(`/store/carts/${cartId}/customer`, {
+      method: 'POST',
+    })
+    return cart
+  } catch {
+    // Non-fatal: the shopper still has a working cart, just no group pricing.
     return null
   }
 }
@@ -243,13 +302,24 @@ export async function listShippingOptions(cartId: string): Promise<ShippingOptio
 }
 
 export async function selectShippingMethod(cartId: string, optionId: string): Promise<CartTotals> {
-  const { cart } = await api<{ cart: CartTotals }>(`/store/carts/${cartId}/shipping-methods`, {
+  const { cart } = await api<{ cart: MedusaCart }>(`/store/carts/${cartId}/shipping-methods`, {
     method: 'POST',
     body: JSON.stringify({ option_id: optionId }),
   })
+  return toTotals(cart)
+}
+
+// Medusa omits a zero total from some responses, so every field defaults to 0.
+export function toTotals(cart: Partial<CartTotals> & { id: string }): CartTotals {
+  const item_total = cart.item_total ?? 0
+  const discount_total = cart.discount_total ?? 0
   return {
     id: cart.id,
-    item_total: cart.item_total ?? 0,
+    item_total,
+    // Fall back to reconstructing the pre-discount goods total, so the checkout
+    // summary still balances if the field is absent.
+    original_item_total: cart.original_item_total ?? item_total + discount_total,
+    discount_total,
     shipping_total: cart.shipping_total ?? 0,
     total: cart.total ?? 0,
   }
