@@ -73,14 +73,14 @@ export default async function B2BConfirmedPage({
                 <span className="text-xl">✅</span>
                 <div>
                   <p className="text-sm font-medium">Approval within 1 business day</p>
-                  <p className="text-xs text-[var(--muted)] mt-0.5 leading-relaxed">We'll review your application and email you your approved pricing tier.</p>
+                  <p className="text-xs text-[var(--muted)] mt-0.5 leading-relaxed">We'll review your application and email you once the business account is active.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <span className="text-xl">💳</span>
                 <div>
                   <p className="text-sm font-medium">Account set up for you</p>
-                  <p className="text-xs text-[var(--muted)] mt-0.5 leading-relaxed">Once approved, your discount applies automatically to every order.</p>
+                  <p className="text-xs text-[var(--muted)] mt-0.5 leading-relaxed">Once approved, sign in and the volume discount comes off qualifying orders automatically — nothing to enter.</p>
                 </div>
               </div>
             </>

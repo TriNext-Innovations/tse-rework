@@ -1,10 +1,12 @@
 'use client'
 
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+// Announced so the cart can re-associate itself with the customer and pick up
+// group pricing the moment auth changes.
+import { AUTH_TOKEN_KEY as TOKEN_KEY, announceAuthChange } from '@/lib/checkout-cart'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
-const TOKEN_KEY = 'tse_auth_token'
 
 export type CustomerGroup = { id: string; name: string }
 
@@ -132,6 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setToken(tok)
       const c = await fetchCustomer(tok)
       setCustomer(c)
+      announceAuthChange()
       return null
     } catch {
       return 'Network error — please try again'
@@ -148,12 +151,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
       const authData = await authRes.json()
       if (!authRes.ok) return authData.message ?? 'Registration failed'
-      const tok = authData.token as string
+      const registrationToken = authData.token as string
 
       // Step 2: create customer profile
       await fetch(`${BACKEND}/store/customers`, {
         method: 'POST',
-        headers: storeHeaders(tok),
+        headers: storeHeaders(registrationToken),
         body: JSON.stringify({
           email: input.email,
           first_name: input.first_name,
@@ -162,10 +165,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }),
       })
 
+      // Step 3: exchange for a real session token. The registration token is
+      // issued BEFORE the customer profile exists, so its actor_id is empty —
+      // it can create the profile and nothing else. Persisting it leaves the
+      // shopper 401 on /store/customers/me (silently "signed out") and unable
+      // to claim their cart, so the B2B group discount never applies. Only a
+      // login token carries actor_id = cus_….
+      const loginRes = await fetch(`${BACKEND}/auth/customer/emailpass`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: input.email, password: input.password }),
+      })
+      const loginData = await loginRes.json().catch(() => ({}))
+      const tok = (loginRes.ok && (loginData.token as string)) || registrationToken
+
       localStorage.setItem(TOKEN_KEY, tok)
       setToken(tok)
       const c = await fetchCustomer(tok)
       setCustomer(c)
+      announceAuthChange()
       return null
     } catch {
       return 'Network error — please try again'
@@ -176,6 +194,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try { localStorage.removeItem(TOKEN_KEY) } catch {}
     setToken(null)
     setCustomer(null)
+    // Re-fetch the cart unauthenticated so any group discount drops off the
+    // totals immediately rather than lingering in the UI until reload.
+    announceAuthChange()
   }
 
   async function refreshCustomer() {

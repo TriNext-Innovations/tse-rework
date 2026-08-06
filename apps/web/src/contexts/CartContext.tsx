@@ -11,6 +11,8 @@ import {
   addLineItem,
   updateLineItem,
   removeLineItem,
+  transferCartToCustomer,
+  AUTH_CHANGED_EVENT,
 } from '@/lib/checkout-cart'
 
 // A line of the cart as the UI consumes it. `id` is the Medusa LINE-ITEM id
@@ -42,6 +44,10 @@ type CartContextType = {
   count: number
   cartId: string | null
   pending: boolean
+  /** Goods total incl VAT, excl shipping, BEFORE discount — the B2B threshold basis. */
+  goodsTotal: number
+  /** Automatic promotion discount Medusa applied to this cart (0 for most shoppers). */
+  discountTotal: number
   addItem: (item: AddToCartInput, quantity?: number) => void
   removeItem: (lineId: string) => void
   updateQty: (lineId: string, qty: number) => void
@@ -103,15 +109,41 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } catch {}
     if (!saved) return
     cartIdRef.current = saved
-    getCart(saved).then((c) => {
-      if (c) setCart(c)
-      else setCartId(null)
+    getCart(saved).then(async (c) => {
+      if (!c) {
+        setCartId(null)
+        return
+      }
+      // A cart carried over from a signed-out session still has no customer, so
+      // group-gated promotions can't match it. Claim it before first render.
+      setCart(c.customer_id ? c : ((await transferCartToCustomer(saved!)) ?? c))
     })
   }, [setCartId])
 
+  // Re-associate the cart with the customer whenever auth changes. A cart
+  // created while signed out has customer_id = null, and Medusa evaluates the
+  // B2B promotion's customer-group rule against the cart's customer — so
+  // without this, signing in mid-session leaves the shopper on list price.
+  // Signing out re-fetches unauthenticated so the discount drops off at once.
+  useEffect(() => {
+    const onAuthChange = async () => {
+      const id = cartIdRef.current
+      if (!id) return
+      const transferred = await transferCartToCustomer(id)
+      setCart(transferred ?? (await getCart(id)))
+    }
+    window.addEventListener(AUTH_CHANGED_EVENT, onAuthChange)
+    return () => window.removeEventListener(AUTH_CHANGED_EVENT, onAuthChange)
+  }, [])
+
   const items = useMemo(() => toItems(cart), [cart])
   const count = items.reduce((sum, i) => sum + i.qty, 0)
-  const total = items.reduce((sum, i) => sum + (i.price ?? 0) * i.qty, 0)
+  // Goods total, pre-discount. Computed from the lines rather than read off the
+  // cart because the B2B promotion is order-level (allocation: 'across'), so it
+  // never moves unit prices — only the cart's discount_total.
+  const goodsTotal = items.reduce((sum, i) => sum + (i.price ?? 0) * i.qty, 0)
+  const discountTotal = cart?.discount_total ?? 0
+  const total = goodsTotal - discountTotal
 
   // Lazily create the Medusa cart and add the variant. The returned cart
   // (server-computed prices/totals) becomes the new state. Adding does NOT
@@ -178,6 +210,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         count,
         cartId: cart?.id ?? null,
         pending,
+        goodsTotal,
+        discountTotal,
         addItem,
         removeItem,
         updateQty,
@@ -294,8 +328,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           {/* Footer */}
           {items.length > 0 && (
             <div className="px-6 py-5 border-t border-[var(--line-3)] space-y-3">
+              {discountTotal > 0 && (
+                <>
+                  <div className="flex items-center justify-between text-sm text-[var(--muted)]">
+                    <span>Subtotal</span>
+                    <span>R{goodsTotal.toFixed(0)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm text-[#0f7a4a]">
+                    <span>Business discount</span>
+                    <span>−R{discountTotal.toFixed(0)}</span>
+                  </div>
+                </>
+              )}
               <div className="flex items-center justify-between">
-                <span className="text-sm text-[var(--muted)]">Subtotal</span>
+                <span className="text-sm text-[var(--muted)]">
+                  {discountTotal > 0 ? 'Goods total' : 'Subtotal'}
+                </span>
                 <span className="text-xl font-light" style={{ fontFamily: 'var(--font-fraunces, Georgia, serif)' }}>
                   R{total.toFixed(0)}
                 </span>

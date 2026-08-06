@@ -10,6 +10,8 @@ export interface OrderConfirmationData {
     lineTotal: string
   }>
   subtotal: string
+  /** Promotion discount (e.g. the B2B threshold rate). Omitted when there is none. */
+  discount?: string
   shippingCost: string
   vatContent: string
   total: string
@@ -30,6 +32,15 @@ function row(label: string, value: string, bold = false): string {
     <tr>
       <td style="padding:4px 0;color:#6B7280;font-size:14px;">${label}</td>
       <td style="padding:4px 0;text-align:right;color:#374151;font-size:14px;${bold ? 'font-weight:700;' : ''}">${value}</td>
+    </tr>`
+}
+
+// Deductions render green and signed so the column still adds up by eye.
+function discountRow(label: string, value: string): string {
+  return `
+    <tr>
+      <td style="padding:4px 0;color:#0F7A4A;font-size:14px;">${label}</td>
+      <td style="padding:4px 0;text-align:right;color:#0F7A4A;font-size:14px;">−${value}</td>
     </tr>`
 }
 
@@ -125,6 +136,7 @@ export function orderConfirmationHtml(d: OrderConfirmationData): string {
               <!-- Totals -->
               <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
                 ${row('Subtotal', d.subtotal)}
+                ${d.discount ? discountRow('Business discount', d.discount) : ''}
                 ${row('Shipping', d.shippingCost)}
                 ${row('VAT included (15%)', d.vatContent)}
                 <tr><td colspan="2" style="padding:4px 0;border-top:2px solid #111827;"></td></tr>

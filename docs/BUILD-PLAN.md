@@ -220,7 +220,8 @@ Maps to AI prompts 5 and 11.
 - [ ] `quote_request` table + `POST /store/b2b/quote` + admin email via Resend
 - [ ] Admin widgets: compatibility, B2B tier, social posts, quotes route
 
-**Exit criteria:** client can log in as a reseller and see reseller pricing.
+**Exit criteria:** client can log in as an approved B2B account and see the
+per-order threshold discount come off a qualifying cart at checkout.
 
 ### Phase 5 — Automation, POPIA & launch hardening (week 6)
 
@@ -282,7 +283,7 @@ walking-skeleton implementation.
 | 1 | Which design POC do we promote? (`/one` / `/two` / `/three` / `/four`) | Client | End of Phase 0 |
 | 2 | Domain registrar + DNS — is Cloudflare account ready? | Client | End of Phase 0 |
 | 3 | PayFast and Ozow merchant accounts — sandbox creds in hand? | Client | Start of Phase 3 |
-| 4 | Reseller / wholesale discount %s (currently assumed 15% / 25%) | Client | Start of Phase 4 |
+| 4 | ~~Reseller / wholesale discount %s (assumed 15% / 25%)~~ **Resolved (#272):** flat tiers dropped for per-order thresholds — 10% on R10 000–R24 999, 15% from R25 000. Bands live in `packages/types/src/b2b.ts`. | Client | ~~Start of Phase 4~~ Done |
 | 5 | Final product CSV (SKU, title, price, stock, OEM flag, images) | Client | End of Phase 4 |
 | 6 | Compatibility CSV (printer brand → model → SKU) | Client | End of Phase 2 |
 | 14 | **SKU master list — BLOCKER.** WC audit (2026-05-14) found all 560 products have no SKU. Medusa seed and compatibility finder both gate on this. Provide supplier SKU CSV or add SKUs in WooCommerce before Phase 1 seed. See `migration/MIGRATION-LOG.md`. | Client | Before Phase 1 seed |

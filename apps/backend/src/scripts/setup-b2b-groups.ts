@@ -1,11 +1,11 @@
 /**
- * B2B approval model (#272): ONE customer group — "B2B Approved". Approval =
- * membership. Discounts are NOT flat price lists anymore; they are per-order
- * threshold promotions created by `setup-b2b-pricing.ts` (10% ≥ R10k goods,
- * 15% ≥ R25k), so this script no longer creates the retired Reseller /
- * Wholesale groups. If those legacy groups still exist, their members are
- * migrated into "B2B Approved"; deleting the empty groups and their price
- * lists is left to Admin (destructive, so not automated).
+ * B2B approval model (#272): ONE customer group — see `B2B_GROUP_NAME`.
+ * Approval = membership. Discounts are NOT flat price lists anymore; they are
+ * per-order threshold promotions created by `setup-b2b-pricing.ts` from the
+ * bands in `@tse/types`, so this script no longer creates the retired Reseller
+ * / Wholesale groups. If those legacy groups still exist, their members are
+ * migrated into the B2B group; deleting the empty groups and their price lists
+ * is left to Admin (destructive, so not automated).
  *
  * Safe to re-run.
  *
@@ -15,8 +15,8 @@
 
 import { MedusaContainer } from '@medusajs/framework/types'
 import { Modules } from '@medusajs/framework/utils'
+import { B2B_GROUP_NAME, B2B_TIERS, b2bTierLabel } from '@tse/types'
 
-export const B2B_GROUP_NAME = 'B2B Approved'
 const LEGACY_GROUP_NAMES = ['Reseller', 'Wholesale']
 
 export default async function setupB2BGroups({ container }: { container: MedusaContainer }) {
@@ -58,7 +58,7 @@ export default async function setupB2BGroups({ container }: { container: MedusaC
   console.log('[setup-b2b] done.')
   console.log('')
   console.log('Next steps:')
-  console.log('  1. Run setup-b2b-pricing.ts to create the threshold promotions (10% / 15%)')
+  console.log(`  1. Run setup-b2b-pricing.ts to create the threshold promotions (${B2B_TIERS.map(b2bTierLabel).join(', ')})`)
   console.log(`  2. When approving a B2B application, add the customer to "${B2B_GROUP_NAME}"`)
   console.log('     in Medusa Admin → Customers → [customer] → Groups')
   console.log('  3. Retire any legacy "Reseller Pricing" / "Wholesale Pricing" price lists in Admin')
