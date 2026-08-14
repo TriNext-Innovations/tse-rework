@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useCart } from '@/contexts/CartContext'
 import { useAuth, type CustomerAddress } from '@/contexts/AuthContext'
 import { AddressAutocomplete } from '@/components/AddressAutocomplete'
+import { PromoCodeField } from '@/components/PromoCodeField'
 import {
   setCartContact,
   listShippingOptions,
@@ -47,7 +48,7 @@ function toAddressForm(a: CustomerAddress): AddressForm {
 }
 
 export default function CheckoutForm() {
-  const { items, count, cartId, goodsTotal, discountTotal } = useCart()
+  const { items, count, cartId, goodsTotal, discountTotal, discountLabel, promoCodes } = useCart()
   const { customer, register, addAddress } = useAuth()
   const [step, setStep] = useState(1)
   const [contact, setContact] = useState<ContactForm>(EMPTY_CONTACT)
@@ -114,6 +115,25 @@ export default function CheckoutForm() {
   const discountRand = totals ? totals.discount_total : discountTotal
   const totalRand = totals ? totals.total : subtotal - discountRand + deliveryRand
   const vatContent = Math.round((totalRand * 15) / 115)
+
+  // Once a shipping method is chosen, `totals` — not the cart — drives the
+  // summary, and applying a promo doesn't touch it. Re-selecting the same method
+  // is idempotent in Medusa and returns freshly computed totals, so the sidebar
+  // can't sit showing a pre-discount Total after a code is applied or removed.
+  const syncedPromosRef = useRef<string | null>(null)
+  useEffect(() => {
+    const key = promoCodes.join(',')
+    if (syncedPromosRef.current === null) {
+      syncedPromosRef.current = key // first render: nothing to re-sync
+      return
+    }
+    if (syncedPromosRef.current === key) return
+    syncedPromosRef.current = key
+    if (!cartId || !selectedOptionId) return
+    selectShippingMethod(cartId, selectedOptionId)
+      .then(setTotals)
+      .catch((err) => console.error('[checkout] totals re-sync after promo failed:', err))
+  }, [promoCodes, cartId, selectedOptionId])
 
   function validateContact(): boolean {
     const errs: Partial<ContactForm> = {}
@@ -721,7 +741,7 @@ export default function CheckoutForm() {
               </div>
               {discountRand > 0 && (
                 <div className="flex justify-between text-[#0f7a4a]">
-                  <span>Business discount</span><span>−R{discountRand.toFixed(0)}</span>
+                  <span>{discountLabel}</span><span>−R{discountRand.toFixed(0)}</span>
                 </div>
               )}
               <div className="flex justify-between text-[var(--muted)]">
@@ -732,6 +752,8 @@ export default function CheckoutForm() {
                 <span>{selectedOption ? (deliveryRand === 0 ? 'Free' : `R${deliveryRand.toFixed(0)}`) : 'Select at checkout'}</span>
               </div>
             </div>
+            <PromoCodeField className="mt-4 pt-4 border-t border-[var(--line-2)]" />
+
             <div className="border-t border-[var(--line-2)] mt-4 pt-4 flex justify-between items-baseline">
               <span className="font-medium">Total</span>
               <span className="font-display text-2xl">R{totalRand.toFixed(0)}</span>

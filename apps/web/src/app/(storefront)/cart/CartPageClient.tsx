@@ -4,10 +4,11 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { B2B_GROUP_NAME, formatRand, nextB2BTier } from '@tse/types'
 import { useCart } from '@/contexts/CartContext'
+import { PromoCodeField } from '@/components/PromoCodeField'
 import { useAuth } from '@/contexts/AuthContext'
 
 export default function CartPageClient() {
-  const { items, count, updateQty, removeItem, goodsTotal, discountTotal } = useCart()
+  const { items, count, updateQty, removeItem, goodsTotal, discountTotal, discountLabel } = useCart()
   const { customer } = useAuth()
 
   const subtotal = goodsTotal
@@ -129,7 +130,7 @@ export default function CartPageClient() {
                 </div>
                 {discountTotal > 0 && (
                   <div className="flex justify-between text-[#0f7a4a]">
-                    <span>Business discount</span>
+                    <span>{discountLabel}</span>
                     <span>−R{discountTotal.toFixed(0)}</span>
                   </div>
                 )}
@@ -153,6 +154,8 @@ export default function CartPageClient() {
                   </p>
                 </div>
               )}
+
+              <PromoCodeField className="mt-5 pt-5 border-t border-[var(--line-2)]" />
 
               <div className="border-t border-[var(--line-2)] mt-4 pt-4 flex justify-between items-baseline">
                 <span className="font-medium">Total</span>

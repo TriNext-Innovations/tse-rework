@@ -6,12 +6,18 @@ import Image from 'next/image'
 import { CartLottie } from '@/components/CartLottie'
 import {
   type MedusaCart,
+  type CartPromotion,
   createEmptyCart,
   getCart,
   addLineItem,
   updateLineItem,
   removeLineItem,
   transferCartToCustomer,
+  applyPromoCode,
+  removePromoCode,
+  manualPromoCodes,
+  discountLabel,
+  PromoCodeError,
   AUTH_CHANGED_EVENT,
 } from '@/lib/checkout-cart'
 
@@ -46,8 +52,21 @@ type CartContextType = {
   pending: boolean
   /** Goods total incl VAT, excl shipping, BEFORE discount — the B2B threshold basis. */
   goodsTotal: number
-  /** Automatic promotion discount Medusa applied to this cart (0 for most shoppers). */
+  /** Every promotion applied — the automatic B2B discount and any shopper codes. */
   discountTotal: number
+  /** Promotions on the cart, automatic and code-entered. */
+  promotions: CartPromotion[]
+  /** Just the codes the shopper typed in (the automatic discount is not removable). */
+  promoCodes: string[]
+  /** Label for the single discount line, reflecting which kinds are applied. */
+  discountLabel: string
+  promoPending: boolean
+  /** Shopper-facing reason the last code was rejected; '' when there is none. */
+  promoError: string
+  /** Resolves true when the code was actually applied; false means `promoError` explains why not. */
+  applyPromo: (code: string) => Promise<boolean>
+  removePromo: (code: string) => Promise<void>
+  clearPromoError: () => void
   addItem: (item: AddToCartInput, quantity?: number) => void
   removeItem: (lineId: string) => void
   updateQty: (lineId: string, qty: number) => void
@@ -77,6 +96,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<MedusaCart | null>(null)
   const [isOpen, setIsOpen] = useState(false)
   const [pending, setPending] = useState(false)
+  const [promoPending, setPromoPending] = useState(false)
+  const [promoError, setPromoError] = useState('')
   // cartId lives in a ref too so concurrent adds don't each create a new cart.
   const cartIdRef = useRef<string | null>(null)
   // In-flight cart creation, shared by concurrent first-adds so they don't each
@@ -144,6 +165,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const goodsTotal = items.reduce((sum, i) => sum + (i.price ?? 0) * i.qty, 0)
   const discountTotal = cart?.discount_total ?? 0
   const total = goodsTotal - discountTotal
+  const promotions = useMemo(() => cart?.promotions ?? [], [cart])
+  const promoCodes = useMemo(() => manualPromoCodes(promotions), [promotions])
 
   // Lazily create the Medusa cart and add the variant. The returned cart
   // (server-computed prices/totals) becomes the new state. Adding does NOT
@@ -189,11 +212,56 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
+  // Apply a shopper-entered promo code. Errors are surfaced as state rather than
+  // thrown, because every caller is a form that needs to render the reason
+  // inline — and an unknown code is an ordinary outcome here, not a fault.
+  const applyPromo = useCallback(async (code: string): Promise<boolean> => {
+    const id = cartIdRef.current
+    if (!id) {
+      setPromoError('Add something to your cart first.')
+      return false
+    }
+    setPromoPending(true)
+    setPromoError('')
+    try {
+      setCart(await applyPromoCode(id, code))
+      return true
+    } catch (err) {
+      if (err instanceof PromoCodeError) {
+        setPromoError(err.message)
+      } else {
+        console.error('[cart] promo apply failed:', err)
+        setPromoError("That code couldn't be applied. Please try again.")
+      }
+      return false
+    } finally {
+      setPromoPending(false)
+    }
+  }, [])
+
+  const removePromo = useCallback(async (code: string) => {
+    const id = cartIdRef.current
+    if (!id) return
+    setPromoPending(true)
+    setPromoError('')
+    try {
+      setCart(await removePromoCode(id, code))
+    } catch (err) {
+      console.error('[cart] promo remove failed:', err)
+      setPromoError("That code couldn't be removed. Please try again.")
+    } finally {
+      setPromoPending(false)
+    }
+  }, [])
+
+  const clearPromoError = useCallback(() => setPromoError(''), [])
+
   // Drop the local cart reference (e.g. after redirecting to PayFast). The
   // Medusa cart itself is completed server-side on payment, not deleted here.
   const clearCart = useCallback(() => {
     setCart(null)
     setCartId(null)
+    setPromoError('')
   }, [setCartId])
 
   useEffect(() => {
@@ -212,6 +280,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         pending,
         goodsTotal,
         discountTotal,
+        promotions,
+        promoCodes,
+        discountLabel: discountLabel(promotions),
+        promoPending,
+        promoError,
+        applyPromo,
+        removePromo,
+        clearPromoError,
         addItem,
         removeItem,
         updateQty,
@@ -335,7 +411,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                     <span>R{goodsTotal.toFixed(0)}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm text-[#0f7a4a]">
-                    <span>Business discount</span>
+                    <span>{discountLabel(promotions)}</span>
                     <span>−R{discountTotal.toFixed(0)}</span>
                   </div>
                 </>

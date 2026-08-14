@@ -79,6 +79,35 @@ export type CartTotals = {
   total: number // rands
 }
 
+// A promotion applied to the cart. `is_automatic` separates the B2B threshold
+// discount (which Medusa applies on its own, and which the shopper must never be
+// able to remove) from a code the shopper typed in.
+export type CartPromotion = {
+  id: string
+  code?: string | null
+  is_automatic?: boolean
+}
+
+/** Codes the shopper entered — i.e. everything except the automatic B2B discount. */
+export function manualPromoCodes(promotions?: CartPromotion[]): string[] {
+  return (promotions ?? []).filter((p) => !p.is_automatic && p.code).map((p) => p.code as string)
+}
+
+export function hasAutomaticPromotion(promotions?: CartPromotion[]): boolean {
+  return (promotions ?? []).some((p) => p.is_automatic)
+}
+
+// One discount line carries the sum of every promotion, so its label has to
+// describe whichever kinds are actually applied — calling a promo code
+// "Business discount" (or vice versa) misreports where the money went.
+export function discountLabel(promotions?: CartPromotion[]): string {
+  const auto = hasAutomaticPromotion(promotions)
+  const codes = manualPromoCodes(promotions).length > 0
+  if (auto && codes) return 'Discounts'
+  if (codes) return 'Promo discount'
+  return 'Business discount'
+}
+
 // A Medusa store cart line item (default store response shape). Product/variant
 // fields are denormalised onto the line, so a single cart fetch renders the UI.
 export type MedusaLineItem = {
@@ -105,6 +134,7 @@ export type MedusaCart = {
   shipping_total?: number // rands
   total?: number // rands
   items?: MedusaLineItem[]
+  promotions?: CartPromotion[]
 }
 
 // Minimal shape the storefront needs to add a product to the cart. PDP/listing
@@ -123,6 +153,17 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(`Medusa ${init?.method ?? 'GET'} ${path} failed (${res.status}): ${body.slice(0, 200)}`)
   }
   return res.json() as Promise<T>
+}
+
+// Medusa leaves `promotions` out of the default cart payload, so every call that
+// returns a cart asks for it explicitly. This matters beyond rendering the
+// chips: Medusa drops a promotion by itself when the cart stops qualifying (the
+// shopper removes an item and falls under a code's minimum spend), and asking
+// for the field on *every* mutation means the UI loses the code in the same
+// round-trip that invalidated it, rather than showing a discount that is gone.
+function withCartFields(path: string): string {
+  const sep = path.includes('?') ? '&' : '?'
+  return `${path}${sep}fields=${encodeURIComponent('+promotions.code,+promotions.is_automatic')}`
 }
 
 // Mirror of the backend splitCartId: a cart id "prod_x-variant_y" encodes the
@@ -180,7 +221,7 @@ export async function createEmptyCart(): Promise<MedusaCart> {
 // redirect (the provider flow keeps cart_id through the redirect on purpose).
 export async function getCart(cartId: string): Promise<MedusaCart | null> {
   try {
-    const { cart } = await api<{ cart: MedusaCart }>(`/store/carts/${cartId}`)
+    const { cart } = await api<{ cart: MedusaCart }>(withCartFields(`/store/carts/${cartId}`))
     if (!cart || cart.completed_at) return null
     return cart
   } catch {
@@ -196,7 +237,7 @@ export async function getCart(cartId: string): Promise<MedusaCart | null> {
 export async function transferCartToCustomer(cartId: string): Promise<MedusaCart | null> {
   if (!authToken()) return null
   try {
-    const { cart } = await api<{ cart: MedusaCart }>(`/store/carts/${cartId}/customer`, {
+    const { cart } = await api<{ cart: MedusaCart }>(withCartFields(`/store/carts/${cartId}/customer`), {
       method: 'POST',
     })
     return cart
@@ -208,7 +249,7 @@ export async function transferCartToCustomer(cartId: string): Promise<MedusaCart
 
 export async function addLineItem(cartId: string, item: AddItemInput, quantity = 1): Promise<MedusaCart> {
   const variant_id = await resolveVariantId(item)
-  const { cart } = await api<{ cart: MedusaCart }>(`/store/carts/${cartId}/line-items`, {
+  const { cart } = await api<{ cart: MedusaCart }>(withCartFields(`/store/carts/${cartId}/line-items`), {
     method: 'POST',
     body: JSON.stringify({ variant_id, quantity }),
   })
@@ -216,7 +257,7 @@ export async function addLineItem(cartId: string, item: AddItemInput, quantity =
 }
 
 export async function updateLineItem(cartId: string, lineId: string, quantity: number): Promise<MedusaCart> {
-  const { cart } = await api<{ cart: MedusaCart }>(`/store/carts/${cartId}/line-items/${lineId}`, {
+  const { cart } = await api<{ cart: MedusaCart }>(withCartFields(`/store/carts/${cartId}/line-items/${lineId}`), {
     method: 'POST',
     body: JSON.stringify({ quantity }),
   })
@@ -225,7 +266,7 @@ export async function updateLineItem(cartId: string, lineId: string, quantity: n
 
 export async function removeLineItem(cartId: string, lineId: string): Promise<MedusaCart> {
   // DELETE returns { id, object, deleted, parent: <cart> }.
-  const { parent } = await api<{ parent: MedusaCart }>(`/store/carts/${cartId}/line-items/${lineId}`, {
+  const { parent } = await api<{ parent: MedusaCart }>(withCartFields(`/store/carts/${cartId}/line-items/${lineId}`), {
     method: 'DELETE',
   })
   return parent
@@ -242,6 +283,50 @@ export async function setCartContact(cartId: string, email: string, address: Shi
       billing_address: { ...address, country_code: 'za' },
     }),
   })
+}
+
+// ─── Promotion codes ──────────────────────────────────────────────────────────
+
+export class PromoCodeError extends Error {}
+
+/**
+ * Apply a shopper-entered promotion code to the cart.
+ *
+ * Medusa does NOT reject an unknown or expired code with an error — it returns
+ * 200 and a cart the code was simply never added to. Trusting the status alone
+ * would show "applied" over an unchanged total, so the code is only considered
+ * applied if it comes back on the cart. Anything else is reported to the caller
+ * as a `PromoCodeError` carrying a message meant for the shopper.
+ */
+export async function applyPromoCode(cartId: string, rawCode: string): Promise<MedusaCart> {
+  const code = rawCode.trim()
+  if (!code) throw new PromoCodeError('Enter a promo code.')
+
+  let cart: MedusaCart
+  try {
+    ;({ cart } = await api<{ cart: MedusaCart }>(withCartFields(`/store/carts/${cartId}/promotions`), {
+      method: 'POST',
+      body: JSON.stringify({ promo_codes: [code] }),
+    }))
+  } catch {
+    // A 4xx here is Medusa refusing the code outright (unknown, expired, or the
+    // cart doesn't meet its rules). The shopper doesn't need the status code.
+    throw new PromoCodeError(`"${code}" isn't a valid promo code.`)
+  }
+
+  const applied = manualPromoCodes(cart.promotions).some((c) => c.toLowerCase() === code.toLowerCase())
+  if (!applied) {
+    throw new PromoCodeError(`"${code}" isn't a valid promo code, or doesn't apply to this order.`)
+  }
+  return cart
+}
+
+export async function removePromoCode(cartId: string, code: string): Promise<MedusaCart> {
+  const { cart } = await api<{ cart: MedusaCart }>(withCartFields(`/store/carts/${cartId}/promotions`), {
+    method: 'DELETE',
+    body: JSON.stringify({ promo_codes: [code] }),
+  })
+  return cart
 }
 
 // ─── Shipping ─────────────────────────────────────────────────────────────────
@@ -302,7 +387,7 @@ export async function listShippingOptions(cartId: string): Promise<ShippingOptio
 }
 
 export async function selectShippingMethod(cartId: string, optionId: string): Promise<CartTotals> {
-  const { cart } = await api<{ cart: MedusaCart }>(`/store/carts/${cartId}/shipping-methods`, {
+  const { cart } = await api<{ cart: MedusaCart }>(withCartFields(`/store/carts/${cartId}/shipping-methods`), {
     method: 'POST',
     body: JSON.stringify({ option_id: optionId }),
   })
