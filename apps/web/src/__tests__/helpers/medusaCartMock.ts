@@ -27,19 +27,42 @@ type Line = {
   thumbnail: string | null
 }
 
+type Promotion = { id: string; code: string; is_automatic: boolean }
+
+// Codes the fake backend recognises, and what each takes off. Anything else is
+// accepted with a 200 and simply not applied — which is what real Medusa does,
+// and the behaviour applyPromoCode has to defend against.
+const KNOWN_CODES: Record<string, number> = { SAVE10: 10, WELCOME: 25 }
+
 export function installCartMock() {
-  let cart: { id: string; email: string | null; item_total: number; total: number; items: Line[] } | null = null
+  let cart:
+    | {
+        id: string
+        email: string | null
+        item_total: number
+        discount_total: number
+        total: number
+        items: Line[]
+        promotions: Promotion[]
+      }
+    | null = null
   let seq = 0
 
   const recompute = () => {
     if (!cart) return
-    cart.item_total = cart.items.reduce((s, i) => s + i.unit_price * i.quantity, 0)
-    cart.total = cart.item_total
+    const goods = cart.items.reduce((s, i) => s + i.unit_price * i.quantity, 0)
+    // Drop any code whose discount the cart can no longer cover, mirroring
+    // Medusa removing a promotion once the order stops qualifying.
+    cart.promotions = cart.promotions.filter((p) => p.is_automatic || (KNOWN_CODES[p.code] ?? 0) <= goods)
+    cart.discount_total = cart.promotions.reduce((s, p) => s + (KNOWN_CODES[p.code] ?? 0), 0)
+    cart.item_total = goods
+    cart.total = goods - cart.discount_total
   }
 
   // Return a fresh copy each time (the real API returns new JSON), so React sees
   // a new object reference and re-renders.
-  const snapshot = () => (cart ? { ...cart, items: cart.items.map((i) => ({ ...i })) } : cart)
+  const snapshot = () =>
+    cart ? { ...cart, items: cart.items.map((i) => ({ ...i })), promotions: cart.promotions.map((p) => ({ ...p })) } : cart
 
   const ok = (body: unknown) => ({
     ok: true,
@@ -68,7 +91,27 @@ export function installCartMock() {
     }
 
     if (path === '/store/carts' && method === 'POST') {
-      cart = { id: `cart_${++seq}`, email: null, item_total: 0, total: 0, items: [] }
+      cart = { id: `cart_${++seq}`, email: null, item_total: 0, discount_total: 0, total: 0, items: [], promotions: [] }
+      return ok({ cart: snapshot() })
+    }
+
+    // POST/DELETE /store/carts/:id/promotions
+    const promo = path.match(/^\/store\/carts\/([^/]+)\/promotions$/)
+    if (promo) {
+      if (!cart) return notFound()
+      const codes: string[] = body.promo_codes ?? []
+      if (method === 'POST') {
+        for (const raw of codes) {
+          const code = String(raw).toUpperCase()
+          if (!(code in KNOWN_CODES)) continue // unknown: accepted, not applied
+          if (cart.promotions.some((p) => p.code === code)) continue
+          cart.promotions.push({ id: `promo_${code}`, code, is_automatic: false })
+        }
+      } else if (method === 'DELETE') {
+        const drop = codes.map((c) => String(c).toUpperCase())
+        cart.promotions = cart.promotions.filter((p) => !drop.includes(p.code))
+      }
+      recompute()
       return ok({ cart: snapshot() })
     }
 
