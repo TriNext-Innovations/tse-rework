@@ -299,26 +299,41 @@ export class PromoCodeError extends Error {}
  * as a `PromoCodeError` carrying a message meant for the shopper.
  */
 export async function applyPromoCode(cartId: string, rawCode: string): Promise<MedusaCart> {
-  const code = rawCode.trim()
-  if (!code) throw new PromoCodeError('Enter a promo code.')
+  const entered = rawCode.trim()
+  if (!entered) throw new PromoCodeError('Enter a promo code.')
 
-  let cart: MedusaCart
-  try {
-    ;({ cart } = await api<{ cart: MedusaCart }>(withCartFields(`/store/carts/${cartId}/promotions`), {
-      method: 'POST',
-      body: JSON.stringify({ promo_codes: [code] }),
-    }))
-  } catch {
-    // A 4xx here is Medusa refusing the code outright (unknown, expired, or the
-    // cart doesn't meet its rules). The shopper doesn't need the status code.
-    throw new PromoCodeError(`"${code}" isn't a valid promo code.`)
+  // Medusa matches promotion codes EXACTLY — verified against production, where
+  // a promotion created as "TSETESTC" rejects both "tsetestc" and "TseTestC"
+  // with a 400. Shoppers copy codes off adverts, WhatsApp and email in whatever
+  // case they like, and the field renders uppercase, so typing it lower case
+  // would otherwise show them their own code back and call it invalid.
+  //
+  // So try the sensible casings rather than making the shopper guess. Deduped
+  // and ordered so the common case — an all-caps code typed in caps — is a
+  // single request; only a miss costs the extra round-trips.
+  const candidates = [...new Set([entered, entered.toUpperCase(), entered.toLowerCase()])]
+
+  for (const code of candidates) {
+    let cart: MedusaCart
+    try {
+      ;({ cart } = await api<{ cart: MedusaCart }>(withCartFields(`/store/carts/${cartId}/promotions`), {
+        method: 'POST',
+        body: JSON.stringify({ promo_codes: [code] }),
+      }))
+    } catch {
+      // 400 = Medusa refusing this exact casing. Try the next one.
+      continue
+    }
+
+    // A 200 is not proof: a promotion still in `draft` (or one the cart doesn't
+    // qualify for) comes back 200 with the code silently absent. Only treat it
+    // as applied if Medusa actually put it on the cart.
+    if (manualPromoCodes(cart.promotions).some((c) => c.toLowerCase() === code.toLowerCase())) {
+      return cart
+    }
   }
 
-  const applied = manualPromoCodes(cart.promotions).some((c) => c.toLowerCase() === code.toLowerCase())
-  if (!applied) {
-    throw new PromoCodeError(`"${code}" isn't a valid promo code, or doesn't apply to this order.`)
-  }
-  return cart
+  throw new PromoCodeError(`"${entered}" isn't a valid promo code, or doesn't apply to this order.`)
 }
 
 export async function removePromoCode(cartId: string, code: string): Promise<MedusaCart> {

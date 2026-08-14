@@ -29,10 +29,15 @@ type Line = {
 
 type Promotion = { id: string; code: string; is_automatic: boolean }
 
-// Codes the fake backend recognises, and what each takes off. Anything else is
-// accepted with a 200 and simply not applied — which is what real Medusa does,
-// and the behaviour applyPromoCode has to defend against.
+// Codes the fake backend recognises, and what each takes off. Matching is
+// case-SENSITIVE on purpose: verified against production on 14 Aug 2026, a
+// promotion created as "TSETESTC" rejects "tsetestc" and "TseTestC" with a 400.
 const KNOWN_CODES: Record<string, number> = { SAVE10: 10, WELCOME: 25 }
+
+// A promotion still in `draft`. Medusa accepts it with a 200 and then silently
+// does not apply it — no discount, no error. This is the nastier of the two
+// failure modes and the reason a 200 alone is never treated as success.
+const DRAFT_CODES = new Set(['DRAFTONLY'])
 
 export function installCartMock() {
   let cart:
@@ -71,6 +76,12 @@ export function installCartMock() {
     text: async () => JSON.stringify(body),
   })
   const notFound = () => ({ ok: false, status: 404, json: async () => ({}), text: async () => 'not found' })
+  const badRequest = (message: string) => ({
+    ok: false,
+    status: 400,
+    json: async () => ({ type: 'invalid_data', message }),
+    text: async () => JSON.stringify({ type: 'invalid_data', message }),
+  })
 
   const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
     const method = init?.method ?? 'GET'
@@ -102,13 +113,15 @@ export function installCartMock() {
       const codes: string[] = body.promo_codes ?? []
       if (method === 'POST') {
         for (const raw of codes) {
-          const code = String(raw).toUpperCase()
-          if (!(code in KNOWN_CODES)) continue // unknown: accepted, not applied
+          const code = String(raw)
+          // Draft promotion: 200, but nothing applied.
+          if (DRAFT_CODES.has(code)) continue
+          if (!(code in KNOWN_CODES)) return badRequest(`The promotion code ${code} is invalid`)
           if (cart.promotions.some((p) => p.code === code)) continue
           cart.promotions.push({ id: `promo_${code}`, code, is_automatic: false })
         }
       } else if (method === 'DELETE') {
-        const drop = codes.map((c) => String(c).toUpperCase())
+        const drop = codes.map((c) => String(c))
         cart.promotions = cart.promotions.filter((p) => !drop.includes(p.code))
       }
       recompute()

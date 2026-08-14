@@ -53,7 +53,33 @@ describe('PromoCodeField', () => {
     expect(screen.getByLabelText('Promo code')).toHaveValue('')
   })
 
-  it('rejects an unknown code that Medusa accepts with a 200 but never applies', async () => {
+  it.each([
+    ['lower case', 'save10'],
+    ['mixed case', 'SaVe10'],
+    ['padded with spaces', '  SAVE10  '],
+  ])('applies a code typed in %s — Medusa itself matches exactly', async (_label, typed) => {
+    const user = await renderWithItem()
+
+    await user.type(screen.getByLabelText('Promo code'), typed)
+    await user.click(screen.getByRole('button', { name: 'Apply' }))
+
+    await waitFor(() => expect(screen.getByTestId('discount')).toHaveTextContent('10'))
+    // The chip shows the code as Medusa stores it, not as the shopper typed it.
+    expect(screen.getByText('SAVE10')).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('rejects a promotion still in draft, which Medusa accepts with 200 but never applies', async () => {
+    const user = await renderWithItem()
+
+    await user.type(screen.getByLabelText('Promo code'), 'DRAFTONLY')
+    await user.click(screen.getByRole('button', { name: 'Apply' }))
+
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
+    expect(screen.getByTestId('discount')).toHaveTextContent('0')
+  })
+
+  it('rejects an unknown code, which Medusa refuses with a 400', async () => {
     const user = await renderWithItem()
 
     await user.type(screen.getByLabelText('Promo code'), 'NOTREAL')
