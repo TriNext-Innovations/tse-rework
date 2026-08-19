@@ -117,7 +117,8 @@ export default function B2BPage() {
               Volume pricing for offices, IT resellers, print shops, and schools. Approved accounts
               get {B2B_TIERS[0]!.percent}% off orders from {formatRand(B2B_MIN_THRESHOLD_RAND)} and{' '}
               {B2B_MAX_PERCENT}% from {formatRand(B2B_TIERS[B2B_TIERS.length - 1]!.minRand)} — worked
-              out automatically at checkout, with next-day delivery to Johannesburg and Pretoria.
+              out automatically at checkout, with next-business-day delivery to Johannesburg and
+              Pretoria on our Overnight service.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <a href="#apply" className="inline-flex items-center gap-2 bg-[var(--ink)] text-[var(--paper)] rounded-full pl-6 pr-2 py-2.5 text-sm font-semibold hover:bg-[#dfe344] hover:text-[var(--on-accent)] transition-colors">
@@ -135,7 +136,7 @@ export default function B2BPage() {
             {[
               { stat: `${B2B_MAX_PERCENT}%`, label: 'Max discount' },
               { stat: '<2h', label: 'Quote turnaround' },
-              { stat: 'COD', label: 'JHB/PTA option' },
+              { stat: 'COD', label: 'On approved accounts' },
             ].map(({ stat, label }) => (
               <div key={label} className="bg-[var(--surface)] rounded-[20px] p-5 text-center">
                 <div className="font-display text-3xl font-light">{stat}</div>
@@ -310,7 +311,7 @@ export default function B2BPage() {
             {[
               { step: '01', title: 'Apply', body: 'Fill in the form above. We review every application manually — usually same business day.' },
               { step: '02', title: 'Get approved', body: 'We approve the account against your email address. Nothing to install, no code to remember — the discount is attached to the account itself.' },
-              { step: '03', title: 'Order and save', body: `Sign in, fill the cart, and the ${B2B_TIERS[0]!.percent}% or ${B2B_MAX_PERCENT}% comes off at checkout on its own. Next-day delivery JHB/PTA — COD available for our own drivers.` },
+              { step: '03', title: 'Order and save', body: `Sign in, fill the cart, and the ${B2B_TIERS[0]!.percent}% or ${B2B_MAX_PERCENT}% comes off at checkout on its own. Choose Overnight for next-business-day delivery to JHB/PTA, or arrange delivery on account with our team.` },
             ].map(({ step, title, body }) => (
               <div key={step} className="border-t-2 border-[#dfe344] pt-5">
                 <div className="font-display text-5xl font-light text-[#dfe344] leading-none mb-4">{step}</div>

@@ -317,7 +317,7 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
             <div className="grid grid-cols-2 gap-3">
               {[
                 { icon: '✓', label: 'Guaranteed to work or your money back' },
-                { icon: '🚚', label: 'Nationwide courier — next-day JHB/PTA' },
+                { icon: '🚚', label: 'Nationwide courier — Overnight option to JHB/PTA' },
                 { icon: '⚡', label: 'Same-day dispatch on orders before noon' },
                 { icon: '🔒', label: 'Secure checkout with PayFast' },
               ].map(({ icon, label }) => (
