@@ -34,7 +34,7 @@ export type HeroProduct = {
 
 const faqs = [
   { q: 'Will a generic cartridge work in my printer?', a: "Yes. Our compatibles are engineered to spec for each printer model and meet or exceed OEM page yield. If it doesn't print as well as the original — we replace it." },
-  { q: 'How does delivery work?', a: 'Order before noon and we deliver next day in Johannesburg and Pretoria via our own drivers (COD available). Nationwide courier ships same day on prepayment.' },
+  { q: 'How does delivery work?', a: `Countrywide via The Courier Guy — Economy (3–4 business days) at R150, or Overnight (next business day) at R200. Free on orders over R2,000, and collection from our Kya Sands warehouse is always free. Need a local delivery or to pay on delivery? Call ${siteConfig.phone.display} — we arrange those by phone.` },
   { q: 'What if a cartridge is faulty?', a: "Every cartridge is covered by our guarantee. Faulty unit? We replace it, no fuss. That's the deal we've held since 1987." },
   { q: 'Do you do bulk / business pricing?', a: `Yes. Offices, schools, print shops — call ${siteConfig.phone.display} or email ${siteConfig.email.sales} for a quote.` },
 ]
@@ -192,7 +192,8 @@ export default function StorefrontClient({
             </h1>
             <p className="mt-8 max-w-xl text-[15px] sm:text-base text-[var(--ink-2)] leading-relaxed">
               South Africa's printer-cartridge specialist since 1987. We make compatibles that print as well as the
-              original — sometimes better — at a fraction of the price. Order before noon, on your desk tomorrow.
+              original — sometimes better — at a fraction of the price. Order before noon, choose Overnight, and it's on your
+              desk tomorrow.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">

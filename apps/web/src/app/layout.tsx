@@ -23,7 +23,7 @@ const fraunces = Fraunces({
 
 const SITE_NAME = 'TSE Online'
 const DESCRIPTION =
-  "South Africa's printer cartridge specialist since 1987. Quality generic compatibles for HP, Canon, Epson, Brother, Samsung and more — next day delivery to JHB & PTA."
+  "South Africa's printer cartridge specialist since 1987. Quality generic compatibles for HP, Canon, Epson, Brother, Samsung and more — countrywide courier, with next-day delivery available to JHB & PTA."
 
 export const metadata: Metadata = {
   title: {

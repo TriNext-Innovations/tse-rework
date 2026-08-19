@@ -60,7 +60,7 @@ export default async function OrderConfirmedPage() {
         <div className="bg-[var(--surface)] rounded-[20px] p-6 text-left mb-8 space-y-4">
           {[
             { icon: '📬', heading: 'Confirmation', body: "A confirmation email with your order number and details is on its way to your inbox." },
-            { icon: '🚚', heading: 'Delivery', body: 'We dispatch with your chosen delivery method. Orders placed before noon are typically delivered next business day to JHB & PTA; other areas may vary.' },
+            { icon: '🚚', heading: 'Delivery', body: 'We dispatch with your chosen delivery method. Economy takes 3–4 business days; Overnight orders placed before noon are typically delivered the next business day to JHB & PTA. Other areas may vary.' },
             { icon: '💳', heading: 'Payment', body: 'Paid in full online via PayFast — no further payment is needed.' },
           ].map(({ icon, heading, body }) => (
             <div key={heading} className="flex items-start gap-3">
