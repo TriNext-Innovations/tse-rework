@@ -453,7 +453,8 @@ export default function StorefrontClient({
               </div>
               <p className="mt-4 font-display font-light text-3xl sm:text-4xl leading-[1.05] tracking-tight">
                 Order by <span className="font-display-italic">noon</span>,<br />
-                in your printer <span className="text-[var(--magenta)]">tomorrow</span>.
+                in your printer <span className="text-[var(--magenta)]">tomorrow</span>.<br />
+                <span className="text-base sm:text-lg text-[var(--muted)]">With Overnight delivery to JHB &amp; PTA.</span>
               </p>
               <div className="mt-5 flex flex-wrap items-center gap-4 text-xs text-[var(--ink-2)]">
                 <span className="inline-flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-[var(--magenta)]" /> Warehouse — pickup</span>
@@ -578,7 +579,7 @@ export default function StorefrontClient({
             {[
               { stat: '↓60%', copy: 'Average cost-per-page reduction vs. matching OEM cartridge across the top 50 SKUs.' },
               { stat: '2,400', copy: 'Pages from a single Canon 737 compatible at R300 — that\'s R0.13 a page, black-and-white.' },
-              { stat: '<24h', copy: 'Next-day delivery across Johannesburg and Pretoria on orders placed before 12:00.' },
+              { stat: '<24h', copy: 'Overnight delivery across Johannesburg and Pretoria on orders placed before 12:00.' },
               { stat: '1987', copy: 'The year TSE started servicing offices out of Kya Sands. We\'ve been refining the recipe ever since.' },
             ].map(({ stat, copy }) => (
               <div key={stat} className="border-t border-[var(--ink)]/15 pt-5">

@@ -438,7 +438,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               >
                 View Cart
               </Link>
-              <p className="text-[10px] text-center text-[var(--muted)]">COD available · JHB &amp; PTA next day</p>
+              <p className="text-[10px] text-center text-[var(--muted)]">Free delivery over R2,000 &middot; Overnight to JHB &amp; PTA</p>
             </div>
           )}
         </div>

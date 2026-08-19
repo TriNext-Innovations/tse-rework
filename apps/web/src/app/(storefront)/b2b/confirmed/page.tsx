@@ -63,7 +63,7 @@ export default async function B2BConfirmedPage({
                 <span className="text-xl">🚚</span>
                 <div>
                   <p className="text-sm font-medium">Fast delivery</p>
-                  <p className="text-xs text-[var(--muted)] mt-0.5 leading-relaxed">Orders before noon deliver next day to JHB & PTA. Nationwide courier available.</p>
+                  <p className="text-xs text-[var(--muted)] mt-0.5 leading-relaxed">Overnight orders before noon deliver next business day to JHB &amp; PTA. Economy runs 3–4 business days countrywide.</p>
                 </div>
               </div>
             </>
