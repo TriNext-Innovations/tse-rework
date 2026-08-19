@@ -94,8 +94,9 @@ export default function TermsPage() {
 
           <h2>6. Delivery</h2>
           <ul>
-            <li>We deliver countrywide via The Courier Guy, and offer Pudo locker delivery as a lower-cost option.</li>
-            <li>Orders to Johannesburg and Pretoria placed before 12:00 on a business day are normally delivered the next business day.</li>
+            <li>We deliver countrywide via The Courier Guy. Economy takes 3&ndash;4 business days; Overnight is charged separately and aims for the next business day.</li>
+            <li>Orders to Johannesburg and Pretoria placed before 12:00 on a business day and sent Overnight are normally delivered the next business day.</li>
+            <li>Delivery is free on orders over R2,000.</li>
             <li>Collection from our Kya Sands warehouse is free.</li>
             <li>Delivery timeframes are estimates given in good faith, not guarantees — couriers occasionally run late.</li>
             <li>Risk passes to you on delivery. If it arrives damaged, see our <Link href="/legal/returns">Returns &amp; Refunds</Link> policy.</li>

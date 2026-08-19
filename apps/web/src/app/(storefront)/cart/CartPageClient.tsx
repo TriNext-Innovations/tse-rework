@@ -172,7 +172,7 @@ export default function CartPageClient() {
               <div className="mt-4 space-y-2">
                 {[
                   '✓ Guaranteed to work or money back',
-                  '🚚 Next-day delivery JHB & PTA',
+                  '🚚 Next-day delivery available JHB & PTA',
                   '🔒 Secure checkout',
                 ].map((t) => (
                   <p key={t} className="text-[11px] text-[var(--muted)] flex items-center gap-1.5">{t}</p>

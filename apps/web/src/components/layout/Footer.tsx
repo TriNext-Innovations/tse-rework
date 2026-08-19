@@ -130,7 +130,7 @@ export function Footer() {
               </li>
               <li>Fri · 8am–3pm</li>
               <li className="text-white/40 text-xs leading-relaxed pt-2">
-                Order before noon for same-day dispatch. Next-day delivery JHB/PTA.
+                Order before noon for same-day dispatch. Next-day delivery to JHB/PTA on Overnight.
               </li>
             </ul>
           </div>

@@ -250,7 +250,7 @@ export default async function CompatibilityPage({ searchParams }: Props) {
               {[
                 { step: '01', heading: 'Enter your printer', body: 'Type your printer brand and model — e.g. "HP LaserJet 1020" or "Canon PIXMA G3410".' },
                 { step: '02', heading: 'See compatible cartridges', body: 'We show every generic cartridge in our range that works with your printer, with price and SKU.' },
-                { step: '03', heading: 'Add to cart', body: 'Order online or call us. Order before noon for next-day delivery to JHB/PTA.' },
+                { step: '03', heading: 'Add to cart', body: 'Order online or call us. Order before noon and choose Overnight for next-business-day delivery to JHB/PTA.' },
               ].map(({ step, heading, body }) => (
                 <div key={step} className="flex flex-col gap-3">
                   <div className="font-display text-5xl text-[var(--ink)]/8 leading-none">{step}</div>
