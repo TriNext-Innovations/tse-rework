@@ -1,4 +1,5 @@
 import { htmlToPlainText } from '@/lib/html-text'
+import { buildMerchantTitle, buildProductType, type CartridgeTypeMeta } from '@/lib/merchant-title'
 import { TYPE_CATEGORY_NAMES as TYPE_CATS } from '@/lib/taxonomy'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
@@ -24,13 +25,22 @@ const PLACEHOLDER_VARIANT_TITLES = new Set(['default title', 'default value'])
 
 const COLOUR_PATTERN = /\b(black|cyan|magenta|yellow|colour|color)\b/i
 const FIELDS =
-  '+images,+categories.id,+categories.name,+variants.sku,+variants.title,+variants.calculated_price'
+  '+images,+metadata,+categories.id,+categories.name,+variants.sku,+variants.title,+variants.calculated_price'
+
+// Google accepts up to 10 additional images. 33 of 301 products have more than
+// one on file; the rest simply emit none.
+const MAX_ADDITIONAL_IMAGES = 10
 
 type Category = { id: string; name: string }
 type Variant = {
   sku: string | null
   title: string
   calculated_price?: { calculated_amount?: number; currency_code?: string }
+}
+type ProductMetadata = {
+  brand?: string
+  compatible?: boolean
+  cartridge_type?: CartridgeTypeMeta
 }
 type Product = {
   id: string
@@ -40,6 +50,7 @@ type Product = {
   images?: { url: string }[]
   categories?: Category[]
   variants?: Variant[]
+  metadata?: ProductMetadata | null
 }
 
 // The store has no manufacturer GTINs/MPNs on file for these generic/compatible
@@ -103,7 +114,16 @@ export async function GET() {
 
   const items = products.flatMap((p) => {
     const brand = p.categories?.find((c) => !TYPE_CATS.has(c.name))?.name ?? 'TSE'
+    const cartridgeType = p.metadata?.cartridge_type ?? null
+    const compatible = p.metadata?.compatible === true
+    const productType = buildProductType(p.title, cartridgeType, brand)
     const image = p.images?.[0]?.url
+    // Same shape as variantAttribute below: pre-rendered so the item template
+    // stays a flat list of lines rather than nested ternaries.
+    const additionalImages = (p.images ?? [])
+      .slice(1, 1 + MAX_ADDITIONAL_IMAGES)
+      .map((i) => `      <g:additional_image_link>${escapeXml(i.url)}</g:additional_image_link>\n`)
+      .join('')
     const link = `${SITE}/products/${p.handle}`
     const description = p.description ? htmlToPlainText(p.description).slice(0, 5000) : p.title
 
@@ -125,7 +145,14 @@ export async function GET() {
         v.title && !PLACEHOLDER_VARIANT_TITLES.has(v.title.trim().toLowerCase())
           ? v.title.trim()
           : null
-      const title = variantName ? `${p.title} — ${variantName}` : p.title
+      // Not `${p.title} — ${variantName}` any more: that produced 18-character
+      // titles with none of the words shoppers type. See lib/merchant-title.ts.
+      const title = buildMerchantTitle({
+        productTitle: p.title,
+        variantName,
+        cartridgeType,
+        compatible,
+      })
       const shipping = price >= FREE_SHIPPING_THRESHOLD_RAND ? 0 : ECONOMY_SHIPPING_RAND
 
       const variantAttribute =
@@ -141,12 +168,13 @@ export async function GET() {
       <description>${cdata(description)}</description>
       <link>${escapeXml(link)}</link>
       ${image ? `<g:image_link>${escapeXml(image)}</g:image_link>` : ''}
-      <g:availability>in_stock</g:availability>
+${additionalImages}      <g:availability>in_stock</g:availability>
       <g:price>${price.toFixed(2)} ${currency}</g:price>
       <g:brand>${escapeXml(brand)}</g:brand>
       <g:condition>new</g:condition>
       <g:identifier_exists>no</g:identifier_exists>
       <g:google_product_category>${GOOGLE_PRODUCT_CATEGORY}</g:google_product_category>
+      <g:product_type>${escapeXml(productType)}</g:product_type>
 ${isVariantGroup ? `      <g:item_group_id>${escapeXml(p.handle)}</g:item_group_id>\n` : ''}${variantAttribute}      <g:shipping>
         <g:country>ZA</g:country>
         <g:service>Economy</g:service>
