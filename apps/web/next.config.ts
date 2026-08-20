@@ -18,18 +18,32 @@ const connectSrc = [
   'https://*.sentry.io',
 ].filter(Boolean).join(' ')
 
+// GA4 (consent-gated — see components/analytics). gtag.js is fetched from
+// googletagmanager.com and then beacons measurement data to google-analytics.com,
+// so BOTH a script-src and a connect-src entry are required. Missing either one
+// fails silently: the tag simply never reports and the property reads zero.
+// google-analytics.com is wildcarded because GA4 routes to regional collectors
+// (regionN.google-analytics.com) chosen at runtime, not to a fixed host.
+const GTM_SCRIPT_SRC = 'https://www.googletagmanager.com'
+const GA_CONNECT_SRC = [
+  'https://www.google-analytics.com',
+  'https://*.google-analytics.com',
+  'https://*.analytics.google.com',
+  'https://www.googletagmanager.com',
+].join(' ')
+
 const contentSecurityPolicy = [
   "default-src 'self'",
   // Next.js relies on inline runtime bootstrap; eval kept for safety with some
   // deps. maps.googleapis/gstatic host the Places autocomplete library.
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com https://maps.gstatic.com",
+  `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com https://maps.gstatic.com ${GTM_SCRIPT_SRC}`,
   "style-src 'self' 'unsafe-inline'",
   // https: covers R2/Supabase product images without enumerating every CDN host.
   "img-src 'self' data: https:",
   "font-src 'self' data:",
   // maps.googleapis.com loads the JS bootstrap; places.googleapis.com serves the
   // Places (New) Autocomplete data calls used by the checkout address field.
-  `connect-src ${connectSrc} https://maps.googleapis.com https://places.googleapis.com`,
+  `connect-src ${connectSrc} https://maps.googleapis.com https://places.googleapis.com ${GA_CONNECT_SRC}`,
   // Checkout posts to www.payfast.co.za/eng/process, which 302-redirects the
   // browser to payment.payfast.io to complete payment. form-action is enforced on
   // EVERY hop, so BOTH domains must be listed — the payment page lives on the
