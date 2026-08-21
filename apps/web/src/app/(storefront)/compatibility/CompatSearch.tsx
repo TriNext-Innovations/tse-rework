@@ -81,7 +81,7 @@ export function CompatSearch({
           onFocus={() => query.length >= 2 && setShowSuggestions(true)}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
           onKeyDown={handleKeyDown}
-          placeholder="e.g. HP LaserJet 1020"
+          placeholder="e.g. Brother DCP-L3520cdw"
           className="flex-1 text-sm outline-none placeholder:text-[var(--muted-2)] bg-transparent"
           aria-label="Printer model search"
           aria-autocomplete="list"

@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { CATEGORIES } from '@/lib/categories'
+import { fetchPrinterModels, printerSlug } from '@/lib/printers'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
@@ -10,6 +11,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: BASE, lastModified: new Date(), changeFrequency: 'weekly', priority: 1 },
     { url: `${BASE}/products`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
     { url: `${BASE}/compatibility`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE}/printers`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.9 },
     { url: `${BASE}/contact`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },
     { url: `${BASE}/legal/returns`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.4 },
     { url: `${BASE}/legal/terms`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.3 },
@@ -44,7 +46,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.8,
       }))
 
-    return [...staticPages, ...categoryPages, ...productPages]
+    // Printer-model pages. Every one of the 903 models was checked against the
+    // live compatibility lookup on 21 Aug and all returned at least one
+    // cartridge, so none of these is a known 404 — but the page still 404s on
+    // an empty result, so if that ever changes the sitemap is the thing to
+    // re-audit.
+    const printerPages: MetadataRoute.Sitemap = (await fetchPrinterModels()).map((m) => ({
+      url: `${BASE}/printers/${printerSlug(m.brand, m.model)}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.6,
+    }))
+
+    return [...staticPages, ...categoryPages, ...printerPages, ...productPages]
   } catch {
     return staticPages
   }
