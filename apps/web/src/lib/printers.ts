@@ -86,10 +86,14 @@ export async function findCartridges(brand: string, model: string): Promise<Comp
     if (!res.ok) return []
     const d = await res.json()
     const results = (d.results ?? []) as CompatibleCartridge[]
-    // The endpoint can return the same product under more than one matching
-    // rule; a printer page must never list one cartridge twice.
     const seen = new Set<string>()
     return results.filter((r) => {
+      // Belt and braces against the backend regressing: a row without a handle
+      // rendered as `href="/products/null"`. The endpoint now drops these, but
+      // the page should not be able to emit a broken link even if it stops.
+      if (!r.handle) return false
+      // The endpoint can return the same product under more than one matching
+      // rule; a printer page must never list one cartridge twice.
       const key = r.product_id ?? r.sku
       if (!key || seen.has(key)) return false
       seen.add(key)

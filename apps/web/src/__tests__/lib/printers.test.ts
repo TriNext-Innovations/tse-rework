@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { printerSlug, printerLabel, groupByBrand, type PrinterModel } from '@/lib/printers'
+import { describe, it, expect, vi, afterEach } from 'vitest'
+import { printerSlug, printerLabel, groupByBrand, findCartridges, type PrinterModel } from '@/lib/printers'
 
 const m = (brand: string, model: string, cartridge_count = 1): PrinterModel => ({ brand, model, cartridge_count })
 
@@ -54,5 +54,45 @@ describe('groupByBrand', () => {
   it('sorts models numerically so M110 precedes M233', () => {
     const [first] = groupByBrand(models)
     expect(first?.models.map((x) => x.model)).toEqual(['M110', 'M233', 'M404'])
+  })
+})
+
+describe('findCartridges', () => {
+  function mockResults(results: unknown[]) {
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ results }),
+    })))
+  }
+
+  afterEach(() => vi.unstubAllGlobals())
+
+  // A compatibility row with no published product used to render a card with a
+  // null title and href="/products/null". The backend now drops these; the page
+  // must not be able to emit one even if that regresses.
+  it('drops rows with no handle', async () => {
+    mockResults([
+      { sku: 'A', product_id: 'p1', handle: 'brother-tn-279', title: 'TN 279' },
+      { sku: 'B', product_id: 'p2', handle: null, title: null },
+      { sku: 'C', product_id: 'p3', title: 'no handle key at all' },
+    ])
+    const out = await findCartridges('Brother', 'DCP-L3520cdw')
+    expect(out.map((c) => c.product_id)).toEqual(['p1'])
+  })
+
+  it('collapses colour variants of one product into a single card', async () => {
+    mockResults([
+      { sku: 'KM-TN321-K', product_id: 'p1', handle: 'km-tn-321', title: 'TN 321' },
+      { sku: 'KM-TN321-C', product_id: 'p1', handle: 'km-tn-321', title: 'TN 321' },
+      { sku: 'KM-TN328-K', product_id: 'p2', handle: 'km-tn-328', title: 'TN 328' },
+    ])
+    const out = await findCartridges('Konica Minolta', 'C284e')
+    expect(out).toHaveLength(2)
+    expect(out.map((c) => c.handle)).toEqual(['km-tn-321', 'km-tn-328'])
+  })
+
+  it('returns [] rather than throwing when the endpoint fails', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, json: async () => ({}) })))
+    expect(await findCartridges('HP', 'CP1025')).toEqual([])
   })
 })
