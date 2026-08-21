@@ -6,7 +6,8 @@ import { FilterPanel } from './FilterPanel'
 import { SortSelect } from './SortSelect'
 import { MobileFilters } from './MobileFilters'
 import { AddToCartButton } from './AddToCartButton'
-import { TYPE_CATEGORY_NAMES, TYPE_PARENT, cartridgeTypeLabel } from '@/lib/taxonomy'
+import { TYPE_PARENT, cartridgeTypeLabel, isBrandCategory } from '@/lib/taxonomy'
+import { CATEGORIES } from '@/lib/categories'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
@@ -44,7 +45,7 @@ function resolveCategoryIds(
   const parent = opts.type ? TYPE_PARENT[opts.type] : undefined
   if (!parent && !opts.brand) return []
   return categories
-    .filter((c) => !TYPE_CATEGORY_NAMES.has(c.name))
+    .filter((c) => isBrandCategory(c))
     .filter((c) => (opts.brand ? c.name === opts.brand : true))
     .filter((c) => (parent ? c.parent_category?.name === parent : true))
     .map((c) => c.id as string)
@@ -320,6 +321,27 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
             })()}
           </div>
         </div>
+
+        {/* Crawlable entry points into the brand x type category layer.
+            Google reaches those pages from here: /products is the only browse
+            page it currently knows about, and the category pages are the ones
+            the legacy site ranks on. Plain server-rendered links, not a filter
+            widget — a query-string filter is not a page Google can rank. */}
+        <section className="mt-16 border-t border-[var(--line-4)] pt-8">
+          <h2 className="font-display text-xl mb-4">Shop by brand</h2>
+          <ul className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-[var(--muted)]">
+            {CATEGORIES.map((c) => (
+              <li key={c.slug}>
+                <Link
+                  href={`/cartridges/${c.slug}`}
+                  className="hover:text-[var(--ink)] transition-colors underline underline-offset-2 decoration-[var(--line-4)]"
+                >
+                  {c.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
       </div>
     </div>
   )

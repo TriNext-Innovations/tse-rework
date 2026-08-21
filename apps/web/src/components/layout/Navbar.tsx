@@ -8,7 +8,7 @@ import { CartButton } from '@/components/CartButton'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { useAuth } from '@/contexts/AuthContext'
 import { SearchModal } from '@/components/SearchModal'
-import { TYPE_CATEGORY_NAMES } from '@/lib/taxonomy'
+import { isBrandCategory } from '@/lib/taxonomy'
 
 type Category = { id: string; name: string }
 type BrandEntry = { name: string; ids: string[] }
@@ -66,7 +66,7 @@ const { customer, loading: authLoading } = useAuth()
   // Deduplicate brands by name — Brother appears under both Inkjet and Laser
   const brandMap = new Map<string, string[]>()
   for (const c of categories) {
-    if (TYPE_CATEGORY_NAMES.has(c.name)) continue
+    if (!isBrandCategory(c)) continue
     const ids = brandMap.get(c.name) ?? []
     ids.push(c.id)
     brandMap.set(c.name, ids)
