@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout'
 import { fetchPrinterModels, groupByBrand, printerSlug } from '@/lib/printers'
+import { websiteRef } from '@/lib/structured-data'
 
 const BASE = 'https://tse-cartridges.co.za'
 
@@ -34,7 +35,7 @@ export default async function PrintersIndexPage() {
     '@type': 'CollectionPage',
     name: 'Printers we carry cartridges for',
     url: `${BASE}/printers`,
-    isPartOf: { '@type': 'WebSite', name: 'TSE Online', url: BASE },
+    isPartOf: websiteRef,
   }
 
   return (

@@ -6,6 +6,8 @@ import { CartProvider } from '@/contexts/CartContext'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { CookieBanner } from '@/components/CookieBanner'
 import { Analytics } from '@/components/Analytics'
+import { siteConfig } from '@/lib/site-config'
+import { organizationJsonLd, websiteJsonLd } from '@/lib/structured-data'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -21,7 +23,7 @@ const fraunces = Fraunces({
   display: 'swap',
 })
 
-const SITE_NAME = 'TSE Online'
+const SITE_NAME = siteConfig.company.brandName
 const DESCRIPTION =
   "South Africa's printer cartridge specialist since 1987. Quality generic compatibles for HP, Canon, Epson, Brother, Samsung and more — countrywide courier, with next-day delivery available to JHB & PTA."
 
@@ -55,32 +57,6 @@ export const metadata: Metadata = {
   ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
     ? { verification: { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION } }
     : {}),
-}
-
-const organizationJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'Organization',
-  name: SITE_NAME,
-  url: 'https://tse-cartridges.co.za',
-  logo: 'https://tse-cartridges.co.za/brand/logo-v2.svg',
-  foundingDate: '1987',
-  address: {
-    '@type': 'PostalAddress',
-    addressLocality: 'Kya Sands, Johannesburg',
-    addressCountry: 'ZA',
-  },
-}
-
-const websiteJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'WebSite',
-  name: SITE_NAME,
-  url: 'https://tse-cartridges.co.za',
-  potentialAction: {
-    '@type': 'SearchAction',
-    target: 'https://tse-cartridges.co.za/products?q={search_term_string}',
-    'query-input': 'required name=search_term_string',
-  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

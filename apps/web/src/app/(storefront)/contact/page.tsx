@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { siteConfig } from '@/lib/site-config'
+import { ORGANIZATION_ID, SITE_URL, organizationRef } from '@/lib/structured-data'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout'
 
@@ -14,7 +15,9 @@ import { Navbar } from '@/components/layout'
 //     span. Phone, WhatsApp and the physical address are never obfuscated, so they
 //     are plain text and satisfy the requirement on their own.
 //
-// JSON-LD repeats the same details in a form Google parses directly.
+// JSON-LD used to repeat the whole business here as a second `Store` node,
+// competing with the `Organization` the root layout emitted. The business entity
+// now lives once in lib/structured-data.ts and this page just points at it.
 
 export const metadata: Metadata = {
   title: 'Contact Us — TSE Online',
@@ -22,48 +25,17 @@ export const metadata: Metadata = {
     'Phone, WhatsApp, email and physical address for TSE Online — printer cartridge supplier in Kya Sands, Johannesburg. Trading since 1987.',
 }
 
-const ADDRESS = {
-  street: 'Unit 34, A.P.D. Industrial Park, Cnr Bernie & Elsecar Street',
-  suburb: 'Kya Sands',
-  city: 'Johannesburg',
-  postalCode: '2163',
-  country: 'South Africa',
-}
+const ADDRESS = siteConfig.address
 
+// No business facts here — the entity itself is emitted sitewide by the root
+// layout. This node only says "this page is the contact page for that entity".
 const jsonLd = {
   '@context': 'https://schema.org',
-  '@type': 'Store',
-  name: siteConfig.company.legalName,
-  alternateName: siteConfig.company.tradingName,
-  url: 'https://tse-cartridges.co.za',
-  telephone: '+27117082304',
-  email: siteConfig.email.sales,
-  address: {
-    '@type': 'PostalAddress',
-    streetAddress: ADDRESS.street,
-    addressLocality: ADDRESS.suburb,
-    addressRegion: 'Gauteng',
-    postalCode: ADDRESS.postalCode,
-    addressCountry: 'ZA',
-  },
-  openingHoursSpecification: [
-    {
-      '@type': 'OpeningHoursSpecification',
-      dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-      opens: '08:00',
-      closes: '17:00',
-    },
-  ],
-  contactPoint: [
-    {
-      '@type': 'ContactPoint',
-      contactType: 'customer service',
-      telephone: '+27117082304',
-      email: siteConfig.email.sales,
-      areaServed: 'ZA',
-      availableLanguage: ['en'],
-    },
-  ],
+  '@type': 'ContactPage',
+  name: 'Contact TSE Online',
+  url: `${SITE_URL}/contact`,
+  about: organizationRef,
+  mainEntity: { '@id': ORGANIZATION_ID },
 }
 
 export default function ContactPage() {

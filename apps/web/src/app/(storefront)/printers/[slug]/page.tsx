@@ -13,6 +13,7 @@ import {
   type CompatibleCartridge,
   type PrinterModel,
 } from '@/lib/printers'
+import { websiteRef } from '@/lib/structured-data'
 import { AddToCartButton } from '../../products/AddToCartButton'
 
 const BASE = 'https://tse-cartridges.co.za'
@@ -95,7 +96,7 @@ export default async function PrinterPage({ params }: Props) {
     name: `${label} cartridges`,
     url,
     description: lede(printer, cartridges),
-    isPartOf: { '@type': 'WebSite', name: 'TSE Online', url: BASE },
+    isPartOf: websiteRef,
     mainEntity: {
       '@type': 'ItemList',
       numberOfItems: cartridges.length,
