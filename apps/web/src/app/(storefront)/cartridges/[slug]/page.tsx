@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { Navbar } from '@/components/layout'
 import { AddToCartButton } from '../../products/AddToCartButton'
 import { CATEGORIES, categoryBySlug, type Category } from '@/lib/categories'
+import { websiteRef } from '@/lib/structured-data'
 import { cartridgeTypeLabel } from '@/lib/taxonomy'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
@@ -169,7 +170,7 @@ export default async function CategoryPage({ params }: Props) {
     name: category.title,
     url,
     description: lede(category, products),
-    isPartOf: { '@type': 'WebSite', name: 'TSE Online', url: BASE },
+    isPartOf: websiteRef,
     mainEntity: {
       '@type': 'ItemList',
       numberOfItems: sorted.length,
