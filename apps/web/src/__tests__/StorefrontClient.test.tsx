@@ -386,14 +386,16 @@ describe('StorefrontClient — bento grid', () => {
     expect(mockPush).toHaveBeenCalledWith('/products?type=inkjet')
   })
 
-  it('brand compatibility pills navigate to the brand-filtered catalogue', async () => {
+  it('brand compatibility pills are real links to the category pages', () => {
     renderStorefront()
-    // Find brand pills in the bento section (not the marquee)
-    const allHpButtons = screen.getAllByText('HP')
-    // Click the button version (not a span in the marquee)
-    const hpPill = allHpButtons.find((el) => el.tagName === 'BUTTON')
-    if (hpPill) await userEvent.click(hpPill)
-    expect(mockPush).toHaveBeenCalledWith('/products?brand=HP')
+    // They must be anchors, not router.push handlers: these are the only
+    // homepage links into /cartridges, so a crawler has to be able to see them.
+    const hpPill = screen.getAllByText('HP').find((el) => el.tagName === 'A')
+    expect(hpPill).toBeTruthy()
+    expect(hpPill).toHaveAttribute('href', '/cartridges/hp-laserjet-cartridges')
+
+    const konica = screen.getAllByText('Konica Minolta').find((el) => el.tagName === 'A')
+    expect(konica).toHaveAttribute('href', '/cartridges/konica-minolta-laserjet-cartridges')
   })
 })
 

@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { cartridgeTypeLabel } from '@/lib/taxonomy'
+import { primaryCategoryForBrand } from '@/lib/categories'
 import { siteConfig } from '@/lib/site-config'
 import Image from 'next/image'
 import { Navbar } from '@/components/layout'
@@ -465,15 +467,21 @@ export default function StorefrontClient({
             <article data-reveal className="bento-card sm:col-span-3 bg-[var(--paper)] border border-[var(--ink)]/10 rounded-[24px] p-7 relative overflow-hidden min-h-[180px]">
               <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] mb-3">Compatible with</div>
               <div className="flex flex-wrap gap-1.5">
-                {brands.map((b) => (
-                  <button
-                    key={b}
-                    onClick={() => router.push(`/products?brand=${encodeURIComponent(b)}`)}
-                    className="text-[11px] font-medium px-2.5 py-1 border border-[var(--ink)]/10 hover:border-[var(--magenta)] hover:text-[var(--magenta)] rounded-full transition-colors cursor-pointer"
-                  >
-                    {b}
-                  </button>
-                ))}
+                {brands.map((b) => {
+                  // A real href, not a router.push: these are the only homepage
+                  // links into the /cartridges layer, so a crawler has to see
+                  // them — and a shopper has to be able to open one in a tab.
+                  const category = primaryCategoryForBrand(b)
+                  return (
+                    <Link
+                      key={b}
+                      href={category ? `/cartridges/${category.slug}` : `/products?brand=${encodeURIComponent(b)}`}
+                      className="text-[11px] font-medium px-2.5 py-1 border border-[var(--ink)]/10 hover:border-[var(--magenta)] hover:text-[var(--magenta)] rounded-full transition-colors cursor-pointer"
+                    >
+                      {b}
+                    </Link>
+                  )
+                })}
               </div>
               <div className="mt-5 font-display text-2xl">
                 <span className="font-display-italic text-[var(--magenta)]">{brands.length || 12}</span> brands · <span className="text-[var(--muted)]">660+ models</span>

@@ -181,6 +181,30 @@ export function categoryBySlug(slug: string): Category | undefined {
   return CATEGORIES.find((c) => c.slug === slug)
 }
 
+/**
+ * Every category page for a brand, laser first.
+ *
+ * Brand names arrive from two unrelated sources — Medusa's category tree and
+ * the `cartridge_compat` printer data — so the match is case-insensitive
+ * rather than trusting both to agree on "OKI" vs "Oki".
+ */
+export function categoriesForBrand(brand: string): Category[] {
+  const needle = brand.trim().toLowerCase()
+  return CATEGORIES.filter((c) => c.brand.toLowerCase() === needle).sort((a, b) =>
+    a.type === b.type ? 0 : a.type === 'laser' ? -1 : 1,
+  )
+}
+
+/**
+ * The one category page a brand link should point at. Laser wins where a brand
+ * has both, because it is the larger half of this catalogue in every case.
+ * Returns undefined for a brand with no page — the caller falls back to the
+ * filtered product list rather than linking to a 404.
+ */
+export function primaryCategoryForBrand(brand: string): Category | undefined {
+  return categoriesForBrand(brand)[0]
+}
+
 /** Every legacy path → the slug that should receive it. For the cutover map. */
 export function legacyRedirectMap(): Record<string, string> {
   const map: Record<string, string> = {}
