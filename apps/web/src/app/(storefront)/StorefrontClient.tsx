@@ -34,7 +34,7 @@ export type HeroProduct = {
 
 const faqs = [
   { q: 'Will a generic cartridge work in my printer?', a: "Yes. Our compatibles are engineered to spec for each printer model and meet or exceed OEM page yield. If it doesn't print as well as the original — we replace it." },
-  { q: 'How does delivery work?', a: 'Order before noon and we deliver next day in Johannesburg and Pretoria via our own drivers (COD available). Nationwide courier ships same day on prepayment.' },
+  { q: 'How does delivery work?', a: `Countrywide via The Courier Guy — Economy (3–4 business days) at R150, or Overnight (next business day) at R200. Free on orders over R2,000, and collection from our Kya Sands warehouse is always free. Need a local delivery or to pay on delivery? Call ${siteConfig.phone.display} — we arrange those by phone.` },
   { q: 'What if a cartridge is faulty?', a: "Every cartridge is covered by our guarantee. Faulty unit? We replace it, no fuss. That's the deal we've held since 1987." },
   { q: 'Do you do bulk / business pricing?', a: `Yes. Offices, schools, print shops — call ${siteConfig.phone.display} or email ${siteConfig.email.sales} for a quote.` },
 ]
@@ -192,7 +192,8 @@ export default function StorefrontClient({
             </h1>
             <p className="mt-8 max-w-xl text-[15px] sm:text-base text-[var(--ink-2)] leading-relaxed">
               South Africa's printer-cartridge specialist since 1987. We make compatibles that print as well as the
-              original — sometimes better — at a fraction of the price. Order before noon, on your desk tomorrow.
+              original — sometimes better — at a fraction of the price. Order before noon, choose Overnight, and it's on your
+              desk tomorrow.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -452,7 +453,8 @@ export default function StorefrontClient({
               </div>
               <p className="mt-4 font-display font-light text-3xl sm:text-4xl leading-[1.05] tracking-tight">
                 Order by <span className="font-display-italic">noon</span>,<br />
-                in your printer <span className="text-[var(--magenta)]">tomorrow</span>.
+                in your printer <span className="text-[var(--magenta)]">tomorrow</span>.<br />
+                <span className="text-base sm:text-lg text-[var(--muted)]">With Overnight delivery to JHB &amp; PTA.</span>
               </p>
               <div className="mt-5 flex flex-wrap items-center gap-4 text-xs text-[var(--ink-2)]">
                 <span className="inline-flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-[var(--magenta)]" /> Warehouse — pickup</span>
@@ -577,7 +579,7 @@ export default function StorefrontClient({
             {[
               { stat: '↓60%', copy: 'Average cost-per-page reduction vs. matching OEM cartridge across the top 50 SKUs.' },
               { stat: '2,400', copy: 'Pages from a single Canon 737 compatible at R300 — that\'s R0.13 a page, black-and-white.' },
-              { stat: '<24h', copy: 'Next-day delivery across Johannesburg and Pretoria on orders placed before 12:00.' },
+              { stat: '<24h', copy: 'Overnight delivery across Johannesburg and Pretoria on orders placed before 12:00.' },
               { stat: '1987', copy: 'The year TSE started servicing offices out of Kya Sands. We\'ve been refining the recipe ever since.' },
             ].map(({ stat, copy }) => (
               <div key={stat} className="border-t border-[var(--ink)]/15 pt-5">

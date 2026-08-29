@@ -27,19 +27,47 @@ type Line = {
   thumbnail: string | null
 }
 
+type Promotion = { id: string; code: string; is_automatic: boolean }
+
+// Codes the fake backend recognises, and what each takes off. Matching is
+// case-SENSITIVE on purpose: verified against production on 14 Aug 2026, a
+// promotion created as "TSETESTC" rejects "tsetestc" and "TseTestC" with a 400.
+const KNOWN_CODES: Record<string, number> = { SAVE10: 10, WELCOME: 25 }
+
+// A promotion still in `draft`. Medusa accepts it with a 200 and then silently
+// does not apply it — no discount, no error. This is the nastier of the two
+// failure modes and the reason a 200 alone is never treated as success.
+const DRAFT_CODES = new Set(['DRAFTONLY'])
+
 export function installCartMock() {
-  let cart: { id: string; email: string | null; item_total: number; total: number; items: Line[] } | null = null
+  let cart:
+    | {
+        id: string
+        email: string | null
+        item_total: number
+        discount_total: number
+        total: number
+        items: Line[]
+        promotions: Promotion[]
+      }
+    | null = null
   let seq = 0
 
   const recompute = () => {
     if (!cart) return
-    cart.item_total = cart.items.reduce((s, i) => s + i.unit_price * i.quantity, 0)
-    cart.total = cart.item_total
+    const goods = cart.items.reduce((s, i) => s + i.unit_price * i.quantity, 0)
+    // Drop any code whose discount the cart can no longer cover, mirroring
+    // Medusa removing a promotion once the order stops qualifying.
+    cart.promotions = cart.promotions.filter((p) => p.is_automatic || (KNOWN_CODES[p.code] ?? 0) <= goods)
+    cart.discount_total = cart.promotions.reduce((s, p) => s + (KNOWN_CODES[p.code] ?? 0), 0)
+    cart.item_total = goods
+    cart.total = goods - cart.discount_total
   }
 
   // Return a fresh copy each time (the real API returns new JSON), so React sees
   // a new object reference and re-renders.
-  const snapshot = () => (cart ? { ...cart, items: cart.items.map((i) => ({ ...i })) } : cart)
+  const snapshot = () =>
+    cart ? { ...cart, items: cart.items.map((i) => ({ ...i })), promotions: cart.promotions.map((p) => ({ ...p })) } : cart
 
   const ok = (body: unknown) => ({
     ok: true,
@@ -48,6 +76,12 @@ export function installCartMock() {
     text: async () => JSON.stringify(body),
   })
   const notFound = () => ({ ok: false, status: 404, json: async () => ({}), text: async () => 'not found' })
+  const badRequest = (message: string) => ({
+    ok: false,
+    status: 400,
+    json: async () => ({ type: 'invalid_data', message }),
+    text: async () => JSON.stringify({ type: 'invalid_data', message }),
+  })
 
   const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
     const method = init?.method ?? 'GET'
@@ -68,7 +102,29 @@ export function installCartMock() {
     }
 
     if (path === '/store/carts' && method === 'POST') {
-      cart = { id: `cart_${++seq}`, email: null, item_total: 0, total: 0, items: [] }
+      cart = { id: `cart_${++seq}`, email: null, item_total: 0, discount_total: 0, total: 0, items: [], promotions: [] }
+      return ok({ cart: snapshot() })
+    }
+
+    // POST/DELETE /store/carts/:id/promotions
+    const promo = path.match(/^\/store\/carts\/([^/]+)\/promotions$/)
+    if (promo) {
+      if (!cart) return notFound()
+      const codes: string[] = body.promo_codes ?? []
+      if (method === 'POST') {
+        for (const raw of codes) {
+          const code = String(raw)
+          // Draft promotion: 200, but nothing applied.
+          if (DRAFT_CODES.has(code)) continue
+          if (!(code in KNOWN_CODES)) return badRequest(`The promotion code ${code} is invalid`)
+          if (cart.promotions.some((p) => p.code === code)) continue
+          cart.promotions.push({ id: `promo_${code}`, code, is_automatic: false })
+        }
+      } else if (method === 'DELETE') {
+        const drop = codes.map((c) => String(c))
+        cart.promotions = cart.promotions.filter((p) => !drop.includes(p.code))
+      }
+      recompute()
       return ok({ cart: snapshot() })
     }
 

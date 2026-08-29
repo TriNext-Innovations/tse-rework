@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/layout'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
+const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
 
 type LineItem = { id: number; sku: string; description: string; qty: string }
 
@@ -54,7 +55,7 @@ export default function QuotePage() {
     try {
       const res = await fetch(`${BACKEND}/store/b2b/quote`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-publishable-api-key': PUB_KEY },
         body: JSON.stringify({
           company_name: company,
           contact_name: contact,

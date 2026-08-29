@@ -106,7 +106,7 @@ export default async function CompatibilityPage({ searchParams }: Props) {
                 <input
                   name="model"
                   defaultValue={model}
-                  placeholder="e.g. HP LaserJet 1020"
+                  placeholder="e.g. Brother DCP-L3520cdw"
                   className="flex-1 px-4 py-3 rounded-[14px] bg-[var(--surface)] border border-[var(--line-2)] text-sm outline-none"
                 />
                 <button
@@ -148,7 +148,7 @@ export default async function CompatibilityPage({ searchParams }: Props) {
 
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 text-xs text-[var(--muted)] mb-6">
-              <Link href="/compatibility" className="hover:text-[var(--ink)] transition-colors">All printers</Link>
+              <Link href="/printers" className="hover:text-[var(--ink)] transition-colors">All printers</Link>
               <span>/</span>
               <span className="text-[var(--ink)]">{model}</span>
             </div>
@@ -248,9 +248,9 @@ export default async function CompatibilityPage({ searchParams }: Props) {
           <div className="mx-auto max-w-7xl">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-8 border-t border-[var(--line-2)]">
               {[
-                { step: '01', heading: 'Enter your printer', body: 'Type your printer brand and model — e.g. "HP LaserJet 1020" or "Canon PIXMA G3410".' },
+                { step: '01', heading: 'Enter your printer', body: 'Type your printer brand and model — e.g. "Brother DCP-L3520cdw" or "Canon PIXMA G3410".' },
                 { step: '02', heading: 'See compatible cartridges', body: 'We show every generic cartridge in our range that works with your printer, with price and SKU.' },
-                { step: '03', heading: 'Add to cart', body: 'Order online or call us. Order before noon for next-day delivery to JHB/PTA.' },
+                { step: '03', heading: 'Add to cart', body: 'Order online or call us. Order before noon and choose Overnight for next-business-day delivery to JHB/PTA.' },
               ].map(({ step, heading, body }) => (
                 <div key={step} className="flex flex-col gap-3">
                   <div className="font-display text-5xl text-[var(--ink)]/8 leading-none">{step}</div>

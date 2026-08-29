@@ -41,6 +41,14 @@ ENV NODE_OPTIONS="--max-old-space-size=1536"
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
 
+# Workspace packages. node_modules/@tse/* are pnpm symlinks into ./packages,
+# so without this they dangle and anything importing @tse/types fails to
+# resolve. That breaks at BOOT, not at build: medusa compiles src/api/** at
+# runtime, so a missing workspace package sails through `docker build` and
+# then crash-loops the container with "Cannot find module '@tse/types'".
+# (Took prod's API down for ~3 min on 2026-08-06 — see docs/PROD-DEPLOY.md.)
+COPY --from=builder /app/packages ./packages
+
 # Compiled backend (dist/) and admin dashboard
 COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
 

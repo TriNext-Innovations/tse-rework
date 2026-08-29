@@ -27,6 +27,9 @@ patchedDependencies:
   '@medusajs/dashboard@2.17.2':
     hash: ilph7nh64vjzhge243alqyw5u4
     path: patches/@medusajs__dashboard@2.17.2.patch
+  '@medusajs/medusa@2.17.2':
+    hash: j7arlnfzsh5ifnmh3zlu5plwom
+    path: patches/@medusajs__medusa@2.17.2.patch
 
 importers:
 
@@ -64,7 +67,7 @@ importers:
         version: 2.17.2(@medusajs/cli@2.13.6(@types/node@22.20.1))(@types/node@22.20.1)(ioredis@5.11.1)(vite@5.4.21(@types/node@22.20.1)(lightningcss@1.32.0)(terser@5.48.0))(zod@4.2.0)
       '@medusajs/medusa':
         specifier: ^2.17.2
-        version: 2.17.2(@medusajs/admin-sdk@2.17.2)(@medusajs/cli@2.13.6(@types/node@22.20.1))(@medusajs/dashboard@2.17.2(patch_hash=ilph7nh64vjzhge243alqyw5u4)(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(typescript@6.0.3))(@medusajs/framework@2.17.2(@medusajs/cli@2.13.6(@types/node@22.20.1))(@types/node@22.20.1)(ioredis@5.11.1)(vite@5.4.21(@types/node@22.20.1)(lightningcss@1.32.0)(terser@5.48.0))(zod@4.2.0))(@medusajs/icons@2.17.2(react@19.2.8))(@medusajs/ui@4.1.19(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3))(@types/node@22.20.1)(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(awilix@8.0.1)(lightningcss@1.32.0)(picomatch@4.0.5)(posthog-node@5.29.2(rxjs@7.8.2))(react-dom@19.2.8(react@19.2.8))(react-router-dom@6.30.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)(terser@5.48.0)(tsx@4.23.1)(typescript@6.0.3)(yaml@2.9.0)
+        version: 2.17.2(patch_hash=j7arlnfzsh5ifnmh3zlu5plwom)(@medusajs/admin-sdk@2.17.2)(@medusajs/cli@2.13.6(@types/node@22.20.1))(@medusajs/dashboard@2.17.2(patch_hash=ilph7nh64vjzhge243alqyw5u4)(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(typescript@6.0.3))(@medusajs/framework@2.17.2(@medusajs/cli@2.13.6(@types/node@22.20.1))(@types/node@22.20.1)(ioredis@5.11.1)(vite@5.4.21(@types/node@22.20.1)(lightningcss@1.32.0)(terser@5.48.0))(zod@4.2.0))(@medusajs/icons@2.17.2(react@19.2.8))(@medusajs/ui@4.1.19(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3))(@types/node@22.20.1)(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(awilix@8.0.1)(lightningcss@1.32.0)(picomatch@4.0.5)(posthog-node@5.29.2(rxjs@7.8.2))(react-dom@19.2.8(react@19.2.8))(react-router-dom@6.30.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)(terser@5.48.0)(tsx@4.23.1)(typescript@6.0.3)(yaml@2.9.0)
       '@sentry/node':
         specifier: ^10.68.0
         version: 10.68.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.221.0(@opentelemetry/api@1.9.1))
@@ -5492,6 +5495,7 @@ packages:
   eslint@9.39.4:
     resolution: {integrity: sha512-XoMjdBOwe/esVgEvLmNsD3IRHkm7fbKIUGvrleloJXUZgDHig2IPWNniv+GwjyJXzuNqVjlr5+4yVUZjycJwfQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
     peerDependencies:
       jiti: '*'
@@ -9915,7 +9919,7 @@ snapshots:
     dependencies:
       '@medusajs/framework': 2.17.2(@medusajs/cli@2.13.6(@types/node@22.20.1))(@types/node@22.20.1)(ioredis@5.11.1)(vite@5.4.21(@types/node@22.20.1)(lightningcss@1.32.0)(terser@5.48.0))(zod@4.2.0)
 
-  '@medusajs/medusa@2.17.2(@medusajs/admin-sdk@2.17.2)(@medusajs/cli@2.13.6(@types/node@22.20.1))(@medusajs/dashboard@2.17.2(patch_hash=ilph7nh64vjzhge243alqyw5u4)(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(typescript@6.0.3))(@medusajs/framework@2.17.2(@medusajs/cli@2.13.6(@types/node@22.20.1))(@types/node@22.20.1)(ioredis@5.11.1)(vite@5.4.21(@types/node@22.20.1)(lightningcss@1.32.0)(terser@5.48.0))(zod@4.2.0))(@medusajs/icons@2.17.2(react@19.2.8))(@medusajs/ui@4.1.19(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3))(@types/node@22.20.1)(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(awilix@8.0.1)(lightningcss@1.32.0)(picomatch@4.0.5)(posthog-node@5.29.2(rxjs@7.8.2))(react-dom@19.2.8(react@19.2.8))(react-router-dom@6.30.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)(terser@5.48.0)(tsx@4.23.1)(typescript@6.0.3)(yaml@2.9.0)':
+  '@medusajs/medusa@2.17.2(patch_hash=j7arlnfzsh5ifnmh3zlu5plwom)(@medusajs/admin-sdk@2.17.2)(@medusajs/cli@2.13.6(@types/node@22.20.1))(@medusajs/dashboard@2.17.2(patch_hash=ilph7nh64vjzhge243alqyw5u4)(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(typescript@6.0.3))(@medusajs/framework@2.17.2(@medusajs/cli@2.13.6(@types/node@22.20.1))(@types/node@22.20.1)(ioredis@5.11.1)(vite@5.4.21(@types/node@22.20.1)(lightningcss@1.32.0)(terser@5.48.0))(zod@4.2.0))(@medusajs/icons@2.17.2(react@19.2.8))(@medusajs/ui@4.1.19(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3))(@types/node@22.20.1)(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(awilix@8.0.1)(lightningcss@1.32.0)(picomatch@4.0.5)(posthog-node@5.29.2(rxjs@7.8.2))(react-dom@19.2.8(react@19.2.8))(react-router-dom@6.30.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)(terser@5.48.0)(tsx@4.23.1)(typescript@6.0.3)(yaml@2.9.0)':
     dependencies:
       '@inquirer/checkbox': 2.5.0
       '@inquirer/confirm': 2.0.17

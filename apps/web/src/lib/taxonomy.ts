@@ -37,3 +37,26 @@ export const TYPE_PARENT: Record<string, string> = Object.fromEntries(
 export function cartridgeTypeLabel(value: unknown): string | null {
   return TYPE_CATEGORIES.find((t) => t.key === value)?.label ?? null
 }
+
+/**
+ * Is this category a brand (as opposed to a type category, or a stray)?
+ *
+ * A brand always sits *under* a type category. Name-matching alone is not
+ * enough: the live catalogue carries an empty top-level "Ink" category, and
+ * because its name is not one of the two type names it was being listed as a
+ * brand in the nav and the filter panel — a filter that can only ever return
+ * nothing.
+ *
+ * `parent_category` is only consulted when it was actually requested. Some
+ * callers fetch the tree with `include_descendants_tree` and no parent fields,
+ * where the key is absent; there we fall back to the name check rather than
+ * silently classifying every brand as a stray.
+ */
+export function isBrandCategory(c: {
+  name: string
+  parent_category?: { name?: string } | null
+}): boolean {
+  if (TYPE_CATEGORY_NAMES.has(c.name)) return false
+  if (c.parent_category !== undefined) return Boolean(c.parent_category?.name)
+  return true
+}

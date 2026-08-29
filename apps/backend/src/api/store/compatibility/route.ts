@@ -104,8 +104,15 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     )
     if (variants.length) {
       const productIds = [...new Set(variants.map((v: any) => v.product_id as string))]
+      // `status: "published"` is load-bearing. `cartridge_compat` records a
+      // physical fact — this cartridge fits this printer — and keeps recording
+      // it after the product is delisted. `delist-products.cjs` sets
+      // `status='draft'` and never touches the compat table, so without this
+      // filter drafted products came back with live handles and the storefront
+      // linked to them: 40 dead handles across 418 link positions, and 138
+      // printer pages where every single link 404'd.
       const products = await productModule.listProducts(
-        { id: { $in: productIds } },
+        { id: { $in: productIds }, status: "published" },
         {
           select: ["id", "title", "thumbnail", "handle"],
           relations: ["images"],
@@ -135,22 +142,34 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 
   // Dedupe by product (when matched) so colour variants of the same cartridge
   // collapse into one card. SKUs without a matched product stay individual.
+  // Only cartridges that resolve to a published product. A row with no product
+  // is a compatibility fact with nothing to sell: it rendered as a card with a
+  // null title and an `href="/products/null"`, which is a dead end for a shopper
+  // who arrived on a buying query and a broken link for a crawler. The endpoint's
+  // contract is "cartridges you can buy that fit this printer".
   const seen = new Set<string>()
   const results: any[] = []
+  let dropped = 0
   for (const r of rows) {
     const product = variantMap.get(r.sku)
-    const key = product?.product_id ?? r.sku
-    if (seen.has(key)) continue
-    seen.add(key)
+    if (!product?.handle) {
+      dropped++
+      continue
+    }
+    if (seen.has(product.product_id)) continue
+    seen.add(product.product_id)
     results.push({
       sku:           r.sku,
       printer_brand: r.brand,
       printer_model: r.model,
-      product_id:    product?.product_id ?? null,
-      title:         product?.title ?? null,
-      thumbnail:     product?.thumbnail ?? null,
-      handle:        product?.handle ?? null,
+      product_id:    product.product_id,
+      title:         product.title,
+      thumbnail:     product.thumbnail,
+      handle:        product.handle,
     })
+  }
+  if (dropped) {
+    console.log(`[compat] dropped ${dropped} rows with no published product`)
   }
 
   console.log(`[compat] returning ${results.length} deduped results (from ${rows.length} rows)`)

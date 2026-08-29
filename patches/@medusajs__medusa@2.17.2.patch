@@ -1,0 +1,42 @@
+diff --git a/dist/api/admin/promotions/utils/rule-attributes-map.js b/dist/api/admin/promotions/utils/rule-attributes-map.js
+index d89c244d1699c7836c3cc73771add56588a09cdb..18eb54128a2b9c89a7253e905cc655ca65e3be13 100644
+--- a/dist/api/admin/promotions/utils/rule-attributes-map.js
++++ b/dist/api/admin/promotions/utils/rule-attributes-map.js
+@@ -42,6 +42,37 @@ const ruleAttributes = [
+         field_type: "multiselect",
+         operators: Object.values(operators_map_1.operatorsMap),
+     },
++    /*
++      patched(TSE): threshold promotions ("R50 off orders over R1000").
++
++      The promotion engine already supports gte/gt/lte/lt (see
++      @medusajs/promotion evaluateRuleValueCondition) and the cart context
++      already carries item_subtotal (see core-flows cartFieldsForRefreshSteps),
++      but upstream never exposes a numeric cart attribute here, so the Admin
++      rule builder has nothing to offer. This adds one.
++
++      item_subtotal is products-only, pre-discount and excl. tax, so the
++      threshold cannot drift as other promotions apply. Amounts are in rands
++      (see scripts/migrate-prices-to-rands.ts), i.e. enter 1000 for R1000.
++
++      Single operator on purpose: the dashboard auto-selects the operator when
++      exactly one is offered, so the row reads "Cart subtotal / at least / 1000"
++      with no dropdown to get wrong. Add LTE here if a cap is ever needed.
++    */
++    {
++        id: "item_subtotal",
++        value: "item_subtotal",
++        label: "Cart subtotal (excl. tax and shipping)",
++        required: false,
++        field_type: "number",
++        operators: [
++            {
++                id: utils_1.RuleOperator.GTE,
++                value: utils_1.RuleOperator.GTE,
++                label: "At least",
++            },
++        ],
++    },
+ ];
+ const itemsAttributes = [
+     {

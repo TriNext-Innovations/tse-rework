@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTransition } from 'react'
-import { TYPE_CATEGORIES as TYPES, TYPE_CATEGORY_NAMES } from '@/lib/taxonomy'
+import { TYPE_CATEGORIES as TYPES, isBrandCategory } from '@/lib/taxonomy'
 
 type Category = {
   id: string
@@ -22,7 +22,7 @@ export function FilterPanel({ categories, onNavigate }: { categories: Category[]
   // brand appears under — so we can show only the relevant brands per type.
   const brandParents = new Map<string, Set<string>>()
   for (const c of categories) {
-    if (TYPE_CATEGORY_NAMES.has(c.name)) continue
+    if (!isBrandCategory(c)) continue
     const set = brandParents.get(c.name) ?? new Set<string>()
     if (c.parent_category?.name) set.add(c.parent_category.name)
     brandParents.set(c.name, set)

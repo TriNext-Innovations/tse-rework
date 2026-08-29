@@ -19,11 +19,12 @@ const SHOP_LINKS = [
 
 const HELP_LINKS = [
   { label: 'Delivery info', href: '/#delivery' },
-  { label: 'Returns & guarantee', href: '/#bento' },
+  { label: 'Returns & refunds', href: '/legal/returns' },
   { label: 'FAQ', href: '/#faq' },
+  { label: 'Terms & conditions', href: '/legal/terms' },
   { label: 'Privacy policy', href: '/legal/privacy' },
   { label: 'Cookie policy', href: '/legal/cookies' },
-  { label: 'Contact us', href: siteConfig.email.mailto },
+  { label: 'Contact us', href: '/contact' },
 ]
 
 export function Footer() {
@@ -129,7 +130,7 @@ export function Footer() {
               </li>
               <li>Fri · 8am–3pm</li>
               <li className="text-white/40 text-xs leading-relaxed pt-2">
-                Order before noon for same-day dispatch. Next-day delivery JHB/PTA.
+                Order before noon for same-day dispatch. Next-day delivery to JHB/PTA on Overnight.
               </li>
             </ul>
           </div>
@@ -153,6 +154,8 @@ export function Footer() {
           <div className="flex items-center gap-4 text-xs text-white/25">
             <Link href="/legal/privacy" className="hover:text-white/50 transition-colors">Privacy</Link>
             <Link href="/legal/cookies" className="hover:text-white/50 transition-colors">Cookies</Link>
+            <Link href="/legal/terms" className="hover:text-white/50 transition-colors">Terms</Link>
+            <Link href="/legal/returns" className="hover:text-white/50 transition-colors">Returns</Link>
           </div>
         </div>
       </div>

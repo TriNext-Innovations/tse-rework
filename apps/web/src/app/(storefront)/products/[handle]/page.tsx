@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Navbar } from '@/components/layout'
 import ProductDetail from './ProductDetail'
 import { TYPE_CATEGORY_NAMES as TYPE_CATS } from '@/lib/taxonomy'
+import { organizationRef } from '@/lib/structured-data'
 import { htmlToPlainText } from '@/lib/html-text'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
@@ -132,7 +133,7 @@ export default async function ProductPage({ params }: Props) {
       availability: 'https://schema.org/InStock',
       itemCondition: 'https://schema.org/NewCondition',
       url: canonical,
-      seller: { '@type': 'Organization', name: 'TSE Online' },
+      seller: organizationRef,
     }))
   const prices = offers.map((o: any) => o.price)
 
