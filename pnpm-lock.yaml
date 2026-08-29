@@ -91,8 +91,8 @@ importers:
         specifier: ^22.20.1
         version: 22.20.1
       '@types/pg':
-        specifier: ^8.11.11
-        version: 8.20.0
+        specifier: ^8.23.1
+        version: 8.23.1
       '@types/react':
         specifier: ^19.2.18
         version: 19.2.18
@@ -100,8 +100,8 @@ importers:
         specifier: ^19.2.4
         version: 19.2.4(@types/react@19.2.18)
       pg:
-        specifier: ^8.22.0
-        version: 8.22.0
+        specifier: ^8.23.0
+        version: 8.23.0
       ts-node:
         specifier: ^10.9.2
         version: 10.9.2(@types/node@22.20.1)(typescript@6.0.3)
@@ -4396,8 +4396,8 @@ packages:
   '@types/pg-pool@2.0.6':
     resolution: {integrity: sha512-TaAUE5rq2VQYxab5Ts7WZhKNmuN78Q6PiFonTDdpbx8a1H0M1vhy3rhiMjl+e2iHmogyMw7jZF4FrE6eJUy5HQ==}
 
-  '@types/pg@8.20.0':
-    resolution: {integrity: sha512-bEPFOaMAHTEP1EzpvHTbmwR8UsFyHSKsRisLIHVMXnpNefSbGA1bD6CVy+qKjGSqmZqNqBDV2azOBo8TgkcVow==}
+  '@types/pg@8.23.1':
+    resolution: {integrity: sha512-fKVHpikPdg4GKks3JuLEhvwSyvwzF23hnabPy6DD8ljVbC7+6J5dQzdv4arV6jqq57djnMgs1HKBxX4P8aBI3A==}
 
   '@types/pg@8.6.1':
     resolution: {integrity: sha512-1Kc4oAGzAl7uqUStZCDvaLFqZrW9qWSjXOmBfdgyBP5La7Us6Mg4GBvRlSoaZMhQF/zSj1C8CtKMBkoiT8eL8w==}
@@ -6817,12 +6817,6 @@ packages:
     peerDependencies:
       pg: '>=8.0'
 
-  pg-protocol@1.14.0:
-    resolution: {integrity: sha512-n5taZ1kO3s9ngDTVxsEznOqCyToTgz0FLuPq0B33COy5pPpuWJpY3/2oRBVETuOgzdqRXfWpM9HIhp2LBBT1BA==}
-
-  pg-protocol@1.15.0:
-    resolution: {integrity: sha512-cq9sECI5s0+uPUXjbz8ioyPJni6RzsRib0US67i5IoTZKw8fNeYlVE7u8F4dG7vEJJtc5wdD1K189lCCUwqWTQ==}
-
   pg-protocol@1.16.0:
     resolution: {integrity: sha512-sILXutLVjCLjcDuOmvhX5e2Z4cS5qG/6Bu3VkpFwdf/633ElGLpEh9bgmuI5I4sqKqkifQiGyiCcx1HdtrK7tg==}
 
@@ -6832,15 +6826,6 @@ packages:
 
   pg@8.20.0:
     resolution: {integrity: sha512-ldhMxz2r8fl/6QkXnBD3CR9/xg694oT6DZQ2s6c/RI28OjtSOpxnPrUCGOBJ46RCUxcWdx3p6kw/xnDHjKvaRA==}
-    engines: {node: '>= 16.0.0'}
-    peerDependencies:
-      pg-native: '>=3.0.1'
-    peerDependenciesMeta:
-      pg-native:
-        optional: true
-
-  pg@8.22.0:
-    resolution: {integrity: sha512-8wih1vVIBMxoUM2oB4soJsD9tDnDpLv4OXBJ+EJzFsvycD+lfyIreC2gGHq78f8jbLLt+bvlPTFdFZfJkOuzAA==}
     engines: {node: '>= 16.0.0'}
     peerDependencies:
       pg-native: '>=3.0.1'
@@ -9752,10 +9737,10 @@ snapshots:
 
   '@medusajs/deps@2.17.2(@types/node@22.20.1)':
     dependencies:
-      '@mikro-orm/cli': 6.6.14(pg@8.22.0)
+      '@mikro-orm/cli': 6.6.14(pg@8.23.0)
       '@mikro-orm/core': 6.6.14
-      '@mikro-orm/knex': 6.6.14(@mikro-orm/core@6.6.14)(pg@8.22.0)
-      '@mikro-orm/migrations': 6.6.14(@mikro-orm/core@6.6.14)(@types/node@22.20.1)(pg@8.22.0)
+      '@mikro-orm/knex': 6.6.14(@mikro-orm/core@6.6.14)(pg@8.23.0)
+      '@mikro-orm/migrations': 6.6.14(@mikro-orm/core@6.6.14)(@types/node@22.20.1)(pg@8.23.0)
       '@mikro-orm/postgresql': 6.6.14(@mikro-orm/core@6.6.14)
       '@opentelemetry/api': 1.9.1
       '@opentelemetry/instrumentation-pg': 0.52.0(@opentelemetry/api@1.9.1)
@@ -9763,7 +9748,7 @@ snapshots:
       '@opentelemetry/sdk-node': 0.220.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-trace-node': 2.9.0(@opentelemetry/api@1.9.1)
       awilix: 8.0.1
-      pg: 8.22.0
+      pg: 8.23.0
       zod: 4.2.0
     transitivePeerDependencies:
       - '@types/node'
@@ -10362,11 +10347,11 @@ snapshots:
       - supports-color
       - tedious
 
-  '@mikro-orm/cli@6.6.14(pg@8.22.0)':
+  '@mikro-orm/cli@6.6.14(pg@8.23.0)':
     dependencies:
       '@jercle/yargonaut': 1.1.5
       '@mikro-orm/core': 6.6.14
-      '@mikro-orm/knex': 6.6.14(@mikro-orm/core@6.6.14)(pg@8.22.0)
+      '@mikro-orm/knex': 6.6.14(@mikro-orm/core@6.6.14)(pg@8.23.0)
       fs-extra: 11.3.3
       tsconfig-paths: 4.2.0
       yargs: 17.7.2
@@ -10451,11 +10436,11 @@ snapshots:
       - supports-color
       - tedious
 
-  '@mikro-orm/knex@6.6.14(@mikro-orm/core@6.6.14)(pg@8.22.0)':
+  '@mikro-orm/knex@6.6.14(@mikro-orm/core@6.6.14)(pg@8.23.0)':
     dependencies:
       '@mikro-orm/core': 6.6.14
       fs-extra: 11.3.3
-      knex: 3.2.10(pg@8.22.0)
+      knex: 3.2.10(pg@8.23.0)
       sqlstring: 2.3.3
     transitivePeerDependencies:
       - mysql
@@ -10487,10 +10472,10 @@ snapshots:
       - supports-color
       - tedious
 
-  '@mikro-orm/migrations@6.6.14(@mikro-orm/core@6.6.14)(@types/node@22.20.1)(pg@8.22.0)':
+  '@mikro-orm/migrations@6.6.14(@mikro-orm/core@6.6.14)(@types/node@22.20.1)(pg@8.23.0)':
     dependencies:
       '@mikro-orm/core': 6.6.14
-      '@mikro-orm/knex': 6.6.14(@mikro-orm/core@6.6.14)(pg@8.22.0)
+      '@mikro-orm/knex': 6.6.14(@mikro-orm/core@6.6.14)(pg@8.23.0)
       fs-extra: 11.3.3
       umzug: 3.8.2(@types/node@22.20.1)
     transitivePeerDependencies:
@@ -13950,18 +13935,18 @@ snapshots:
 
   '@types/pg-pool@2.0.6':
     dependencies:
-      '@types/pg': 8.20.0
+      '@types/pg': 8.23.1
 
-  '@types/pg@8.20.0':
+  '@types/pg@8.23.1':
     dependencies:
       '@types/node': 22.20.1
-      pg-protocol: 1.14.0
+      pg-protocol: 1.16.0
       pg-types: 2.2.0
 
   '@types/pg@8.6.1':
     dependencies:
       '@types/node': 22.20.1
-      pg-protocol: 1.15.0
+      pg-protocol: 1.16.0
       pg-types: 2.2.0
 
   '@types/pluralize@0.0.33': {}
@@ -15920,27 +15905,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  knex@3.2.10(pg@8.22.0):
-    dependencies:
-      colorette: 2.0.19
-      commander: 10.0.1
-      debug: 4.3.4
-      escalade: 3.2.0
-      esm: 3.2.25
-      get-package-type: 0.1.0
-      getopts: 2.3.0
-      interpret: 2.2.0
-      lodash: 4.18.1
-      pg-connection-string: 2.6.2
-      rechoir: 0.8.0
-      resolve-from: 5.0.0
-      tarn: 3.1.0
-      tildify: 2.0.0
-    optionalDependencies:
-      pg: 8.22.0
-    transitivePeerDependencies:
-      - supports-color
-
   knex@3.2.10(pg@8.23.0):
     dependencies:
       colorette: 2.0.19
@@ -16512,17 +16476,9 @@ snapshots:
     dependencies:
       pg: 8.20.0
 
-  pg-pool@3.14.0(pg@8.22.0):
-    dependencies:
-      pg: 8.22.0
-
   pg-pool@3.14.0(pg@8.23.0):
     dependencies:
       pg: 8.23.0
-
-  pg-protocol@1.14.0: {}
-
-  pg-protocol@1.15.0: {}
 
   pg-protocol@1.16.0: {}
 
@@ -16538,17 +16494,7 @@ snapshots:
     dependencies:
       pg-connection-string: 2.14.0
       pg-pool: 3.14.0(pg@8.20.0)
-      pg-protocol: 1.15.0
-      pg-types: 2.2.0
-      pgpass: 1.0.5
-    optionalDependencies:
-      pg-cloudflare: 1.4.0
-
-  pg@8.22.0:
-    dependencies:
-      pg-connection-string: 2.14.0
-      pg-pool: 3.14.0(pg@8.22.0)
-      pg-protocol: 1.15.0
+      pg-protocol: 1.16.0
       pg-types: 2.2.0
       pgpass: 1.0.5
     optionalDependencies:
