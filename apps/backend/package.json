@@ -9,6 +9,7 @@
     "lint": "eslint src",
     "type-check": "tsc --noEmit",
     "migrate": "medusa db:migrate",
+    "key": "medusa exec src/scripts/print-publishable-key.ts",
     "migrate:compat": "medusa exec src/scripts/migrate-compatibility.ts",
     "migrate:compat:v2": "medusa exec src/scripts/migrate-compatibility-v2.ts",
     "seed:compat": "medusa exec src/scripts/seed-compatibility.ts",
