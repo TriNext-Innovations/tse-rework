@@ -129,14 +129,20 @@ jobs:
         env:
           NODE_OPTIONS: --max-old-space-size=3072
 
-  # Release gate: build the actual prod images so Dockerfile/context breakage
-  # (e.g. the patches/ COPY incident) fails the release PR, not the deploy.
+  # Build the actual prod images so Dockerfile/context breakage (e.g. the
+  # patches/ COPY incident) fails a PR rather than the deploy — and boot the
+  # backend image, because building it proves nothing about whether it starts.
+  #
+  # Runs on PRs into develop as well as main. Features merge into develop, so
+  # gating only the release PR would catch a broken image once everything is
+  # already batched, when the cheap moment to catch it is the feature PR that
+  # introduced it.
   docker:
     name: Docker images
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: unit
-    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    if: github.event_name == 'pull_request' && (github.base_ref == 'main' || github.base_ref == 'develop')
 
     env:
       IMAGE: tse-backend:ci
