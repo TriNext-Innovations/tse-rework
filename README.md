@@ -144,6 +144,9 @@ docker compose down
 | `feature/*` | Feature branches, PR into develop |
 | `initial/Phase-0` | Phase 0 migration & scaffold work |
 
+Features PR into `develop`; a rolling `develop → main` release PR batches them
+and merging it deploys to production. See [docs/RELEASING.md](docs/RELEASING.md).
+
 ---
 
 ## Deployment
