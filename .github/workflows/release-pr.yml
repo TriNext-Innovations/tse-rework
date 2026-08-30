@@ -55,11 +55,32 @@ jobs:
           fi
           echo "pr=$PR" >> "$GITHUB_OUTPUT"
 
-          AUTHORS=$(git log origin/main..HEAD --no-merges --pretty='%an' | sort -u)
-          if [ "$AUTHORS" = "dependabot[bot]" ]; then
+          # Auto-shipping skips human review, so it must fail closed. Two
+          # independent gates, both of which have to pass.
+          #
+          # Gate 1 — authorship, INCLUDING merge commits. This used to pass
+          # --no-merges, which made a human merge commit invisible: on
+          # 2026-08-29 a `git merge main` into develop was classified
+          # Dependabot-only, so the release self-merged and deployed with no
+          # human involved. Match on the author email rather than the display
+          # name, which anyone can set to anything.
+          AUTHORS=$(git log origin/main..HEAD --pretty='%ae' | sort -u)
+          NON_BOT=$(printf '%s\n' "$AUTHORS" | grep -vE '(^|\+)dependabot(\[bot\])?@' || true)
+
+          # Gate 2 — the diff itself. Even if authorship somehow says bot, a
+          # release touching application code must never ship unreviewed.
+          # Dependabot only edits manifests, the lockfile and workflow pins.
+          OFFENDING=$(git diff --name-only origin/main..HEAD \
+            | grep -vE '(^|/)package\.json$|^pnpm-lock\.yaml$|^\.github/workflows/[^/]+\.ya?ml$' || true)
+
+          if [ -z "$NON_BOT" ] && [ -z "$OFFENDING" ]; then
             echo "deps_only=true" >> "$GITHUB_OUTPUT"
+            echo "Release is Dependabot-only by both authorship and diff — eligible to auto-ship"
           else
             echo "deps_only=false" >> "$GITHUB_OUTPUT"
+            echo "Not auto-shipping — needs a human to merge."
+            [ -n "$NON_BOT" ] && echo "  non-Dependabot authors: $(printf '%s' "$NON_BOT" | tr '\n' ' ')"
+            [ -n "$OFFENDING" ] && echo "  non-dependency files changed: $(printf '%s' "$OFFENDING" | head -5 | tr '\n' ' ')"
           fi
 
       - name: Auto-ship Dependabot-only releases
