@@ -5,16 +5,32 @@ How a change gets from a branch to production.
 ## The flow
 
 ```
-feature/*  ──PR──►  develop  ──rolling release PR──►  main  ──push──►  production
-                                    (#404)                   deploy.yml
+feature/*  ──PR──►  develop  ─────┐
+                                  ├──►  release/YYYY-MM  ──human PR──►  main  ──►  production
+dependabot/*  ──auto-merge────────┘        (rolling release PR)                    deploy.yml
 ```
 
 - **`develop`** is the default branch and the target for every feature PR.
-- **`release-pr.yml`** keeps a single `develop → main` PR open and rewrites its
-  body with the changelog on every push to `develop`.
-- **Merging that PR is the release.** The push to `main` triggers `deploy.yml`.
-- A release where every commit is Dependabot's ships itself: the workflow waits
-  for checks, merges, and dispatches the deploy.
+- **`release/YYYY-MM`** is the release branch, cut per cycle. Dependabot targets
+  it directly and its green PRs auto-merge there, source branch deleted.
+- **`release-pr.yml`** keeps a single `release/* → main` PR open and rewrites its
+  body with the changelog on every push to the release branch.
+- **Merging that PR is the release**, and it is always a human action. The push
+  to `main` triggers `deploy.yml`.
+
+## Nothing deploys itself
+
+There is no automation anywhere that deploys, and none that merges to `main`.
+`deploy.yml` runs on a push to `main` or a manual dispatch, and the only thing
+that pushes to `main` is a person merging the release PR.
+
+This is deliberate. `release-pr.yml` used to auto-merge and dispatch a deploy
+when a release looked Dependabot-only, deciding that with
+`git log --no-merges`. On 2026-08-29 a human merge commit was invisible to that
+check, so the release merged itself and deployed unreviewed. It failed its
+health check and rolled back, but no automation should have been able to make
+that call. Auto-merge now only ever targets a `release/*` branch, so the worst
+it can do is put a dependency bump on a branch nobody has shipped yet.
 
 ## Why not merge features straight into `main`
 
@@ -31,10 +47,14 @@ the same drift starts again.
 
 ## Cutting a release
 
-1. **Land the features.** Feature PRs merge into `develop`. CI must be green.
-2. **Triage Dependabot.** Its PRs target `develop` and will join the release.
-   Major-version jumps deserve their own release rather than riding along with
-   features.
+0. **Cut the branch.** `git checkout -b release/YYYY-MM develop`, push it, and
+   update `target-branch` in `.github/dependabot.yml` to match. The rolling
+   release PR opens itself on the first push.
+1. **Land the features.** Feature PRs merge into `develop`, then `develop`
+   merges into the release branch. CI must be green.
+2. **Triage Dependabot.** Its PRs target the release branch and auto-merge on
+   green. Major-version jumps are labelled `major-bump` and wait for a human —
+   they deserve their own release rather than riding along with features.
 3. **Check the release PR.** `release-pr.yml` keeps it current; confirm its
    changelog matches what you expect to ship.
 4. **Merge it.** This deploys. `scripts/prod-deploy.sh` smoke-tests the backend
