@@ -1,10 +1,15 @@
 name: CI
 
+# release/** matters as much as main and develop: dependency updates now target
+# the release branch and auto-merge there on green. Without it in these filters
+# those PRs have no checks at all, and `gh pr merge --auto` merges a PR the
+# moment it is mergeable — so an untested bump would land on the branch that is
+# next in line to be deployed.
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, 'release/**']
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, 'release/**']
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -142,7 +147,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: unit
-    if: github.event_name == 'pull_request' && (github.base_ref == 'main' || github.base_ref == 'develop')
+    if: github.event_name == 'pull_request' && (github.base_ref == 'main' || github.base_ref == 'develop' || startsWith(github.base_ref, 'release/'))
 
     env:
       IMAGE: tse-backend:ci
