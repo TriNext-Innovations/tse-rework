@@ -15,6 +15,9 @@ Reference documents for the TSE Online build. The root [README.md](../README.md)
 | [BUILD-PLAN.md](BUILD-PLAN.md) | Milestone breakdown and delivery timeline. |
 | [PROD-DEPLOY.md](PROD-DEPLOY.md) | Production deploy runbook — first-run sequence, certbot bootstrap, gotchas from the 2026-05-20 dev cutover, cert renewal, DR. |
 | [RETAINER-SCOPE.md](RETAINER-SCOPE.md) | Monthly retainer services, SLAs, and handover terms. |
+| [COMMERCIAL-FINDINGS.md](COMMERCIAL-FINDINGS.md) | Legacy store sales analysis (Jan 2025 – Sep 2026): revenue trend, buyer profile, catalogue concentration, and the priorities they imply. |
+| [CLIENT-PENDING.md](CLIENT-PENDING.md) | Open questions, confirmations and assets awaited from the client. |
+| [client-meeting-2026-09.html](client-meeting-2026-09.html) | Client review deck (Sep 2026) — cutover status, the two open decisions, revenue findings and the recovery plan. |
 
 ---
 

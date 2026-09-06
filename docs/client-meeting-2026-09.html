@@ -1,0 +1,418 @@
+<title>TSE Cutover &amp; Recovery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  /* TSE sells CMYK toner — the four separation plates are the palette.
+     C/M/Y are the client's confirmed brand tokens; K is the ground. */
+  :root{
+    --k:#0d0f12; --k-surface:#15181d; --k-line:#252a32;
+    --c:#41e0f5; --m:#ee75e9; --y:#dfe344;
+    --text:#e9ecef; --muted:#8d949e; --dim:#616872;
+    --display:'Archivo',system-ui,sans-serif;
+    --body:'IBM Plex Sans',system-ui,sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+    --measure:64ch;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--k); color:var(--text);
+    font-family:var(--body); font-size:17px; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .slide{
+    border-bottom:1px solid var(--k-line);
+    padding:clamp(48px,7vw,96px) clamp(20px,5vw,64px);
+  }
+  .inner{max-width:1000px;margin:0 auto}
+
+  /* eyebrow: plate letter + step number. The meeting runs in order,
+     so the numbering encodes real sequence. */
+  .eyebrow{
+    display:flex;align-items:center;gap:14px;
+    font-family:var(--mono);font-size:12px;font-weight:500;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+    margin-bottom:28px;
+  }
+  .plate{
+    width:26px;height:26px;flex:none;display:grid;place-items:center;
+    border-radius:50%;color:var(--k);font-weight:600;font-size:12px;
+    background:var(--accent,var(--c));
+  }
+  .eyebrow .rule{flex:1;height:1px;background:var(--k-line)}
+
+  h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;letter-spacing:-.02em}
+  h1{font-size:clamp(38px,6vw,68px);font-weight:800;line-height:1.02}
+  h2{font-size:clamp(28px,3.8vw,44px);font-weight:700;line-height:1.1}
+  h3{font-size:19px;font-weight:600;letter-spacing:-.01em}
+  p{max-width:var(--measure)}
+  .lede{font-size:clamp(18px,2vw,21px);color:var(--muted);margin-top:20px}
+  .note{font-size:15px;color:var(--dim);max-width:var(--measure)}
+  strong{color:var(--text);font-weight:600}
+  .accent{color:var(--accent,var(--c))}
+
+  /* cover */
+  .cover{padding-top:clamp(72px,12vw,150px);padding-bottom:clamp(64px,10vw,120px)}
+  .bars{display:flex;gap:5px;margin-bottom:36px}
+  .bars i{display:block;height:7px;width:56px;border-radius:1px}
+  .meta{
+    display:flex;flex-wrap:wrap;gap:10px 34px;margin-top:44px;
+    font-family:var(--mono);font-size:13px;color:var(--muted);
+  }
+  .meta b{color:var(--text);font-weight:500}
+
+  /* figures */
+  .figure{font-family:var(--display);font-weight:800;letter-spacing:-.03em;
+    font-variant-numeric:tabular-nums;line-height:1}
+  .grid{display:grid;gap:1px;background:var(--k-line);border:1px solid var(--k-line);margin-top:36px}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+  .cell{background:var(--k-surface);padding:26px 24px}
+  .cell .k{font-family:var(--mono);font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted);display:block;margin-bottom:12px}
+  .cell .v{font-size:clamp(30px,4vw,40px)}
+  .cell .sub{font-size:14px;color:var(--dim);margin-top:8px}
+
+  /* chart */
+  .chartwrap{overflow-x:auto;margin-top:36px}
+  svg{display:block;max-width:100%;height:auto}
+  .ax{font-family:var(--mono);font-size:12px;fill:var(--muted)}
+  .barlbl{font-family:var(--mono);font-size:13px;fill:var(--text)}
+  .barval{font-family:var(--display);font-size:22px;font-weight:700;fill:var(--text)}
+
+  /* segmented share bar */
+  .share{display:flex;height:44px;margin-top:32px;border-radius:2px;overflow:hidden}
+  .share span{display:grid;place-items:center;font-family:var(--mono);
+    font-size:12px;font-weight:600;color:var(--k)}
+  .sharekey{display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:14px;
+    font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .sharekey i{display:inline-block;width:9px;height:9px;margin-right:7px;border-radius:2px}
+
+  /* lists */
+  ul.plain{list-style:none;padding:0;margin:28px 0 0;display:grid;gap:1px;
+    background:var(--k-line);border:1px solid var(--k-line)}
+  ul.plain li{background:var(--k-surface);padding:20px 24px;display:flex;gap:18px;align-items:flex-start}
+  ul.plain .n{font-family:var(--mono);font-size:12px;color:var(--accent,var(--c));
+    padding-top:3px;flex:none;width:22px;font-weight:600}
+  ul.plain .b{margin:0}
+  ul.plain .b p{margin:6px 0 0;font-size:15px;color:var(--muted)}
+
+  /* decision callout — border only on the thing that needs lifting */
+  .decision{border:1px solid var(--accent,var(--c));padding:28px 30px;margin-top:32px;
+    background:color-mix(in srgb,var(--accent,var(--c)) 7%,transparent)}
+  .decision .q{font-family:var(--mono);font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--accent,var(--c));margin-bottom:12px}
+  .decision p{margin:0}
+  .rec{margin-top:20px;padding-top:18px;border-top:1px solid var(--k-line);
+    font-size:15px}
+  .rec b{font-family:var(--mono);font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px;font-weight:500}
+
+  .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:40px;margin-top:36px}
+  .two p{margin-top:10px}
+  code{font-family:var(--mono);font-size:.88em;color:var(--c)}
+  @media (prefers-reduced-motion:no-preference){
+    a{transition:color .15s ease}
+  }
+  a{color:var(--c)}
+  a:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--c);outline-offset:3px}
+</style>
+
+<!-- COVER -->
+<section class="slide cover">
+  <div class="inner">
+    <div class="bars">
+      <i style="background:var(--c)"></i><i style="background:var(--m)"></i>
+      <i style="background:var(--y)"></i><i style="background:#4a5058"></i>
+    </div>
+    <h1>The new store is ready.<br>Now let's talk about<br>the numbers.</h1>
+    <p class="lede">A review of where TSE Online stands, two decisions we need from you,
+      and what the sales data says about turning the trend around.</p>
+    <div class="meta">
+      <span>Prepared for <b>TSE</b> — Technical Systems Engineering, Kya Sands</span>
+      <span>By <b>TriNext Innovations</b></span>
+      <span><b>6 September 2026</b></span>
+    </div>
+  </div>
+</section>
+
+<!-- 1. WHERE WE ARE -->
+<section class="slide" style="--accent:var(--c)">
+  <div class="inner">
+    <div class="eyebrow"><span class="plate">C</span>01 — Where we are<span class="rule"></span></div>
+    <h2>The new store is built, live, and safe to switch on</h2>
+    <p class="lede">The rebuild is done and running. The last technical piece — protecting your
+      Google rankings through the switchover — is now complete and tested.</p>
+
+    <div class="grid g3">
+      <div class="cell"><span class="k">Pages mapped</span>
+        <div class="figure v accent">832<span style="font-size:.5em;color:var(--dim)">/832</span></div>
+        <div class="sub">Every page Google has indexed now points to its correct new destination.</div></div>
+      <div class="cell"><span class="k">Landing on exact match</span>
+        <div class="figure v">532</div>
+        <div class="sub">Resolve to the precise replacement product or category page.</div></div>
+      <div class="cell"><span class="k">Status</span>
+        <div class="figure v" style="font-size:26px">Ready &amp; inert</div>
+        <div class="sub">Deployed but switched off. Nothing changes until you say go.</div></div>
+    </div>
+
+    <p class="note" style="margin-top:28px">Why this matters: retiring the old site is a
+      <strong>one-shot event for Google</strong>. A ranking page that lands on an error is a
+      ranking lost for good, not one that recovers. This is the work that prevents that.</p>
+  </div>
+</section>
+
+<!-- 2. DECISION ONE -->
+<section class="slide" style="--accent:var(--y)">
+  <div class="inner">
+    <div class="eyebrow"><span class="plate">Y</span>02 — Decision one<span class="rule"></span></div>
+    <h2>Which address should be your main one?</h2>
+
+    <div class="decision">
+      <div class="q">We need your answer</div>
+      <p><strong>tse.co.za</strong> — the name your customers already know, registered since
+        <strong>1997</strong>, carrying nearly three decades of search history and links.</p>
+      <p style="margin-top:14px"><strong>tse-cartridges.co.za</strong> — where the new store
+        currently lives. Newer, and the hyphen is easily mistyped or lost over the phone.</p>
+      <div class="rec">
+        <b>Our recommendation</b>
+        Keep <strong>tse.co.za</strong> as the main address and run the new store there.
+        It's the stronger asset and it's the one already on your invoices, signage and email.
+      </div>
+    </div>
+
+    <p class="note" style="margin-top:28px">Either option works technically — the redirect map
+      handles both. But it must be settled <strong>before</strong> we switch over, because it's
+      difficult and costly to reverse afterwards.</p>
+  </div>
+</section>
+
+<!-- 3. DECISION TWO -->
+<section class="slide" style="--accent:var(--y)">
+  <div class="inner">
+    <div class="eyebrow"><span class="plate">Y</span>03 — Decision two<span class="rule"></span></div>
+    <h2>Are you still stocking Samsung and Lexmark inkjet?</h2>
+
+    <div class="decision">
+      <div class="q">We need your answer</div>
+      <p>The new catalogue has no Samsung or Lexmark <strong>inkjet</strong> range, so those old
+        page links currently send customers to each brand's <strong>laser toner</strong> pages
+        instead.</p>
+      <div class="rec">
+        <b>What the sales data says</b>
+        Inkjet is just <strong>4%</strong> of your revenue, and neither Samsung nor Lexmark
+        appears anywhere in your top 25 sellers — in any format. On that basis the current
+        setup is sound. If you're bringing that stock back in, tell us and we'll change it.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4. THE NUMBERS -->
+<section class="slide" style="--accent:var(--m)">
+  <div class="inner">
+    <div class="eyebrow"><span class="plate">M</span>04 — The numbers<span class="rule"></span></div>
+    <h2>Online sales have more than halved in a year</h2>
+    <p class="lede">We reviewed the store's figures while preparing the switchover. This is the
+      trend we think you should see — and the reason we'd rather meet than send a status email.</p>
+
+    <div class="chartwrap">
+      <svg viewBox="0 0 720 310" role="img" aria-label="Net online sales, January to September: R73,485 in 2025 falling to R30,355 in 2026.">
+        <line x1="90" y1="30"  x2="690" y2="30"  stroke="#252a32" stroke-width="1"/>
+        <line x1="90" y1="82.5" x2="690" y2="82.5" stroke="#252a32" stroke-width="1"/>
+        <line x1="90" y1="135" x2="690" y2="135" stroke="#252a32" stroke-width="1"/>
+        <line x1="90" y1="187.5" x2="690" y2="187.5" stroke="#252a32" stroke-width="1"/>
+        <line x1="90" y1="240" x2="690" y2="240" stroke="#4a5058" stroke-width="1"/>
+        <text class="ax" x="80" y="34"  text-anchor="end">R80k</text>
+        <text class="ax" x="80" y="86"  text-anchor="end">R60k</text>
+        <text class="ax" x="80" y="139" text-anchor="end">R40k</text>
+        <text class="ax" x="80" y="191" text-anchor="end">R20k</text>
+        <text class="ax" x="80" y="244" text-anchor="end">R0</text>
+
+        <rect x="170" y="47"  width="140" height="193" fill="#4a5058"/>
+        <rect x="420" y="160" width="140" height="80"  fill="#ee75e9"/>
+
+        <text class="barval" x="240" y="38"  text-anchor="middle">R73,485</text>
+        <text class="barval" x="490" y="151" text-anchor="middle" fill="#ee75e9">R30,355</text>
+        <text class="barlbl" x="240" y="264" text-anchor="middle">Jan–Sep 2025</text>
+        <text class="barlbl" x="490" y="264" text-anchor="middle">Jan–Sep 2026</text>
+        <text class="ax" x="490" y="288" text-anchor="middle" fill="#ee75e9">down 59% year on year</text>
+      </svg>
+    </div>
+
+    <div class="grid g3">
+      <div class="cell"><span class="k">2025 full year</span><div class="figure v">R102,115</div></div>
+      <div class="cell"><span class="k">2026 at this rate</span><div class="figure v" style="color:var(--m)">R44,400</div></div>
+      <div class="cell"><span class="k">Orders per month</span><div class="figure v">3.8</div>
+        <div class="sub">76 orders across the last 20 months.</div></div>
+    </div>
+    <p class="note" style="margin-top:26px">We're not raising this as a criticism — the site has
+      been left largely untouched for some time. We're raising it because we think it's fixable,
+      and the rebuild is the moment to fix it.</p>
+  </div>
+</section>
+
+<!-- 5. WHO BUYS -->
+<section class="slide" style="--accent:var(--c)">
+  <div class="inner">
+    <div class="eyebrow"><span class="plate">C</span>05 — Who actually buys<span class="rule"></span></div>
+    <h2>Your online customers are businesses, not walk-in shoppers</h2>
+    <p class="lede">This was the clearest signal in the data, and it changes what the new store
+      should be good at.</p>
+
+    <div class="grid g3">
+      <div class="cell"><span class="k">Average order</span><div class="figure v accent">R1,743</div></div>
+      <div class="cell"><span class="k">Items per order</span><div class="figure v">3.9</div></div>
+      <div class="cell"><span class="k">Laser toner share</span><div class="figure v">96%</div>
+        <div class="sub">Inkjet accounts for the remaining 4%.</div></div>
+    </div>
+
+    <div class="two">
+      <div>
+        <h3>What that tells us</h3>
+        <p class="note">Offices and resellers buying several cartridges at a time — one order
+          alone took <strong>15 units</strong> of <code>HP 151A</code>. That's procurement,
+          not a household replacing one cartridge.</p>
+      </div>
+      <div>
+        <h3>What the store should do about it</h3>
+        <p class="note">Quantity pricing, a quote request for bigger baskets, purchase orders
+          and invoices, saved business accounts, and one-click reordering.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. WHERE THE MONEY IS -->
+<section class="slide" style="--accent:var(--c)">
+  <div class="inner">
+    <div class="eyebrow"><span class="plate">C</span>06 — Where the money is<span class="rule"></span></div>
+    <h2>Three brands carry almost all of it</h2>
+
+    <div class="share" aria-label="Share of top-25 revenue by brand: HP 46%, Canon 38%, Brother 13%, Ricoh 4%.">
+      <span style="background:#41e0f5;flex:45.9">HP 46%</span>
+      <span style="background:#ee75e9;flex:37.8">CANON 38%</span>
+      <span style="background:#dfe344;flex:12.8">BROTHER 13%</span>
+      <span style="background:#8d949e;flex:3.6">4%</span>
+    </div>
+    <div class="sharekey">
+      <span><i style="background:#41e0f5"></i>HP</span>
+      <span><i style="background:#ee75e9"></i>Canon</span>
+      <span><i style="background:#dfe344"></i>Brother</span>
+      <span><i style="background:#8d949e"></i>Ricoh</span>
+    </div>
+
+    <div class="grid g2">
+      <div class="cell"><span class="k">Products that have ever sold</span>
+        <div class="figure v">84<span style="font-size:.5em;color:var(--dim)"> of 555</span></div>
+        <div class="sub">471 products in the catalogue have not sold a single unit in 20 months.</div></div>
+      <div class="cell"><span class="k">Best seller</span>
+        <div class="figure v" style="font-size:30px">HP 106A</div>
+        <div class="sub">31 units, R10,230 — followed by Canon 737, HP 151A and Canon 071H.</div></div>
+    </div>
+
+    <p class="note" style="margin-top:26px">We'll keep the full range listed so it can still be
+      found in search — but the photography, content and promotion effort should go where the
+      revenue actually is: <strong>HP, Canon and Brother laser toner</strong>.</p>
+  </div>
+</section>
+
+<!-- 7. RECOMMENDATIONS -->
+<section class="slide" style="--accent:var(--y)">
+  <div class="inner">
+    <div class="eyebrow"><span class="plate">Y</span>07 — What we recommend<span class="rule"></span></div>
+    <h2>Four things, in the order we'd do them</h2>
+
+    <ul class="plain">
+      <li><span class="n">01</span><div class="b"><h3>Reorder and review emails</h3>
+        <p>Cartridges run out on a predictable cycle, and you have a base of past buyers —
+          but nothing currently goes out to them. This needs no extra visitors to the site and
+          is the fastest money on the table. You also have <strong>no product reviews at all</strong>,
+          which is free credibility going unclaimed.</p></div></li>
+      <li><span class="n">02</span><div class="b"><h3>Serve the business buyer properly</h3>
+        <p>Bulk pricing, quote requests, purchase orders and quick reordering — built around
+          how your actual customers buy.</p></div></li>
+      <li><span class="n">03</span><div class="b"><h3>Build out the printer pages</h3>
+        <p>Customers search for their <em>printer model</em>, not the cartridge code. The new
+          site already has a page for around 750 printer models — filling those out properly
+          is the biggest untapped source of new visitors you have.</p></div></li>
+      <li><span class="n">04</span><div class="b"><h3>Local search</h3>
+        <p>You deliver same-day in Johannesburg and Pretoria. Your Google Business Profile and
+          some delivery-area pages should be working much harder for you.</p></div></li>
+    </ul>
+  </div>
+</section>
+
+<!-- 8. THE PRIZE -->
+<section class="slide" style="--accent:var(--y)">
+  <div class="inner">
+    <div class="eyebrow"><span class="plate">Y</span>08 — Why it's worth doing<span class="rule"></span></div>
+    <h2>Because your average order is large, small gains pay well</h2>
+    <p class="lede">At R1,743 an order, you don't need a flood of new visitors to change the
+      picture — you need a handful more orders each month.</p>
+
+    <div class="grid g3">
+      <div class="cell"><span class="k">If we add</span><div class="figure v">+10</div>
+        <div class="sub">orders per month</div></div>
+      <div class="cell"><span class="k">That's about</span><div class="figure v">+R17k</div>
+        <div class="sub">per month</div></div>
+      <div class="cell"><span class="k">Which is roughly</span>
+        <div class="figure v" style="color:var(--y)">+R200k</div>
+        <div class="sub">per year</div></div>
+    </div>
+    <p class="note" style="margin-top:26px">For context, that would take the store from roughly
+      four orders a month to fourteen — and put it comfortably ahead of where it was in 2025.</p>
+  </div>
+</section>
+
+<!-- 9. WHAT WE NEED -->
+<section class="slide" style="--accent:var(--m)">
+  <div class="inner">
+    <div class="eyebrow"><span class="plate">M</span>09 — What we need from you<span class="rule"></span></div>
+    <h2>Six items are waiting on your side</h2>
+    <p class="lede">Some of these have been outstanding a while, and a few of them are holding
+      up the final go-live steps.</p>
+
+    <ul class="plain">
+      <li><span class="n">01</span><div class="b"><h3>The two decisions above</h3>
+        <p>Main domain, and Samsung / Lexmark inkjet stock.</p></div></li>
+      <li><span class="n">02</span><div class="b"><h3>POPIA Information Officer</h3>
+        <p>Must be formally designated and registered with the Information Regulator.
+          This is a legal requirement that only TSE can fulfil — we can't do it on your behalf.</p></div></li>
+      <li><span class="n">03</span><div class="b"><h3>PayFast dashboard settings</h3>
+        <p>The return and notify addresses need updating, then one small live test order.</p></div></li>
+      <li><span class="n">04</span><div class="b"><h3>Compatibility spreadsheet</h3>
+        <p>91 products still have no printer-model data. Customers can't find them without it.</p></div></li>
+      <li><span class="n">05</span><div class="b"><h3>Original logo file</h3>
+        <p>The version we have is a low-quality trace. We need the original artwork for
+          clean icons and print.</p></div></li>
+      <li><span class="n">06</span><div class="b"><h3>Email sending records</h3>
+        <p>Two DNS entries so order confirmations reliably reach the inbox, not the spam folder.</p></div></li>
+    </ul>
+  </div>
+</section>
+
+<!-- 10. NEXT -->
+<section class="slide" style="--accent:var(--c)">
+  <div class="inner">
+    <div class="eyebrow"><span class="plate">C</span>10 — Next steps<span class="rule"></span></div>
+    <h2>What happens after this meeting</h2>
+
+    <ul class="plain">
+      <li><span class="n">→</span><div class="b"><h3>You confirm the two decisions</h3>
+        <p>That unblocks the switchover.</p></div></li>
+      <li><span class="n">→</span><div class="b"><h3>We switch over and watch it closely</h3>
+        <p>The redirects go live, we submit the change to Google, and we monitor for four weeks
+          to catch anything that slips.</p></div></li>
+      <li><span class="n">→</span><div class="b"><h3>We start the reorder and review emails</h3>
+        <p>The quickest win, and it can run in parallel with everything else.</p></div></li>
+      <li><span class="n">→</span><div class="b"><h3>We report back monthly</h3>
+        <p>Orders, revenue, visitors and what we'd change next — so you can see whether the
+          trend is actually turning.</p></div></li>
+    </ul>
+
+    <div class="meta" style="margin-top:52px">
+      <span>TriNext Innovations</span><span>Questions: <b>ryno@trinextinnovations.co.za</b></span>
+    </div>
+  </div>
+</section>
