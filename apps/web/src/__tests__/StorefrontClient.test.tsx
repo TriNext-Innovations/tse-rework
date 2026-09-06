@@ -92,10 +92,11 @@ describe('StorefrontClient — hero', () => {
     expect(screen.getAllByText(/Est\. 198[07]/)[0]).toBeInTheDocument()
   })
 
-  it('renders key stats (years, brands, price)', () => {
+  it('renders the hero trust signals', () => {
     renderStorefront()
-    expect(screen.getAllByText(/39/)[0]).toBeInTheDocument()
-    expect(screen.getAllByText('13')[0]).toBeInTheDocument()
+    expect(screen.getByText('Trading since 1987')).toBeInTheDocument()
+    expect(screen.getByText('Faulty? We replace it')).toBeInTheDocument()
+    expect(screen.getByText('Free delivery over R2,000')).toBeInTheDocument()
   })
 
   it('renders the hero "Add to cart" button', () => {
@@ -254,13 +255,13 @@ describe('StorefrontClient — compatibility finder', () => {
     expect((input as HTMLInputElement).value).toBe('M404dn')
   })
 
-  it('"Find cartridges" button navigates with brand and model params', async () => {
+  it('"Find my cartridges" button navigates with brand and model params', async () => {
     renderStorefront()
     const select = document.querySelector('select') as HTMLSelectElement
     await userEvent.selectOptions(select, 'Canon')
     const input = screen.getByPlaceholderText(/P1102/i)
     await userEvent.type(input, 'MF273dw')
-    await userEvent.click(screen.getByText('Find cartridges'))
+    await userEvent.click(screen.getByText('Find my cartridges'))
     expect(mockPush).toHaveBeenCalledWith('/compatibility?model=Canon%20MF273dw')
   })
 
