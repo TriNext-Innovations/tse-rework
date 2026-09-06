@@ -1,0 +1,5826 @@
+[
+  {
+    "path": "/everything-you-need-to-know-about-generic-printer-cartridges",
+    "kind": "post",
+    "target": "/products",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-brother-tn3185-toner",
+    "kind": "post",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-brother-tn3607-toner",
+    "kind": "post",
+    "target": "/products/brother-tn-3607",
+    "tier": "A",
+    "how": "model page → normalized exact"
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-brother-dr3607-drum",
+    "kind": "post",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-pantum-pc110-toner",
+    "kind": "post",
+    "target": "/cartridges/pantum-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"pantum\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-pantum-tl425-toner",
+    "kind": "post",
+    "target": "/products/pantum-tl425x-high-capacity",
+    "tier": "B",
+    "how": "model page → unique prefix \"pantumtl425\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-pantum-ctl2000-toner",
+    "kind": "post",
+    "target": "/products/pantum-ctl-2000h",
+    "tier": "B",
+    "how": "model page → unique prefix \"pantumctl2000\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-samsung-358-toner",
+    "kind": "post",
+    "target": "/cartridges/samsung-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"samsung\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-samsung-116-drum",
+    "kind": "post",
+    "target": "/cartridges/samsung-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"samsung\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-samsung-116-toner",
+    "kind": "post",
+    "target": "/cartridges/samsung-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"samsung\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-samsung-101-toner",
+    "kind": "post",
+    "target": "/cartridges/samsung-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"samsung\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-samsung-104-toner",
+    "kind": "post",
+    "target": "/cartridges/samsung-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"samsung\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-canon-t09-cartridges",
+    "kind": "post",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"canon\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-canon-t10-cartridges",
+    "kind": "post",
+    "target": "/products/canon-t10",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-brother-dr2500-drum",
+    "kind": "post",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-canon-057-cartridges",
+    "kind": "post",
+    "target": "/products/canon-057",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-canon-731-cartridges",
+    "kind": "post",
+    "target": "/products/canon-731",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-canon-728-cartridges",
+    "kind": "post",
+    "target": "/products/canon-ca728",
+    "tier": "B",
+    "how": "model page → unique prefix \"canonca728\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-brother-dr2305-drum",
+    "kind": "post",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-brother-dr2255-drum",
+    "kind": "post",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-brother-dr1000-drum",
+    "kind": "post",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-brother-tn2150-toner",
+    "kind": "post",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-brother-tn3290-toner",
+    "kind": "post",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-brother-tn1000-toner",
+    "kind": "post",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-brother-tn3350-toner",
+    "kind": "post",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-brother-tn3467-toner",
+    "kind": "post",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-brother-tn2280-toner",
+    "kind": "post",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-brother-tn2060-toner",
+    "kind": "post",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-brother-tn2355-toner",
+    "kind": "post",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-hp-59x-toner",
+    "kind": "post",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-hp-59a-toner",
+    "kind": "post",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-hp-81x-toner",
+    "kind": "post",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-hp-81a-toner",
+    "kind": "post",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-hp-05x-toner",
+    "kind": "post",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-hp-05a-toner",
+    "kind": "post",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-brother-tn2500-toner",
+    "kind": "post",
+    "target": "/products/brother-tn-2500xl",
+    "tier": "B",
+    "how": "model page → unique prefix \"brothertn2500\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-canon-056-cartridges",
+    "kind": "post",
+    "target": "/products/canon-056",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-hp-89x-toner",
+    "kind": "post",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-hp-89a-toner",
+    "kind": "post",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-hp-126a-toner",
+    "kind": "post",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-hp-151x-toner",
+    "kind": "post",
+    "target": "/products/hp-151x",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-hp-78a-toner",
+    "kind": "post",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-hp-85a-toner",
+    "kind": "post",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-hp-37a-toner",
+    "kind": "post",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-hp-12a-toner",
+    "kind": "post",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-hp-131a-toner",
+    "kind": "post",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-hp-130a-toner",
+    "kind": "post",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-hp-203a-toner",
+    "kind": "post",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-hp-205a-toner",
+    "kind": "post",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-samsung-105-toner",
+    "kind": "post",
+    "target": "/cartridges/samsung-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"samsung\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-hp-30a-toner",
+    "kind": "post",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-hp-17a-toner",
+    "kind": "post",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-hp-105a-toner",
+    "kind": "post",
+    "target": "/products/hp-105a",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-hp-151a-toner",
+    "kind": "post",
+    "target": "/products/hp-151a",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-canon-737-cartridges",
+    "kind": "post",
+    "target": "/products/canon-ca737",
+    "tier": "B",
+    "how": "model page → unique prefix \"canonca737\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-canon-071-cartridges",
+    "kind": "post",
+    "target": "/products/canon-071",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-pantum-tl5120-toner",
+    "kind": "post",
+    "target": "/products/pantum-tl5120",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-pantum-ctl1100-toner-2",
+    "kind": "post",
+    "target": "/products/pantum-ctl-1100",
+    "tier": "A",
+    "how": "model page → normalized exact"
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-pantum-tl410-toner",
+    "kind": "post",
+    "target": "/products/pantum-tl410x-high-capacity",
+    "tier": "B",
+    "how": "model page → unique prefix \"pantumtl410\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-pantum-pc310-toner",
+    "kind": "post",
+    "target": "/products/pantum-pc310h",
+    "tier": "B",
+    "how": "model page → unique prefix \"pantumpc310\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-pantum-pc210-toner-2",
+    "kind": "post",
+    "target": "/products/pantum-pc210h",
+    "tier": "B",
+    "how": "model page → unique prefix \"pantumpc210\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-hp-106a-toner",
+    "kind": "post",
+    "target": "/products/hp-106a",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-kyocera-tk-6115-toner",
+    "kind": "post",
+    "target": "/products/kyocera-tk-6115",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-kyocera-tk-1170-toner",
+    "kind": "post",
+    "target": "/products/kyocera-tk-1170",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-canon-2400-cartridges",
+    "kind": "post",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"canon\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-canon-1400-cartridges",
+    "kind": "post",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"canon\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-pantum-pc252-toner",
+    "kind": "post",
+    "target": "/products/pantum-pc252h",
+    "tier": "B",
+    "how": "model page → unique prefix \"pantumpc252\""
+  },
+  {
+    "path": "/unlock-the-best-printing-quality-with-samsung-111-toner",
+    "kind": "post",
+    "target": "/cartridges/samsung-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"samsung\""
+  },
+  {
+    "path": "/oki-cartridges-the-best-quality-and-service",
+    "kind": "post",
+    "target": "/cartridges/oki-laserjet-cartridges",
+    "tier": "D",
+    "how": "hub → brand token \"oki\""
+  },
+  {
+    "path": "/xerox-cartridges-the-best-quality-and-service",
+    "kind": "post",
+    "target": "/cartridges/xerox-cartridges",
+    "tier": "D",
+    "how": "hub → brand token \"xerox\""
+  },
+  {
+    "path": "/lexmark-cartridges-the-best-quality-and-service",
+    "kind": "post",
+    "target": "/cartridges/lexmark-laserjet-cartridges",
+    "tier": "D",
+    "how": "hub → brand token \"lexmark\""
+  },
+  {
+    "path": "/epson-ink-the-best-quality-and-service",
+    "kind": "post",
+    "target": "/cartridges/epson-inkjet-cartridges",
+    "tier": "D",
+    "how": "hub → brand token \"epson\" (inkjet)"
+  },
+  {
+    "path": "/konica-minolta-cartridges-the-best-quality-and-service",
+    "kind": "post",
+    "target": "/cartridges/konica-minolta-laserjet-cartridges",
+    "tier": "D",
+    "how": "hub → brand token \"konica\""
+  },
+  {
+    "path": "/brother-cartridges-the-best-quality-and-service",
+    "kind": "post",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "hub → brand token \"brother\""
+  },
+  {
+    "path": "/kyocera-cartridges-the-best-quality-and-service",
+    "kind": "post",
+    "target": "/cartridges/kyocera-laserjet-cartridges",
+    "tier": "D",
+    "how": "hub → brand token \"kyocera\""
+  },
+  {
+    "path": "/ricoh-cartridges-the-best-quality-and-service",
+    "kind": "post",
+    "target": "/cartridges/ricoh-laserjet-cartridges",
+    "tier": "D",
+    "how": "hub → brand token \"ricoh\""
+  },
+  {
+    "path": "/the-best-samsung-cartridges-to-fullfill-your-printing-needs",
+    "kind": "post",
+    "target": "/cartridges/samsung-laserjet-cartridges",
+    "tier": "D",
+    "how": "hub → brand token \"samsung\""
+  },
+  {
+    "path": "/the-best-hp-cartridges-to-enhance-your-printing-experience",
+    "kind": "post",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/printer-with-ink-tank-revolutionizing-printing-efficiency-better",
+    "kind": "post",
+    "target": "/products",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/the-best-pantum-cartridges-to-enhance-your-printing-experience",
+    "kind": "post",
+    "target": "/cartridges/pantum-laserjet-cartridges",
+    "tier": "D",
+    "how": "hub → brand token \"pantum\""
+  },
+  {
+    "path": "/printer-cartridges-near-me",
+    "kind": "post",
+    "target": "/products",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/canon-printer-cartridge-price",
+    "kind": "post",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "hub → brand token \"canon\""
+  },
+  {
+    "path": "/",
+    "kind": "page",
+    "target": "/",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/samsung-mlt-208-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/samsung-mlt-d208l",
+    "tier": "B",
+    "how": "model page → unique prefix \"samsungmltd208\""
+  },
+  {
+    "path": "/samsung-clt-506-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/samsung-clt-506l",
+    "tier": "B",
+    "how": "model page → unique prefix \"samsungclt506\""
+  },
+  {
+    "path": "/hp-216a-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/hp-216a",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/hp-212a-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/hp-212a",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/hp-207a-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/hp-12a-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/hp-147a-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/hp-147a",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/hp-136a-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/hp-136a",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/hp-120a-drum-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/hp-120a-drum-unit",
+    "tier": "B",
+    "how": "model page → unique prefix \"hp120a\""
+  },
+  {
+    "path": "/hp-219a-drum-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/pantum-pc210-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/pantum-pc210h",
+    "tier": "B",
+    "how": "model page → unique prefix \"pantumpc210\""
+  },
+  {
+    "path": "/pantum-tl410-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/pantum-tl410x-high-capacity",
+    "tier": "B",
+    "how": "model page → unique prefix \"pantumtl410\""
+  },
+  {
+    "path": "/pantum-pc310-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/pantum-pc310h",
+    "tier": "B",
+    "how": "model page → unique prefix \"pantumpc310\""
+  },
+  {
+    "path": "/pantum-tl425-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/pantum-tl425x-high-capacity",
+    "tier": "B",
+    "how": "model page → unique prefix \"pantumtl425\""
+  },
+  {
+    "path": "/pantum-tl5120-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/pantum-tl5120",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/pantum-dl5120-drums-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/pantum-dl-5120",
+    "tier": "A",
+    "how": "model page → normalized exact"
+  },
+  {
+    "path": "/pantum-dl425-drums-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/pantum-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"pantum\""
+  },
+  {
+    "path": "/pantum-dl410-drums-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/pantum-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"pantum\""
+  },
+  {
+    "path": "/hp-131a-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/hp-128a-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/hp-125a-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/canon-719-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/canon-ca719-black",
+    "tier": "B",
+    "how": "model page → unique prefix \"canonca719\""
+  },
+  {
+    "path": "/hp-201a-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/hp-126a-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/hp-130a-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/hp-205a-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/hp-203a-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/samsung-clt-407-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/samsung-clt-407",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/samsung-clt-404-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/samsung-clt-404",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/samsung-mlt-209-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/samsung-mlt-d209l",
+    "tier": "B",
+    "how": "model page → unique prefix \"samsungmltd209\""
+  },
+  {
+    "path": "/samsung-mlt-117-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/samsung-mlt-d117s",
+    "tier": "B",
+    "how": "model page → unique prefix \"samsungmltd117\""
+  },
+  {
+    "path": "/samsung-mlt-111-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/samsung-mlt-d111l",
+    "tier": "B",
+    "how": "model page → unique prefix \"samsungmltd111\""
+  },
+  {
+    "path": "/samsung-mlt-109-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/samsung-mlt-d109s",
+    "tier": "B",
+    "how": "model page → unique prefix \"samsungmltd109\""
+  },
+  {
+    "path": "/samsung-mlt-108-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/samsung-mlt-d108s",
+    "tier": "B",
+    "how": "model page → unique prefix \"samsungmltd108\""
+  },
+  {
+    "path": "/samsung-mlt-101-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/samsung-mlt-d101s",
+    "tier": "B",
+    "how": "model page → unique prefix \"samsungmltd101\""
+  },
+  {
+    "path": "/hp-655a-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/hp-655a",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/brother-tn279-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/brother-tn-279",
+    "tier": "A",
+    "how": "model page → normalized exact"
+  },
+  {
+    "path": "/pantum-ctl-2000h-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/pantum-ctl-2000h",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/hp-289a-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/hp-145a-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/hp-145a",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/hp-106-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/hp-106x",
+    "tier": "B",
+    "how": "model page → hp106 family (2)"
+  },
+  {
+    "path": "/hp-105a-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/hp-105a",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/canon-056h-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/canon-056h",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/canon-055-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/canon-055",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/canon-056-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/canon-056",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/hp-22-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/hp-21-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/hp-57-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/hp-56-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/hp-655-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/hp-655",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/hp-920-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/hp-920-xl",
+    "tier": "B",
+    "how": "model page → unique prefix \"hp920\""
+  },
+  {
+    "path": "/hp-121-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/hp-121-xl",
+    "tier": "B",
+    "how": "model page → unique prefix \"hp121\""
+  },
+  {
+    "path": "/hp-122-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/hp-122-xl",
+    "tier": "B",
+    "how": "model page → unique prefix \"hp122\""
+  },
+  {
+    "path": "/canon-446-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"canon\""
+  },
+  {
+    "path": "/canon-445-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"canon\""
+  },
+  {
+    "path": "/canon-725-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/canon-ca725",
+    "tier": "B",
+    "how": "model page → unique prefix \"canonca725\""
+  },
+  {
+    "path": "/brother-dr3115-drum-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/brother-dr3215-drum-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/brother-dr1000-drum-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/brother-dr2255-drum-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/brother-dr3607-drum-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/brother-dr3405-drum-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/brother-dr3405",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/minolta-tn-512-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/konica-minolta-tn-512",
+    "tier": "B",
+    "how": "model page → unique prefix \"konicaminoltatn512\""
+  },
+  {
+    "path": "/minolta-tn-321-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/konica-minolta-tn-321",
+    "tier": "B",
+    "how": "model page → unique prefix \"konicaminoltatn321\""
+  },
+  {
+    "path": "/kyocera-tk-5240-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/kyocera-tk-5240",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/kyocera-tk-7125-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/kyocera-tk-7125",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/kyocera-tk-3060-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/kyocera-tk-3060",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/kyocera-tk-3100-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/kyocera-tk-3100",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/kyocera-tk-6115-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/kyocera-tk-6115",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/kyocera-tk-4105-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/kyocera-tk-4105",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/brother-dr2305-drums-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/brother-tn3607-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/brother-tn-3607",
+    "tier": "A",
+    "how": "model page → normalized exact"
+  },
+  {
+    "path": "/hp-325x-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/hp-934-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/hp-934-xl-black",
+    "tier": "B",
+    "how": "model page → unique prefix \"hp934\""
+  },
+  {
+    "path": "/hp-932-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/hp-901-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/hp-963-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/hp-305-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/hp-305-xl",
+    "tier": "B",
+    "how": "model page → unique prefix \"hp305\""
+  },
+  {
+    "path": "/brother-tn469-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/brother-tn-469",
+    "tier": "A",
+    "how": "model page → normalized exact"
+  },
+  {
+    "path": "/canon-067-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/canon-067",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/hp-55a-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/hp-80a-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/hp-259a-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/hp-505a-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/hp-26a-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/hp-217a-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/hp-230x-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/canon-2400-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"canon\""
+  },
+  {
+    "path": "/brother-lc77-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/brother-3719-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/canon-1400-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"canon\""
+  },
+  {
+    "path": "/hp-953-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/hp-953-xl",
+    "tier": "B",
+    "how": "model page → unique prefix \"hp953\""
+  },
+  {
+    "path": "/hp-903-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/hp-903-xl",
+    "tier": "B",
+    "how": "model page → unique prefix \"hp903\""
+  },
+  {
+    "path": "/hp-650-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/hp-650-xl",
+    "tier": "B",
+    "how": "model page → unique prefix \"hp650\""
+  },
+  {
+    "path": "/canon-069-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/canon-069",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/canon-729-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/canon-729",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/canon-728-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/canon-ca728",
+    "tier": "B",
+    "how": "model page → unique prefix \"canonca728\""
+  },
+  {
+    "path": "/brother-tn2355-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/brother-tn2280-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/brother-tn369-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/brother-tn369",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/brother-tn348-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/brother-tn3350-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/samsung-clt-406-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/samsung-clt-406",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/samsung-clt-504-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/samsung-clt-504",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/samsung-mlt-116-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/samsung-mlt-d116l",
+    "tier": "B",
+    "how": "model page → unique prefix \"samsungmltd116\""
+  },
+  {
+    "path": "/samsung-mlt-104-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/samsung-mlt-d104s",
+    "tier": "B",
+    "how": "model page → unique prefix \"samsungmltd104\""
+  },
+  {
+    "path": "/samsung-mlt-105-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/samsung-mlt-d105l",
+    "tier": "B",
+    "how": "model page → unique prefix \"samsungmltd105\""
+  },
+  {
+    "path": "/samsung-mlt-205-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/samsung-mlt-d205l",
+    "tier": "B",
+    "how": "model page → unique prefix \"samsungmltd205\""
+  },
+  {
+    "path": "/samsung-mlt-203-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/samsung-mlt-d203l",
+    "tier": "B",
+    "how": "model page → unique prefix \"samsungmltd203\""
+  },
+  {
+    "path": "/samsung-mlt-103-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/samsung-mlt-d103l",
+    "tier": "B",
+    "how": "model page → unique prefix \"samsungmltd103\""
+  },
+  {
+    "path": "/canon-045-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/canon-045",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/canon-054-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/canon-054",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/canon-731-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/canon-731",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/brother-tn261-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/brother-tn3290-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/brother-tn3467-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/brother-tn1000-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"brother\""
+  },
+  {
+    "path": "/buy-canon-cartridges",
+    "kind": "page",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "hub → brand token \"canon\""
+  },
+  {
+    "path": "/buy-hp-cartridges",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "hub → brand token \"hp\""
+  },
+  {
+    "path": "/buy-lexmark-cartridges",
+    "kind": "page",
+    "target": "/cartridges/lexmark-laserjet-cartridges",
+    "tier": "D",
+    "how": "hub → brand token \"lexmark\""
+  },
+  {
+    "path": "/buy-samsung-cartridges",
+    "kind": "page",
+    "target": "/cartridges/samsung-laserjet-cartridges",
+    "tier": "D",
+    "how": "hub → brand token \"samsung\""
+  },
+  {
+    "path": "/the-best-quality-generic-pantum-cartridges-satisfaction-guaranteed",
+    "kind": "page",
+    "target": "/cartridges/pantum-laserjet-cartridges",
+    "tier": "D",
+    "how": "hub → brand token \"pantum\""
+  },
+  {
+    "path": "/canon-047-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/can-047-copy",
+    "tier": "B",
+    "how": "model page → unique prefix \"can047\""
+  },
+  {
+    "path": "/pantum-pc252-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/pantum-pc252h",
+    "tier": "B",
+    "how": "model page → unique prefix \"pantumpc252\""
+  },
+  {
+    "path": "/pantum-ctl-1100-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/pantum-ctl-1100",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/kyocera-tk-1170-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/kyocera-tk-1170",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/ricoh-mpc2011-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/ricoh-mp-c2011",
+    "tier": "A",
+    "how": "model page → normalized exact"
+  },
+  {
+    "path": "/hp-123-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/hp-123-xl",
+    "tier": "B",
+    "how": "model page → unique prefix \"hp123\""
+  },
+  {
+    "path": "/canon-057-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/canon-057",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/ricoh-mp201-toner-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/ricoh-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"ricoh\""
+  },
+  {
+    "path": "/ricoh-1270-toners-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/ricoh-1270d",
+    "tier": "B",
+    "how": "model page → unique prefix \"ricoh1270\""
+  },
+  {
+    "path": "/printer-cartridges-what-you-need-to-know-before-you-buy",
+    "kind": "page",
+    "target": "/products",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/ricoh-mpc2003-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/ricoh-mp-c2003",
+    "tier": "A",
+    "how": "model page → normalized exact"
+  },
+  {
+    "path": "/hp-laserjet-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/hp-inkjet-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\" (inkjet)"
+  },
+  {
+    "path": "/hp-151a-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/hp-151a",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/canon-737-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/canon-ca737",
+    "tier": "B",
+    "how": "model page → unique prefix \"canonca737\""
+  },
+  {
+    "path": "/canon-071-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/products/canon-071",
+    "tier": "A",
+    "how": "model page → exact handle"
+  },
+  {
+    "path": "/buy-the-best-quality-generic-samsung-111-cartridges",
+    "kind": "page",
+    "target": "/products/samsung-mlt-d111l",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/kyocera-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/kyocera-laserjet-cartridges",
+    "tier": "A",
+    "how": "brand hub → category"
+  },
+  {
+    "path": "/printer-cartridges-ts-cs",
+    "kind": "page",
+    "target": "/legal/terms",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/tse-printer-cartridges-everything-you-need-to-know",
+    "kind": "page",
+    "target": "/products",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/hp-652-cartridges-buy-the-best-quality-generics",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "D",
+    "how": "model page → brand token \"hp\""
+  },
+  {
+    "path": "/shop",
+    "kind": "page",
+    "target": "/products",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/reliable-best-quality-and-efficient-printer-ink-near-me",
+    "kind": "page",
+    "target": "/products",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/printer-cartridges-know-how",
+    "kind": "page",
+    "target": "/products",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/buy-brother-cartridges",
+    "kind": "page",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "D",
+    "how": "hub → brand token \"brother\""
+  },
+  {
+    "path": "/product/hp-953-xl-cyan",
+    "kind": "product",
+    "target": "/products/hp-953-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-953-xl-magenta",
+    "kind": "product",
+    "target": "/products/hp-953-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-953-xl-yellow",
+    "kind": "product",
+    "target": "/products/hp-953-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/ricoh-mp-c2503-black",
+    "kind": "product",
+    "target": "/products/ricoh-mp-c2503",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/ricoh-mp-c2503-yellow",
+    "kind": "product",
+    "target": "/products/ricoh-mp-c2503",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/ricoh-mp-c2503-magenta",
+    "kind": "product",
+    "target": "/products/ricoh-mp-c2503",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/ricoh-mp-c2503-cyan",
+    "kind": "product",
+    "target": "/products/ricoh-mp-c2503",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/ricoh-mp-c2011-black",
+    "kind": "product",
+    "target": "/products/ricoh-mp-c2011",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/ricoh-mp-c2011-cyan",
+    "kind": "product",
+    "target": "/products/ricoh-mp-c2011",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/ricoh-mp-c2011-magenta",
+    "kind": "product",
+    "target": "/products/ricoh-mp-c2011",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/ricoh-mp-c2011-yellow",
+    "kind": "product",
+    "target": "/products/ricoh-mp-c2011",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ce255a-2",
+    "kind": "product",
+    "target": "/products/hp-ce255a-2",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf214x",
+    "kind": "product",
+    "target": "/products/hp-cf214x",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ce255x",
+    "kind": "product",
+    "target": "/products/hp-ce255x",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/pantum-pc310h",
+    "kind": "product",
+    "target": "/products/pantum-pc310h",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-117-a-cyan",
+    "kind": "product",
+    "target": "/products/hp-117a",
+    "tier": "A",
+    "how": "normalized exact"
+  },
+  {
+    "path": "/product/hp-117-a-yellow",
+    "kind": "product",
+    "target": "/products/hp-117a",
+    "tier": "A",
+    "how": "normalized exact"
+  },
+  {
+    "path": "/product/ricoh-mp-c2003-yellow",
+    "kind": "product",
+    "target": "/products/ricoh-mp-c2003",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/ricoh-mp-c2003-magenta",
+    "kind": "product",
+    "target": "/products/ricoh-mp-c2003",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/ricoh-mp-c2003-cyan",
+    "kind": "product",
+    "target": "/products/ricoh-mp-c2003",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/ricoh-mp-c2003-black",
+    "kind": "product",
+    "target": "/products/ricoh-mp-c2003",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-t06",
+    "kind": "product",
+    "target": "/products/canon-t06",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-055-cyan",
+    "kind": "product",
+    "target": "/products/canon-055",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-055-yellow",
+    "kind": "product",
+    "target": "/products/canon-055",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-055-black",
+    "kind": "product",
+    "target": "/products/canon-055",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-055-magenta",
+    "kind": "product",
+    "target": "/products/canon-055",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/xerox-3100",
+    "kind": "product",
+    "target": "/products/xerox-3100",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/brother-tn-279-magenta",
+    "kind": "product",
+    "target": "/products/brother-tn-279",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/brother-tn-279-cyan",
+    "kind": "product",
+    "target": "/products/brother-tn-279",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/brother-tn-279-black",
+    "kind": "product",
+    "target": "/products/brother-tn-279",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/brother-tn-279-yellow",
+    "kind": "product",
+    "target": "/products/brother-tn-279",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/brother-tn-279xl-yellow",
+    "kind": "product",
+    "target": "/products/brother-tn-279xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/brother-tn-279xl-magenta",
+    "kind": "product",
+    "target": "/products/brother-tn-279xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/brother-tn-279xl-cyan",
+    "kind": "product",
+    "target": "/products/brother-tn-279xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/brother-tn-279xl-black",
+    "kind": "product",
+    "target": "/products/brother-tn-279xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-472-xl-black",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-472-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-m40-black",
+    "kind": "product",
+    "target": "/cartridges/samsung-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"samsung-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/samsung-m43-black",
+    "kind": "product",
+    "target": "/cartridges/samsung-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"samsung-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-105a",
+    "kind": "product",
+    "target": "/products/hp-105a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-472-xl-yellow",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-472-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-472-xl-magenta",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-472-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-472-xl-cyan",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-472-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-655a-black",
+    "kind": "product",
+    "target": "/products/hp-655a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-655a-cyan",
+    "kind": "product",
+    "target": "/products/hp-655a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-655a-magenta",
+    "kind": "product",
+    "target": "/products/hp-655a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-655a-yellow",
+    "kind": "product",
+    "target": "/products/hp-655a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-151a",
+    "kind": "product",
+    "target": "/products/hp-151a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-150a",
+    "kind": "product",
+    "target": "/products/hp-150a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf325x",
+    "kind": "product",
+    "target": "/products/hp-cf325x",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-106a",
+    "kind": "product",
+    "target": "/products/hp-106a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-056",
+    "kind": "product",
+    "target": "/products/canon-056",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-056h",
+    "kind": "product",
+    "target": "/products/canon-056h",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-071h",
+    "kind": "product",
+    "target": "/products/canon-071h",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-071",
+    "kind": "product",
+    "target": "/products/canon-071",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf226a",
+    "kind": "product",
+    "target": "/products/hp-cf226a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf259a",
+    "kind": "product",
+    "target": "/products/hp-cf259a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-057",
+    "kind": "product",
+    "target": "/products/canon-057",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-ep-27",
+    "kind": "product",
+    "target": "/products/canon-ep-27",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/epson-t7021-black",
+    "kind": "product",
+    "target": "/cartridges/epson-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"epson-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/epson-t7022-cyan",
+    "kind": "product",
+    "target": "/cartridges/epson-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"epson-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/epson-t7023-magenta",
+    "kind": "product",
+    "target": "/cartridges/epson-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"epson-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/epson-t7024-yellow",
+    "kind": "product",
+    "target": "/cartridges/epson-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"epson-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/canon-t10-yellow",
+    "kind": "product",
+    "target": "/products/canon-t10",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-t10-magenta",
+    "kind": "product",
+    "target": "/products/canon-t10",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-t10-cyan",
+    "kind": "product",
+    "target": "/products/canon-t10",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-t10-black",
+    "kind": "product",
+    "target": "/products/canon-t10",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-067-black",
+    "kind": "product",
+    "target": "/products/canon-067",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-067-cyan",
+    "kind": "product",
+    "target": "/products/canon-067",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-067-magenta",
+    "kind": "product",
+    "target": "/products/canon-067",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-067-yellow",
+    "kind": "product",
+    "target": "/products/canon-067",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/brother-tn-2500xl",
+    "kind": "product",
+    "target": "/products/brother-tn-2500xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-230a-yellow",
+    "kind": "product",
+    "target": "/products/hp-230a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-230a-magenta",
+    "kind": "product",
+    "target": "/products/hp-230a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-230a-cyan",
+    "kind": "product",
+    "target": "/products/hp-230a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-230a-black",
+    "kind": "product",
+    "target": "/products/hp-230a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-064h-yellow",
+    "kind": "product",
+    "target": "/products/canon-064h",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-064h-magenta",
+    "kind": "product",
+    "target": "/products/canon-064h",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-064h-cyan",
+    "kind": "product",
+    "target": "/products/canon-064h",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-064h-black",
+    "kind": "product",
+    "target": "/products/canon-064h",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-067h-yellow",
+    "kind": "product",
+    "target": "/products/canon-067h",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-067h-magenta",
+    "kind": "product",
+    "target": "/products/canon-067h",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-067h-cyan",
+    "kind": "product",
+    "target": "/products/canon-067h",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-067h-black",
+    "kind": "product",
+    "target": "/products/canon-067h",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-069h-yellow",
+    "kind": "product",
+    "target": "/products/canon-069h",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-069h-magenta",
+    "kind": "product",
+    "target": "/products/canon-069h",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-069h-cyan",
+    "kind": "product",
+    "target": "/products/canon-069h",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-069h-black",
+    "kind": "product",
+    "target": "/products/canon-069h",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-136x",
+    "kind": "product",
+    "target": "/products/hp-136x",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/brother-tn-3607xxl",
+    "kind": "product",
+    "target": "/products/brother-tn-3607xxl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf289x",
+    "kind": "product",
+    "target": "/products/hp-cf289x",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-tn348-magenta",
+    "kind": "product",
+    "target": "/products/generic-brother-tn348",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-tn348-yellow",
+    "kind": "product",
+    "target": "/products/generic-brother-tn348",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-tn348-cyan",
+    "kind": "product",
+    "target": "/products/generic-brother-tn348",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-tn348-black",
+    "kind": "product",
+    "target": "/products/generic-brother-tn348",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-tn265-magenta",
+    "kind": "product",
+    "target": "/products/generic-brother-tn265",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-tn265-yellow",
+    "kind": "product",
+    "target": "/products/generic-brother-tn265",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-tn265-cyan",
+    "kind": "product",
+    "target": "/products/generic-brother-tn265",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-tn261-black",
+    "kind": "product",
+    "target": "/products/generic-brother-tn261-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-tn-3350",
+    "kind": "product",
+    "target": "/products/generic-brother-tn-3350",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-tn-3185",
+    "kind": "product",
+    "target": "/products/generic-brother-tn-3185",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-dr-2255",
+    "kind": "product",
+    "target": "/products/generic-brother-dr-2255",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-151x",
+    "kind": "product",
+    "target": "/products/hp-151x",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/epson-101-yellow",
+    "kind": "product",
+    "target": "/products/epson-101",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/epson-101-magenta",
+    "kind": "product",
+    "target": "/products/epson-101",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/epson-101-cyan",
+    "kind": "product",
+    "target": "/products/epson-101",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/epson-101-black",
+    "kind": "product",
+    "target": "/products/epson-101",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/epson-103-yellow",
+    "kind": "product",
+    "target": "/products/epson-103",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/epson-103-magenta",
+    "kind": "product",
+    "target": "/products/epson-103",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/epson-103-cyan",
+    "kind": "product",
+    "target": "/products/epson-103",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/epson-103-black",
+    "kind": "product",
+    "target": "/products/epson-103",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-070h",
+    "kind": "product",
+    "target": "/products/canon-070h",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/gi-46-yellow",
+    "kind": "product",
+    "target": "/products/gi-46",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/gi-46-cyan",
+    "kind": "product",
+    "target": "/products/gi-46",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/gi-46-magenta",
+    "kind": "product",
+    "target": "/products/gi-46",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/gi-46-black",
+    "kind": "product",
+    "target": "/products/gi-46",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf289a",
+    "kind": "product",
+    "target": "/products/hp-cf289a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-222a-yellow",
+    "kind": "product",
+    "target": "/products/hp-222a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-222a-magenta",
+    "kind": "product",
+    "target": "/products/hp-222a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-222a-cyan",
+    "kind": "product",
+    "target": "/products/hp-222a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-222a-black",
+    "kind": "product",
+    "target": "/products/hp-222a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-120a-drum-unit",
+    "kind": "product",
+    "target": "/products/hp-120a-drum-unit",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/oki-b432",
+    "kind": "product",
+    "target": "/products/oki-b432",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/pantum-ctl-2000h-magenta",
+    "kind": "product",
+    "target": "/products/pantum-ctl-2000h",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-539-xl-black",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-539-xl-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-679-xl-black",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-679-xl-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-675-xl-cyan",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-675-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-675-xl-magenta",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-675-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-675-xl-yellow",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-675-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-77-cyan",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-77",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-77-black",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-77",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-77-magenta",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-77",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-77-yellow",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-77",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-3719xl-yellow",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-3719xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-3719xl-magenta",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-3719xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-3719xl-cyan",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-3719xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-3719xl-black",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-3719xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/gi-490-black-2",
+    "kind": "product",
+    "target": "/products/gi-490-black-2",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/gi-490-cyan-2",
+    "kind": "product",
+    "target": "/products/gi-490-cyan-2",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/gi-490-magenta-2",
+    "kind": "product",
+    "target": "/products/gi-490-magenta-2",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/gi-490-yellow-2",
+    "kind": "product",
+    "target": "/products/gi-490-yellow-2",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-pgi-2400-xl-black",
+    "kind": "product",
+    "target": "/products/canon-pgi-2400-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-pgi-2400-xl-cyan",
+    "kind": "product",
+    "target": "/products/canon-pgi-2400-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-pgi-2400-xl-magenta",
+    "kind": "product",
+    "target": "/products/canon-pgi-2400-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-pgi-2400-xl-yellow",
+    "kind": "product",
+    "target": "/products/canon-pgi-2400-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/pantum-ctl-2000h-black",
+    "kind": "product",
+    "target": "/products/pantum-ctl-2000h",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-415a-yellow",
+    "kind": "product",
+    "target": "/products/hp-415a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-415a-black",
+    "kind": "product",
+    "target": "/products/hp-415a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-415a-cyan",
+    "kind": "product",
+    "target": "/products/hp-415a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-415a-magenta",
+    "kind": "product",
+    "target": "/products/hp-415a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf540a-black",
+    "kind": "product",
+    "target": "/products/hp-cf540a-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-106x",
+    "kind": "product",
+    "target": "/products/hp-106x",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-pantum-dl-425x",
+    "kind": "product",
+    "target": "/products/generic-pantum-dl-425x",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-pantum-dl-410",
+    "kind": "product",
+    "target": "/products/generic-pantum-dl-410",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/pantum-tl425x-high-capacity",
+    "kind": "product",
+    "target": "/products/pantum-tl425x-high-capacity",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-clt-506-black",
+    "kind": "product",
+    "target": "/products/samsung-clt-506l",
+    "tier": "B",
+    "how": "unique prefix \"samsungclt506\""
+  },
+  {
+    "path": "/product/samsung-clt-506-cyan",
+    "kind": "product",
+    "target": "/products/samsung-clt-506l",
+    "tier": "B",
+    "how": "unique prefix \"samsungclt506\""
+  },
+  {
+    "path": "/product/samsung-clt-506-magenta",
+    "kind": "product",
+    "target": "/products/samsung-clt-506l",
+    "tier": "B",
+    "how": "unique prefix \"samsungclt506\""
+  },
+  {
+    "path": "/product/samsung-clt-506-yellow",
+    "kind": "product",
+    "target": "/products/samsung-clt-506l",
+    "tier": "B",
+    "how": "unique prefix \"samsungclt506\""
+  },
+  {
+    "path": "/product/generic-brother-tn-3290",
+    "kind": "product",
+    "target": "/products/generic-brother-tn-3290",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-dr-3607",
+    "kind": "product",
+    "target": "/products/generic-brother-dr-3607",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-207a-yellow-copy",
+    "kind": "product",
+    "target": "/products/hp-207a-yellow-copy",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-207a-bk",
+    "kind": "product",
+    "target": "/products/hp-207a-bk",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-207a-cyan",
+    "kind": "product",
+    "target": "/products/hp-207a-cyan",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-207a-m-copy",
+    "kind": "product",
+    "target": "/products/hp-207a-m-copy",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-953-xl-black",
+    "kind": "product",
+    "target": "/products/hp-953-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-305-xl-black",
+    "kind": "product",
+    "target": "/products/hp-305-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-305-xl-colour",
+    "kind": "product",
+    "target": "/products/hp-305-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/pantum-ctl-2000h-yellow",
+    "kind": "product",
+    "target": "/products/pantum-ctl-2000h",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/pantum-ctl-2000h-cyan",
+    "kind": "product",
+    "target": "/products/pantum-ctl-2000h",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-145a",
+    "kind": "product",
+    "target": "/products/hp-145a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-216a-yellow",
+    "kind": "product",
+    "target": "/products/hp-216a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-117-a-black",
+    "kind": "product",
+    "target": "/products/hp-117a",
+    "tier": "A",
+    "how": "normalized exact"
+  },
+  {
+    "path": "/product/hp-117-a-magenta",
+    "kind": "product",
+    "target": "/products/hp-117a",
+    "tier": "A",
+    "how": "normalized exact"
+  },
+  {
+    "path": "/product/hp-212a-yellow",
+    "kind": "product",
+    "target": "/products/hp-212a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-212a-magenta",
+    "kind": "product",
+    "target": "/products/hp-212a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-212a-cyan",
+    "kind": "product",
+    "target": "/products/hp-212a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-212a-black",
+    "kind": "product",
+    "target": "/products/hp-212a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-653a-yellow",
+    "kind": "product",
+    "target": "/products/hp-653a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-653a-magenta",
+    "kind": "product",
+    "target": "/products/hp-653a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-653a-cyan",
+    "kind": "product",
+    "target": "/products/hp-653a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-652a-black",
+    "kind": "product",
+    "target": "/products/hp-652a-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-147a",
+    "kind": "product",
+    "target": "/products/hp-147a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-728-yellow",
+    "kind": "product",
+    "target": "/products/hp-728",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-728-magenta",
+    "kind": "product",
+    "target": "/products/hp-728",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-728-cyan",
+    "kind": "product",
+    "target": "/products/hp-728",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-728-black",
+    "kind": "product",
+    "target": "/products/hp-728",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-216a-magenta",
+    "kind": "product",
+    "target": "/products/hp-216a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-216a-cyan",
+    "kind": "product",
+    "target": "/products/hp-216a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-216a-black",
+    "kind": "product",
+    "target": "/products/hp-216a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-mlt-d111l",
+    "kind": "product",
+    "target": "/products/samsung-mlt-d111l",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-mlt-d101s",
+    "kind": "product",
+    "target": "/products/samsung-mlt-d101s",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/pantum-tl5120",
+    "kind": "product",
+    "target": "/products/pantum-tl5120",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/pantum-tl5120h",
+    "kind": "product",
+    "target": "/cartridges/pantum-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"pantum-cartridges\""
+  },
+  {
+    "path": "/product/pantum-dl-5120",
+    "kind": "product",
+    "target": "/products/pantum-dl-5120",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/brother-dr3405",
+    "kind": "product",
+    "target": "/products/brother-dr3405",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/brother-tn-277-yellow",
+    "kind": "product",
+    "target": "/products/brother-tn-277",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/brother-tn-277-magenta",
+    "kind": "product",
+    "target": "/products/brother-tn-277",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/brother-tn-277-cyan",
+    "kind": "product",
+    "target": "/products/brother-tn-277",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/brother-tn-277-black",
+    "kind": "product",
+    "target": "/products/brother-tn-277",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-dr-2305",
+    "kind": "product",
+    "target": "/products/generic-brother-dr-2305",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-dr-1000",
+    "kind": "product",
+    "target": "/products/generic-brother-dr-1000",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/brother-tn-469-yellow",
+    "kind": "product",
+    "target": "/products/brother-tn-469",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/brother-tn-469-magenta",
+    "kind": "product",
+    "target": "/products/brother-tn-469",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/brother-tn-469-cyan",
+    "kind": "product",
+    "target": "/products/brother-tn-469",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/brother-tn-469-black",
+    "kind": "product",
+    "target": "/products/brother-tn-469",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-tn369-magenta",
+    "kind": "product",
+    "target": "/products/brother-tn369",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-tn369-cyan",
+    "kind": "product",
+    "target": "/products/brother-tn369",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-tn369-yellow",
+    "kind": "product",
+    "target": "/products/brother-tn369",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-tn369-black",
+    "kind": "product",
+    "target": "/products/brother-tn369",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/brother-tn-3607",
+    "kind": "product",
+    "target": "/products/brother-tn-3607",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-tn-2060",
+    "kind": "product",
+    "target": "/products/generic-brother-tn-2060",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-tn-2280",
+    "kind": "product",
+    "target": "/products/generic-brother-tn-2280",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-tn-3467",
+    "kind": "product",
+    "target": "/products/generic-brother-tn-3467",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-tn-2355",
+    "kind": "product",
+    "target": "/products/generic-brother-tn-2355",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-tn-1000",
+    "kind": "product",
+    "target": "/products/generic-brother-tn-1000",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/pantum-tl410x-high-capacity",
+    "kind": "product",
+    "target": "/products/pantum-tl410x-high-capacity",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-057h",
+    "kind": "product",
+    "target": "/products/canon-057h",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-069-yellow",
+    "kind": "product",
+    "target": "/products/canon-069",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-069-magenta",
+    "kind": "product",
+    "target": "/products/canon-069",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-069-cyan",
+    "kind": "product",
+    "target": "/products/canon-069",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-069-black",
+    "kind": "product",
+    "target": "/products/canon-069",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-clt-504-yellow",
+    "kind": "product",
+    "target": "/products/samsung-clt-504",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-clt-504-magenta",
+    "kind": "product",
+    "target": "/products/samsung-clt-504",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-clt-504-cyan",
+    "kind": "product",
+    "target": "/products/samsung-clt-504",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-clt-504-black",
+    "kind": "product",
+    "target": "/products/samsung-clt-504",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-mlt-d205l",
+    "kind": "product",
+    "target": "/products/samsung-mlt-d205l",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-mlt-d203l",
+    "kind": "product",
+    "target": "/products/samsung-mlt-d203l",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-q7553x-49x",
+    "kind": "product",
+    "target": "/products/hp-q7553x-49x",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ce505x",
+    "kind": "product",
+    "target": "/products/hp-ce505x",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf230x",
+    "kind": "product",
+    "target": "/products/hp-cf230x",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf280x",
+    "kind": "product",
+    "target": "/products/hp-cf280x",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-q5949x-copy",
+    "kind": "product",
+    "target": "/products/hp-q5949x-copy",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-136a",
+    "kind": "product",
+    "target": "/products/hp-136a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf259x",
+    "kind": "product",
+    "target": "/products/hp-cf259x",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-pgi-1400-xl-yellow",
+    "kind": "product",
+    "target": "/products/canon-pgi-1400-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-pgi-1400-xl-magenta",
+    "kind": "product",
+    "target": "/products/canon-pgi-1400-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-pgi-1400-xl-cyan",
+    "kind": "product",
+    "target": "/products/canon-pgi-1400-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-pgi-1400-xl-black",
+    "kind": "product",
+    "target": "/products/canon-pgi-1400-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-cl-446-xl-colour",
+    "kind": "product",
+    "target": "/products/canon-cl-446-xl-colour",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-pg-445-xl-black",
+    "kind": "product",
+    "target": "/products/canon-pg-445-xl-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cz112ae-yellow",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-cz111ae-magenta",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-cz110ae-cyan",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-cz109ae-black",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-cn056ae-yellow",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-cn055ae-magenta",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-cn054ae-cyan",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-cn053ae-black",
+    "kind": "product",
+    "target": "/products/hp-cn053ae-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cb338he-3-colour",
+    "kind": "product",
+    "target": "/products/hp-cb338he-3-colour",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cb336he-black",
+    "kind": "product",
+    "target": "/products/hp-cb336he-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cn684he-black",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-c9361he-3-colour",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-c9363a-3-colour",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-c8728ae-3-colour",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-c8727ae-black",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-c6657ae-3-colour",
+    "kind": "product",
+    "target": "/products/hp-c6657ae-3-colour",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-c6656ae-black",
+    "kind": "product",
+    "target": "/products/hp-c6656ae-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-c9352ae-colour",
+    "kind": "product",
+    "target": "/products/hp-c9352ae-colour",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-c9351ae-black",
+    "kind": "product",
+    "target": "/products/hp-c9351ae-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ch564he-colour",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-cc641he-black",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-cn045ae-black",
+    "kind": "product",
+    "target": "/products/hp-cn045ae-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-935-xl-yellow",
+    "kind": "product",
+    "target": "/products/hp-935-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-935-xl-magenta",
+    "kind": "product",
+    "target": "/products/hp-935-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-935-xl-cyan",
+    "kind": "product",
+    "target": "/products/hp-935-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-934-xl-black",
+    "kind": "product",
+    "target": "/products/hp-934-xl-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ch563he-black",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-f6v24ae-colour",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-f6v25ae-black",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/canon-ca718-black",
+    "kind": "product",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+  },
+  {
+    "path": "/product/canon-ca718-cyan",
+    "kind": "product",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+  },
+  {
+    "path": "/product/canon-ca718-magenta",
+    "kind": "product",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+  },
+  {
+    "path": "/product/canon-ca718-yellow",
+    "kind": "product",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+  },
+  {
+    "path": "/product/generic-brother-tn240-yellow",
+    "kind": "product",
+    "target": "/products/generic-brother-tn240",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-tn240-magenta",
+    "kind": "product",
+    "target": "/products/generic-brother-tn240",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-tn240-cyan",
+    "kind": "product",
+    "target": "/products/generic-brother-tn240",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-tn240-black",
+    "kind": "product",
+    "target": "/products/generic-brother-tn240",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ce285a-35a-36a",
+    "kind": "product",
+    "target": "/products/hp-ce285a-35a-36a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-cli-471-xl-yellow",
+    "kind": "product",
+    "target": "/products/canon-cli-471-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-cli-471-xl-magenta",
+    "kind": "product",
+    "target": "/products/canon-cli-471-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-cli-471-xl-cyan",
+    "kind": "product",
+    "target": "/products/canon-cli-471-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-cli-471-xl-black",
+    "kind": "product",
+    "target": "/products/canon-cli-471-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-pgi-470-xl-black",
+    "kind": "product",
+    "target": "/products/canon-pgi-470-xl-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-ca737",
+    "kind": "product",
+    "target": "/products/canon-ca737",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-c-15-13-24a",
+    "kind": "product",
+    "target": "/products/hp-c-15-13-24a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/lexmark-18c2110-colour",
+    "kind": "product",
+    "target": "/cartridges/lexmark-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"lexmark-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/xerox-3117",
+    "kind": "product",
+    "target": "/products/xerox-3117",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/xerox-3140",
+    "kind": "product",
+    "target": "/products/xerox-3140",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/xerox-106r02182",
+    "kind": "product",
+    "target": "/products/xerox-106r02182",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-clt-409-yellow",
+    "kind": "product",
+    "target": "/products/samsung-clt-409",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-clt-409-magenta",
+    "kind": "product",
+    "target": "/products/samsung-clt-409",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-clt-409-cyan",
+    "kind": "product",
+    "target": "/products/samsung-clt-409",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-clt-409-black",
+    "kind": "product",
+    "target": "/products/samsung-clt-409",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-clt-407-yellow",
+    "kind": "product",
+    "target": "/products/samsung-clt-407",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-clt-407-magenta",
+    "kind": "product",
+    "target": "/products/samsung-clt-407",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-clt-407-cyan",
+    "kind": "product",
+    "target": "/products/samsung-clt-407",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-clt-407-black",
+    "kind": "product",
+    "target": "/products/samsung-clt-407",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-clt-406-yellow",
+    "kind": "product",
+    "target": "/products/samsung-clt-406",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-clt-406-magenta",
+    "kind": "product",
+    "target": "/products/samsung-clt-406",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-clt-406-cyan",
+    "kind": "product",
+    "target": "/products/samsung-clt-406",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-clt-406-black",
+    "kind": "product",
+    "target": "/products/samsung-clt-406",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-clt-404-yellow",
+    "kind": "product",
+    "target": "/products/samsung-clt-404",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-clt-404-magenta",
+    "kind": "product",
+    "target": "/products/samsung-clt-404",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-clt-404-cyan",
+    "kind": "product",
+    "target": "/products/samsung-clt-404",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-clt-404-black",
+    "kind": "product",
+    "target": "/products/samsung-clt-404",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-mlt-d105l",
+    "kind": "product",
+    "target": "/products/samsung-mlt-d105l",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-mlt-d104s",
+    "kind": "product",
+    "target": "/products/samsung-mlt-d104s",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-r116-drum-unit",
+    "kind": "product",
+    "target": "/products/samsung-r116-drum-unit",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-mlt-d116l",
+    "kind": "product",
+    "target": "/products/samsung-mlt-d116l",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ce413-magenta",
+    "kind": "product",
+    "target": "/products/hp-ce413-magenta",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ce412-yellow",
+    "kind": "product",
+    "target": "/products/hp-ce412-yellow",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ce411-cyan",
+    "kind": "product",
+    "target": "/products/hp-ce411-cyan",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ce410-black",
+    "kind": "product",
+    "target": "/products/hp-ce410-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cc533-magenta",
+    "kind": "product",
+    "target": "/products/hp-cc533-magenta",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cc532-yellow",
+    "kind": "product",
+    "target": "/products/hp-cc532-yellow",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cc531-cyan",
+    "kind": "product",
+    "target": "/products/hp-cc531-cyan",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cc530-black",
+    "kind": "product",
+    "target": "/products/hp-cc530-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf226x",
+    "kind": "product",
+    "target": "/products/hp-cf226x",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf237a-copy",
+    "kind": "product",
+    "target": "/products/hp-cf237a-copy",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ce403a-magenta",
+    "kind": "product",
+    "target": "/products/hp-ce403a-magenta",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ce402a-yellow",
+    "kind": "product",
+    "target": "/products/hp-ce402a-yellow",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ce401a-cyan",
+    "kind": "product",
+    "target": "/products/hp-ce401a-cyan",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ce400a-black",
+    "kind": "product",
+    "target": "/products/hp-ce400a-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ce253a-magenta",
+    "kind": "product",
+    "target": "/products/hp-ce253a-magenta",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ce252a-yellow",
+    "kind": "product",
+    "target": "/products/hp-ce252a-yellow",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ce251a-cyan",
+    "kind": "product",
+    "target": "/products/hp-ce251a-cyan",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ce250a-black",
+    "kind": "product",
+    "target": "/products/hp-ce250a-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-ca712",
+    "kind": "product",
+    "target": "/products/canon-ca712",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-ca713",
+    "kind": "product",
+    "target": "/products/canon-ca713",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-ca729-yellow",
+    "kind": "product",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+  },
+  {
+    "path": "/product/canon-ca729-magenta",
+    "kind": "product",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+  },
+  {
+    "path": "/product/canon-ca729-cyan",
+    "kind": "product",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+  },
+  {
+    "path": "/product/canon-ca729-black",
+    "kind": "product",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+  },
+  {
+    "path": "/product/canon-cart703",
+    "kind": "product",
+    "target": "/products/canon-cart703",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-fx-10",
+    "kind": "product",
+    "target": "/products/canon-fx-10",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-ca719-black",
+    "kind": "product",
+    "target": "/products/canon-ca719-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-049-copy",
+    "kind": "product",
+    "target": "/products/canon-049-copy",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf219a-drum-unit",
+    "kind": "product",
+    "target": "/products/hp-cf219a-drum-unit",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cb540-716-black",
+    "kind": "product",
+    "target": "/products/hp-cb540-716-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cb541-716-cyan",
+    "kind": "product",
+    "target": "/products/hp-cb541-716-cyan",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cb542-716-yellow",
+    "kind": "product",
+    "target": "/products/hp-cb542-716-yellow",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cb543-716-magenta",
+    "kind": "product",
+    "target": "/products/hp-cb543-716-magenta",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf283a",
+    "kind": "product",
+    "target": "/products/hp-cf283a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-052-black-high-capacity",
+    "kind": "product",
+    "target": "/products/canon-052-black-high-capacity",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf283x",
+    "kind": "product",
+    "target": "/products/hp-cf283x",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/ricoh-mp-306-black",
+    "kind": "product",
+    "target": "/products/ricoh-mp-306",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/ricoh-mp-306-magenta",
+    "kind": "product",
+    "target": "/products/ricoh-mp-306",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/ricoh-mp-306-cyan",
+    "kind": "product",
+    "target": "/products/ricoh-mp-306",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/ricoh-mp-306-yellow",
+    "kind": "product",
+    "target": "/products/ricoh-mp-306",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/ricoh-sp-c430-black",
+    "kind": "product",
+    "target": "/products/ricoh-sp-c430",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/ricoh-sp-c430-cyan",
+    "kind": "product",
+    "target": "/products/ricoh-sp-c430",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/ricoh-sp-c430-magenta",
+    "kind": "product",
+    "target": "/products/ricoh-sp-c430",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/ricoh-sp-c430-yellow",
+    "kind": "product",
+    "target": "/products/ricoh-sp-c430",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/ricoh-mp-301",
+    "kind": "product",
+    "target": "/products/ricoh-mp-301",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/kyocera-tk-1140",
+    "kind": "product",
+    "target": "/products/kyocera-tk-1140",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/kyocera-tk-6305",
+    "kind": "product",
+    "target": "/products/kyocera-tk-6305",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-f6v19ae-colour",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-f6v18ae-black",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/generic-brother-tn-2025",
+    "kind": "product",
+    "target": "/products/generic-brother-tn-2025",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-tn-2150",
+    "kind": "product",
+    "target": "/products/generic-brother-tn-2150",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/ricoh-1270d",
+    "kind": "product",
+    "target": "/products/ricoh-1270d",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/ricoh-sp-311",
+    "kind": "product",
+    "target": "/products/ricoh-sp-311",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/konica-minolta-tn-321-yellow",
+    "kind": "product",
+    "target": "/products/konica-minolta-tn-321",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/konica-minolta-tn-321-magenta",
+    "kind": "product",
+    "target": "/products/konica-minolta-tn-321",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/konica-minolta-tn-321-cyan",
+    "kind": "product",
+    "target": "/products/konica-minolta-tn-321",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/konica-minolta-tn-512-yellow",
+    "kind": "product",
+    "target": "/products/konica-minolta-tn-512",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/konica-minolta-tn-512-magenta",
+    "kind": "product",
+    "target": "/products/konica-minolta-tn-512",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/konica-minolta-tn-512-cyan",
+    "kind": "product",
+    "target": "/products/konica-minolta-tn-512",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/konica-minolta-tn-512-black",
+    "kind": "product",
+    "target": "/products/konica-minolta-tn-512",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/konica-minolta-tn-321-black",
+    "kind": "product",
+    "target": "/products/konica-minolta-tn-321",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/kyocera-tk-5270-yellow",
+    "kind": "product",
+    "target": "/products/kyocera-tk-5270",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/kyocera-tk-5270-magenta",
+    "kind": "product",
+    "target": "/products/kyocera-tk-5270",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/kyocera-tk-5270-cyan",
+    "kind": "product",
+    "target": "/products/kyocera-tk-5270",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/kyocera-tk-5270-black",
+    "kind": "product",
+    "target": "/products/kyocera-tk-5270",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/kyocera-tk-7125",
+    "kind": "product",
+    "target": "/products/kyocera-tk-7125",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-mlt-119",
+    "kind": "product",
+    "target": "/products/samsung-mlt-119",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-mlt-d108s",
+    "kind": "product",
+    "target": "/products/samsung-mlt-d108s",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-mlt-d103l",
+    "kind": "product",
+    "target": "/products/samsung-mlt-d103l",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-mlt-d109s",
+    "kind": "product",
+    "target": "/products/samsung-mlt-d109s",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-mlt-d209l",
+    "kind": "product",
+    "target": "/products/samsung-mlt-d209l",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-mlt-d208l",
+    "kind": "product",
+    "target": "/products/samsung-mlt-d208l",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/samsung-mlt-d117s",
+    "kind": "product",
+    "target": "/products/samsung-mlt-d117s",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf232a-drum-unit-copy",
+    "kind": "product",
+    "target": "/products/hp-cf232a-drum-unit-copy",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf287a-copy",
+    "kind": "product",
+    "target": "/products/hp-cf287a-copy",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ce390a-copy",
+    "kind": "product",
+    "target": "/products/hp-ce390a-copy",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf281a",
+    "kind": "product",
+    "target": "/products/hp-cf281a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf280a",
+    "kind": "product",
+    "target": "/products/hp-cf280a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/can-047-copy",
+    "kind": "product",
+    "target": "/products/can-047-copy",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-q7551a",
+    "kind": "product",
+    "target": "/products/hp-q7551a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-ca716-black",
+    "kind": "product",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+  },
+  {
+    "path": "/product/canon-ca716-cyan",
+    "kind": "product",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+  },
+  {
+    "path": "/product/canon-ca716-magenta",
+    "kind": "product",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+  },
+  {
+    "path": "/product/canon-ca716-yellow",
+    "kind": "product",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-ce323a-magenta",
+    "kind": "product",
+    "target": "/products/hp-ce323a-magenta",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ce322a-yellow",
+    "kind": "product",
+    "target": "/products/hp-ce322a-yellow",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ce321a-cyan",
+    "kind": "product",
+    "target": "/products/hp-ce321a-cyan",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ce320a-black",
+    "kind": "product",
+    "target": "/products/hp-ce320a-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-ca731-high-yield-black",
+    "kind": "product",
+    "target": "/products/canon-ca731-high-yield-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-ca731-black",
+    "kind": "product",
+    "target": "/products/canon-ca731-high-yield-black",
+    "tier": "B",
+    "how": "unique prefix \"canonca731\""
+  },
+  {
+    "path": "/product/canon-ca731-cyan",
+    "kind": "product",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+  },
+  {
+    "path": "/product/canon-ca731-magenta",
+    "kind": "product",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+  },
+  {
+    "path": "/product/canon-ca731-yellow",
+    "kind": "product",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-cf213a-magenta",
+    "kind": "product",
+    "target": "/products/hp-cf213a-magenta",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf212a-yellow",
+    "kind": "product",
+    "target": "/products/hp-cf212a-yellow",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf210x-black",
+    "kind": "product",
+    "target": "/products/hp-cf210x-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf211a-cyan",
+    "kind": "product",
+    "target": "/products/hp-cf211a-cyan",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf210a-black",
+    "kind": "product",
+    "target": "/products/hp-cf210a-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ce314a-drum-copy",
+    "kind": "product",
+    "target": "/products/hp-ce314a-drum-copy",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-q5949a-copy",
+    "kind": "product",
+    "target": "/products/hp-q5949a-copy",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-ca726",
+    "kind": "product",
+    "target": "/products/canon-ca726",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-ca725",
+    "kind": "product",
+    "target": "/products/canon-ca725",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-ca728",
+    "kind": "product",
+    "target": "/products/canon-ca728",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ce278a",
+    "kind": "product",
+    "target": "/products/hp-ce278a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ce505a",
+    "kind": "product",
+    "target": "/products/hp-ce505a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ce313a-magenta",
+    "kind": "product",
+    "target": "/products/hp-ce313a-magenta",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ce312a-yellow",
+    "kind": "product",
+    "target": "/products/hp-ce312a-yellow",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ce311a-cyan",
+    "kind": "product",
+    "target": "/products/hp-ce311a-cyan",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-ce310a-729-black",
+    "kind": "product",
+    "target": "/products/hp-ce310a-729-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf353a-magenta",
+    "kind": "product",
+    "target": "/products/hp-cf353a-magenta",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf352a-yellow",
+    "kind": "product",
+    "target": "/products/hp-cf352a-yellow",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf351a-cyan",
+    "kind": "product",
+    "target": "/products/hp-cf351a-cyan",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf350a-black",
+    "kind": "product",
+    "target": "/products/hp-cf350a-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-q7553a-49a",
+    "kind": "product",
+    "target": "/products/hp-q7553a-49a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf410a-black",
+    "kind": "product",
+    "target": "/products/hp-cf410a-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf411a-cyan",
+    "kind": "product",
+    "target": "/products/hp-cf411a-cyan",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf412a-yellow",
+    "kind": "product",
+    "target": "/products/hp-cf412a-yellow",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf413a-magenta",
+    "kind": "product",
+    "target": "/products/hp-cf413a-magenta",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf530a-black",
+    "kind": "product",
+    "target": "/products/hp-cf530a-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf531a-cyan",
+    "kind": "product",
+    "target": "/products/hp-cf531a-cyan",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf532a-yellow",
+    "kind": "product",
+    "target": "/products/hp-cf532a-yellow",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf533a-magenta",
+    "kind": "product",
+    "target": "/products/hp-cf533a-magenta",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-q2612a",
+    "kind": "product",
+    "target": "/products/hp-q2612a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf400a-black",
+    "kind": "product",
+    "target": "/products/hp-cf400a-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf401a-cyan",
+    "kind": "product",
+    "target": "/products/hp-cf401a-cyan",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf402a-yellow",
+    "kind": "product",
+    "target": "/products/hp-cf402a-yellow",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf403a-magenta",
+    "kind": "product",
+    "target": "/products/hp-cf403a-magenta",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf541a-cyan",
+    "kind": "product",
+    "target": "/products/hp-cf541a-cyan",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf542a-yellow",
+    "kind": "product",
+    "target": "/products/hp-cf542a-yellow",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf543a-magenta",
+    "kind": "product",
+    "target": "/products/hp-cf543a-magenta",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-ca045-black",
+    "kind": "product",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+  },
+  {
+    "path": "/product/canon-ca045-magenta",
+    "kind": "product",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+  },
+  {
+    "path": "/product/canon-ca045-cyan",
+    "kind": "product",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+  },
+  {
+    "path": "/product/canon-ca045-yellow",
+    "kind": "product",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+  },
+  {
+    "path": "/product/canon-054-yellow",
+    "kind": "product",
+    "target": "/products/canon-054",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-054-magenta",
+    "kind": "product",
+    "target": "/products/canon-054",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-054-cyan",
+    "kind": "product",
+    "target": "/products/canon-054",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-054-black-high-capacity",
+    "kind": "product",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+  },
+  {
+    "path": "/product/canon-052-black",
+    "kind": "product",
+    "target": "/products/canon-052-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/kyocera-tk-3060",
+    "kind": "product",
+    "target": "/products/kyocera-tk-3060",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/kyocera-tk-6115",
+    "kind": "product",
+    "target": "/products/kyocera-tk-6115",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/kyocera-tk-3130",
+    "kind": "product",
+    "target": "/products/kyocera-tk-3130",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/kyocera-tk-3100",
+    "kind": "product",
+    "target": "/products/kyocera-tk-3100",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/kyocera-tk-4105",
+    "kind": "product",
+    "target": "/products/kyocera-tk-4105",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/kyocera-tk-5240-yellow",
+    "kind": "product",
+    "target": "/products/kyocera-tk-5240",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/kyocera-tk-5240-magenta",
+    "kind": "product",
+    "target": "/products/kyocera-tk-5240",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/kyocera-tk-5240-cyan",
+    "kind": "product",
+    "target": "/products/kyocera-tk-5240",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/kyocera-tk-5240-black",
+    "kind": "product",
+    "target": "/products/kyocera-tk-5240",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/kyocera-tk-1170",
+    "kind": "product",
+    "target": "/products/kyocera-tk-1170",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/pantum-pc252h",
+    "kind": "product",
+    "target": "/products/pantum-pc252h",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cf217a",
+    "kind": "product",
+    "target": "/products/hp-cf217a",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/pantum-ctl-1100-yellow",
+    "kind": "product",
+    "target": "/products/pantum-ctl-1100",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/pantum-ctl-1100-magenta",
+    "kind": "product",
+    "target": "/products/pantum-ctl-1100",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/pantum-ctl-1100-cyan",
+    "kind": "product",
+    "target": "/products/pantum-ctl-1100",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/pantum-ctl-1100-black",
+    "kind": "product",
+    "target": "/products/pantum-ctl-1100",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/pantum-pc210h",
+    "kind": "product",
+    "target": "/products/pantum-pc210h",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-exv-49-yellow",
+    "kind": "product",
+    "target": "/products/canon-exv-49",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-exv-49-magenta",
+    "kind": "product",
+    "target": "/products/canon-exv-49",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-exv-49-cyan",
+    "kind": "product",
+    "target": "/products/canon-exv-49",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-exv-49-black",
+    "kind": "product",
+    "target": "/products/canon-exv-49",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/xerox-113r00730",
+    "kind": "product",
+    "target": "/products/xerox-113r00730",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/lexmark-e260",
+    "kind": "product",
+    "target": "/products/lexmark-e260",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/lexmark-e250",
+    "kind": "product",
+    "target": "/products/lexmark-e250",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/lexmark-12016se",
+    "kind": "product",
+    "target": "/products/lexmark-12016se",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-535-xl-cyan",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-535-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-535-xl-magenta",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-535-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-535-xl-yellow",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-535-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-569-xl-b",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-569-xl-b",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-565-xl-cyan",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-565-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-565-xl-magenta",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-565-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-565-xl-yellow",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-565-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-38-67-black",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-38-67",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-38-67-cyan",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-38-67",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-38-67-magenta",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-38-67",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-38-67-yellow",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-38-67",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-39-black",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-39",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-39-cyan",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-39",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-39-magenta",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-39",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/generic-brother-lc-39-yellow",
+    "kind": "product",
+    "target": "/products/generic-brother-lc-39",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cz101ak-black",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-cz102ae-colour",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/epson-t6642-cyan-2",
+    "kind": "product",
+    "target": "/products/epson-t6642-cyan-2",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/epson-t6643-magenta-2",
+    "kind": "product",
+    "target": "/products/epson-t6643-magenta-2",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/epson-t6644-yellow-2",
+    "kind": "product",
+    "target": "/products/epson-t6644-yellow-2",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/epson-t6641-black-2",
+    "kind": "product",
+    "target": "/products/epson-t6641-black-2",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-903-xl-magenta-2",
+    "kind": "product",
+    "target": "/products/hp-903-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-903-xl-yellow-2",
+    "kind": "product",
+    "target": "/products/hp-903-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-903-xl-cyan-2",
+    "kind": "product",
+    "target": "/products/hp-903-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-903-xl-black-2",
+    "kind": "product",
+    "target": "/products/hp-903-xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-c6578d-3-colour",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-c1823d-3-colour",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-c6625ae-3-colour",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-c9364he-black",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-c8767a-black",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-c8765a-black",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-c9362he-black",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-cc656he-colour",
+    "kind": "product",
+    "target": "/products/hp-cc656he-colour",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cc654he-black",
+    "kind": "product",
+    "target": "/products/hp-cc654he-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cc644he-colour",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/lexmark-10n0026-3-colour",
+    "kind": "product",
+    "target": "/cartridges/lexmark-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"lexmark-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/lexmark-10n0016-black",
+    "kind": "product",
+    "target": "/cartridges/lexmark-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"lexmark-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/lexmark-18c0035-3-colour",
+    "kind": "product",
+    "target": "/cartridges/lexmark-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"lexmark-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/lexmark-18c0034-black",
+    "kind": "product",
+    "target": "/cartridges/lexmark-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"lexmark-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/lexmark-18c2090-black",
+    "kind": "product",
+    "target": "/cartridges/lexmark-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"lexmark-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/lexmark-18c2180-colour",
+    "kind": "product",
+    "target": "/cartridges/lexmark-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"lexmark-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/lexmark-18c2170-black",
+    "kind": "product",
+    "target": "/cartridges/lexmark-laserjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"lexmark-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/canon-cli-426-magenta",
+    "kind": "product",
+    "target": "/products/canon-cli-426",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-cli-426-yellow",
+    "kind": "product",
+    "target": "/products/canon-cli-426",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-pgi-425-black",
+    "kind": "product",
+    "target": "/products/canon-pgi-425-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-cli-426-black",
+    "kind": "product",
+    "target": "/products/canon-cli-426",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-cli-426-cyan",
+    "kind": "product",
+    "target": "/products/canon-cli-426",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-pgi-450xl-black",
+    "kind": "product",
+    "target": "/products/canon-pgi-450xl-black",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-cli-451xl-black",
+    "kind": "product",
+    "target": "/products/canon-cli-451xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-cli-451xl-cyan",
+    "kind": "product",
+    "target": "/products/canon-cli-451xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-cli-451xl-magenta",
+    "kind": "product",
+    "target": "/products/canon-cli-451xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/canon-cli-451xl-yellow",
+    "kind": "product",
+    "target": "/products/canon-cli-451xl",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-cn046ae-cyan",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-cn047ae-magenta",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-cn048ae-yellow",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-cd972ae-cyan",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-cd973ae-magenta",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-cd974ae-yellow",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-cd975ae-black",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-cb323he-cyan",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-cb324he-magenta",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-cb325he-yellow",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/epson-t0795-photo-cyan",
+    "kind": "product",
+    "target": "/cartridges/epson-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"epson-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/epson-t0796-photo-magenta",
+    "kind": "product",
+    "target": "/cartridges/epson-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"epson-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/epson-t0923-magenta",
+    "kind": "product",
+    "target": "/cartridges/epson-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"epson-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/epson-t0924-yellow",
+    "kind": "product",
+    "target": "/cartridges/epson-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"epson-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/epson-t0921-black",
+    "kind": "product",
+    "target": "/cartridges/epson-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"epson-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/epson-t0922-cyan",
+    "kind": "product",
+    "target": "/cartridges/epson-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"epson-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/epson-t1291-black",
+    "kind": "product",
+    "target": "/cartridges/epson-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"epson-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/epson-t0791-black",
+    "kind": "product",
+    "target": "/cartridges/epson-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"epson-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/epson-t1292-cyan",
+    "kind": "product",
+    "target": "/cartridges/epson-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"epson-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/epson-t0792-cyan",
+    "kind": "product",
+    "target": "/cartridges/epson-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"epson-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/epson-t1293-magenta",
+    "kind": "product",
+    "target": "/cartridges/epson-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"epson-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/epson-t0793-magenta",
+    "kind": "product",
+    "target": "/cartridges/epson-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"epson-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/epson-t1294-yellow",
+    "kind": "product",
+    "target": "/cartridges/epson-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"epson-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/epson-t0794-yellow",
+    "kind": "product",
+    "target": "/cartridges/epson-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"epson-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-hc177-73-yellow",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-hc177-21-black",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-hc177-71-cyan",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-hc177-72-magenta",
+    "kind": "product",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "D",
+    "how": "no product → legacy category \"hp-inkjet-cartridges\""
+  },
+  {
+    "path": "/product/hp-hc177-74-cyan-light",
+    "kind": "product",
+    "target": "/products/hp-hc177-74-cyan-light",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/product/hp-hc177-75-magenta-light",
+    "kind": "product",
+    "target": "/products/hp-hc177-75-magenta-light",
+    "tier": "A",
+    "how": "exact handle"
+  },
+  {
+    "path": "/",
+    "kind": "mailpoet_page",
+    "target": "/",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/",
+    "kind": "mailpoet_page",
+    "target": "/",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/category/uncategorized",
+    "kind": "category",
+    "target": "/products",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/product-category/brother-laserjet-cartridges",
+    "kind": "product_cat",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "A",
+    "how": "category crosswalk"
+  },
+  {
+    "path": "/product-category/brother-inkjet-cartridges",
+    "kind": "product_cat",
+    "target": "/cartridges/brother-inkjet-cartridges",
+    "tier": "A",
+    "how": "category crosswalk"
+  },
+  {
+    "path": "/product-category/epson-inkjet-cartridges",
+    "kind": "product_cat",
+    "target": "/cartridges/epson-inkjet-cartridges",
+    "tier": "A",
+    "how": "category crosswalk"
+  },
+  {
+    "path": "/product-category/canon-laserjet-cartridges",
+    "kind": "product_cat",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "A",
+    "how": "category crosswalk"
+  },
+  {
+    "path": "/product-category/canon-inkjet-cartridges",
+    "kind": "product_cat",
+    "target": "/cartridges/canon-inkjet-cartridges",
+    "tier": "A",
+    "how": "category crosswalk"
+  },
+  {
+    "path": "/product-category/hp-laserjet-cartridges",
+    "kind": "product_cat",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "A",
+    "how": "category crosswalk"
+  },
+  {
+    "path": "/product-category/hp-inkjet-cartridges",
+    "kind": "product_cat",
+    "target": "/cartridges/hp-inkjet-cartridges",
+    "tier": "A",
+    "how": "category crosswalk"
+  },
+  {
+    "path": "/product-category/lexmark-inkjet-cartridges",
+    "kind": "product_cat",
+    "target": "/cartridges/lexmark-laserjet-cartridges",
+    "tier": "A",
+    "how": "category crosswalk"
+  },
+  {
+    "path": "/product-category/samsung-laserjet-cartridges",
+    "kind": "product_cat",
+    "target": "/cartridges/samsung-laserjet-cartridges",
+    "tier": "A",
+    "how": "category crosswalk"
+  },
+  {
+    "path": "/product-category/samsung-inkjet-cartridges",
+    "kind": "product_cat",
+    "target": "/cartridges/samsung-laserjet-cartridges",
+    "tier": "A",
+    "how": "category crosswalk"
+  },
+  {
+    "path": "/product-category/xerox-cartridges",
+    "kind": "product_cat",
+    "target": "/cartridges/xerox-cartridges",
+    "tier": "A",
+    "how": "category crosswalk"
+  },
+  {
+    "path": "/product-category/pantum-cartridges",
+    "kind": "product_cat",
+    "target": "/cartridges/pantum-laserjet-cartridges",
+    "tier": "A",
+    "how": "category crosswalk"
+  },
+  {
+    "path": "/product-category/lexmark-laserjet-cartridges",
+    "kind": "product_cat",
+    "target": "/cartridges/lexmark-laserjet-cartridges",
+    "tier": "A",
+    "how": "category crosswalk"
+  },
+  {
+    "path": "/product-category/generic-ricoh-laserjet-cartridges",
+    "kind": "product_cat",
+    "target": "/cartridges/ricoh-laserjet-cartridges",
+    "tier": "A",
+    "how": "category crosswalk"
+  },
+  {
+    "path": "/product-category/generic-kyocera-laserjet-cartridges",
+    "kind": "product_cat",
+    "target": "/cartridges/kyocera-laserjet-cartridges",
+    "tier": "A",
+    "how": "category crosswalk"
+  },
+  {
+    "path": "/product-category/generic-konica-minolta-laserjet-cartridges",
+    "kind": "product_cat",
+    "target": "/cartridges/konica-minolta-laserjet-cartridges",
+    "tier": "A",
+    "how": "category crosswalk"
+  },
+  {
+    "path": "/product-category/generic-oki-laserjet-cartridges",
+    "kind": "product_cat",
+    "target": "/cartridges/oki-laserjet-cartridges",
+    "tier": "A",
+    "how": "category crosswalk"
+  },
+  {
+    "path": "/2023",
+    "kind": "date",
+    "target": "/products",
+    "tier": "M",
+    "how": "date archive → browse"
+  },
+  {
+    "path": "/2023/11",
+    "kind": "date",
+    "target": "/products",
+    "tier": "M",
+    "how": "date archive → browse"
+  },
+  {
+    "path": "/2024",
+    "kind": "date",
+    "target": "/products",
+    "tier": "M",
+    "how": "date archive → browse"
+  },
+  {
+    "path": "/2024/02",
+    "kind": "date",
+    "target": "/products",
+    "tier": "M",
+    "how": "date archive → browse"
+  },
+  {
+    "path": "/2024/03",
+    "kind": "date",
+    "target": "/products",
+    "tier": "M",
+    "how": "date archive → browse"
+  },
+  {
+    "path": "/2024/04",
+    "kind": "date",
+    "target": "/products",
+    "tier": "M",
+    "how": "date archive → browse"
+  },
+  {
+    "path": "/2024/05",
+    "kind": "date",
+    "target": "/products",
+    "tier": "M",
+    "how": "date archive → browse"
+  },
+  {
+    "path": "/2024/06",
+    "kind": "date",
+    "target": "/products",
+    "tier": "M",
+    "how": "date archive → browse"
+  },
+  {
+    "path": "/2024/07",
+    "kind": "date",
+    "target": "/products",
+    "tier": "M",
+    "how": "date archive → browse"
+  },
+  {
+    "path": "/2024/08",
+    "kind": "date",
+    "target": "/products",
+    "tier": "M",
+    "how": "date archive → browse"
+  },
+  {
+    "path": "/2024/09",
+    "kind": "date",
+    "target": "/products",
+    "tier": "M",
+    "how": "date archive → browse"
+  },
+  {
+    "path": "/2024/10",
+    "kind": "date",
+    "target": "/products",
+    "tier": "M",
+    "how": "date archive → browse"
+  },
+  {
+    "path": "/2024/11",
+    "kind": "date",
+    "target": "/products",
+    "tier": "M",
+    "how": "date archive → browse"
+  },
+  {
+    "path": "/2024/12",
+    "kind": "date",
+    "target": "/products",
+    "tier": "M",
+    "how": "date archive → browse"
+  },
+  {
+    "path": "/2025",
+    "kind": "date",
+    "target": "/products",
+    "tier": "M",
+    "how": "date archive → browse"
+  },
+  {
+    "path": "/2025/01",
+    "kind": "date",
+    "target": "/products",
+    "tier": "M",
+    "how": "date archive → browse"
+  },
+  {
+    "path": "/2025/03",
+    "kind": "date",
+    "target": "/products",
+    "tier": "M",
+    "how": "date archive → browse"
+  },
+  {
+    "path": "/2025/08",
+    "kind": "date",
+    "target": "/products",
+    "tier": "M",
+    "how": "date archive → browse"
+  },
+  {
+    "path": "/2025/09",
+    "kind": "date",
+    "target": "/products",
+    "tier": "M",
+    "how": "date archive → browse"
+  },
+  {
+    "path": "/2025/10",
+    "kind": "date",
+    "target": "/products",
+    "tier": "M",
+    "how": "date archive → browse"
+  },
+  {
+    "path": "/2025/11",
+    "kind": "date",
+    "target": "/products",
+    "tier": "M",
+    "how": "date archive → browse"
+  },
+  {
+    "path": "/2026",
+    "kind": "date",
+    "target": "/products",
+    "tier": "M",
+    "how": "date archive → browse"
+  },
+  {
+    "path": "/2026/01",
+    "kind": "date",
+    "target": "/products",
+    "tier": "M",
+    "how": "date archive → browse"
+  },
+  {
+    "path": "/2026/02",
+    "kind": "date",
+    "target": "/products",
+    "tier": "M",
+    "how": "date archive → browse"
+  },
+  {
+    "path": "/2026/04",
+    "kind": "date",
+    "target": "/products",
+    "tier": "M",
+    "how": "date archive → browse"
+  },
+  {
+    "path": "/2026/06",
+    "kind": "date",
+    "target": "/products",
+    "tier": "M",
+    "how": "date archive → browse"
+  },
+  {
+    "path": "/2026/07",
+    "kind": "date",
+    "target": "/products",
+    "tier": "M",
+    "how": "date archive → browse"
+  }
+]

@@ -317,6 +317,95 @@ Redis and Next.js / Medusa containers are stateless: rebuild from git + image an
 
 ---
 
+## 7a. Legacy domain cutover — `tse.co.za` → `tse-cartridges.co.za`
+
+Retiring the WooCommerce site is a **one-shot** SEO event. A ranking legacy page
+that 301s to a non-equivalent is read as a soft 404, and Google drops the
+ranking instead of transferring it. There is no second attempt, so the redirect
+map goes in before the DNS moves, not after.
+
+### What is already in the repo
+
+| File | State |
+|---|---|
+| `infrastructure/nginx/conf.d/00-legacy-redirects.conf` | **Deployed and inert.** Defines `$legacy_target` for all 832 indexed legacy URLs. Nothing reads it yet. |
+| `infrastructure/nginx/conf.d/legacy-tse-co-za.conf.disabled` | The `tse.co.za` server block. Not included by nginx until renamed. |
+| `scripts/build-legacy-redirects.ts` | Regenerates the map from the live legacy + new sitemaps. |
+| `migration/raw/legacy-redirects.json` | Per-URL rationale, for review and for arguing with the result. |
+
+Coverage: 832/832 indexed legacy URLs. 532 resolve to the exact product or
+category, 52 through a known spelling difference between the two catalogues
+(`canon-725` → `canon-ca725`, `samsung-mlt-101` → `samsung-mlt-d101s`), 206 fall
+back to the brand's category page because the product no longer exists, and 42
+are manual rules. Every target is asserted to be a live route at generation
+time — the script fails rather than emit a 301 into a 404.
+
+### Cutover sequence
+
+```bash
+# 1. Regenerate. The catalogue moves; a map built weeks ago will point at
+#    products that have since been delisted. The script hard-fails on any
+#    target that is no longer a live route, so this is also the pre-flight check.
+npx tsx scripts/build-legacy-redirects.ts
+git commit -am 'chore(seo): refresh the cutover redirect map' && git push
+
+# 2. Deploy so 00-legacy-redirects.conf is on the box (still inert).
+
+# 3. Point tse.co.za + www.tse.co.za at the VM in GAM DNS.
+#    Wait for propagation — the cert in step 4 needs the A record live.
+
+# 4. Issue the cert — same standalone pattern as section 4.1, because webroot
+#    cannot work yet: serving the ACME challenge for tse.co.za needs its :80
+#    block live, but that file also carries the :443 block, which references
+#    the cert that does not exist yet. nginx would refuse to start. Standalone
+#    sidesteps it at the cost of ~30s of storefront downtime.
+cd /opt/tse-ui
+docker compose stop nginx
+docker run --rm -p 80:80 \
+  -v tse-ui_certbot_certs:/etc/letsencrypt \
+  -v tse-ui_certbot_www:/var/www/certbot \
+  certbot/certbot certonly --standalone \
+  -d tse.co.za -d www.tse.co.za \
+  --email <ops@trinext> --agree-tos --no-eff-email
+docker compose up -d nginx
+
+# Confirm the cert landed where the server block expects it.
+docker compose exec nginx ls /etc/letsencrypt/live/tse.co.za/fullchain.pem
+
+# 5. Only now enable the server block, and verify BEFORE reloading.
+mv infrastructure/nginx/conf.d/legacy-tse-co-za.conf.disabled \
+   infrastructure/nginx/conf.d/legacy-tse-co-za.conf
+docker compose exec nginx nginx -t     # must print "syntax is ok" + "test is successful"
+docker compose exec nginx nginx -s reload
+
+# 6. Spot-check the three tiers.
+for u in /product-category/hp-laserjet-cartridges/ \
+         /hp-12a-cartridges-buy-the-best-quality-generics/ \
+         /product/brother-tn-277-black/; do
+  curl -sI "https://tse.co.za$u" | grep -iE '^(HTTP|location)'
+done
+```
+
+### Gotchas
+
+- **`nginx -t` before `-s reload`, always.** A missing cert path aborts the
+  whole config, which takes the storefront down with the redirect host. That is
+  the entire reason the server block ships disabled.
+- **The map keys on `$uri`, not `$request_uri`.** `$request_uri` carries the
+  query string, so `?utm_source=…` would miss every entry. A companion map
+  strips the trailing slash first, since the legacy site links everything with
+  one.
+- **Unmapped paths return 404, deliberately.** Bulk-redirecting the long tail
+  (wp-admin, feeds, cart URLs) onto the homepage is the classic soft-404
+  generator. Every *indexed* URL is in the map, so nothing that ranks 404s.
+- **Do not decommission Woo until the redirects are verified.** Once the DNS
+  moves, the old site is unreachable and the legacy sitemap — the input to the
+  generator — goes with it. Regenerate first (step 1).
+- Keep `tse.co.za` **registered and pointed here indefinitely**. Link equity
+  flows through the 301 only for as long as it answers.
+
+---
+
 ## 8. Reference — service environment
 
 Each service's required env vars (already in `.env.example`):

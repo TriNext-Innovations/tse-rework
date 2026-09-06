@@ -1,0 +1,61 @@
+# ── Legacy domain — tse.co.za → tse-cartridges.co.za ──────────────────────
+#
+# DISABLED ON PURPOSE. conf.d/*.conf is what nginx includes, so this file is
+# inert until it is renamed to legacy-tse-co-za.conf at cutover.
+#
+# Enabling it before the DNS change would be harmless (nothing resolves here
+# yet) EXCEPT for the certificate paths below — nginx refuses to start if a
+# referenced cert is missing, which would take the storefront down with it.
+# So: move DNS, issue the cert, THEN rename. See docs/PROD-DEPLOY.md.
+#
+# The 301 targets come from conf.d/00-legacy-redirects.conf, which is generated
+# by scripts/build-legacy-redirects.ts and is already deployed. Regenerate it
+# immediately before the cutover so the catalogue is current.
+
+server {
+    listen 80;
+    server_name tse.co.za www.tse.co.za;
+
+    # For RENEWALS (webroot). The first issuance cannot use this: enabling
+    # this file also enables the :443 block below, which needs a cert that
+    # does not exist yet, and nginx refuses to start on a missing cert path.
+    # Issue the cert with certbot --standalone first — see docs/PROD-DEPLOY.md
+    # §7a step 4 — then enable this file.
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    http2  on;
+    server_name tse.co.za www.tse.co.za;
+
+    ssl_certificate     /etc/letsencrypt/live/tse.co.za/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/tse.co.za/privkey.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
+
+    # Every URL the legacy site had indexed is in the map, so a hit here is the
+    # equivalent page and the ranking transfers.
+    if ($legacy_target) {
+        return 301 https://tse-cartridges.co.za$legacy_target;
+    }
+
+    # The homepage is the one unmapped path worth carrying across.
+    location = / {
+        return 301 https://tse-cartridges.co.za/;
+    }
+
+    # Anything else was never indexed — WooCommerce plumbing, feeds, wp-admin,
+    # cart URLs with query strings. Deliberately NOT redirected to the homepage:
+    # bulk redirects onto an unrelated page are read as soft 404s, which is
+    # worse for the domain than an honest 404.
+    location / {
+        return 404;
+    }
+}

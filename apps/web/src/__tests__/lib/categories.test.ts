@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, it, expect } from 'vitest'
 import { CATEGORIES, categoryBySlug, legacyRedirectMap } from '@/lib/categories'
 import { TYPE_CATEGORIES } from '@/lib/taxonomy'
@@ -72,6 +74,47 @@ describe('legacy redirect map', () => {
     for (const [, target] of Object.entries(map)) {
       const slug = target.replace('/cartridges/', '')
       expect(categoryBySlug(slug)).toBeDefined()
+    }
+  })
+})
+
+// The nginx map in infrastructure/ is what actually serves the cutover 301s;
+// CATEGORIES is what renders the pages. They are produced by different tools,
+// so nothing but this test stops them drifting apart — and the failure mode is
+// silent until the one-shot authority transfer has already been spent.
+describe('cutover redirect map', () => {
+  const conf = readFileSync(
+    join(import.meta.dirname, '../../../../../infrastructure/nginx/conf.d/00-legacy-redirects.conf'),
+    'utf8',
+  )
+  const nginxMap = Object.fromEntries(
+    conf
+      .split('\n')
+      .filter((l) => /^\s{4}\//.test(l))
+      .map((l) => l.trim().replace(/;$/, '').split(/\s+/) as [string, string]),
+  )
+
+  it('serves a 301 for every legacy path the category registry claims', () => {
+    for (const [legacyPath, target] of Object.entries(legacyRedirectMap())) {
+      expect(nginxMap, `${legacyPath} is in CATEGORIES but not in the nginx map`).toHaveProperty(
+        legacyPath,
+      )
+      expect(nginxMap[legacyPath], `${legacyPath} redirects somewhere else`).toBe(target)
+    }
+  })
+
+  it('has no duplicate keys — nginx refuses to load a map with one', () => {
+    const keys = conf
+      .split('\n')
+      .filter((l) => /^\s{4}\//.test(l))
+      .map((l) => l.trim().split(/\s+/)[0])
+    expect(new Set(keys).size).toBe(keys.length)
+  })
+
+  it('never points a legacy URL at another legacy URL', () => {
+    for (const target of Object.values(nginxMap)) {
+      expect(target.startsWith('/')).toBe(true)
+      expect(target).not.toMatch(/^\/(product|product-category)\//)
     }
   })
 })
