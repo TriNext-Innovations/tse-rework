@@ -14,9 +14,10 @@ import {
   type PrinterModel,
 } from '@/lib/printers'
 import { websiteRef } from '@/lib/structured-data'
+import { SITE_URL } from '@/lib/site-url'
 import { AddToCartButton } from '../../products/AddToCartButton'
 
-const BASE = 'https://tse-cartridges.co.za'
+const BASE = SITE_URL
 
 type Props = { params: Promise<{ slug: string }> }
 

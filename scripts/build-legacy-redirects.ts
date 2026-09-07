@@ -27,7 +27,11 @@ import { writeFileSync, mkdirSync } from 'fs'
 import { join } from 'path'
 
 const LEGACY = 'https://www.tse.co.za'
-const NEW = 'https://tse-cartridges.co.za'
+// Kept in step with the storefront's own origin so the generator can never
+// verify targets against a different host than the site actually publishes.
+const NEW = process.env.NEXT_PUBLIC_SITE_URL?.startsWith('https://')
+  ? process.env.NEXT_PUBLIC_SITE_URL.replace(/\/+$/, '')
+  : 'https://tse-cartridges.co.za'
 const ROOT = join(import.meta.dirname, '..')
 
 const SITEMAPS = ['post', 'page', 'product', 'mailpoet_page', 'category', 'product_cat', 'date'] as const

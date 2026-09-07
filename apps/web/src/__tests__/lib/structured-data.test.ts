@@ -12,7 +12,7 @@ import { siteConfig } from '@/lib/site-config'
 
 describe('the business entity', () => {
   it('has a stable @id other pages can point at', () => {
-    expect(ORGANIZATION_ID).toBe('https://tse-cartridges.co.za/#organization')
+    expect(ORGANIZATION_ID).toBe(`${SITE_URL}/#organization`)
     expect(organizationJsonLd['@id']).toBe(ORGANIZATION_ID)
     expect(organizationRef).toEqual({ '@id': ORGANIZATION_ID })
   })

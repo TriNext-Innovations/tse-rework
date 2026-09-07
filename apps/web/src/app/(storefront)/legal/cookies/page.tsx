@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { siteConfig } from '@/lib/site-config'
+import { SITE_HOST } from '@/lib/site-url'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout'
 
@@ -40,7 +41,7 @@ export default function CookiesPage() {
 
         <div className="prose text-[var(--ink-2)] text-[15px]">
           <p>
-            This policy explains how <strong>tse-cartridges.co.za</strong> uses cookies and similar technologies,
+            This policy explains how <strong>{SITE_HOST}</strong> uses cookies and similar technologies,
             and how you can control them.
           </p>
 
@@ -79,7 +80,7 @@ export default function CookiesPage() {
           <h2>Controlling cookies</h2>
           <p>
             You can change your consent at any time by clearing your browser&apos;s local storage for{' '}
-            <strong>tse-cartridges.co.za</strong> and reloading the page — the consent banner will reappear.
+            <strong>{SITE_HOST}</strong> and reloading the page — the consent banner will reappear.
           </p>
           <p>
             You can also configure your browser to block or delete cookies:

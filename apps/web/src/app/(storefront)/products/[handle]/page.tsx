@@ -4,6 +4,7 @@ import { Navbar } from '@/components/layout'
 import ProductDetail from './ProductDetail'
 import { TYPE_CATEGORY_NAMES as TYPE_CATS } from '@/lib/taxonomy'
 import { organizationRef } from '@/lib/structured-data'
+import { SITE_URL, siteUrl } from '@/lib/site-url'
 import { htmlToPlainText } from '@/lib/html-text'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
@@ -80,7 +81,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const plain = product.description ? htmlToPlainText(product.description) : ''
   const title = product.title
   const description = plain ? plain.slice(0, 160) : `Quality generic ${product.title} — TSE Online`
-  const url = `https://tse-cartridges.co.za/products/${handle}`
+  const url = siteUrl(`/products/${handle}`)
   const image = product.images?.[0]?.url
   return {
     title,
@@ -116,7 +117,7 @@ export default async function ProductPage({ params }: Props) {
     ? await getRelated(brandCategory.id, product.id, regionId)
     : []
 
-  const canonical = `https://tse-cartridges.co.za/products/${handle}`
+  const canonical = siteUrl(`/products/${handle}`)
 
   // One Offer per variant. The Merchant Center feed submits every variant as its
   // own item against this single landing page, so publishing only variants[0]'s
@@ -161,12 +162,12 @@ export default async function ProductPage({ params }: Props) {
   }
 
   const breadcrumbItems = [
-    { name: 'Home', url: 'https://tse-cartridges.co.za' },
-    { name: 'Products', url: 'https://tse-cartridges.co.za/products' },
+    { name: 'Home', url: SITE_URL },
+    { name: 'Products', url: siteUrl('/products') },
     ...(brandCategory
-      ? [{ name: brandCategory.name, url: `https://tse-cartridges.co.za/products?brand=${encodeURIComponent(brandCategory.name)}` }]
+      ? [{ name: brandCategory.name, url: siteUrl(`/products?brand=${encodeURIComponent(brandCategory.name)}`) }]
       : []),
-    { name: product.title, url: `https://tse-cartridges.co.za/products/${handle}` },
+    { name: product.title, url: siteUrl(`/products/${handle}`) },
   ]
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',

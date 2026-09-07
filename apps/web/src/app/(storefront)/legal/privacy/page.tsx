@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { siteConfig } from '@/lib/site-config'
+import { SITE_HOST } from '@/lib/site-url'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout'
 
@@ -42,7 +43,7 @@ export default function PrivacyPage() {
         <div className="prose text-[var(--ink-2)] text-[15px]">
           <p>
             Technical Systems Engineering (<strong>"TSE"</strong>, <strong>"we"</strong>, <strong>"us"</strong>) operates{' '}
-            <strong>tse-cartridges.co.za</strong>. This policy explains what personal information we collect, why we
+            <strong>{SITE_HOST}</strong>. This policy explains what personal information we collect, why we
             collect it, and your rights under the Protection of Personal Information Act 4 of 2013 (<strong>POPIA</strong>).
           </p>
 

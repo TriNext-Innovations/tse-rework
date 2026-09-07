@@ -18,7 +18,8 @@
 
 import { siteConfig } from './site-config'
 
-export const SITE_URL = 'https://tse-cartridges.co.za'
+export { SITE_URL } from './site-url'
+import { SITE_URL } from './site-url'
 
 /** Stable node id for the business. Reference this — never redefine the entity. */
 export const ORGANIZATION_ID = `${SITE_URL}/#organization`

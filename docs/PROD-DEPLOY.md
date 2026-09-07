@@ -319,6 +319,15 @@ Redis and Next.js / Medusa containers are stateless: rebuild from git + image an
 
 ## 7a. Legacy domain cutover — `tse.co.za` → `tse-cartridges.co.za`
 
+> ⚠ **Direction is not settled.** This section assumes `tse-cartridges.co.za` stays
+> primary, per `CLIENT-PENDING.md` #8. Open decision **#13** proposes the reverse — moving
+> the storefront onto `tse.co.za`, which is the older (1997) and only ranking domain. See
+> **[DOMAIN-CUTOVER.md](DOMAIN-CUTOVER.md)** for that case and the phased plan.
+>
+> The redirect map below is unaffected either way: every target is a relative path, so
+> only the host in the server block changes. If #13 goes ahead, these become same-host
+> redirects and the cert step is superseded by DOMAIN-CUTOVER.md Phase 3 (DNS-01).
+
 Retiring the WooCommerce site is a **one-shot** SEO event. A ranking legacy page
 that 301s to a non-equivalent is read as a soft 404, and Google drops the
 ranking instead of transferring it. There is no second attempt, so the redirect
