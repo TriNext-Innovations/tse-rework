@@ -1,5 +1,9 @@
 name: Auto-merge Dependabot
 
+# Merges green Dependabot PRs into the release branch and deletes the source
+# branch. It merges only — it never deploys. Shipping a release is always a
+# human merging the release/* → main PR.
+
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
@@ -12,7 +16,12 @@ jobs:
   auto-merge:
     name: Auto-merge if Dependabot + CI passes
     runs-on: ubuntu-latest
-    if: github.actor == 'dependabot[bot]'
+    # Only ever auto-merge into a release branch. A push to main deploys, so
+    # auto-merging a PR based on main would be an automatic production deploy
+    # by another route — which is exactly what this repo must never do.
+    if: |
+      github.actor == 'dependabot[bot]' &&
+      startsWith(github.base_ref, 'release/')
 
     steps:
       - name: Fetch Dependabot metadata
@@ -27,7 +36,7 @@ jobs:
         if: |
           steps.meta.outputs.update-type == 'version-update:semver-patch' ||
           steps.meta.outputs.update-type == 'version-update:semver-minor'
-        run: gh pr merge --auto --squash "$PR_URL"
+        run: gh pr merge --auto --squash --delete-branch "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

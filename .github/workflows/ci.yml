@@ -1,10 +1,15 @@
 name: CI
 
+# release/** matters as much as main and develop: dependency updates now target
+# the release branch and auto-merge there on green. Without it in these filters
+# those PRs have no checks at all, and `gh pr merge --auto` merges a PR the
+# moment it is mergeable — so an untested bump would land on the branch that is
+# next in line to be deployed.
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, 'release/**']
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, 'release/**']
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -21,7 +26,7 @@ jobs:
 
       - uses: pnpm/action-setup@v6.0.10
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: pnpm
@@ -64,7 +69,7 @@ jobs:
 
       - uses: pnpm/action-setup@v6.0.10
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: pnpm
@@ -107,7 +112,7 @@ jobs:
 
       - uses: pnpm/action-setup@v6.0.10
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: pnpm
@@ -129,20 +134,92 @@ jobs:
         env:
           NODE_OPTIONS: --max-old-space-size=3072
 
-  # Release gate: build the actual prod images so Dockerfile/context breakage
-  # (e.g. the patches/ COPY incident) fails the release PR, not the deploy.
+  # Build the actual prod images so Dockerfile/context breakage (e.g. the
+  # patches/ COPY incident) fails a PR rather than the deploy — and boot the
+  # backend image, because building it proves nothing about whether it starts.
+  #
+  # Runs on PRs into develop as well as main. Features merge into develop, so
+  # gating only the release PR would catch a broken image once everything is
+  # already batched, when the cheap moment to catch it is the feature PR that
+  # introduced it.
   docker:
     name: Docker images
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: unit
-    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    if: github.event_name == 'pull_request' && (github.base_ref == 'main' || github.base_ref == 'develop' || startsWith(github.base_ref, 'release/'))
+
+    env:
+      IMAGE: tse-backend:ci
+      CI_NETWORK: tse-ci
+      SMOKE_DATABASE_URL: postgresql://postgres:smoke@postgres-ci:5432/tse_medusa_ci?sslmode=disable
+      SMOKE_REDIS_URL: redis://redis-ci:6379
 
     steps:
       - uses: actions/checkout@v7
 
       - name: Build backend image
-        run: docker build -f apps/backend/Dockerfile --build-arg MEDUSA_BACKEND_URL=https://api.tse-cartridges.co.za .
+        run: docker build -f apps/backend/Dockerfile -t "$IMAGE" --build-arg MEDUSA_BACKEND_URL=https://api.tse-cartridges.co.za .
+
+      # Throwaway Postgres + Redis on a user-defined network so the smoke
+      # container reaches them by name. Deliberately `docker run` rather than
+      # `services:` — service containers are only reachable from the job via
+      # published ports on the runner host, and the smoke container needs to
+      # be on the same network as them, exactly as it is in prod-deploy.sh.
+      - name: Start throwaway Postgres + Redis
+        run: |
+          docker network create "$CI_NETWORK"
+          docker run -d --name postgres-ci --network "$CI_NETWORK" \
+            -e POSTGRES_DB=tse_medusa_ci \
+            -e POSTGRES_USER=postgres \
+            -e POSTGRES_PASSWORD=smoke \
+            --health-cmd "pg_isready -U postgres -d tse_medusa_ci" \
+            --health-interval 5s --health-retries 20 \
+            postgres:16-alpine
+          docker run -d --name redis-ci --network "$CI_NETWORK" \
+            --health-cmd "redis-cli ping" \
+            --health-interval 5s --health-retries 20 \
+            redis:7-alpine
+          for c in postgres-ci redis-ci; do
+            for _ in $(seq 1 40); do
+              [ "$(docker inspect -f '{{.State.Health.Status}}' "$c")" = healthy ] && break
+              sleep 3
+            done
+            [ "$(docker inspect -f '{{.State.Health.Status}}' "$c")" = healthy ] \
+              || { echo "::error::$c never became healthy"; docker logs "$c"; exit 1; }
+          done
+
+      # Medusa only reaches route registration against a migrated database, so
+      # an unmigrated DB would fail the smoke test for the wrong reason. Only
+      # `db:migrate` runs here, not docker-migrate-entrypoint.sh — the seed and
+      # data-backfill scripts in that entrypoint are about data correctness, and
+      # this gate is about whether the image boots. The dummy R2_* values are
+      # required because medusa-config.ts registers @medusajs/file-s3
+      # unconditionally and it throws at load without credentials (see #372).
+      - name: Run migrations against the throwaway DB
+        run: |
+          docker run --rm --network "$CI_NETWORK" \
+            -e DATABASE_URL="$SMOKE_DATABASE_URL" \
+            -e REDIS_URL="$SMOKE_REDIS_URL" \
+            -e JWT_SECRET=smoke-test \
+            -e COOKIE_SECRET=smoke-test \
+            -e R2_ACCESS_KEY_ID=smoke -e R2_SECRET_ACCESS_KEY=smoke -e R2_BUCKET=smoke \
+            -e R2_ENDPOINT=http://127.0.0.1:9999 -e R2_PUBLIC_URL=http://127.0.0.1:9999 \
+            -e NODE_ENV=production \
+            --entrypoint /app/node_modules/.bin/medusa \
+            "$IMAGE" db:migrate
+
+      # `docker build` exiting 0 says nothing about whether medusa starts:
+      # src/api/** compiles at RUNTIME. A green image crash-looped in prod on
+      # 2026-08-06 (502 for ~3 min). This is that gate.
+      - name: Smoke test — the backend image must actually boot
+        run: scripts/smoke-backend-image.sh "$IMAGE" --network "$CI_NETWORK" --timeout 300
+
+      - name: Tear down throwaway services
+        if: always()
+        run: |
+          docker rm -f postgres-ci redis-ci >/dev/null 2>&1 || true
+          docker network rm "$CI_NETWORK" >/dev/null 2>&1 || true
 
       - name: Build web image
         run: >
