@@ -93,6 +93,17 @@ const nextConfig: NextConfig = {
   outputFileTracingExcludes: {
     '*': ['**/node_modules/**'],
   },
+  // The blanket exclude above drops every node_modules file the tracer did not
+  // statically see referenced. Next resolves @swc/helpers dynamically from
+  // `next/dist/server/require-hook.js`, so the tracer never sees it and prunes
+  // the package down to cjs/ + package.json. Harmless until Next 16.3.1, whose
+  // require-hook needs `@swc/helpers/esm/_interop_require_default.js` at boot:
+  // the standalone container then exits 1 on start with MODULE_NOT_FOUND and
+  // the deploy fails its health check (prod outage 2026-08-29 and 2026-09-09).
+  // Force the whole package back into the trace.
+  outputFileTracingIncludes: {
+    '*': ['../../node_modules/.pnpm/@swc+helpers@*/node_modules/@swc/helpers/**'],
+  },
 }
 
 export default withSentryConfig(nextConfig, {

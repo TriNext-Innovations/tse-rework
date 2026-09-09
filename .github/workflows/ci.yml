@@ -224,7 +224,27 @@ jobs:
       - name: Build web image
         run: >
           docker build -f apps/web/Dockerfile
+          -t tse-web:ci
           --build-arg NEXT_PUBLIC_MEDUSA_BACKEND_URL=https://api.tse-cartridges.co.za
           --build-arg NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=test-key
           --build-arg NEXT_PUBLIC_SITE_URL=https://tse-cartridges.co.za
           .
+
+      # Building only proves it compiles. The standalone bundle can be missing a
+      # dynamically-required module and still build perfectly clean — that shipped
+      # twice (2026-08-29, 2026-09-09): the container exited 1 on start, failed the
+      # deploy health check and took production down until rollback, with all of CI
+      # green. #401 added this for the backend image; web was left build-only.
+      - name: Boot web image and health-check
+        run: |
+          docker run -d --name web-ci -p 3000:3000 tse-web:ci
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3000/api/health >/dev/null 2>&1; then
+              echo "✓ web image booted and answered /api/health"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "✗ web image never became healthy — logs follow"
+          docker logs web-ci
+          exit 1
