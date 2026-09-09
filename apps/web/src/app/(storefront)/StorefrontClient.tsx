@@ -182,7 +182,7 @@ export default function StorefrontClient({
                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--magenta)]" /> Est. 1987 · South Africa
               </span>
             </div>
-            <h1 className="font-display font-light text-[15vw] sm:text-[12vw] lg:text-[9.5vw] leading-[0.88] tracking-[-0.04em] text-[var(--ink)]">
+            <h1 className="font-display font-light text-[15vw] sm:text-[clamp(4rem,_1.98rem_+_7.06vw,_7.625rem)] leading-[0.88] tracking-[-0.04em] text-[var(--ink)]">
               <span className="font-display-italic font-light">Generic.</span>
               <br />
               <span className="relative inline-block">

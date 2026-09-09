@@ -109,7 +109,7 @@ export default function B2BPage() {
         <div className="mx-auto max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-10 items-end">
           <div className="lg:col-span-7">
             <div className="text-[11px] uppercase tracking-[0.22em] text-[var(--muted)] mb-4">Business accounts</div>
-            <h1 className="font-display font-light text-[13vw] sm:text-[9vw] lg:text-[7vw] leading-[0.9] tracking-[-0.03em]">
+            <h1 className="font-display font-light text-[13vw] sm:text-[clamp(3.5rem,_1.6rem_+_5vw,_5.6rem)] leading-[0.9] tracking-[-0.03em]">
               Print smarter.<br />
               <span className="font-display-italic text-[#41e0f5]">Pay less.</span>
             </h1>
