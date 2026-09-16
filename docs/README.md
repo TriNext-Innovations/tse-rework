@@ -14,6 +14,7 @@ Reference documents for the TSE Online build. The root [README.md](../README.md)
 | [DEVELOPER-GUIDE.md](DEVELOPER-GUIDE.md) | Local setup, git workflow, testing, migrations, go-live checklist. |
 | [BUILD-PLAN.md](BUILD-PLAN.md) | Milestone breakdown and delivery timeline. |
 | [PROD-DEPLOY.md](PROD-DEPLOY.md) | Production deploy runbook — first-run sequence, certbot bootstrap, gotchas from the 2026-05-20 dev cutover, cert renewal, DR. |
+| [DOMAIN-CUTOVER.md](DOMAIN-CUTOVER.md) | Moving the storefront to `tse.co.za` — why that direction, DNS/SPF facts, konsoleH's role, and the phased sequence. Gated on client decision #13. |
 | [RETAINER-SCOPE.md](RETAINER-SCOPE.md) | Monthly retainer services, SLAs, and handover terms. |
 
 ---

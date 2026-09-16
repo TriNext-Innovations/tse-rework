@@ -8,6 +8,7 @@ import { CookieBanner } from '@/components/CookieBanner'
 import { Analytics } from '@/components/Analytics'
 import { siteConfig } from '@/lib/site-config'
 import { organizationJsonLd, websiteJsonLd } from '@/lib/structured-data'
+import { SITE_URL } from '@/lib/site-url'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -33,7 +34,7 @@ export const metadata: Metadata = {
     template: '%s | TSE Online',
   },
   description: DESCRIPTION,
-  metadataBase: new URL('https://tse-cartridges.co.za'),
+  metadataBase: new URL(SITE_URL),
   icons: {
     icon: '/icon.png',
     apple: '/apple-icon.png',
@@ -42,7 +43,7 @@ export const metadata: Metadata = {
     type: 'website',
     siteName: SITE_NAME,
     locale: 'en_ZA',
-    url: 'https://tse-cartridges.co.za',
+    url: SITE_URL,
     title: 'TSE Online — Printer Cartridges South Africa',
     description: DESCRIPTION,
   },

@@ -3,8 +3,9 @@ import Link from 'next/link'
 import { Navbar } from '@/components/layout'
 import { fetchPrinterModels, groupByBrand, printerSlug } from '@/lib/printers'
 import { websiteRef } from '@/lib/structured-data'
+import { SITE_URL } from '@/lib/site-url'
 
-const BASE = 'https://tse-cartridges.co.za'
+const BASE = SITE_URL
 
 // Rendered per request rather than at build. Statically prerendering this page
 // bakes in whatever the build could reach: a build without the backend ships
