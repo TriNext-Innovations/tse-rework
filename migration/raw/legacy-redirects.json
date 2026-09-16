@@ -3495,30 +3495,30 @@
   {
     "path": "/product/canon-ca718-black",
     "kind": "product",
-    "target": "/cartridges/canon-laserjet-cartridges",
-    "tier": "D",
-    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+    "target": "/products/canon-718",
+    "tier": "B",
+    "how": "unique prefix \"canon718\""
   },
   {
     "path": "/product/canon-ca718-cyan",
     "kind": "product",
-    "target": "/cartridges/canon-laserjet-cartridges",
-    "tier": "D",
-    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+    "target": "/products/canon-718",
+    "tier": "B",
+    "how": "unique prefix \"canon718\""
   },
   {
     "path": "/product/canon-ca718-magenta",
     "kind": "product",
-    "target": "/cartridges/canon-laserjet-cartridges",
-    "tier": "D",
-    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+    "target": "/products/canon-718",
+    "tier": "B",
+    "how": "unique prefix \"canon718\""
   },
   {
     "path": "/product/canon-ca718-yellow",
     "kind": "product",
-    "target": "/cartridges/canon-laserjet-cartridges",
-    "tier": "D",
-    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+    "target": "/products/canon-718",
+    "tier": "B",
+    "how": "unique prefix \"canon718\""
   },
   {
     "path": "/product/generic-brother-tn240-yellow",
@@ -3915,30 +3915,30 @@
   {
     "path": "/product/canon-ca729-yellow",
     "kind": "product",
-    "target": "/cartridges/canon-laserjet-cartridges",
-    "tier": "D",
-    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+    "target": "/products/canon-729",
+    "tier": "B",
+    "how": "unique prefix \"canon729\""
   },
   {
     "path": "/product/canon-ca729-magenta",
     "kind": "product",
-    "target": "/cartridges/canon-laserjet-cartridges",
-    "tier": "D",
-    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+    "target": "/products/canon-729",
+    "tier": "B",
+    "how": "unique prefix \"canon729\""
   },
   {
     "path": "/product/canon-ca729-cyan",
     "kind": "product",
-    "target": "/cartridges/canon-laserjet-cartridges",
-    "tier": "D",
-    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+    "target": "/products/canon-729",
+    "tier": "B",
+    "how": "unique prefix \"canon729\""
   },
   {
     "path": "/product/canon-ca729-black",
     "kind": "product",
-    "target": "/cartridges/canon-laserjet-cartridges",
-    "tier": "D",
-    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+    "target": "/products/canon-729",
+    "tier": "B",
+    "how": "unique prefix \"canon729\""
   },
   {
     "path": "/product/canon-cart703",
@@ -4335,30 +4335,30 @@
   {
     "path": "/product/canon-ca716-black",
     "kind": "product",
-    "target": "/cartridges/canon-laserjet-cartridges",
-    "tier": "D",
-    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+    "target": "/products/canon-716",
+    "tier": "B",
+    "how": "unique prefix \"canon716\""
   },
   {
     "path": "/product/canon-ca716-cyan",
     "kind": "product",
-    "target": "/cartridges/canon-laserjet-cartridges",
-    "tier": "D",
-    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+    "target": "/products/canon-716",
+    "tier": "B",
+    "how": "unique prefix \"canon716\""
   },
   {
     "path": "/product/canon-ca716-magenta",
     "kind": "product",
-    "target": "/cartridges/canon-laserjet-cartridges",
-    "tier": "D",
-    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+    "target": "/products/canon-716",
+    "tier": "B",
+    "how": "unique prefix \"canon716\""
   },
   {
     "path": "/product/canon-ca716-yellow",
     "kind": "product",
-    "target": "/cartridges/canon-laserjet-cartridges",
-    "tier": "D",
-    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+    "target": "/products/canon-716",
+    "tier": "B",
+    "how": "unique prefix \"canon716\""
   },
   {
     "path": "/product/hp-ce323a-magenta",
@@ -4405,23 +4405,23 @@
   {
     "path": "/product/canon-ca731-cyan",
     "kind": "product",
-    "target": "/cartridges/canon-laserjet-cartridges",
-    "tier": "D",
-    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+    "target": "/products/canon-731",
+    "tier": "B",
+    "how": "unique prefix \"canon731\""
   },
   {
     "path": "/product/canon-ca731-magenta",
     "kind": "product",
-    "target": "/cartridges/canon-laserjet-cartridges",
-    "tier": "D",
-    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+    "target": "/products/canon-731",
+    "tier": "B",
+    "how": "unique prefix \"canon731\""
   },
   {
     "path": "/product/canon-ca731-yellow",
     "kind": "product",
-    "target": "/cartridges/canon-laserjet-cartridges",
-    "tier": "D",
-    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+    "target": "/products/canon-731",
+    "tier": "B",
+    "how": "unique prefix \"canon731\""
   },
   {
     "path": "/product/hp-cf213a-magenta",
@@ -4685,30 +4685,30 @@
   {
     "path": "/product/canon-ca045-black",
     "kind": "product",
-    "target": "/cartridges/canon-laserjet-cartridges",
-    "tier": "D",
-    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+    "target": "/products/canon-045",
+    "tier": "B",
+    "how": "unique prefix \"canon045\""
   },
   {
     "path": "/product/canon-ca045-magenta",
     "kind": "product",
-    "target": "/cartridges/canon-laserjet-cartridges",
-    "tier": "D",
-    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+    "target": "/products/canon-045",
+    "tier": "B",
+    "how": "unique prefix \"canon045\""
   },
   {
     "path": "/product/canon-ca045-cyan",
     "kind": "product",
-    "target": "/cartridges/canon-laserjet-cartridges",
-    "tier": "D",
-    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+    "target": "/products/canon-045",
+    "tier": "B",
+    "how": "unique prefix \"canon045\""
   },
   {
     "path": "/product/canon-ca045-yellow",
     "kind": "product",
-    "target": "/cartridges/canon-laserjet-cartridges",
-    "tier": "D",
-    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+    "target": "/products/canon-045",
+    "tier": "B",
+    "how": "unique prefix \"canon045\""
   },
   {
     "path": "/product/canon-054-yellow",
@@ -4734,9 +4734,9 @@
   {
     "path": "/product/canon-054-black-high-capacity",
     "kind": "product",
-    "target": "/cartridges/canon-laserjet-cartridges",
-    "tier": "D",
-    "how": "no product → legacy category \"canon-laserjet-cartridges\""
+    "target": "/products/canon-054",
+    "tier": "A",
+    "how": "exact handle"
   },
   {
     "path": "/product/canon-052-black",

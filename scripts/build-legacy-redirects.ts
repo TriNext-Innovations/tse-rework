@@ -131,10 +131,13 @@ const UNLOCK_POST = /^\/unlock-the-best-printing-quality-with-(.+?)-(cartridges?
 const norm = (s: string): string => s.toLowerCase().replace(/[^a-z0-9]/g, '')
 
 const COLOUR = /-(black|cyan|magenta|yellow|tri-?colou?r|colou?r|bk|photo-black|light-cyan|light-magenta)(-\d+)?$/
+// A yield qualifier can trail the colour ("-black-high-capacity"), which leaves
+// the colour mid-slug where COLOUR (anchored at the end) cannot see it.
+const YIELD_SUFFIX = /-(high-capacity|high-yield|extra-high-capacity|standard-capacity)$/
 const stripColour = (s: string): string => {
   let prev = s
   for (;;) {
-    const next = prev.replace(COLOUR, '')
+    const next = prev.replace(YIELD_SUFFIX, '').replace(COLOUR, '')
     if (next === prev) return prev
     prev = next
   }
@@ -212,6 +215,11 @@ export function buildMatcher(handles: string[]) {
       if (s.startsWith('canon-')) {
         cands.add(norm(`canon-ca${s.slice(6)}`)) // legacy "canon-725" → "canon-ca725"
         cands.add(norm(`can-${s.slice(6)}`))
+        // …and the other way round. The legacy catalogue also carries the "ca"
+        // prefix itself (canon-ca718), where the new store does not (canon-718).
+        // Without this, 25 Canon URLs — the brand that is 38% of revenue — fall
+        // back to the category page while an exact product match exists.
+        if (s.startsWith('canon-ca')) cands.add(norm(`canon-${s.slice(8)}`))
       }
       const sam = s.match(/^samsung-(mlt|clt)-(\d+)$/)
       if (sam) cands.add(norm(`samsung-${sam[1]}-d${sam[2]}`)) // "mlt-101" → "mlt-d101s"
@@ -219,15 +227,21 @@ export function buildMatcher(handles: string[]) {
     // A bare brand token would prefix-match the whole brand — never a match.
     for (const c of [...cands]) if (brandTokens.has(c) || c.length < 4) cands.delete(c)
 
+    // A colour clash disqualifies the candidate, not the whole slug: keep trying
+    // the shorter candidates. Legacy canon-ca731-cyan clashes with the new
+    // canon-ca731-high-yield-black, but canon-731 — the colour-neutral parent
+    // carrying all four variants — is a correct match and is tried next.
     for (const c of [...cands].sort((a, b) => b.length - a.length)) {
       const hits = prefixMatches(c)
       if (hits.length === 1) {
-        return colourClash(slug, hits[0]) ? null : { target: hits[0], tier: 'B', how: `unique prefix "${c}"` }
+        if (colourClash(slug, hits[0])) continue
+        return { target: hits[0], tier: 'B', how: `unique prefix "${c}"` }
       }
       if (hits.length > 1) {
-        if (!sameFamily(hits, c)) return null
+        if (!sameFamily(hits, c)) continue
         const pick = pickFamily(hits, slug)
-        return colourClash(slug, pick) ? null : { target: pick, tier: 'B', how: `${c} family (${hits.length})` }
+        if (colourClash(slug, pick)) continue
+        return { target: pick, tier: 'B', how: `${c} family (${hits.length})` }
       }
     }
     return null
