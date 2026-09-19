@@ -62,10 +62,15 @@ pnpm install
 
 ```bash
 cp apps/backend/.env.example apps/backend/.env
+cp apps/web/.env.example apps/web/.env.local
 # fill in apps/backend/.env — minimum: DATABASE_URL, REDIS_URL, JWT_SECRET, COOKIE_SECRET
 ```
 
 The root `.env` already contains `POSTGRES_PASSWORD` for docker-compose. Edit it if you want a different password (and mirror it in `apps/backend/.env`).
+
+You do **not** need object-storage credentials to work locally. If `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` are unset, the S3 file provider is not registered and the backend boots without it — everything works except uploading product images.
+
+`NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY` is filled in at step 6 below, once the database exists.
 
 ### 3. Start the database and Redis
 
@@ -95,7 +100,23 @@ Medusa takes ~10–15 seconds to boot. Wait for:
 ✔ Server is ready on port: 9000
 ```
 
-### 6. Start the Next.js storefront
+### 6. Copy the publishable API key into the storefront
+
+The storefront authenticates every `/store` call with a publishable key. Without
+it you get `Publishable API key required in the request header:
+x-publishable-api-key` and a storefront with no products, no cart and no search.
+
+Migrating the database creates a default key. Print it with:
+
+```bash
+pnpm --filter @tse/backend key
+```
+
+Copy the `pk_...` value into `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY` in
+`apps/web/.env.local`. (It is also in Medusa admin under
+Settings → Publishable API keys.)
+
+### 7. Start the Next.js storefront
 
 In a second terminal:
 
@@ -125,6 +146,7 @@ docker compose down
 |---|---|
 | `docker compose up postgres redis -d` | Start infra only (Postgres + Redis) |
 | `pnpm --filter backend migrate` | Run pending DB migrations |
+| `pnpm --filter @tse/backend key` | Print the publishable API key for the storefront |
 | `pnpm --filter backend dev` | Start Medusa backend with hot reload |
 | `pnpm --filter web dev` | Start Next.js storefront with hot reload |
 | `pnpm build` | Build all workspaces |
@@ -143,6 +165,9 @@ docker compose down
 | `develop` | Default branch — active development target |
 | `feature/*` | Feature branches, PR into develop |
 | `initial/Phase-0` | Phase 0 migration & scaffold work |
+
+Features PR into `develop`; a rolling `develop → main` release PR batches them
+and merging it deploys to production. See [docs/RELEASING.md](docs/RELEASING.md).
 
 ---
 

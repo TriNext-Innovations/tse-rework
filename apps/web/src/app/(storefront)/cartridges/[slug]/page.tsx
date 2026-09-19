@@ -6,11 +6,12 @@ import { Navbar } from '@/components/layout'
 import { AddToCartButton } from '../../products/AddToCartButton'
 import { CATEGORIES, categoryBySlug, type Category } from '@/lib/categories'
 import { websiteRef } from '@/lib/structured-data'
+import { SITE_URL } from '@/lib/site-url'
 import { cartridgeTypeLabel } from '@/lib/taxonomy'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
-const BASE = 'https://tse-cartridges.co.za'
+const BASE = SITE_URL
 // The largest category (HP laser) is ~111 products. Fetch the category whole so
 // the page can list every model as a crawlable link — pagination here would
 // hide most of the catalogue from Google behind a query string.

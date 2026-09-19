@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { siteConfig } from '@/lib/site-config'
+import { SITE_HOST } from '@/lib/site-url'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout'
 
@@ -43,7 +44,7 @@ export default function TermsPage() {
 
         <div className="prose text-[var(--ink-2)] text-[15px]">
           <p>
-            These terms apply when you buy from <strong>tse-cartridges.co.za</strong>. Placing an
+            These terms apply when you buy from <strong>{SITE_HOST}</strong>. Placing an
             order means you accept them.
           </p>
 

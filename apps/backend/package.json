@@ -9,6 +9,7 @@
     "lint": "eslint src",
     "type-check": "tsc --noEmit",
     "migrate": "medusa db:migrate",
+    "key": "medusa exec src/scripts/print-publishable-key.ts",
     "migrate:compat": "medusa exec src/scripts/migrate-compatibility.ts",
     "migrate:compat:v2": "medusa exec src/scripts/migrate-compatibility-v2.ts",
     "seed:compat": "medusa exec src/scripts/seed-compatibility.ts",
@@ -20,7 +21,9 @@
     "import:woo": "medusa exec src/scripts/import-woo-orders.ts",
     "import:woocommerce": "medusa exec src/scripts/import-woocommerce.ts",
     "payfast:setup": "medusa exec src/scripts/setup-payfast.ts",
-    "shipping:setup": "medusa exec src/scripts/setup-shipping.ts"
+    "shipping:setup": "medusa exec src/scripts/setup-shipping.ts",
+    "test": "vitest run",
+    "audit:compat": "medusa exec src/scripts/audit-compat-unresolvable.ts"
   },
   "dependencies": {
     "@medusajs/admin-sdk": "2.17.2",
@@ -38,11 +41,13 @@
   "devDependencies": {
     "@tse/config": "workspace:*",
     "@types/node": "^22.20.1",
-    "@types/pg": "^8.11.11",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
-    "pg": "^8.22.0",
+    "pg": "^8.23.0",
     "ts-node": "^10.9.2",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vite": "^8.1.5",
+    "vitest": "^4.1.10"
   }
 }

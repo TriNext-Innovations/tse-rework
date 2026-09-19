@@ -13,6 +13,42 @@ function requireSecret(name: string, fallback: string): string {
   return value ?? fallback
 }
 
+// Register the S3 file provider only when R2 is configured. @medusajs/file-s3
+// throws at load without credentials ("Access key ID and secret access key are
+// required when using access key authentication"), which meant a clean checkout
+// could not boot the backend at all until you knew to invent R2 values. Local
+// work rarely touches uploads; when R2_* is unset Medusa falls back to its
+// default local file provider.
+const r2Configured = Boolean(process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY)
+
+// Not registering it is right locally and wrong in production, where images
+// are served from R2 — so say so loudly rather than silently losing uploads.
+if (!r2Configured && process.env.NODE_ENV === 'production') {
+  console.warn(
+    '[config] R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY are unset in production — ' +
+      'the S3 file provider is NOT registered and product image uploads will fail.'
+  )
+}
+const fileModule = {
+  resolve: '@medusajs/medusa/file',
+  options: {
+    providers: [
+      {
+        resolve: '@medusajs/file-s3',
+        id: 's3',
+        options: {
+          file_url: process.env.R2_PUBLIC_URL,
+          access_key_id: process.env.R2_ACCESS_KEY_ID,
+          secret_access_key: process.env.R2_SECRET_ACCESS_KEY,
+          region: 'auto',
+          bucket: process.env.R2_BUCKET,
+          endpoint: process.env.R2_ENDPOINT,
+        },
+      },
+    ],
+  },
+}
+
 // Register the PayFast payment provider only when configured, so environments
 // without PayFast credentials still boot. Enable it on the ZAR region with
 // `pnpm --filter @tse/backend payfast:setup` after deploy.
@@ -107,25 +143,7 @@ export default defineConfig({
         ],
       },
     },
-    {
-      resolve: '@medusajs/medusa/file',
-      options: {
-        providers: [
-          {
-            resolve: '@medusajs/file-s3',
-            id: 's3',
-            options: {
-              file_url: process.env.R2_PUBLIC_URL,
-              access_key_id: process.env.R2_ACCESS_KEY_ID,
-              secret_access_key: process.env.R2_SECRET_ACCESS_KEY,
-              region: 'auto',
-              bucket: process.env.R2_BUCKET,
-              endpoint: process.env.R2_ENDPOINT,
-            },
-          },
-        ],
-      },
-    },
+    ...(r2Configured ? [fileModule] : []),
   ],
   admin: {
     disable: process.env.DISABLE_MEDUSA_ADMIN === 'true',
