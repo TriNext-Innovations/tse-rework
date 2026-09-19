@@ -23,7 +23,7 @@ describe('configureIndex', () => {
     const { client, index } = fakeClient()
     await configureIndex(client)
 
-    const attrs = index.updateSearchableAttributes.mock.calls[0][0] as string[]
+    const attrs = index.updateSearchableAttributes.mock.calls[0]![0] as string[]
     expect(attrs).toContain('search_joins')
     // Ranked after title and sku so exact matches still win `attribute`.
     expect(attrs.indexOf('search_joins')).toBeGreaterThan(attrs.indexOf('title'))
@@ -34,7 +34,7 @@ describe('configureIndex', () => {
     const { client, index } = fakeClient()
     await configureIndex(client)
 
-    const typo = index.updateTypoTolerance.mock.calls[0][0]
+    const typo = index.updateTypoTolerance.mock.calls[0]![0] as any
     expect(typo.enabled).toBe(true)
     expect(typo.disableOnAttributes).toContain('sku')
   })
@@ -47,7 +47,7 @@ describe('configureIndex', () => {
     const { client, index } = fakeClient()
     await configureIndex(client)
 
-    const typo = index.updateTypoTolerance.mock.calls[0][0]
+    const typo = index.updateTypoTolerance.mock.calls[0]![0] as any
     expect(typo.disableOnAttributes).not.toContain('search_joins')
   })
 
@@ -55,7 +55,7 @@ describe('configureIndex', () => {
     const { client, index } = fakeClient()
     await configureIndex(client)
 
-    const typo = index.updateTypoTolerance.mock.calls[0][0]
+    const typo = index.updateTypoTolerance.mock.calls[0]![0] as any
     expect(typo.minWordSizeForTypos).toEqual({ oneTypo: 5, twoTypos: 9 })
   })
 })
