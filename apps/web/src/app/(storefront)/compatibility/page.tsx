@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { Suspense } from 'react'
 import { Logo } from '@/components/layout'
 import { CompatSearch } from './CompatSearch'
+import { ProductSearch } from './ProductSearch'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const PUB_KEY  = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
@@ -138,6 +139,11 @@ export default async function CompatibilityPage({ searchParams }: Props) {
               </div>
             </div>
           )}
+
+          {/* Second entry point: the shopper who already knows the cartridge. */}
+          <div className="mt-12 pt-10 border-t border-[var(--line-2)]">
+            <ProductSearch />
+          </div>
         </div>
       </div>
 

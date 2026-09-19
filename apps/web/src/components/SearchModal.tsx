@@ -3,89 +3,29 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { Meilisearch } from 'meilisearch'
-import * as Sentry from '@sentry/nextjs'
 import { cartridgeTypeLabel } from '@/lib/taxonomy'
-
-const HOST = process.env.NEXT_PUBLIC_MEILISEARCH_HOST ?? ''
-const KEY = process.env.NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY ?? ''
-const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
-const INDEX = 'products'
-
-type Hit = {
-  id: string
-  title: string
-  handle: string
-  sku: string | null
-  brand: string | null
-  cartridge_type: string | null
-  price_zar: number | null
-  image_url: string | null
-  categories: string[]
-}
-
-function getClient(): Meilisearch | null {
-  if (!HOST || !KEY) return null
-  return new Meilisearch({ host: HOST, apiKey: KEY })
-}
-
-function useDebounce<T>(value: T, ms: number): T {
-  const [debounced, setDebounced] = useState(value)
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(value), ms)
-    return () => clearTimeout(t)
-  }, [value, ms])
-  return debounced
-}
+import { useProductSearch, isSearchConfigured } from '@/lib/product-search'
 
 export function SearchModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
   const [query, setQuery] = useState('')
-  const [hits, setHits] = useState<Hit[]>([])
-  const [loading, setLoading] = useState(false)
   const [cursor, setCursor] = useState(-1)
-  const debouncedQuery = useDebounce(query, 150)
-  const client = useRef(getClient())
+  // Shared with the printer finder's product search — one relevance behaviour
+  // across every entry point. See lib/product-search.ts.
+  const { hits, loading } = useProductSearch(query, { limit: 6 })
 
   // Focus input when opened
   useEffect(() => {
     if (open) {
       setQuery('')
-      setHits([])
       setCursor(-1)
       setTimeout(() => inputRef.current?.focus(), 50)
     }
   }, [open])
 
-  // Search on query change
-  useEffect(() => {
-    if (!debouncedQuery.trim()) { setHits([]); return }
-    if (!client.current) return
-
-    setLoading(true)
-    client.current
-      .index(INDEX)
-      .search<Hit>(debouncedQuery, { limit: 6 })
-      .then((r) => {
-        setHits(r.hits)
-        setCursor(-1)
-        if (r.hits.length === 0 && debouncedQuery.trim().length >= 3) {
-          fetch(`${BACKEND}/store/search/no-results`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query: debouncedQuery.trim() }),
-          }).catch(() => null)
-        }
-      })
-      .catch((err) => {
-        // A search failure renders as "no results" — report it so a Meili
-        // outage doesn't hide behind an empty state.
-        Sentry.captureException(err, { tags: { feature: 'search' }, extra: { query: debouncedQuery } })
-        setHits([])
-      })
-      .finally(() => setLoading(false))
-  }, [debouncedQuery])
+  // Reset the highlight whenever the result set changes under it.
+  useEffect(() => { setCursor(-1) }, [hits])
 
   // Close on Escape
   useEffect(() => {
@@ -116,7 +56,7 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
 
   if (!open) return null
 
-  const configured = Boolean(HOST && KEY)
+  const configured = isSearchConfigured()
 
   return (
     <div className="fixed inset-0 z-[200] flex items-start justify-center pt-[10vh] px-4" role="dialog" aria-modal="true" aria-label="Search">
