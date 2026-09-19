@@ -21,6 +21,8 @@ export type SearchDocument = {
   // compatible cartridges. Sourced from the cartridge_compat tables, not the
   // product module — see getCompatPrintersBySku.
   compatible_printers: string[]
+  // Separator-insensitive joins of the fields above — see joinVariants.
+  search_joins: string[]
 }
 
 let _pool: Pool | null = null
@@ -71,6 +73,55 @@ export function getSearchClient(): Meilisearch {
   })
 }
 
+/**
+ * Build the separator-insensitive match tokens for a string.
+ *
+ * Meilisearch's tokenizer splits letter-digit boundaries, so "HP106" already
+ * finds "HP 106". It does NOT split letter-letter, so "canonmx494" misses
+ * "Canon MX 494" — customers routinely run the brand and model together.
+ *
+ * We close that by indexing the adjacent-word joins of the source string:
+ * "Canon MX 494 Ink" yields canonmx, mx494, 494ink (pairs) and canonmx494,
+ * mx494ink (triples). Deliberately NOT one normalised blob of the whole
+ * string — a single long token prefix-matches every short query ("hp" would
+ * hit "hp106blacktonercartridge") and skews ranking across the catalogue.
+ */
+export function joinVariants(source: string, maxWindow = 3): string[] {
+  const words = source
+    .toLowerCase()
+    .split(/[^a-z0-9]+/i)
+    .filter(Boolean)
+  if (words.length < 2) return []
+
+  const out = new Set<string>()
+  for (let size = 2; size <= maxWindow; size++) {
+    for (let i = 0; i + size <= words.length; i++) {
+      const joined = words.slice(i, i + size).join('')
+      // Joins this short are noise, not intent.
+      if (joined.length >= 4) out.add(joined)
+    }
+  }
+  return [...out]
+}
+
+/** Every join token for a product: its own fields, plus brand-prefixed printers. */
+export function buildSearchJoins(
+  parts: { title: string; sku: string | null; brand: string | null; compatiblePrinters: string[] },
+): string[] {
+  const { title, sku, brand, compatiblePrinters } = parts
+  const out = new Set<string>()
+  for (const source of [title, sku ?? '', brand ?? '', ...compatiblePrinters]) {
+    for (const v of joinVariants(source)) out.add(v)
+  }
+  // Some models are stored brand-less, so pair brand and model up too.
+  if (brand) {
+    for (const printer of compatiblePrinters) {
+      for (const v of joinVariants(`${brand} ${printer}`)) out.add(v)
+    }
+  }
+  return [...out]
+}
+
 export function productToDocument(
   product: any,
   compatiblePrinters: string[] = [],
@@ -96,6 +147,12 @@ export function productToDocument(
     image_url: product.images?.[0]?.url ?? null,
     categories,
     compatible_printers: compatiblePrinters,
+    search_joins: buildSearchJoins({
+      title: product.title ?? '',
+      sku: variant?.sku ?? null,
+      brand,
+      compatiblePrinters,
+    }),
   }
 }
 
@@ -114,7 +171,7 @@ export function compatiblePrintersForProduct(
 
 export async function configureIndex(client: Meilisearch): Promise<void> {
   const index = client.index(SEARCH_INDEX)
-  await index.updateSearchableAttributes(['title', 'sku', 'brand', 'compatible_printers', 'categories', 'description'])
+  await index.updateSearchableAttributes(['title', 'sku', 'brand', 'compatible_printers', 'search_joins', 'categories', 'description'])
   await index.updateFilterableAttributes(['brand', 'cartridge_type'])
   await index.updateSortableAttributes(['price_zar'])
   await index.updateRankingRules([
