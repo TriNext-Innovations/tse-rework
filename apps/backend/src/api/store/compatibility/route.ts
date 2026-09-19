@@ -5,12 +5,22 @@ import { Pool } from "pg"
 // Only pass through thumbnails stored in our own infrastructure.
 // WooCommerce import leaves WordPress URLs in the DB — drop them until
 // the import pipeline re-uploads images to S3/R2.
-const ALLOWED_THUMBNAIL_HOSTS = [".supabase.co", ".r2.dev"]
-function ownThumbnail(url: string | null | undefined): string | null {
+//
+// Keep this in step with the remotePatterns in apps/web/next.config.ts: a host
+// missing here renders the placeholder instead of the product, silently.
+// images.tse-cartridges.co.za is the R2 custom domain that product images moved
+// onto; pub-*.r2.dev stays allowed while the DB URLs finish migrating.
+const ALLOWED_THUMBNAIL_SUFFIXES = [".supabase.co", ".r2.dev"]
+const ALLOWED_THUMBNAIL_HOSTS = ["images.tse-cartridges.co.za"]
+
+export function ownThumbnail(url: string | null | undefined): string | null {
   if (!url) return null
   try {
-    const host = new URL(url).hostname
-    return ALLOWED_THUMBNAIL_HOSTS.some((h) => host.endsWith(h)) ? url : null
+    const host = new URL(url).hostname.toLowerCase()
+    // Exact match for named hosts — a suffix test would also accept
+    // "anythingimages.tse-cartridges.co.za".
+    if (ALLOWED_THUMBNAIL_HOSTS.includes(host)) return url
+    return ALLOWED_THUMBNAIL_SUFFIXES.some((s) => host.endsWith(s)) ? url : null
   } catch {
     return null
   }
