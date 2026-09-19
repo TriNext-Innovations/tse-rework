@@ -21,6 +21,8 @@ export type SearchDocument = {
   // compatible cartridges. Sourced from the cartridge_compat tables, not the
   // product module — see getCompatPrintersBySku.
   compatible_printers: string[]
+  // Separator-insensitive joins of the fields above — see joinVariants.
+  search_joins: string[]
 }
 
 let _pool: Pool | null = null
@@ -71,6 +73,55 @@ export function getSearchClient(): Meilisearch {
   })
 }
 
+/**
+ * Build the separator-insensitive match tokens for a string.
+ *
+ * Meilisearch's tokenizer splits letter-digit boundaries, so "HP106" already
+ * finds "HP 106". It does NOT split letter-letter, so "canonmx494" misses
+ * "Canon MX 494" — customers routinely run the brand and model together.
+ *
+ * We close that by indexing the adjacent-word joins of the source string:
+ * "Canon MX 494 Ink" yields canonmx, mx494, 494ink (pairs) and canonmx494,
+ * mx494ink (triples). Deliberately NOT one normalised blob of the whole
+ * string — a single long token prefix-matches every short query ("hp" would
+ * hit "hp106blacktonercartridge") and skews ranking across the catalogue.
+ */
+export function joinVariants(source: string, maxWindow = 3): string[] {
+  const words = source
+    .toLowerCase()
+    .split(/[^a-z0-9]+/i)
+    .filter(Boolean)
+  if (words.length < 2) return []
+
+  const out = new Set<string>()
+  for (let size = 2; size <= maxWindow; size++) {
+    for (let i = 0; i + size <= words.length; i++) {
+      const joined = words.slice(i, i + size).join('')
+      // Joins this short are noise, not intent.
+      if (joined.length >= 4) out.add(joined)
+    }
+  }
+  return [...out]
+}
+
+/** Every join token for a product: its own fields, plus brand-prefixed printers. */
+export function buildSearchJoins(
+  parts: { title: string; sku: string | null; brand: string | null; compatiblePrinters: string[] },
+): string[] {
+  const { title, sku, brand, compatiblePrinters } = parts
+  const out = new Set<string>()
+  for (const source of [title, sku ?? '', brand ?? '', ...compatiblePrinters]) {
+    for (const v of joinVariants(source)) out.add(v)
+  }
+  // Some models are stored brand-less, so pair brand and model up too.
+  if (brand) {
+    for (const printer of compatiblePrinters) {
+      for (const v of joinVariants(`${brand} ${printer}`)) out.add(v)
+    }
+  }
+  return [...out]
+}
+
 export function productToDocument(
   product: any,
   compatiblePrinters: string[] = [],
@@ -96,6 +147,12 @@ export function productToDocument(
     image_url: product.images?.[0]?.url ?? null,
     categories,
     compatible_printers: compatiblePrinters,
+    search_joins: buildSearchJoins({
+      title: product.title ?? '',
+      sku: variant?.sku ?? null,
+      brand,
+      compatiblePrinters,
+    }),
   }
 }
 
@@ -114,12 +171,43 @@ export function compatiblePrintersForProduct(
 
 export async function configureIndex(client: Meilisearch): Promise<void> {
   const index = client.index(SEARCH_INDEX)
-  await index.updateSearchableAttributes(['title', 'sku', 'brand', 'compatible_printers', 'categories', 'description'])
+  await index.updateSearchableAttributes(['title', 'sku', 'brand', 'compatible_printers', 'search_joins', 'categories', 'description'])
   await index.updateFilterableAttributes(['brand', 'cartridge_type'])
   await index.updateSortableAttributes(['price_zar'])
   await index.updateRankingRules([
     'words', 'typo', 'proximity', 'attribute', 'sort', 'exactness',
   ])
+  // Typo tolerance, stated rather than inherited.
+  //
+  // Prose can take a typo; a part number cannot. "HP 106" and "HP 105" are
+  // different products, and a cartridge bought on a fuzzy match is a return.
+  // The defaults already shield the short codes — a typo needs a 5-character
+  // word, so "106" and "494" get none — but that is a property of the
+  // defaults, not a decision, and it would move if they did. Pinned here.
+  //
+  // `sku` is the one attribute worth disabling outright: a near-miss on an
+  // exact part number is always wrong (W1106B must not find W1106A).
+  //
+  // `search_joins` is deliberately NOT in this list, despite also being an
+  // identifier field. Disabling typos on it stops it matching AT ALL, not just
+  // fuzzily, which silently undoes the separator fix it exists for —
+  // "canonmx494" drops back to zero results. Verified against v1.12.8:
+  //
+  //   disableOnAttributes            canonmx494   W1106B   cartrige
+  //   sku, search_joins, printers    0 (broken)   0        4
+  //   sku                            1            0        4
+  //   (none)                         1            1        4
+  //
+  // The cost of leaving it out: a typo'd model code can still match through
+  // `search_joins` or `title` (TN2412 finds TN-2411). Exactness ranking puts
+  // the right product first, and that is the better trade against breaking
+  // spaceless search outright. Revisit if Meilisearch separates "no typos on
+  // this attribute" from "do not match this attribute".
+  await index.updateTypoTolerance({
+    enabled: true,
+    minWordSizeForTypos: { oneTypo: 5, twoTypos: 9 },
+    disableOnAttributes: ['sku'],
+  })
 }
 
 export async function upsertDocument(product: any): Promise<void> {
