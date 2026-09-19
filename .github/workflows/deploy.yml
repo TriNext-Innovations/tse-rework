@@ -74,6 +74,15 @@ jobs:
             docker compose pull --quiet
             docker compose build
 
+            # Validate the nginx config BEFORE any container is swapped. A bad
+            # config used to surface at the first `nginx -s reload`, which exits
+            # 1 and aborts the deploy mid-swap with nginx already down — that is
+            # how the 2026-09-19 outage happened. `run --rm` builds a throwaway
+            # container against the same mounted config, so this works even when
+            # nginx itself is not running.
+            echo "▶ Validating nginx config (gate — must exit 0)"
+            docker compose run --rm --no-deps --entrypoint nginx nginx -t
+
             echo "▶ Running database migrations (gate — must exit 0)"
             docker compose run --rm --no-deps medusa-migrate
 
@@ -84,6 +93,7 @@ jobs:
             # static upstreams resolve them once at load — reload so it
             # re-resolves, otherwise the public site 502s while checks pass.
             echo "▶ Reloading nginx (medusa IP changed)"
+            docker compose up -d --no-build nginx
             docker compose exec -T nginx nginx -s reload
 
             echo "▶ Health check — Medusa (direct)"
@@ -93,6 +103,7 @@ jobs:
             docker compose up -d --no-deps --no-build --wait --wait-timeout 180 web
 
             echo "▶ Reloading nginx (web IP changed)"
+            docker compose up -d --no-build nginx
             docker compose exec -T nginx nginx -s reload
 
             echo "▶ Health check — Next.js (direct)"
@@ -100,6 +111,7 @@ jobs:
 
             echo "▶ Syncing remaining services (nginx/bugsink/config changes)"
             docker compose up -d --no-build --remove-orphans
+            docker compose up -d --no-build nginx
             docker compose exec -T nginx nginx -s reload
 
             # Through nginx via the public URLs — this is what customers hit; a
@@ -146,6 +158,7 @@ jobs:
             docker compose up -d --no-build
 
             echo "▶ Reloading nginx after rollback"
+            docker compose up -d --no-build nginx || echo "⚠ nginx start failed"
             docker compose exec -T nginx nginx -s reload || echo "⚠ nginx reload failed"
 
             echo "▶ Post-rollback health checks"
