@@ -177,6 +177,37 @@ export async function configureIndex(client: Meilisearch): Promise<void> {
   await index.updateRankingRules([
     'words', 'typo', 'proximity', 'attribute', 'sort', 'exactness',
   ])
+  // Typo tolerance, stated rather than inherited.
+  //
+  // Prose can take a typo; a part number cannot. "HP 106" and "HP 105" are
+  // different products, and a cartridge bought on a fuzzy match is a return.
+  // The defaults already shield the short codes — a typo needs a 5-character
+  // word, so "106" and "494" get none — but that is a property of the
+  // defaults, not a decision, and it would move if they did. Pinned here.
+  //
+  // `sku` is the one attribute worth disabling outright: a near-miss on an
+  // exact part number is always wrong (W1106B must not find W1106A).
+  //
+  // `search_joins` is deliberately NOT in this list, despite also being an
+  // identifier field. Disabling typos on it stops it matching AT ALL, not just
+  // fuzzily, which silently undoes the separator fix it exists for —
+  // "canonmx494" drops back to zero results. Verified against v1.12.8:
+  //
+  //   disableOnAttributes            canonmx494   W1106B   cartrige
+  //   sku, search_joins, printers    0 (broken)   0        4
+  //   sku                            1            0        4
+  //   (none)                         1            1        4
+  //
+  // The cost of leaving it out: a typo'd model code can still match through
+  // `search_joins` or `title` (TN2412 finds TN-2411). Exactness ranking puts
+  // the right product first, and that is the better trade against breaking
+  // spaceless search outright. Revisit if Meilisearch separates "no typos on
+  // this attribute" from "do not match this attribute".
+  await index.updateTypoTolerance({
+    enabled: true,
+    minWordSizeForTypos: { oneTypo: 5, twoTypos: 9 },
+    disableOnAttributes: ['sku'],
+  })
 }
 
 export async function upsertDocument(product: any): Promise<void> {
