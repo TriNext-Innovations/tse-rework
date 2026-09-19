@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, it, expect } from 'vitest'
 import { CATEGORIES, categoryBySlug, legacyRedirectMap } from '@/lib/categories'
@@ -82,11 +82,21 @@ describe('legacy redirect map', () => {
 // CATEGORIES is what renders the pages. They are produced by different tools,
 // so nothing but this test stops them drifting apart — and the failure mode is
 // silent until the one-shot authority transfer has already been spent.
-describe('cutover redirect map', () => {
-  const conf = readFileSync(
-    join(import.meta.dirname, '../../../../../infrastructure/nginx/conf.d/00-legacy-redirects.conf'),
-    'utf8',
-  )
+// The conf is absent while the cutover redirect map is pulled from main —
+// it duplicated map_hash_max_size against a conf already on the production box
+// and took nginx down on 2026-09-19. These tests re-arm themselves the moment
+// the file returns, so restoring it cannot silently ship without this check.
+const CONF_PATH = join(
+  import.meta.dirname,
+  '../../../../../infrastructure/nginx/conf.d/00-legacy-redirects.conf',
+)
+
+const CONF_PRESENT = existsSync(CONF_PATH)
+
+describe.skipIf(!CONF_PRESENT)('cutover redirect map', () => {
+  // skipIf still evaluates this body during collection, so the read must not
+  // throw when the file is absent.
+  const conf = CONF_PRESENT ? readFileSync(CONF_PATH, 'utf8') : ''
   const nginxMap = Object.fromEntries(
     conf
       .split('\n')
