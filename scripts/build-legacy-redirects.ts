@@ -1,5 +1,5 @@
 /**
- * Builds the tse.co.za → tse-cartridges.co.za 301 map for the cutover.
+ * Builds the legacy WooCommerce 301 map for the cutover.
  *
  * The authority transfer is one-shot: a ranking legacy page redirected to a
  * non-equivalent is read as a soft 404 and the ranking is dropped rather than
@@ -390,15 +390,19 @@ async function main() {
     .join('\n')
 
   writeFileSync(join(ROOT, 'infrastructure/nginx/conf.d/00-legacy-redirects.conf'), `\
-# ── tse.co.za → tse-cartridges.co.za 301 map ──────────────────────────────
+# ── Legacy WooCommerce URL → new storefront 301 map ────────────────────────
 #
 # GENERATED — do not edit by hand.
 #   npx tsx scripts/build-legacy-redirects.ts
 #
 # ${mapped.length} of ${rows.length} legacy URLs, every target verified against the live
 # sitemap at generation time. Defining the map is inert: nothing reads
-# $legacy_target until conf.d/legacy-tse-co-za.conf.disabled is enabled at
+# $legacy_target until conf.d/tse-co-za.conf.disabled is enabled at
 # cutover, so this file is safe to deploy ahead of the DNS change.
+#
+# Every target is a relative path, so the map is direction-agnostic. Under
+# decision #13 these are SAME-HOST redirects on tse.co.za, which is materially
+# safer than a cross-domain move.
 #
 # Tiers (see migration/raw/legacy-redirects.json for the per-URL rationale):
 #   A  exact/normalized product or category match

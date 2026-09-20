@@ -1,0 +1,105 @@
+# ── Storefront on tse.co.za (decision #13) ────────────────────────────────
+#
+# DISABLED ON PURPOSE. nginx includes conf.d/*.conf, so this file is inert
+# until it is renamed to tse-co-za.conf at cutover.
+#
+# Do not enable it before the certificate exists. nginx refuses to start on a
+# missing ssl_certificate path, and it would take the live storefront down
+# with it. Order is: cert (DNS-01, #435) → rename → nginx -t → reload → move
+# the A record (#442). See docs/DOMAIN-CUTOVER.md.
+#
+# This REPLACES legacy-tse-co-za.conf.disabled, which implemented the opposite
+# direction (#8: tse.co.za 301s away to tse-cartridges.co.za). Under #13
+# tse.co.za serves the storefront and tse-cartridges.co.za redirects into it.
+#
+# tse.co.za is NOT behind Cloudflare — its nameservers stay at GAM and the A
+# record points straight at this box. So unlike the tse-cartridges.co.za
+# blocks, there is no Cloudflare Origin CA cert and no edge in front: this
+# needs a publicly-trusted Let's Encrypt cert, and the origin takes traffic
+# raw. Security headers still come from Next (next.config.ts sets HSTS, CSP
+# and the rest on every route), so they are not repeated here.
+
+# ── HTTP → HTTPS, plus the ACME webroot for renewals ──────────────────────
+server {
+    listen 80;
+    server_name tse.co.za www.tse.co.za;
+
+    # Renewals only. The first issuance is DNS-01 (#435) precisely so that it
+    # can happen while tse.co.za still points at Xneelo — enabling this file
+    # also enables the :443 blocks below, which need a cert that does not yet
+    # exist. Once traffic is here, webroot renewal works normally.
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# ── www → apex ────────────────────────────────────────────────────────────
+# Matches the behaviour tse-cartridges.co.za already has. The cert issued in
+# #435 carries both names, so this block can use it directly.
+server {
+    listen 443 ssl;
+    http2  on;
+    server_name www.tse.co.za;
+
+    ssl_certificate     /etc/letsencrypt/live/tse.co.za/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/tse.co.za/privkey.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
+
+    return 301 https://tse.co.za$request_uri;
+}
+
+# ── Storefront — tse.co.za (apex) → Next.js :3000 ─────────────────────────
+server {
+    listen 443 ssl;
+    http2  on;
+    server_name tse.co.za;
+
+    ssl_certificate     /etc/letsencrypt/live/tse.co.za/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/tse.co.za/privkey.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
+
+    proxy_read_timeout  60s;
+    proxy_send_timeout  60s;
+
+    # Legacy WooCommerce URLs, now a SAME-HOST restructure rather than a
+    # cross-domain move — which is the whole point of #13. $legacy_target is
+    # defined in 00-legacy-redirects.conf (832 URLs, every target asserted to
+    # be a live route at generation time).
+    #
+    # Safe to evaluate ahead of the proxy: the two URL namespaces were checked
+    # for collisions and there are none. Legacy uses /product/ and
+    # /product-category/; the new store uses /products/ and /cartridges/. So
+    # this can never shadow a real storefront route.
+    #
+    # The map keys on $uri, so query strings are dropped deliberately — legacy
+    # cart and filter URLs carry nothing worth preserving.
+    if ($legacy_target) {
+        return 301 https://tse.co.za$legacy_target;
+    }
+
+    location /meili/ {
+        proxy_pass         http://meilisearch/;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+    }
+
+    location / {
+        proxy_pass         http://nextjs;
+        proxy_http_version 1.1;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+    }
+}

@@ -94,9 +94,16 @@ Not DNS. Three things, all worth doing in Phase 1:
 
 Each phase has a gate. Do not start one until the previous is verified.
 
-### Phase 0 — Settle #13
-Client signs off in writing. Supersede `CLIENT-PENDING.md` #8 rather than editing it, so
-the reversal is on record. **Blocks everything below.**
+### Phase 0 — Settle #13 ✅ decided
+**Confirmed by Ryno 2026-09-16: the storefront moves onto `tse.co.za`.** TSE has given
+notice to both their hosting provider and their digital media agency, so this is go.
+
+Still to do: get it in writing from the client and supersede `CLIENT-PENDING.md` #8 rather
+than editing it, so the reversal stays on record (#432).
+
+⚠ The notice starts a clock. If the Xneelo box goes dark before Phase 1 runs, the access
+logs, `.htaccess` and legacy sitemap are gone for good — and the sitemap is this plan's
+own input. **Phase 1 is now the urgent one, not Phase 4.**
 
 ### Phase 1 — Harvest the real URL inventory (konsoleH)
 Pull access logs and `.htaccess`. Rebuild the map from what was actually crawled, not just
@@ -121,8 +128,9 @@ so a dev value can never leak into a production build's canonicals. Unset falls 
 `https://tse-cartridges.co.za`, i.e. the domain we are already on.
 
 ### Phase 3 — Pre-issue the certificate
-Do **not** use the `--standalone` flow from `PROD-DEPLOY.md` §7a here. Use a **DNS-01**
-challenge, which works while `tse.co.za` still points at Xneelo:
+Use a **DNS-01** challenge, which works while `tse.co.za` still points at Xneelo. (§7a used
+to prescribe `--standalone`, which needed DNS to have already moved and cost ~30s of
+storefront downtime; it has been corrected to match this.)
 
 ```bash
 docker run --rm -it \
@@ -138,10 +146,13 @@ the flip is zero-downtime. Gate: `nginx -t` passes with the `tse.co.za` server b
 enabled.
 
 ### Phase 4 — Flip
-Lower the A-record TTL to 300s **a day ahead**, then point `tse.co.za` and
+Lower the A-record TTL to 300s **at least two days ahead** — measured 2026-09-16, the
+configured TTL is **1000s**, and a TTL change only takes effect once the old value has
+expired everywhere. Better still, do it now: it is reversible, changes nothing visible, and
+it is the only step with a hard lead time (#433). Then point `tse.co.za` and
 `www.tse.co.za` at the Vultr IP at GAM. Rebuild and deploy the web image with
 `NEXT_PUBLIC_SITE_URL=https://tse.co.za`. Enable the redirect server block per
-`PROD-DEPLOY.md` §7a step 5.
+`PROD-DEPLOY.md` §7a step 4.
 
 Rollback is a DNS revert — hence the low TTL.
 
@@ -161,9 +172,10 @@ The only phase with real business risk.
 - **PayFast** — return / notify / cancel URLs (still outstanding from `CLIENT-PENDING` #6).
 - **GA4**, and the transactional sending domain.
 
-⚠ `CLIENT-PENDING.md` #10 says the sender is Resend (`sales@tse.co.za`) while issue #192
-says ZeptoMail (`orders@tse-cartridges.co.za`). **These contradict each other — establish
-which is live before this phase**, since the DKIM/SPF work differs.
+✅ The sender contradiction is settled: it is **ZeptoMail**, `orders@tse-cartridges.co.za`
+with Reply-To `sales@tse.co.za`. Resend was never adopted; `CLIENT-PENDING.md` #10 has been
+corrected. Moving the sender to `orders@tse.co.za` is tracked separately (#444) and is
+deliberately sequenced *after* the flip so it cannot block it.
 
 ### Phase 7 — Decommission Woo
 Only after Phase 5 verifies. **Regenerate the map before this point** — once the legacy
