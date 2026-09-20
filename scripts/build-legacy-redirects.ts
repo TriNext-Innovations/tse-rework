@@ -406,15 +406,19 @@ async function main() {
 #   D  no product equivalent — falls back to the brand's category page
 #   M  manual rule
 
+# These must precede every map block. Parsing a map sets the hash sizes to
+# their defaults if they are still unset, so a later map_hash_max_size is
+# rejected as "directive is duplicate" even though it appears only once — which
+# took production down on 2026-09-19.
+map_hash_max_size    4096;
+map_hash_bucket_size 256;
+
 # Trailing slash is how the legacy site links everything; normalize before
 # lookup so /product/foo/ and /product/foo hit the same entry.
 map $uri $legacy_key {
     ~^(?<stripped>.+)/$  $stripped;
     default              $uri;
 }
-
-map_hash_max_size    4096;
-map_hash_bucket_size 256;
 
 map $legacy_key $legacy_target {
     default "";
