@@ -50,6 +50,14 @@ server {
     ssl_protocols       TLSv1.2 TLSv1.3;
     ssl_ciphers         HIGH:!aNULL:!MD5;
 
+    # Every indexed legacy URL is on www — the old site canonicalises apex → www
+    # and its sitemap publishes only www URLs (verified 2026-09-21). So resolve
+    # the legacy map HERE too, straight to the final target, rather than letting
+    # www bounce to the apex and redirect a second time. One hop, not two.
+    if ($legacy_target) {
+        return 301 https://tse.co.za$legacy_target;
+    }
+
     return 301 https://tse.co.za$request_uri;
 }
 
