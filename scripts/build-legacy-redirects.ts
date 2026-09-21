@@ -325,6 +325,19 @@ async function main() {
   for (const path of seeded) legacy.push({ kind: 'page', path })
   if (seeded.length) console.log(`  +${seeded.length} seeded from MANUAL (unlisted vanity URLs)`)
 
+  // Same problem, different cause: the legacy catalogue renamed products to a
+  // "generic-" prefix and left the old slug 301ing to the new one. WordPress
+  // serves those rewrites at request time, so only the NEW slug is published
+  // in the sitemap. Verified 2026-09-21: 56 of 64 old slugs still redirect.
+  // After cutover the rewrite is gone, so an unseeded old slug 404s.
+  const aliasOf = new Map<string, string>()
+  for (const r of legacy) {
+    if (!r.path.startsWith('/product/generic-')) continue
+    const old = r.path.replace('/product/generic-', '/product/')
+    if (!seen.has(old)) aliasOf.set(old, r.path)
+  }
+  if (aliasOf.size) console.log(`  +${aliasOf.size} old slugs behind generic- renames`)
+
   console.log('Fetching the new sitemap…')
   const newUrls = locs(await text(`${NEW}/sitemap.xml`)).map(pathOf)
   const handles = newUrls.filter((p) => p.startsWith('/products/')).map((p) => p.slice(10))
@@ -407,6 +420,23 @@ async function main() {
     for (const d of dead) console.error(`  DEAD TARGET ${d.path} → ${d.target}`)
     throw new Error(`${dead.length} targets are not live routes`)
   }
+
+  // An old slug is the same product as its generic- twin — the legacy site's
+  // own 301 says so — so inherit the twin's target rather than re-resolving.
+  // Re-resolving fails: the new store KEPT the generic- prefix in its handles,
+  // so the old slug matches nothing and falls back to the brand category,
+  // turning 60 exact product matches into soft-404 signals.
+  const byPath = new Map(rows.map((r) => [r.path, r]))
+  let inherited = 0
+  for (const [old, twin] of aliasOf) {
+    const t = byPath.get(twin)
+    if (!t || !t.target) continue
+    rows.push({ path: old, kind: 'product', target: t.target, tier: t.tier,
+                how: `generic- rename of ${twin}` })
+    inherited++
+  }
+  if (inherited) console.log(`  ${inherited} old slugs inherited their twin's target`)
+
 
   const mapped = rows.filter((r) => r.target)
   const tiers = rows.reduce<Record<string, number>>((a, r) => ({ ...a, [r.tier]: (a[r.tier] ?? 0) + 1 }), {})
