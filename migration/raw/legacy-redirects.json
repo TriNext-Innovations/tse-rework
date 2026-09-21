@@ -5822,5 +5822,40 @@
     "target": "/products",
     "tier": "M",
     "how": "date archive → browse"
+  },
+  {
+    "path": "/brother",
+    "kind": "page",
+    "target": "/cartridges/brother-laserjet-cartridges",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/lexmark-cartridges",
+    "kind": "page",
+    "target": "/cartridges/lexmark-laserjet-cartridges",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/printer-cartridges",
+    "kind": "page",
+    "target": "/products",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/home",
+    "kind": "page",
+    "target": "/",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/index.php",
+    "kind": "page",
+    "target": "/",
+    "tier": "M",
+    "how": "manual rule"
   }
 ]

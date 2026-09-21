@@ -57,6 +57,40 @@ one host, with no ambiguity.
 GAM. The A-record flip needs **GAM access, which is not currently in hand** — chase this
 first, it is the long pole.
 
+### ⚠ Never delegate the nameservers to Xneelo
+
+konsoleH's *Domain Details* page shows a DNS block — `ns1.host-h.net`, `ns2.host-h.net`,
+`ns1.dns-h.com`, `ns2.dns-h.com` — under the line *"The following URLs point to your
+account once DNS propagation is completed."* That line describes a state that was never
+reached, and konsoleH has no way to know it.
+
+**Those nameservers hold a real, authoritative zone for `tse.co.za` that is not in use.**
+Verified by querying `129.232.248.30` directly, 2026-09-21:
+
+| Record | Xneelo's shadow zone | The live GamCo zone |
+|---|---|---|
+| `A` | `129.232.138.17` | `129.232.138.17` — **identical** |
+| `MX` | `10 mail.tse.co.za` → `129.232.138.17` | `10/20 eu1-smtp-mx1/mx2.titanhq.com` |
+| `SPF` | `v=spf1 mx a include:spf.host-h.net ?all` | the long GamCo record |
+
+konsoleH provisions a zone for every hosting account by default, assuming you will delegate
+to it. TSE never did — the registry delegates to GamCo — so it sits there looking correct
+and doing nothing.
+
+**Why this is a landmine rather than a curiosity.** Pointing the nameservers at Xneelo is a
+natural instinct: the hosting is there, so surely the DNS should be. Do that and the
+**website keeps working** — the A record is byte-identical — while **mail dies instantly**,
+because MX flips from TitanHQ to a box that does not receive TSE's mail. The visible thing
+survives, the invisible thing breaks, and nobody connects the two. That is exactly how
+Sōter lost mail for 12 days.
+
+Two consequences for this runbook:
+
+1. **konsoleH's DNS section is inert.** Editing it changes nothing. Do not try.
+2. **The narrow A-record path is now evidence-backed, not just preferred.** It never touches
+   delegation, so this zone stays dormant. If delegation is ever revisited — to Cloudflare
+   or anyone — MX must be recreated *before* the nameservers change, not after.
+
 ### Email is safe, with one caveat
 
 MX points at TitanHQ, wholly independent of the A record, so flipping A does not touch

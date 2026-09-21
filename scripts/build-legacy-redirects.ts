@@ -26,7 +26,20 @@
 import { writeFileSync, mkdirSync } from 'fs'
 import { join } from 'path'
 
-const LEGACY = 'https://www.tse.co.za'
+// The legacy origin. Overridable because it has to survive the cutover: the
+// moment tse.co.za's A record moves, www.tse.co.za is the NEW site and this
+// generator would happily rebuild the map by reading its own output.
+//
+// Xneelo publishes a per-account hostname that reaches the legacy box directly
+// and needs no DNS change of ours — verified 2026-09-21, it serves every
+// sitemap and all deep content paths:
+//
+//   LEGACY_ORIGIN=http://tse.co.za.dedi585.jnb2.host-h.net npx tsx scripts/build-legacy-redirects.ts
+//
+// Note it is http-only (the cert covers tse.co.za, not the host-h.net name)
+// and its homepage 301s to the canonical www host — neither matters here,
+// since only the sitemaps and category pages are read.
+const LEGACY = (process.env.LEGACY_ORIGIN ?? 'https://www.tse.co.za').replace(/\/+$/, '')
 // Kept in step with the storefront's own origin so the generator can never
 // verify targets against a different host than the site actually publishes.
 const NEW = process.env.NEXT_PUBLIC_SITE_URL?.startsWith('https://')
@@ -120,6 +133,17 @@ const MANUAL: Record<string, string> = {
   '/the-best-hp-cartridges-to-enhance-your-printing-experience': '/cartridges/hp-laserjet-cartridges',
   '/printer-with-ink-tank-revolutionizing-printing-efficiency-better': '/products',
   '/buy-the-best-quality-generic-samsung-111-cartridges': '/products/samsung-mlt-d111l',
+
+  // Vanity URLs and old permalinks. These 301 on the legacy site today via its
+  // own rewrite rules, so they appear in NO sitemap — they were found by
+  // probing the live site (2026-09-21). Their chains are composed in here
+  // rather than left to resolve twice: after cutover the legacy rules are gone,
+  // so an unmapped source 404s instead of redirecting.
+  '/brother': '/cartridges/brother-laserjet-cartridges',
+  '/lexmark-cartridges': '/cartridges/lexmark-laserjet-cartridges',
+  '/printer-cartridges': '/products',
+  '/home': '/',
+  '/index.php': '/',
 }
 
 // The two page-title patterns the legacy site uses for model landing pages.
@@ -291,6 +315,15 @@ async function main() {
     }
   }
   console.log(`  ${legacy.length} legacy URLs`)
+
+  // Vanity URLs and old permalinks appear in no sitemap — the legacy site
+  // rewrites them at request time, so nothing publishes them. Seed the MANUAL
+  // keys that the crawl did not find, or their rules never fire: MANUAL is
+  // applied to discovered URLs, it does not introduce them.
+  const seen = new Set(legacy.map((r) => r.path))
+  const seeded = Object.keys(MANUAL).filter((p) => !seen.has(p))
+  for (const path of seeded) legacy.push({ kind: 'page', path })
+  if (seeded.length) console.log(`  +${seeded.length} seeded from MANUAL (unlisted vanity URLs)`)
 
   console.log('Fetching the new sitemap…')
   const newUrls = locs(await text(`${NEW}/sitemap.xml`)).map(pathOf)
