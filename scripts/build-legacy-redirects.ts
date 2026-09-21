@@ -139,6 +139,40 @@ const MANUAL: Record<string, string> = {
   // probing the live site (2026-09-21). Their chains are composed in here
   // rather than left to resolve twice: after cutover the legacy rules are gone,
   // so an unmapped source 404s instead of redirecting.
+  // Woo pages with a real equivalent on the new store. These are not "plumbing"
+  // — a customer with /my-account bookmarked should land on their account, not
+  // a 404. Verified live 2026-09-21. Cart and checkout stay unmapped: they are
+  // session state, and an empty cart is a worse landing than an honest 404.
+  // Already-404 URLs that AWStats shows are still being requested (Sep 2026).
+  // These are NOT cutover regressions — they are broken on the legacy site
+  // today — so mapping them recovers demand rather than preventing a loss.
+  // The brand ones are the notable hits: /hp-cartridges 46, /samsung-cartridges
+  // 41, /canon-cartridges 38 in one month, on URLs that give a 404 today.
+  '/hp-cartridges': '/cartridges/hp-laserjet-cartridges',
+  '/samsung-cartridges': '/cartridges/samsung-laserjet-cartridges',
+  '/canon-cartridges': '/cartridges/canon-laserjet-cartridges',
+  '/product-category/lexmark-cartridges': '/cartridges/lexmark-laserjet-cartridges',
+  '/product-category/hp-printer-cartridges': '/cartridges/hp-laserjet-cartridges',
+  // Pre-WordPress relics. This domain is from 1997, and something still asks
+  // for the .html structure — exactly the kind of long-tail backlink no
+  // sitemap has listed for a decade.
+  '/Products.html': '/products',
+  '/Brands.html': '/products',
+  '/Delivery.html': '/legal/returns',
+  '/shop-brands-2': '/products',
+  '/everything-about-printer-cartridges': '/products',
+  // Standard pages the legacy site never had at these paths, but that people
+  // and crawlers keep guessing. Targets verified live 2026-09-21.
+  '/privacy-policy': '/legal/privacy',
+  '/privacy': '/legal/privacy',
+  '/terms-and-conditions': '/legal/terms',
+  '/terms': '/legal/terms',
+  '/terms-of-service': '/legal/terms',
+  '/contact-us': '/contact',
+  '/delivery': '/legal/returns',
+  '/warranty': '/legal/returns',
+  '/my-account': '/account',
+  '/my-account/orders': '/account/orders',
   '/brother': '/cartridges/brother-laserjet-cartridges',
   '/lexmark-cartridges': '/cartridges/lexmark-laserjet-cartridges',
   '/printer-cartridges': '/products',
@@ -342,7 +376,15 @@ async function main() {
   const newUrls = locs(await text(`${NEW}/sitemap.xml`)).map(pathOf)
   const handles = newUrls.filter((p) => p.startsWith('/products/')).map((p) => p.slice(10))
   const categories = new Set(newUrls.filter((p) => p.startsWith('/cartridges/')).map((p) => p.slice(12)))
-  const live = new Set(newUrls)
+  // Routes that are deliberately absent from the sitemap because they are
+  // noindex — account pages are private, so publishing them would be wrong.
+  // They are still real routes, and a customer with /my-account bookmarked
+  // should land on their account rather than a 404. Each was verified 200 on
+  // the live storefront (2026-09-21). Keep this list tiny and re-verify it:
+  // the point of the dead-target check is that nothing reaches the map unless
+  // something asserts it exists, and this is an assertion, not an exemption.
+  const NOINDEX_LIVE = ['/account', '/account/orders']
+  const live = new Set([...newUrls, ...NOINDEX_LIVE])
   console.log(`  ${handles.length} products, ${categories.size} categories`)
 
   const catPaths = legacy.filter((r) => r.kind === 'product_cat').map((r) => r.path)
@@ -426,6 +468,17 @@ async function main() {
   // Re-resolving fails: the new store KEPT the generic- prefix in its handles,
   // so the old slug matches nothing and falls back to the brand category,
   // turning 60 exact product matches into soft-404 signals.
+  // WordPress paginates archives as /<path>/page/N. Those URLs are in no
+  // sitemap but are crawled and linked (AWStats, Sep 2026), and after cutover
+  // they 404. Page 2 of a category is not a distinct product on the new store,
+  // so inherit page 1's target rather than inventing one.
+  const PAGED = /^(.*)\/page\/\d+$/
+  const pageAliases = new Map<string, string>()
+  for (const r of legacy) {
+    const base = r.path.match(PAGED)?.[1]
+    if (base) pageAliases.set(r.path, base || '/')
+  }
+
   const byPath = new Map(rows.map((r) => [r.path, r]))
   let inherited = 0
   for (const [old, twin] of aliasOf) {
@@ -436,6 +489,16 @@ async function main() {
     inherited++
   }
   if (inherited) console.log(`  ${inherited} old slugs inherited their twin's target`)
+
+  let paged = 0
+  for (const [path, base] of pageAliases) {
+    const t = byPath.get(base)
+    if (!t || !t.target) continue
+    rows.push({ path, kind: 'page', target: t.target, tier: 'M',
+                how: `pagination of ${base}` })
+    paged++
+  }
+  if (paged) console.log(`  ${paged} paginated archives inherited page 1`)
 
 
   const mapped = rows.filter((r) => r.target)

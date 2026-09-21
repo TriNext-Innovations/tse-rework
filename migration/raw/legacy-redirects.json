@@ -5824,6 +5824,146 @@
     "how": "date archive → browse"
   },
   {
+    "path": "/hp-cartridges",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/samsung-cartridges",
+    "kind": "page",
+    "target": "/cartridges/samsung-laserjet-cartridges",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/canon-cartridges",
+    "kind": "page",
+    "target": "/cartridges/canon-laserjet-cartridges",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/product-category/lexmark-cartridges",
+    "kind": "page",
+    "target": "/cartridges/lexmark-laserjet-cartridges",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/product-category/hp-printer-cartridges",
+    "kind": "page",
+    "target": "/cartridges/hp-laserjet-cartridges",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/Products.html",
+    "kind": "page",
+    "target": "/products",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/Brands.html",
+    "kind": "page",
+    "target": "/products",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/Delivery.html",
+    "kind": "page",
+    "target": "/legal/returns",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/shop-brands-2",
+    "kind": "page",
+    "target": "/products",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/everything-about-printer-cartridges",
+    "kind": "page",
+    "target": "/products",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/privacy-policy",
+    "kind": "page",
+    "target": "/legal/privacy",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/privacy",
+    "kind": "page",
+    "target": "/legal/privacy",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/terms-and-conditions",
+    "kind": "page",
+    "target": "/legal/terms",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/terms",
+    "kind": "page",
+    "target": "/legal/terms",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/terms-of-service",
+    "kind": "page",
+    "target": "/legal/terms",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/contact-us",
+    "kind": "page",
+    "target": "/contact",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/delivery",
+    "kind": "page",
+    "target": "/legal/returns",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/warranty",
+    "kind": "page",
+    "target": "/legal/returns",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/my-account",
+    "kind": "page",
+    "target": "/account",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
+    "path": "/my-account/orders",
+    "kind": "page",
+    "target": "/account/orders",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
     "path": "/brother",
     "kind": "page",
     "target": "/cartridges/brother-laserjet-cartridges",
