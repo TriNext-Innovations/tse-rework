@@ -1,5 +1,5 @@
 /**
- * Builds the tse.co.za → tse-cartridges.co.za 301 map for the cutover.
+ * Builds the legacy WooCommerce 301 map for the cutover.
  *
  * The authority transfer is one-shot: a ranking legacy page redirected to a
  * non-equivalent is read as a soft 404 and the ranking is dropped rather than
@@ -26,7 +26,20 @@
 import { writeFileSync, mkdirSync } from 'fs'
 import { join } from 'path'
 
-const LEGACY = 'https://www.tse.co.za'
+// The legacy origin. Overridable because it has to survive the cutover: the
+// moment tse.co.za's A record moves, www.tse.co.za is the NEW site and this
+// generator would happily rebuild the map by reading its own output.
+//
+// Xneelo publishes a per-account hostname that reaches the legacy box directly
+// and needs no DNS change of ours — verified 2026-09-21, it serves every
+// sitemap and all deep content paths:
+//
+//   LEGACY_ORIGIN=http://tse.co.za.dedi585.jnb2.host-h.net npx tsx scripts/build-legacy-redirects.ts
+//
+// Note it is http-only (the cert covers tse.co.za, not the host-h.net name)
+// and its homepage 301s to the canonical www host — neither matters here,
+// since only the sitemaps and category pages are read.
+const LEGACY = (process.env.LEGACY_ORIGIN ?? 'https://www.tse.co.za').replace(/\/+$/, '')
 // Kept in step with the storefront's own origin so the generator can never
 // verify targets against a different host than the site actually publishes.
 const NEW = process.env.NEXT_PUBLIC_SITE_URL?.startsWith('https://')
@@ -120,6 +133,17 @@ const MANUAL: Record<string, string> = {
   '/the-best-hp-cartridges-to-enhance-your-printing-experience': '/cartridges/hp-laserjet-cartridges',
   '/printer-with-ink-tank-revolutionizing-printing-efficiency-better': '/products',
   '/buy-the-best-quality-generic-samsung-111-cartridges': '/products/samsung-mlt-d111l',
+
+  // Vanity URLs and old permalinks. These 301 on the legacy site today via its
+  // own rewrite rules, so they appear in NO sitemap — they were found by
+  // probing the live site (2026-09-21). Their chains are composed in here
+  // rather than left to resolve twice: after cutover the legacy rules are gone,
+  // so an unmapped source 404s instead of redirecting.
+  '/brother': '/cartridges/brother-laserjet-cartridges',
+  '/lexmark-cartridges': '/cartridges/lexmark-laserjet-cartridges',
+  '/printer-cartridges': '/products',
+  '/home': '/',
+  '/index.php': '/',
 }
 
 // The two page-title patterns the legacy site uses for model landing pages.
@@ -292,6 +316,15 @@ async function main() {
   }
   console.log(`  ${legacy.length} legacy URLs`)
 
+  // Vanity URLs and old permalinks appear in no sitemap — the legacy site
+  // rewrites them at request time, so nothing publishes them. Seed the MANUAL
+  // keys that the crawl did not find, or their rules never fire: MANUAL is
+  // applied to discovered URLs, it does not introduce them.
+  const seen = new Set(legacy.map((r) => r.path))
+  const seeded = Object.keys(MANUAL).filter((p) => !seen.has(p))
+  for (const path of seeded) legacy.push({ kind: 'page', path })
+  if (seeded.length) console.log(`  +${seeded.length} seeded from MANUAL (unlisted vanity URLs)`)
+
   console.log('Fetching the new sitemap…')
   const newUrls = locs(await text(`${NEW}/sitemap.xml`)).map(pathOf)
   const handles = newUrls.filter((p) => p.startsWith('/products/')).map((p) => p.slice(10))
@@ -390,15 +423,19 @@ async function main() {
     .join('\n')
 
   writeFileSync(join(ROOT, 'infrastructure/nginx/conf.d/00-legacy-redirects.conf'), `\
-# ── tse.co.za → tse-cartridges.co.za 301 map ──────────────────────────────
+# ── Legacy WooCommerce URL → new storefront 301 map ────────────────────────
 #
 # GENERATED — do not edit by hand.
 #   npx tsx scripts/build-legacy-redirects.ts
 #
 # ${mapped.length} of ${rows.length} legacy URLs, every target verified against the live
 # sitemap at generation time. Defining the map is inert: nothing reads
-# $legacy_target until conf.d/legacy-tse-co-za.conf.disabled is enabled at
+# $legacy_target until conf.d/tse-co-za.conf.disabled is enabled at
 # cutover, so this file is safe to deploy ahead of the DNS change.
+#
+# Every target is a relative path, so the map is direction-agnostic. Under
+# decision #13 these are SAME-HOST redirects on tse.co.za, which is materially
+# safer than a cross-domain move.
 #
 # Tiers (see migration/raw/legacy-redirects.json for the per-URL rationale):
 #   A  exact/normalized product or category match
@@ -406,15 +443,19 @@ async function main() {
 #   D  no product equivalent — falls back to the brand's category page
 #   M  manual rule
 
+# These must precede every map block. Parsing a map sets the hash sizes to
+# their defaults if they are still unset, so a later map_hash_max_size is
+# rejected as "directive is duplicate" even though it appears only once — which
+# took production down on 2026-09-19.
+map_hash_max_size    4096;
+map_hash_bucket_size 256;
+
 # Trailing slash is how the legacy site links everything; normalize before
 # lookup so /product/foo/ and /product/foo hit the same entry.
 map $uri $legacy_key {
     ~^(?<stripped>.+)/$  $stripped;
     default              $uri;
 }
-
-map_hash_max_size    4096;
-map_hash_bucket_size 256;
 
 map $legacy_key $legacy_target {
     default "";
