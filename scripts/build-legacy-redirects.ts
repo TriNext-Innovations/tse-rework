@@ -26,7 +26,20 @@
 import { writeFileSync, mkdirSync } from 'fs'
 import { join } from 'path'
 
-const LEGACY = 'https://www.tse.co.za'
+// The legacy origin. Overridable because it has to survive the cutover: the
+// moment tse.co.za's A record moves, www.tse.co.za is the NEW site and this
+// generator would happily rebuild the map by reading its own output.
+//
+// Xneelo publishes a per-account hostname that reaches the legacy box directly
+// and needs no DNS change of ours — verified 2026-09-21, it serves every
+// sitemap and all deep content paths:
+//
+//   LEGACY_ORIGIN=http://tse.co.za.dedi585.jnb2.host-h.net npx tsx scripts/build-legacy-redirects.ts
+//
+// Note it is http-only (the cert covers tse.co.za, not the host-h.net name)
+// and its homepage 301s to the canonical www host — neither matters here,
+// since only the sitemaps and category pages are read.
+const LEGACY = (process.env.LEGACY_ORIGIN ?? 'https://www.tse.co.za').replace(/\/+$/, '')
 // Kept in step with the storefront's own origin so the generator can never
 // verify targets against a different host than the site actually publishes.
 const NEW = process.env.NEXT_PUBLIC_SITE_URL?.startsWith('https://')
