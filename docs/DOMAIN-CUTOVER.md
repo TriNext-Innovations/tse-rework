@@ -57,6 +57,40 @@ one host, with no ambiguity.
 GAM. The A-record flip needs **GAM access, which is not currently in hand** — chase this
 first, it is the long pole.
 
+### ⚠ Never delegate the nameservers to Xneelo
+
+konsoleH's *Domain Details* page shows a DNS block — `ns1.host-h.net`, `ns2.host-h.net`,
+`ns1.dns-h.com`, `ns2.dns-h.com` — under the line *"The following URLs point to your
+account once DNS propagation is completed."* That line describes a state that was never
+reached, and konsoleH has no way to know it.
+
+**Those nameservers hold a real, authoritative zone for `tse.co.za` that is not in use.**
+Verified by querying `129.232.248.30` directly, 2026-09-21:
+
+| Record | Xneelo's shadow zone | The live GamCo zone |
+|---|---|---|
+| `A` | `129.232.138.17` | `129.232.138.17` — **identical** |
+| `MX` | `10 mail.tse.co.za` → `129.232.138.17` | `10/20 eu1-smtp-mx1/mx2.titanhq.com` |
+| `SPF` | `v=spf1 mx a include:spf.host-h.net ?all` | the long GamCo record |
+
+konsoleH provisions a zone for every hosting account by default, assuming you will delegate
+to it. TSE never did — the registry delegates to GamCo — so it sits there looking correct
+and doing nothing.
+
+**Why this is a landmine rather than a curiosity.** Pointing the nameservers at Xneelo is a
+natural instinct: the hosting is there, so surely the DNS should be. Do that and the
+**website keeps working** — the A record is byte-identical — while **mail dies instantly**,
+because MX flips from TitanHQ to a box that does not receive TSE's mail. The visible thing
+survives, the invisible thing breaks, and nobody connects the two. That is exactly how
+Sōter lost mail for 12 days.
+
+Two consequences for this runbook:
+
+1. **konsoleH's DNS section is inert.** Editing it changes nothing. Do not try.
+2. **The narrow A-record path is now evidence-backed, not just preferred.** It never touches
+   delegation, so this zone stays dormant. If delegation is ever revisited — to Cloudflare
+   or anyone — MX must be recreated *before* the nameservers change, not after.
+
 ### Email is safe, with one caveat
 
 MX points at TitanHQ, wholly independent of the A record, so flipping A does not touch
@@ -94,9 +128,16 @@ Not DNS. Three things, all worth doing in Phase 1:
 
 Each phase has a gate. Do not start one until the previous is verified.
 
-### Phase 0 — Settle #13
-Client signs off in writing. Supersede `CLIENT-PENDING.md` #8 rather than editing it, so
-the reversal is on record. **Blocks everything below.**
+### Phase 0 — Settle #13 ✅ decided
+**Confirmed by Ryno 2026-09-16: the storefront moves onto `tse.co.za`.** TSE has given
+notice to both their hosting provider and their digital media agency, so this is go.
+
+Still to do: get it in writing from the client and supersede `CLIENT-PENDING.md` #8 rather
+than editing it, so the reversal stays on record (#432).
+
+⚠ The notice starts a clock. If the Xneelo box goes dark before Phase 1 runs, the access
+logs, `.htaccess` and legacy sitemap are gone for good — and the sitemap is this plan's
+own input. **Phase 1 is now the urgent one, not Phase 4.**
 
 ### Phase 1 — Harvest the real URL inventory (konsoleH)
 Pull access logs and `.htaccess`. Rebuild the map from what was actually crawled, not just
@@ -121,8 +162,9 @@ so a dev value can never leak into a production build's canonicals. Unset falls 
 `https://tse-cartridges.co.za`, i.e. the domain we are already on.
 
 ### Phase 3 — Pre-issue the certificate
-Do **not** use the `--standalone` flow from `PROD-DEPLOY.md` §7a here. Use a **DNS-01**
-challenge, which works while `tse.co.za` still points at Xneelo:
+Use a **DNS-01** challenge, which works while `tse.co.za` still points at Xneelo. (§7a used
+to prescribe `--standalone`, which needed DNS to have already moved and cost ~30s of
+storefront downtime; it has been corrected to match this.)
 
 ```bash
 docker run --rm -it \
@@ -138,10 +180,13 @@ the flip is zero-downtime. Gate: `nginx -t` passes with the `tse.co.za` server b
 enabled.
 
 ### Phase 4 — Flip
-Lower the A-record TTL to 300s **a day ahead**, then point `tse.co.za` and
+Lower the A-record TTL to 300s **at least two days ahead** — measured 2026-09-16, the
+configured TTL is **1000s**, and a TTL change only takes effect once the old value has
+expired everywhere. Better still, do it now: it is reversible, changes nothing visible, and
+it is the only step with a hard lead time (#433). Then point `tse.co.za` and
 `www.tse.co.za` at the Vultr IP at GAM. Rebuild and deploy the web image with
 `NEXT_PUBLIC_SITE_URL=https://tse.co.za`. Enable the redirect server block per
-`PROD-DEPLOY.md` §7a step 5.
+`PROD-DEPLOY.md` §7a step 4.
 
 Rollback is a DNS revert — hence the low TTL.
 
@@ -161,9 +206,10 @@ The only phase with real business risk.
 - **PayFast** — return / notify / cancel URLs (still outstanding from `CLIENT-PENDING` #6).
 - **GA4**, and the transactional sending domain.
 
-⚠ `CLIENT-PENDING.md` #10 says the sender is Resend (`sales@tse.co.za`) while issue #192
-says ZeptoMail (`orders@tse-cartridges.co.za`). **These contradict each other — establish
-which is live before this phase**, since the DKIM/SPF work differs.
+✅ The sender contradiction is settled: it is **ZeptoMail**, `orders@tse-cartridges.co.za`
+with Reply-To `sales@tse.co.za`. Resend was never adopted; `CLIENT-PENDING.md` #10 has been
+corrected. Moving the sender to `orders@tse.co.za` is tracked separately (#444) and is
+deliberately sequenced *after* the flip so it cannot block it.
 
 ### Phase 7 — Decommission Woo
 Only after Phase 5 verifies. **Regenerate the map before this point** — once the legacy
