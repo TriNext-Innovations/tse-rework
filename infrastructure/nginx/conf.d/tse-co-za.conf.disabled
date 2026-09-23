@@ -5,8 +5,9 @@
 #
 # Do not enable it before the certificate exists. nginx refuses to start on a
 # missing ssl_certificate path, and it would take the live storefront down
-# with it. Order is: cert (DNS-01, #435) → rename → nginx -t → reload → move
-# the A record (#442). See docs/DOMAIN-CUTOVER.md.
+# with it. HTTP-01 order: enable the separate HTTP-only bootstrap → move A records
+# → issue cert → remove bootstrap and enable this file → nginx -t → reload.
+# See docs/CUTOVER-EXECUTION-2026-09-23.md.
 #
 # This REPLACES legacy-tse-co-za.conf.disabled, which implemented the opposite
 # direction (#8: tse.co.za 301s away to tse-cartridges.co.za). Under #13
@@ -24,10 +25,8 @@ server {
     listen 80;
     server_name tse.co.za www.tse.co.za;
 
-    # Renewals only. The first issuance is DNS-01 (#435) precisely so that it
-    # can happen while tse.co.za still points at Xneelo — enabling this file
-    # also enables the :443 blocks below, which need a cert that does not yet
-    # exist. Once traffic is here, webroot renewal works normally.
+    # First issuance uses tse-co-za-bootstrap.conf.disabled before this file
+    # is enabled. This location serves subsequent webroot renewals.
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
     }
