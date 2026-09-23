@@ -3,7 +3,8 @@
 **TL;DR:** `tse.co.za` was registered in **1997** and still ranks; `tse-cartridges.co.za`
 was registered in **May 2026** and ranks for nothing. The current plan in
 `CLIENT-PENDING.md` #8 redirects the valuable domain into the worthless one. This runbook
-does it the other way round. Nothing here is executable until the client signs off #13.
+does it the other way round. Domain direction is approved. Follow the dated
+[execution pack](CUTOVER-EXECUTION-2026-09-23.md) for current readiness and sequencing.
 
 Companion to `PROD-DEPLOY.md` §7a, which covers the *redirect map*. This covers the
 *domain move*. Do §7a's work as part of Phase 4 below, not separately.
@@ -55,7 +56,24 @@ one host, with no ambiguity.
 
 **konsoleH does not control DNS.** It is Xneelo's hosting panel; the nameservers are at
 GAM. The A-record flip needs **GAM access, which is not currently in hand** — chase this
-first, it is the long pole.
+first, it is the long pole. **Update 23 September:** GAM has accepted Leon’s
+authorisation and will execute the switch on Ryno’s request (KGFQ-486959).
+A direct login is no longer a prerequisite. TTL 300 and the SPF pin are verified.
+
+### Earlier access assessment — superseded by the execution pack
+
+Everything technical is built and tested. What is left is access, and two of these become
+**unrecoverable** if left too long.
+
+| Blocker | Issue | What is lost if it expires first |
+|---|---|---|
+| GAM DNS | #465 | Nothing permanent — but no TTL drop, no SPF pin and no flip, so the cutover simply cannot happen. |
+| konsoleH / Xneelo | #431 | **Unrecoverable.** The URL inventory and `.htaccess` behaviour die with the hosting. Largely mitigated 2026-09-21 by harvesting AWStats instead, but anything not yet extracted is gone when the contract ends. |
+| Agency handover | #447 | **Potentially unrecoverable.** If the agency owns Search Console, GA4, Merchant Center or Meta Business Manager, those leave with them. Historical data especially. |
+
+The nginx server block is verified against the full config (`crossplane`, and `nginx -t` on
+the box), so the certificate is the only technical item outstanding — and it now follows
+the flip rather than preceding it.
 
 ### ⚠ Never delegate the nameservers to Xneelo
 
@@ -132,8 +150,9 @@ Each phase has a gate. Do not start one until the previous is verified.
 **Confirmed by Ryno 2026-09-16: the storefront moves onto `tse.co.za`.** TSE has given
 notice to both their hosting provider and their digital media agency, so this is go.
 
-Still to do: get it in writing from the client and supersede `CLIENT-PENDING.md` #8 rather
-than editing it, so the reversal stays on record (#432).
+Leon authorised the GAM request on 22 September (ticket KGFQ-486959).
+Ryno reconfirmed on 23 September that the client is waiting for us.
+`CLIENT-PENDING.md` now marks #8 superseded and #13 settled.
 
 ⚠ The notice starts a clock. If the Xneelo box goes dark before Phase 1 runs, the access
 logs, `.htaccess` and legacy sitemap are gone for good — and the sitemap is this plan's
@@ -161,34 +180,52 @@ Only an `https://` value is honoured; the `http://localhost:3000` dev default is
 so a dev value can never leak into a production build's canonicals. Unset falls back to
 `https://tse-cartridges.co.za`, i.e. the domain we are already on.
 
-### Phase 3 — Pre-issue the certificate
-Use a **DNS-01** challenge, which works while `tse.co.za` still points at Xneelo. (§7a used
-to prescribe `--standalone`, which needed DNS to have already moved and cost ~30s of
-storefront downtime; it has been corrected to match this.)
+### Phase 3 — Issue the certificate (HTTP-01, after the flip)
+
+**Revised 2026-09-21 (Ryno).** Earlier versions pre-issued via DNS-01 so the cert existed
+before any traffic moved. That is still the only zero-gap route, but it costs a GAM
+round-trip for the `_acme-challenge` TXT, and GAM is the slow part of this project.
+
+HTTP-01 needs the domain pointing at this box anyway, so the cert is issued *after* the A
+record moves:
 
 ```bash
-docker run --rm -it \
+cd /opt/tse-ui
+docker compose exec nginx ls /var/www/certbot            # webroot is mounted
+docker run --rm \
   -v tse-ui_certbot_certs:/etc/letsencrypt \
-  certbot/certbot certonly --manual --preferred-challenges dns \
+  -v tse-ui_certbot_www:/var/www/certbot \
+  certbot/certbot certonly --webroot -w /var/www/certbot \
   -d tse.co.za -d www.tse.co.za \
   --email ryno@trinextinnovations.co.za --agree-tos --no-eff-email
-# publish the _acme-challenge TXT it prints, at GAM, then continue
 ```
 
-This removes the chicken-and-egg entirely: the cert exists **before** any traffic moves, so
-the flip is zero-downtime. Gate: `nginx -t` passes with the `tse.co.za` server block
-enabled.
+⚠ **The cost is a TLS-error window on `tse.co.za`** between the A record propagating and
+the cert being issued. Browsers get a certificate error, not a redirect — this is the one
+visibly broken moment in the whole cutover. Two things keep it small:
+
+1. **TTL 300 (#433)** reduces ordinary DNS cache lifetime; it does not bound
+   certificate issuance or outage duration. Validation failures can extend the gap.
+2. **Do the flip off-peak.** It is a live ecommerce domain that ranks.
+
+The `:80` server block must be enabled *before* the flip so the ACME challenge can be
+served — it carries the webroot location. The `:443` block references a cert that does not
+exist yet and nginx refuses to start on a missing cert path, so enable the file only once
+the cert is in place, or split it.
+
+Gate: `nginx -t` passes with the `tse.co.za` server block enabled.
 
 ### Phase 4 — Flip
-Lower the A-record TTL to 300s **at least two days ahead** — measured 2026-09-16, the
-configured TTL is **1000s**, and a TTL change only takes effect once the old value has
-expired everywhere. Better still, do it now: it is reversible, changes nothing visible, and
-it is the only step with a hard lead time (#433). Then point `tse.co.za` and
+TTL is **300s**, verified on 23 September after GAM confirmed the change.
+Allow at least the previous TTL to elapse after a TTL reduction; two days is not
+a DNS requirement. Resolvers can still serve stale answers, so check multiple
+resolvers and keep both origins available. Then point `tse.co.za` and
 `www.tse.co.za` at the Vultr IP at GAM. Rebuild and deploy the web image with
 `NEXT_PUBLIC_SITE_URL=https://tse.co.za`. Enable the redirect server block per
 `PROD-DEPLOY.md` §7a step 4.
 
-Rollback is a DNS revert — hence the low TTL.
+Rollback is a DNS revert — hence the low TTL. It only helps while something still answers
+at the old address, which is what the Xneelo fallback host gives us for free (#473).
 
 ### Phase 5 — Reverse the old redirect
 `tse-cartridges.co.za` now 301s to `tse.co.za`, path-preserving. Both domains stay

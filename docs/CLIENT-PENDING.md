@@ -1,5 +1,15 @@
 # Client Pending — TSE Online
 
+> **Current cutover status — 2026-09-23:** Ryno confirms the client is waiting on
+> TriNext to execute the move to **tse.co.za**. Domain direction is settled.
+> GAM ticket KGFQ-486959 confirms Leon's authorisation, TTL 300 and the legacy
+> SPF IP pin; both DNS changes were independently verified on 23 September.
+> GAM will switch apex and www on Ryno's request. A DNS login is optional, not
+> a cutover blocker. The hosting expiry date remains to be confirmed.
+> Execution gates and evidence: [cutover execution pack](CUTOVER-EXECUTION-2026-09-23.md).
+> Earlier dated notes below are historical where they conflict with this update.
+
+
 Questions, confirmations, and assets we are waiting on from the client.
 Update the status column as items are resolved.
 
@@ -34,11 +44,11 @@ Update the status column as items are resolved.
 | 2 | **Original logo source file** (Illustrator / CorelDraw) | Print artwork and any future re-draw. **No longer blocking anything digital:** `logo-v2.svg` / `logo-v2-dark.svg` are true vector (2 paths, no embedded raster), live via `Logo.tsx`, and the icon set is complete. | ⏳ Awaiting file — low priority | #22 |
 | 4 | **Product photography updates** | The WooCommerce library carried the relaunch. This was deferred *until after go-live* — the site has been live since 2026-07-01, so it is now due rather than pending. | 🔜 Now actionable | #25 |
 | 6 | **PayFast dashboard URLs** | Merchant `10050765`, provider live (`PAYFAST_SANDBOX=false`) on the ZAR region. The **live test order is done** (#192: pay → capture → ITN → refund, verified). **Remaining:** return/notify/cancel URLs still point at the old address — deferred post-go-live per Ryno 2026-07-11, since the app passes explicit URLs per payment and the dashboard values are fallback only. | 🔄 Deferred, not blocking | #5.1 |
-| 8 | **`tse.co.za` → `tse-cartridges.co.za` redirect** (post-launch) | `tse-cartridges.co.za` is the confirmed primary domain. **No hard cutover:** the new site runs side by side with the existing WooCommerce site (`tse.co.za`) — both stay live in parallel after launch. The 301 redirect and WooCommerce decommission happen only later, once the new site is proven in production and the client signs off on retiring the old one. DNS and nginx 301 redirect config to be set up at that time. | 🔄 **Redirect map done** (832/832 URLs, inert on the box — `PROD-DEPLOY.md` §7a). Awaiting client sign-off to decommission Woo, and resolution of #13. | — |
+| 8 | **Legacy domain direction (superseded)** | The earlier plan to redirect `tse.co.za` away is superseded by #13. The new storefront will serve on `tse.co.za`; `tse-cartridges.co.za` will redirect into it after verification. | Domain decision approved; technical cutover pending. | #442 |
 | 9 | **Vultr VM provisioning** | We need SSH access to the Johannesburg VM to complete the deployment chain (#4.2–#4.10). Nothing goes live without this. | ✅ Done — VM `tse-prod-jnb` (`139.84.247.189`) live, full stack deployed on the apex domain, GitHub Actions deploy working. | #4.1 |
 | 10 | **Transactional email — sender DNS** | Order confirmations, password resets, quote/data-request notifications. | 🔄 **ZeptoMail is the live sender** (`ZEPTOMAIL_TOKEN`; #192 — domain verified, test send delivered 2026-07-11, From `orders@tse-cartridges.co.za`, Reply-To `sales@tse.co.za`). Resend is **not** in use; the previous entry here described a Resend/`tse.co.za` setup that was never adopted. **To verify:** `tse-cartridges.co.za` publishes `v=spf1 include:_spf.mx.cloudflare.net ~all` with no ZeptoMail include, no DKIM answered on 12 common selectors, and DMARC `p=quarantine` — ZeptoMail allows custom selectors so this is not proof of a gap, but confirm in the dashboard. **Not a client task while we stay on `tse-cartridges.co.za`** (Cloudflare NS, TriNext-controlled); it becomes one only under #13. | #5.4 |
 | 12 | **Samsung / Lexmark inkjet — still stocked?** | The new catalogue has no Samsung or Lexmark *inkjet* category, so those legacy URLs currently 301 to each brand's **laser** page. Sales data supports this (inkjet = 4% of revenue; neither brand appears in the top 25 sellers), but if TSE is importing that stock again the redirects and catalogue must change. | ⏳ Awaiting client | — |
-| 13 | **Primary domain direction — confirm** | Item #8 records `tse-cartridges.co.za` as the *confirmed primary domain*, with `tse.co.za` redirecting to it. TriNext has since raised moving the **new site onto `tse.co.za`** instead — it carries the brand recognition, the 1997 registration, and the existing link equity, while `tse-cartridges.co.za` is new and hyphenated. The redirect map works either way (only the target host changes), but this must be settled **before** cutover: it is one-shot for SEO and drives the Search Console change-of-address. | ⏳ Awaiting client decision | — |
+| 13 | **Primary domain — settled** | `tse.co.za` is the destination, recorded 16 September and reconfirmed by Ryno on 23 September. GAM has accepted Leon’s authorisation under KGFQ-486959. | Approved; TriNext prepares execution and agrees the window with GAM. | #442 |
 
 
 ---

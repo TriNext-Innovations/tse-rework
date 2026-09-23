@@ -317,17 +317,17 @@ Redis and Next.js / Medusa containers are stateless: rebuild from git + image an
 
 ---
 
-## 7a. Legacy domain cutover — `tse.co.za` → `tse-cartridges.co.za`
+## 7a. Legacy domain cutover — storefront on `tse.co.za`
 
-> ⚠ **Direction is not settled.** This section assumes `tse-cartridges.co.za` stays
-> primary, per `CLIENT-PENDING.md` #8. Open decision **#13** proposes the reverse — moving
-> the storefront onto `tse.co.za`, which is the older (1997) and only ranking domain. See
-> **[DOMAIN-CUTOVER.md](DOMAIN-CUTOVER.md)** for the phased plan.
+> **Current direction: storefront on `tse.co.za`.** The earlier opposite plan
+> is superseded. See [the execution pack](CUTOVER-EXECUTION-2026-09-23.md).
 >
 > **Settled 2026-09-16: #13 goes ahead.** `tse.co.za` serves the storefront;
 > `tse-cartridges.co.za` becomes a permanent 301 into it. The legacy 301s are therefore
-> **same-host**, and the cert is pre-issued via **DNS-01** — the `--standalone` flow that
-> used to be in step 4 is gone, along with the ~30s of downtime it cost.
+> **same-host**, and the certificate is issued by **HTTP-01 after the A record moves**
+> (revised 2026-09-21). The `--standalone` flow that used to be in step 4 is gone, along
+> with the ~30s of storefront downtime it cost. See DOMAIN-CUTOVER.md Phase 3 for the
+> trade-off this accepts: a short TLS-error window on `tse.co.za`, dependent on successful certificate issuance.
 
 Retiring the WooCommerce site is a **one-shot** SEO event. A ranking legacy page
 that 301s to a non-equivalent is read as a soft 404, and Google drops the
@@ -352,6 +352,10 @@ time — the script fails rather than emit a 301 into a 404.
 
 ### Cutover sequence
 
+**Current execution checklist:** [23 September cutover pack](CUTOVER-EXECUTION-2026-09-23.md).
+Enable its HTTP-only bootstrap before the DNS switch. The TTL does not bound
+certificate issuance time. The historical commands below are not the complete checklist.
+
 ```bash
 # 1. Regenerate. The catalogue moves; a map built weeks ago will point at
 #    products that have since been delisted. The script hard-fails on any
@@ -361,30 +365,33 @@ git commit -am 'chore(seo): refresh the cutover redirect map' && git push
 
 # 2. Deploy so 00-legacy-redirects.conf is on the box (still inert).
 
-# 3. Issue the cert FIRST, via DNS-01, while tse.co.za still points at Xneelo.
-#    This is the whole zero-downtime trick: the cert exists before any traffic
-#    moves, so nothing has to be stopped and there is no chicken-and-egg.
+# 3. Move the A record for tse.co.za + www.tse.co.za in GAM (#433 has already
+#    dropped the TTL to 300, at least two days earlier). Off-peak.
+
+# 4. Issue the cert by HTTP-01 as soon as it resolves here. Until this lands,
+#    https://tse.co.za gives a certificate error — that is the one visibly
+#    broken moment, dependent on successful certificate issuance. Do not wander off between 3 and 4.
 cd /opt/tse-ui
-docker run --rm -it \
+docker run --rm \
   -v tse-ui_certbot_certs:/etc/letsencrypt \
-  certbot/certbot certonly --manual --preferred-challenges dns \
+  -v tse-ui_certbot_www:/var/www/certbot \
+  certbot/certbot certonly --webroot -w /var/www/certbot \
   -d tse.co.za -d www.tse.co.za \
   --email ryno@trinextinnovations.co.za --agree-tos --no-eff-email
-#    Publish the _acme-challenge TXT it prints at GAM, then continue.
 
 # Confirm the cert landed where the server block expects it.
 docker compose exec nginx ls /etc/letsencrypt/live/tse.co.za/fullchain.pem
 
-# 4. Enable the server block and verify BEFORE reloading. Still no traffic —
-#    tse.co.za is on Xneelo until step 5, so this is rehearsal with a net.
+# 5. Enable the server block and verify BEFORE reloading. nginx refuses to
+#    start on a missing cert path and would take the live storefront down with
+#    it, so never reload without a green -t.
 mv infrastructure/nginx/conf.d/tse-co-za.conf.disabled \
    infrastructure/nginx/conf.d/tse-co-za.conf
 docker compose exec nginx nginx -t     # must print "syntax is ok" + "test is successful"
 docker compose exec nginx nginx -s reload
 
-# 5. Only now move the A record for tse.co.za + www.tse.co.za in GAM.
-#    The box is already serving the name, so there is no gap to cover.
-#    Rollback is reverting the A record, bounded by the TTL from #433.
+#    Rollback is reverting the A record, subject to DNS caching and continued availability of the old origin. The
+#    Xneelo fallback host (#473) keeps the old site reachable meanwhile.
 
 # 6. Spot-check the three tiers.
 for u in /product-category/hp-laserjet-cartridges/ \
