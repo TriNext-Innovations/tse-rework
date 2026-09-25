@@ -67,6 +67,17 @@ use `https://www.tse.co.za`. The final nginx block now serves www and 301s the a
 The certificate request (`-d tse.co.za -d www.tse.co.za`) and renewal are unchanged.
 ZeptoMail DKIM and `bounce-zem` CNAME are published and match (checked 25 September).
 
+**Done 25 September:** www candidate built from `de2786f` as `tse-cutover-web:20260925-www`
+(`sha256:47b46982b2446d7c2c8ebcae46d07883219b8baaa44a8623eb0eee3d1d34857e`), built straight
+to its own tag so `tse-ui-web:latest` was never touched. Private env
+`environment.candidate-www.private` sits beside the 23 September one and differs from live
+only in the four URL keys. The apex candidate from 23 September is superseded. Smoke test in
+a private container: home, products, product detail, HP laser category, printer page, cart,
+checkout, sitemap and robots all 200. Home `og:url`, product canonical and `og:url`, all
+1,093 sitemap `<loc>` entries and the robots `Sitemap:` line use `https://www.tse.co.za`.
+The bare domain appears nowhere in the homepage HTML. As before, this validates rendering
+only, not a completed order.
+
 ## Remaining execution sequence
 
 1. Confirm GAM's staffed switch/rollback availability and old hosting retention.
