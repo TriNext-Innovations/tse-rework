@@ -1,6 +1,7 @@
 # TSE cutover execution pack — 23 September 2026
 
-**Destination:** `https://tse.co.za`. **State:** preparation, not yet go-live ready.
+**Destination:** `https://www.tse.co.za` — canonical host is **www** (#475, decided
+25 September; the apex 301s to it). **State:** preparation, not yet go-live ready.
 Initial preparation made no production changes. Subsequent authorised execution
 is tracked in [the status log](CUTOVER-STATUS-2026-09-23.md); consult it before acting.
 Owner: Ryno / TriNext. DNS operator: Maurice / GAM, ticket **KGFQ-486959**.
@@ -70,9 +71,9 @@ login URL/token into Git, WorkDrive or a message draft.
    install and test it in the approved preparation window. Confirm external port
    80 reaches its challenge directory for both hostnames using a probe file.
    Do not enable the final TLS block before its certificate exists.
-6. **Prepare application settings and rebuild.** `NEXT_PUBLIC_SITE_URL=https://tse.co.za`
-   must be baked into the web image. Backend `STOREFRONT_URL=https://tse.co.za`
-   controls PayFast return/cancel links. Add the new origin to `STORE_CORS` and
+6. **Prepare application settings and rebuild.** `NEXT_PUBLIC_SITE_URL=https://www.tse.co.za`
+   must be baked into the web image. Backend `STOREFRONT_URL=https://www.tse.co.za`
+   controls PayFast return/cancel links. Add BOTH `https://www.tse.co.za` and `https://tse.co.za` to `STORE_CORS` and
    `AUTH_CORS`, retaining required existing origins during transition; preserve
    admin origins. Keep the existing API hostname, `MEDUSA_BACKEND_URL`, payment
    credentials, database and ZeptoMail sender unchanged. Inventory other URL settings
@@ -153,10 +154,10 @@ not scheduled renewal.
 ## Acceptance checklist
 
 - [ ] Apex and www resolve to `139.84.247.189` through authoritative/public checks.
-- [ ] Valid TLS for both names; www redirects to apex.
+- [ ] Valid TLS for both names; apex and all `http://` URLs 301 to `https://www` in one hop.
 - [ ] Home, category, product, search/printer finder, account, cart and checkout work
       through public nginx. Test guest and signed-in flows, not only `/health`.
-- [ ] New checkout's PayFast form has `https://tse.co.za` return/cancel URLs and the
+- [ ] New checkout's PayFast form has `https://www.tse.co.za` return/cancel URLs and the
       unchanged API `/hooks/payment/payfast_payfast` callback. Any real payment/refund
       test needs a specifically authorised amount and operator.
 - [ ] Check at least 10 legacy paths across exact products, renamed products,

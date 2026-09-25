@@ -56,6 +56,17 @@ this private file into Git or WorkDrive.
   issuance and a successful `--dry-run`. The host package cron does not prove
   Docker-volume renewal, so it is not counted as coverage.
 
+## Update — 25 September: canonical host is www (#475)
+
+The candidate image and private candidate environment above were built for the
+**apex**. Both must be redone before the window: rebuild the web image with
+`NEXT_PUBLIC_SITE_URL=https://www.tse.co.za`, set `STOREFRONT_URL=https://www.tse.co.za`,
+and list both `https://www.tse.co.za` and `https://tse.co.za` in `STORE_CORS` and `AUTH_CORS`.
+Repeat the eight-route smoke test and confirm canonical, Open Graph and sitemap URLs
+use `https://www.tse.co.za`. The final nginx block now serves www and 301s the apex.
+The certificate request (`-d tse.co.za -d www.tse.co.za`) and renewal are unchanged.
+ZeptoMail DKIM and `bounce-zem` CNAME are published and match (checked 25 September).
+
 ## Remaining execution sequence
 
 1. Confirm GAM's staffed switch/rollback availability and old hosting retention.
