@@ -1,4 +1,4 @@
-# ── Storefront on tse.co.za (decision #13) ────────────────────────────────
+# ── Storefront on www.tse.co.za (decision #13, canonical host #475) ───────
 #
 # DISABLED ON PURPOSE. nginx includes conf.d/*.conf, so this file is inert
 # until it is renamed to tse-co-za.conf at cutover.
@@ -12,6 +12,12 @@
 # This REPLACES legacy-tse-co-za.conf.disabled, which implemented the opposite
 # direction (#8: tse.co.za 301s away to tse-cartridges.co.za). Under #13
 # tse.co.za serves the storefront and tse-cartridges.co.za redirects into it.
+#
+# The canonical host is WWW, not the apex (#475, decided 2026-09-25). The old
+# site canonicalises apex → www and its sitemap lists only www URLs, so every
+# indexed URL is already on www. Serving www keeps the migration a path change
+# only. Every other variant (http, apex) goes to https://www in ONE hop,
+# straight to the legacy map target where there is one.
 #
 # tse.co.za is NOT behind Cloudflare — its nameservers stay at GAM and the A
 # record points straight at this box. So unlike the tse-cartridges.co.za
@@ -31,40 +37,43 @@ server {
         root /var/www/certbot;
     }
 
+    # Straight to the final https://www URL. Going via https://$host would
+    # cost legacy http:// and apex links a second hop.
     location / {
-        return 301 https://$host$request_uri;
+        if ($legacy_target) {
+            return 301 https://www.tse.co.za$legacy_target;
+        }
+        return 301 https://www.tse.co.za$request_uri;
     }
 }
 
-# ── www → apex ────────────────────────────────────────────────────────────
-# Matches the behaviour tse-cartridges.co.za already has. The cert issued in
-# #435 carries both names, so this block can use it directly.
+# ── apex → www ────────────────────────────────────────────────────────────
+# Mirrors what the legacy site has always done. The certificate carries both
+# names, so this block can use it directly.
 server {
     listen 443 ssl;
     http2  on;
-    server_name www.tse.co.za;
+    server_name tse.co.za;
 
     ssl_certificate     /etc/letsencrypt/live/tse.co.za/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/tse.co.za/privkey.pem;
     ssl_protocols       TLSv1.2 TLSv1.3;
     ssl_ciphers         HIGH:!aNULL:!MD5;
 
-    # Every indexed legacy URL is on www — the old site canonicalises apex → www
-    # and its sitemap publishes only www URLs (verified 2026-09-21). So resolve
-    # the legacy map HERE too, straight to the final target, rather than letting
-    # www bounce to the apex and redirect a second time. One hop, not two.
+    # Resolve the legacy map here too, straight to the final target, rather
+    # than bouncing to www and redirecting a second time. One hop, not two.
     if ($legacy_target) {
-        return 301 https://tse.co.za$legacy_target;
+        return 301 https://www.tse.co.za$legacy_target;
     }
 
-    return 301 https://tse.co.za$request_uri;
+    return 301 https://www.tse.co.za$request_uri;
 }
 
-# ── Storefront — tse.co.za (apex) → Next.js :3000 ─────────────────────────
+# ── Storefront — www.tse.co.za → Next.js :3000 ────────────────────────────
 server {
     listen 443 ssl;
     http2  on;
-    server_name tse.co.za;
+    server_name www.tse.co.za;
 
     ssl_certificate     /etc/letsencrypt/live/tse.co.za/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/tse.co.za/privkey.pem;
@@ -87,7 +96,7 @@ server {
     # The map keys on $uri, so query strings are dropped deliberately — legacy
     # cart and filter URLs carry nothing worth preserving.
     if ($legacy_target) {
-        return 301 https://tse.co.za$legacy_target;
+        return 301 https://www.tse.co.za$legacy_target;
     }
 
     location /meili/ {
