@@ -28,6 +28,21 @@ describe('buildMerchantTitle', () => {
     ).toBe('Canon CLI-451XL Cyan Ink Cartridge — Compatible')
   })
 
+  it('calls bottled ink for tank printers "Refill Ink", not a cartridge', () => {
+    expect(
+      buildMerchantTitle({
+        productTitle: 'GI-490 Cyan (70ml)',
+        variantName: null,
+        cartridgeType: 'ink',
+        compatible: true,
+      }),
+    ).toBe('GI-490 Cyan (70ml) Refill Ink — Compatible')
+  })
+
+  it('does not repeat "Ink" when a refill title already has it', () => {
+    expect(typeNounFor('Epson 103 Ink Bottle', 'ink')).toBeNull()
+  })
+
   it('drops the placeholder variant name (passed as null by the caller)', () => {
     expect(
       buildMerchantTitle({

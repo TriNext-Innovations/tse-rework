@@ -512,29 +512,46 @@ export default function StorefrontClient({
               </p>
             </article>
 
-            <article data-reveal onClick={() => openPage('/products?type=inkjet')} className="bento-card sm:col-span-2 bg-[var(--magenta)] text-[var(--on-accent)] rounded-[24px] p-6 relative overflow-hidden min-h-[180px] flex flex-col justify-between cursor-pointer">
-              <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--on-accent)]/70">Category</div>
-              <div>
-                <div className="font-display font-light text-4xl sm:text-5xl leading-none">Inkjet</div>
-                <div className="mt-1 text-xs text-[var(--on-accent)]/80">For HP, Canon, Epson, Brother</div>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                {/* <span>170+ SKUs</span> */}
-                <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[var(--on-accent)] text-[var(--magenta)]">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            {/* The three things TSE sells, one card each, in the brand's three colours */}
+            {[
+              {
+                type: 'inkjet',
+                name: 'Inkjet',
+                note: 'Cartridges for HP, Canon, Epson & Brother',
+                card: 'bg-[var(--cyan)] text-[#111827]',
+                chip: 'bg-[#111827] text-[var(--cyan)]',
+              },
+              {
+                type: 'laser',
+                name: 'Laser',
+                note: 'Toner and drum units',
+                card: 'panel-dark bg-[#1f2937] text-white',
+                chip: 'bg-white text-[#111827]',
+              },
+              {
+                type: 'ink',
+                name: 'Ink',
+                note: 'Refill bottles for tank printers',
+                card: 'bg-[var(--lime)] text-[#111827]',
+                chip: 'bg-[#111827] text-[var(--lime)]',
+              },
+            ].map((c) => (
+              <article
+                key={c.type}
+                data-reveal
+                onClick={() => openPage(`/products?type=${c.type}`)}
+                className={`bento-card sm:col-span-1 ${c.card} rounded-[24px] p-5 relative overflow-hidden min-h-[180px] flex flex-col justify-between cursor-pointer`}
+              >
+                <div className="text-[10px] uppercase tracking-[0.22em] opacity-70">Category</div>
+                <div>
+                  <div className="font-display font-light text-3xl leading-none">{c.name}</div>
+                  <div className="mt-2 text-xs leading-snug opacity-80">{c.note}</div>
+                </div>
+                <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full ${c.chip}`}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </span>
-              </div>
-            </article>
-
-            <article data-reveal onClick={() => openPage('/products?type=laser')} className="panel-dark bento-card sm:col-span-1 bg-[var(--ink-2)] text-[var(--paper)] rounded-[24px] p-5 relative overflow-hidden min-h-[180px] flex flex-col justify-between cursor-pointer">
-              <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--paper)]/60">Category</div>
-              <div className="font-display font-light text-3xl leading-none">Laser</div> 
-              <div className="mt-1 text-xs text-[var(--on-accent)]/80">For HP, Canon, Epson, Brother</div>
-              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[var(--on-accent)] text-[var(--magenta)]">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-              </span>
-              {/* <div className="text-[10px] text-[var(--paper)]/70">380+ SKUs</div> */}
-            </article>
+              </article>
+            ))}
 
             <article id="delivery" data-reveal className="bento-card sm:col-span-3 scroll-mt-34 bg-[var(--paper-2)] rounded-[24px] p-7 relative overflow-hidden min-h-[180px]">
               <div className="flex items-start justify-between">

@@ -24,7 +24,7 @@ describe('category registry', () => {
   // whose products are all laser. Nothing errors, and it is exactly the kind of
   // mismatch a reviewer skims past.
   it('pairs each entry with a handle for its own cartridge type', () => {
-    const prefix = { laser: 'laser-', inkjet: 'inkjet-' } as const
+    const prefix = { laser: 'laser-', inkjet: 'inkjet-', ink: 'ink-' } as const
     for (const c of CATEGORIES) {
       expect(c.medusaHandle.startsWith(prefix[c.type])).toBe(true)
     }

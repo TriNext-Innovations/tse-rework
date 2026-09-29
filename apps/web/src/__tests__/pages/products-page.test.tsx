@@ -193,3 +193,29 @@ describe('ProductsPage', () => {
     expect(homeLinks.length).toBeGreaterThan(0)
   })
 })
+
+describe('ProductsPage — Ink (refill ink for tank printers)', () => {
+  const inkCategories = [
+    { id: 'cat_ink', name: 'Ink', parent_category: null },
+    { id: 'cat_laser', name: 'Laser Cartridges', parent_category: null },
+    { id: 'cat_hp_laser', name: 'HP', parent_category: { id: 'cat_laser', name: 'Laser Cartridges' } },
+  ]
+
+  it('lists refill ink filed directly in the "Ink" type category', async () => {
+    setupFetch('reg_01', inkCategories, [makeProduct('canon-gi-21', 'Canon GI-21')], 1)
+    await renderProductsPage({ type: 'ink' })
+    const productCall = vi.mocked(fetch).mock.calls.map((c) => String(c[0])).find((u) => u.includes('/store/products?'))
+    expect(productCall).toContain('category_id%5B%5D=cat_ink')
+    expect(productCall).not.toContain('cat_hp_laser')
+    expect(screen.getByRole('heading', { name: 'Canon GI-21' })).toBeInTheDocument()
+  })
+
+  it('lists nothing — not the whole catalogue — when a filter matches no category', async () => {
+    setupFetch('reg_01', inkCategories.slice(1), [makeProduct('hp-85a', 'HP 85A')], 1)
+    await renderProductsPage({ type: 'ink' })
+    const productCalls = vi.mocked(fetch).mock.calls.filter((c) => String(c[0]).includes('/store/products?'))
+    expect(productCalls).toHaveLength(0)
+    expect(screen.queryByText('HP 85A')).not.toBeInTheDocument()
+    expect(screen.getByText('No products found.')).toBeInTheDocument()
+  })
+})

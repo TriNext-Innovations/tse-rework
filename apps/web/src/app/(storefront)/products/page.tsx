@@ -35,10 +35,11 @@ type SearchParams = Promise<{
   q?: string
 }>
 
-// Products are assigned to the brand category (e.g. "HP" under "Laser
-// Cartridges"), never the type category directly — so a type filter resolves to
-// the brand categories under that type. type+brand resolves to the single
-// matching brand-under-type category.
+// Cartridges are assigned to the brand category (e.g. "HP" under "Laser
+// Cartridges"), so a type filter resolves to the brand categories under that
+// type, and type+brand to the single matching brand-under-type category. Refill
+// ink can also sit directly in its "Ink" type category, which is why a
+// brandless type filter includes the type category itself.
 function resolveCategoryIds(
   categories: any[],
   opts: { type?: string; brand?: string; category?: string },
@@ -46,11 +47,16 @@ function resolveCategoryIds(
   if (opts.category) return opts.category.split(',').filter(Boolean)
   const parent = opts.type ? TYPE_PARENT[opts.type] : undefined
   if (!parent && !opts.brand) return []
-  return categories
+  const brands = categories
     .filter((c) => isBrandCategory(c))
     .filter((c) => (opts.brand ? c.name === opts.brand : true))
     .filter((c) => (parent ? c.parent_category?.name === parent : true))
     .map((c) => c.id as string)
+  const typeItself =
+    parent && !opts.brand
+      ? categories.filter((c) => c.name === parent && !c.parent_category).map((c) => c.id as string)
+      : []
+  return [...typeItself, ...brands]
 }
 
 function priceOf(p: any): number {
@@ -166,21 +172,26 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
     }))
   } else {
     const regionId = await getRegionId()
+    // A filter that matches no category must list nothing, not everything:
+    // without any category_id[] the store API returns the whole catalogue.
+    const filtered = Boolean(type || brand || category)
     const params = new URLSearchParams({ limit: String(FETCH_ALL) })
     if (regionId) params.append('region_id', regionId)
     for (const id of categoryIds) params.append('category_id[]', id)
     params.append('fields', '+metadata,+categories.id,+categories.name,+categories.handle,+images,+variants.id,+variants.sku,*variants.calculated_price')
 
-    try {
-      const data = await fetch(`${BACKEND}/store/products?${params}`, {
-        headers: { 'x-publishable-api-key': PUB_KEY },
-        next: { revalidate: 60 },
-      }).then((r) => r.json())
-      const all = sortProducts(data.products ?? [], sort)
-      total = all.length
-      products = all.slice(offset, offset + PAGE_SIZE)
-    } catch {
-      // Medusa offline — page renders empty with filters still usable
+    if (!filtered || categoryIds.length > 0) {
+      try {
+        const data = await fetch(`${BACKEND}/store/products?${params}`, {
+          headers: { 'x-publishable-api-key': PUB_KEY },
+          next: { revalidate: 60 },
+        }).then((r) => r.json())
+        const all = sortProducts(data.products ?? [], sort)
+        total = all.length
+        products = all.slice(offset, offset + PAGE_SIZE)
+      } catch {
+        // Medusa offline — page renders empty with filters still usable
+      }
     }
   }
 
