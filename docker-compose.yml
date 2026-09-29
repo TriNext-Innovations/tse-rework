@@ -82,7 +82,13 @@ services:
         max-size: "5m"
         max-file: "2"
 
+  # One-shot: schema migrations + idempotent table/seed scripts. Behind the
+  # "migrate" profile so a plain `docker compose up` never runs it — it boots
+  # Medusa seven times (~2.5 min). The deploy runs it explicitly, and only when
+  # its image changed; by hand: `docker compose run --rm medusa-migrate`
+  # (naming the service enables its profile).
   medusa-migrate:
+    profiles: ["migrate"]
     build:
       context: .
       dockerfile: apps/backend/Dockerfile
@@ -126,9 +132,10 @@ services:
         # Bake the public API URL into the admin dashboard build.
         MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL}
     restart: unless-stopped
+    # No depends_on medusa-migrate: that re-ran every migration on every
+    # `compose up` that touched medusa (five times in one deploy, 2026-09-29).
+    # Run migrations explicitly before starting medusa on a fresh box.
     depends_on:
-      medusa-migrate:
-        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
