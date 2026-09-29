@@ -51,7 +51,7 @@ this private file into Git or WorkDrive.
 - Existing offsite R2 backup routine exited successfully; its private log is
   `offsite-backup.log` in the backup folder. No remote restore drill performed.
 - Original image tag restored; live storefront remains on its original image.
-- Prepared `scripts/renew-tse-domain.sh` for the Docker certificate volume.
+- Prepared `scripts/renew-tse-domain.sh` for the Docker certificate volume *(removed 29 Sep, superseded by `scripts/renew-certs.sh`, which renews both certs)*.
   Shell syntax passes. Install its twice-daily schedule only after certificate
   issuance and a successful `--dry-run`. The host package cron does not prove
   Docker-volume renewal, so it is not counted as coverage.
