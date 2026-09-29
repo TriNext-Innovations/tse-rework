@@ -90,12 +90,12 @@ only, not a completed order.
    nginx to refresh upstreams. Test both new-domain hosts through public TLS,
    cart/account/payment routes, legacy redirects, mail and metadata.
 5. Redirect only the old storefront hostname(s) after acceptance; preserve the API.
-6. Run `scripts/renew-tse-domain.sh --dry-run` with the pinned CERTBOT_IMAGE, then
+6. *(Done differently: `scripts/renew-certs.sh`, see the 29 Sep entry.)* Run a renewal dry-run with the pinned CERTBOT_IMAGE, then
    install a user cron at `17 3,15 * * *` using the absolute script path and
    pinned image value. Keep existing cron entries; log to a private operations log.
 7. Recheck ZeptoMail DNS and provider verification before any sender change.
 
-At last check the website A record remains `129.232.138.17`. No DNS switch,
+*(Superseded 28 Sep: see "Executed" below.)* At last check the website A record remains `129.232.138.17`. No DNS switch,
 certificate issuance, application activation or email sender change has occurred.
 
 ## ZeptoMail — supplied by Ryno, not yet published at time of check
@@ -116,3 +116,25 @@ Public checks returned NXDOMAIN for both records. Recheck against the exact valu
 then confirm domain verification in ZeptoMail before changing the application sender.
 The existing sender remains usable while this is pending. No unrequested mail test
 or third-party message has been sent.
+
+---
+
+## Executed — 28 and 29 September 2026
+
+**28 Sep, 10:59 UTC: www.tse.co.za live** (#442, closed).
+- GAM moved apex + www to `139.84.247.189`. The cert for `tse.co.za` + `www` was issued by HTTP-01 (expires 2026-12-27).
+- The bootstrap conf was renamed `.off.20260928T105616Z`. `tse-co-za.conf` was enabled; it has been tracked under that name in git since 29 Sep.
+- The www-candidate environment and image were activated.
+- Rollback files: `backups/cutover-20260923T091722Z/.env.pre-golive.20260928T105616Z` and image `tse-ui-web:pre-golive-20260928T105616Z`.
+- Verified: www 200; apex and http 301 in one hop; legacy URLs 301 in one hop to 200; API CORS allows www. Ryno completed a real PayFast order, a password reset, mobile checkout, the quote form, and mail send and receive.
+- **Averted:** the `tse-cartridges.co.za` + `api` cert was 24h from expiry with an unrenewable standalone authenticator. It was re-issued by webroot to 2026-12-27.
+
+**29 Sep: follow-through.**
+- #484 is deployed: the ACME webroot is on the old-domain vhosts, and `scripts/renew-certs.sh` is in the repo.
+- A renewal dry run passed for both certs. The cron was installed: `17 3,15 * * *`, logging to `~/logs/cert-renew.log`.
+- #488 is deployed: `tse-cartridges.co.za` → 301 → `https://www.tse.co.za` (#438, closed).
+- **Incident, 06:09:27–06:12:10 UTC (2m45s):** the #484 deploy stopped `web` early. The cause was a bare `docker compose up nginx`, with nginx `depends_on` web, while web waited on a migration run. #489 fixed it (`--no-deps`), and #491 made deploys scoped (web / backend / nginx), so they now take ~3 min instead of 12½. See `PROD-DEPLOY.md` §6.
+- No 5xx since the flip apart from that window.
+
+**Still open:** Search Console change of address (#443) and Merchant Center (#448), both waiting on the agency handover (#447); the PayFast dashboard fallback URLs (#449); the sender move to `orders@tse.co.za` (#444, deferred); canonicals on the homepage and listing pages (#492); retiring the Woo site (#445, milestone #11).
+

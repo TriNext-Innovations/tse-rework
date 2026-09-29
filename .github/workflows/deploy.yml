@@ -123,12 +123,16 @@ jobs:
             docker compose pull --quiet
 
             if [ "$BACKEND" = 1 ]; then
-              # The migrate image holds every migration script. If it builds to
-              # the same ID as before, no migration can have changed — skip it.
-              MIGRATE_BEFORE=$(docker image inspect -f '{{.Id}}' "$PROJECT-medusa-migrate" 2>/dev/null || true)
+              # The migrate image holds every migration script. If its filesystem
+              # layers are unchanged, no migration can have changed — skip it.
+              # Compare layers, not the image ID: the box uses the containerd image
+              # store, where the ID is a manifest digest that changes on every
+              # build even when every layer is identical (seen 2026-09-29).
+              fingerprint() { docker image inspect -f '{{json .RootFS.Layers}}' "$1" 2>/dev/null | sha256sum | cut -d' ' -f1; }
+              MIGRATE_BEFORE=$(fingerprint "$PROJECT-medusa-migrate" || true)
               echo "▶ Building backend images (site stays up)"
               docker compose --profile migrate build medusa medusa-migrate
-              MIGRATE_AFTER=$(docker image inspect -f '{{.Id}}' "$PROJECT-medusa-migrate")
+              MIGRATE_AFTER=$(fingerprint "$PROJECT-medusa-migrate")
             fi
             if [ "$WEB" = 1 ]; then
               echo "▶ Building web image (site stays up)"
