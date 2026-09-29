@@ -161,13 +161,12 @@ docker compose down
 
 | Branch | Purpose |
 |---|---|
-| `main` | Production — protected, requires 1 PR review |
-| `develop` | Default branch — active development target |
-| `feature/*` | Feature branches, PR into develop |
-| `initial/Phase-0` | Phase 0 migration & scaffold work |
+| `main` | Default branch and production. Protected, CI required; merging deploys |
+| `feat/*`, `fix/*`, `chore/*` | Work branches, PR into `main` |
+| `release/YYYY-MM` | Dependency-update batch; Dependabot auto-merges here |
 
-Features PR into `develop`; a rolling `develop → main` release PR batches them
-and merging it deploys to production. See [docs/RELEASING.md](docs/RELEASING.md).
+Every PR targets `main`, and merging it deploys, scoped to what changed. `develop`
+was retired on 29 Sep 2026. See [docs/RELEASING.md](docs/RELEASING.md).
 
 ---
 

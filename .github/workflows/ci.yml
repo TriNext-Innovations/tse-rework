@@ -143,10 +143,9 @@ jobs:
   # patches/ COPY incident) fails a PR rather than the deploy — and boot the
   # backend image, because building it proves nothing about whether it starts.
   #
-  # Runs on PRs into develop as well as main. Features merge into develop, so
-  # gating only the release PR would catch a broken image once everything is
-  # already batched, when the cheap moment to catch it is the feature PR that
-  # introduced it.
+  # Runs on every PR into main (features merge there directly since develop was
+  # retired on 2026-09-29) and into release/* (dependency batches), so a broken
+  # image is caught on the PR that introduced it, before the merge deploys it.
   docker:
     name: Docker images
     runs-on: ubuntu-latest
