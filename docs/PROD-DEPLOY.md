@@ -27,7 +27,7 @@ Before touching the server, confirm all of these. Skipping any one of them turns
 
 ## 2. First-run deploy sequence
 
-The dependency chain is `postgres → redis → medusa-migrate → medusa → web → nginx`. Compose handles most of this via `depends_on: condition: service_healthy`, but **nginx has a chicken-and-egg with TLS certs** — it won't start without certs, and certbot needs port 80, which nginx normally owns. The sequence below sidesteps that.
+The dependency chain is `postgres → redis → medusa-migrate → medusa → web → nginx`. Compose handles most of this via `depends_on: condition: service_healthy` — except `medusa-migrate`, which sits behind the `migrate` profile and is **not** a dependency of `medusa`, so run it explicitly first (step 1), but **nginx has a chicken-and-egg with TLS certs** — it won't start without certs, and certbot needs port 80, which nginx normally owns. The sequence below sidesteps that.
 
 ```bash
 # All commands run from /opt/tse-ui on the VPS

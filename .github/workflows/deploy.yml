@@ -3,7 +3,17 @@ name: Deploy to Production
 on:
   push:
     branches: [main]
+    # Docs-only pushes change nothing on the box.
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
   workflow_dispatch:
+    inputs:
+      scope:
+        description: "What to deploy. auto = work it out from the files changed since the box's current commit."
+        type: choice
+        options: [auto, web, backend, full]
+        default: auto
 
 concurrency:
   group: deploy-production
@@ -21,6 +31,8 @@ jobs:
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.5
+        env:
+          DEPLOY_SCOPE: ${{ inputs.scope || 'auto' }}
         with:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
@@ -33,6 +45,7 @@ jobs:
           # cleanly (hit on the first rolling deploy, 2026-07-20). 20m gives
           # headroom under the job's 25m ceiling.
           command_timeout: 20m
+          envs: DEPLOY_SCOPE
           script: |
             set -e
 
@@ -54,65 +67,117 @@ jobs:
             git stash push -m "auto-stash before deploy $(date -u +%FT%TZ)" || echo "  (nothing to stash)"
 
             echo "▶ Fetching and resetting to origin/main"
+            OLD=$(git rev-parse HEAD)
             git fetch origin main
             git reset --hard origin/main
 
+            # ── What does this deploy need to do? ──────────────────────────
+            # Diff against the commit the box was actually running, not the
+            # push's "before" — that stays correct after a failed deploy or a
+            # manual reset. Shared inputs (packages, lockfile, compose) rebuild
+            # both apps. A manual run can force a scope.
+            CHANGED=$(git diff --name-only "$OLD" HEAD)
+            WEB=0; BACKEND=0; NGINX=0; FORCE_MIGRATE=0
+            case "${DEPLOY_SCOPE:-auto}" in
+              full)    WEB=1; BACKEND=1; NGINX=1; FORCE_MIGRATE=1 ;;
+              web)     WEB=1 ;;
+              backend) BACKEND=1; FORCE_MIGRATE=1 ;;
+              auto)
+                echo "$CHANGED" | grep -qE '^(packages/|patches/|pnpm-lock\.yaml|pnpm-workspace\.yaml|package\.json|turbo\.json|\.npmrc|docker-compose\.yml)' && { WEB=1; BACKEND=1; }
+                echo "$CHANGED" | grep -qE '^(apps/backend/|migration/)' && BACKEND=1
+                echo "$CHANGED" | grep -qE '^apps/web/' && WEB=1
+                echo "$CHANGED" | grep -qE '^infrastructure/nginx/' && NGINX=1
+                ;;
+              *) echo "✗ Unknown DEPLOY_SCOPE '$DEPLOY_SCOPE'"; exit 1 ;;
+            esac
+            echo "▶ Scope ${DEPLOY_SCOPE:-auto}: web=$WEB backend=$BACKEND nginx=$NGINX ($OLD → $(git rev-parse --short HEAD))"
+            echo "$CHANGED" | sed 's/^/    /'
+
+            if [ "$WEB$BACKEND$NGINX" = "000" ]; then
+              echo "✓ Nothing on the box changed — no deploy needed"
+              exit 0
+            fi
+
             # ── Rolling deploy ─────────────────────────────────────────────
-            # Build everything FIRST while the old containers keep serving
-            # traffic, then recreate one app service at a time behind nginx.
-            # Downtime per service ≈ its container swap, not the whole build.
+            # Build FIRST while the old containers keep serving traffic, then
+            # recreate one app service at a time behind nginx. Downtime per
+            # service ≈ its container swap, not the whole build.
+            #
+            # --no-deps on every `up`: nginx depends_on web and web depends_on
+            # medusa, so a plain `up nginx` recreates web as soon as its image
+            # changes, out of order. That took the storefront down for ~2m45s
+            # on 2026-09-29.
 
             PROJECT=$(basename "$PWD")
 
+            # Always tag BOTH running images, even for a one-sided deploy: the
+            # failure step restores both, and a stale tag from an older deploy
+            # would roll the untouched service backwards.
             echo "▶ Tagging currently-running images for rollback"
             for svc in medusa web; do
               id=$(docker compose images "$svc" --format json 2>/dev/null | grep -oP '"ID":"\K[^"]+' | head -1)
               [ -n "$id" ] && docker tag "$id" "tse-rollback-$svc:latest" || echo "  (no running $svc image to tag)"
             done
 
-            echo "▶ Pulling base images and building new images (site stays up)"
+            echo "▶ Pulling base images"
             docker compose pull --quiet
-            docker compose build
+
+            if [ "$BACKEND" = 1 ]; then
+              # The migrate image holds every migration script. If it builds to
+              # the same ID as before, no migration can have changed — skip it.
+              MIGRATE_BEFORE=$(docker image inspect -f '{{.Id}}' "$PROJECT-medusa-migrate" 2>/dev/null || true)
+              echo "▶ Building backend images (site stays up)"
+              docker compose --profile migrate build medusa medusa-migrate
+              MIGRATE_AFTER=$(docker image inspect -f '{{.Id}}' "$PROJECT-medusa-migrate")
+            fi
+            if [ "$WEB" = 1 ]; then
+              echo "▶ Building web image (site stays up)"
+              docker compose build web
+            fi
 
             # Validate the nginx config BEFORE any container is swapped. A bad
             # config used to surface at the first `nginx -s reload`, which exits
             # 1 and aborts the deploy mid-swap with nginx already down — that is
-            # how the 2026-09-19 outage happened. `run --rm` builds a throwaway
-            # container against the same mounted config, so this works even when
-            # nginx itself is not running.
+            # how the 2026-09-19 outage happened. Cheap, so it always runs.
             echo "▶ Validating nginx config (gate — must exit 0)"
             docker compose run --rm --no-deps --entrypoint nginx nginx -t
 
-            echo "▶ Running database migrations (gate — must exit 0)"
-            docker compose run --rm --no-deps medusa-migrate
+            if [ "$BACKEND" = 1 ]; then
+              if [ "$FORCE_MIGRATE" = 1 ] || [ "$MIGRATE_BEFORE" != "$MIGRATE_AFTER" ]; then
+                echo "▶ Running database migrations (gate — must exit 0)"
+                docker compose run --rm --no-deps medusa-migrate
+              else
+                echo "▶ Migrations skipped — migrate image unchanged"
+              fi
 
-            echo "▶ Rolling: medusa"
-            docker compose up -d --no-deps --no-build --wait --wait-timeout 420 medusa
+              echo "▶ Rolling: medusa"
+              docker compose up -d --no-deps --no-build --wait --wait-timeout 420 medusa
 
-            # Recreated containers get new docker-network IPs, but nginx's
-            # static upstreams resolve them once at load — reload so it
-            # re-resolves, otherwise the public site 502s while checks pass.
-            # --no-deps on every `up nginx`: nginx depends_on web, so without it
-            # compose recreates web as soon as its image changes — before the
-            # "Rolling: web" step — and web then waits on medusa → medusa-migrate.
-            # That took the storefront down for ~2m45s on 2026-09-29.
-            echo "▶ Reloading nginx (medusa IP changed)"
-            docker compose up -d --no-deps --no-build nginx
-            docker compose exec -T nginx nginx -s reload
+              # Recreated containers get new docker-network IPs, but nginx's
+              # static upstreams resolve them once at load — reload so it
+              # re-resolves, otherwise the public site 502s while checks pass.
+              echo "▶ Reloading nginx (medusa IP changed)"
+              docker compose up -d --no-deps --no-build nginx
+              docker compose exec -T nginx nginx -s reload
 
-            echo "▶ Health check — Medusa (direct)"
-            curl -sf http://localhost:9000/health || { echo "✗ Medusa health check failed"; exit 1; }
+              echo "▶ Health check — Medusa (direct)"
+              curl -sf http://localhost:9000/health || { echo "✗ Medusa health check failed"; exit 1; }
+            fi
 
-            echo "▶ Rolling: web"
-            docker compose up -d --no-deps --no-build --wait --wait-timeout 180 web
+            if [ "$WEB" = 1 ]; then
+              echo "▶ Rolling: web"
+              docker compose up -d --no-deps --no-build --wait --wait-timeout 180 web
 
-            echo "▶ Reloading nginx (web IP changed)"
-            docker compose up -d --no-deps --no-build nginx
-            docker compose exec -T nginx nginx -s reload
+              echo "▶ Reloading nginx (web IP changed)"
+              docker compose up -d --no-deps --no-build nginx
+              docker compose exec -T nginx nginx -s reload
 
-            echo "▶ Health check — Next.js (direct)"
-            curl -sf http://localhost:3000/api/health || { echo "✗ Next.js health check failed"; exit 1; }
+              echo "▶ Health check — Next.js (direct)"
+              curl -sf http://localhost:3000/api/health || { echo "✗ Next.js health check failed"; exit 1; }
+            fi
 
+            # Picks up nginx config and bugsink/base-image changes. medusa-migrate
+            # is behind the "migrate" profile, so this no longer re-runs it.
             echo "▶ Syncing remaining services (nginx/bugsink/config changes)"
             docker compose up -d --no-build --remove-orphans
             docker compose up -d --no-deps --no-build nginx
