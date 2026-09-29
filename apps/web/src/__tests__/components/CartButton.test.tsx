@@ -49,7 +49,9 @@ describe('CartButton', () => {
     renderCartButton()
     await userEvent.click(screen.getByText('add'))
     const cartBtn = await screen.findByRole('button', { name: /Cart \(1 items\)/i })
-    expect(within(cartBtn).getByText('1')).toBeInTheDocument()
+    // The label is the true count at once; the visible badge ticks over a beat
+    // later, when the flying product lands (none flies under jsdom).
+    expect(await within(cartBtn).findByText('1')).toBeInTheDocument()
   })
 
   it('updates aria-label to reflect current count', async () => {

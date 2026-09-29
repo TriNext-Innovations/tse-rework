@@ -1,6 +1,8 @@
 'use client'
 
-import { useCart } from '@/contexts/CartContext'
+import { useAddToCart, addStatusMessage } from '@/lib/add-to-cart'
+import { bubbleImage } from '@/lib/motion'
+import { AddToCartIcon, AddStatusAnnouncer } from '@/components/motion'
 
 type Props = {
   id: string
@@ -12,30 +14,40 @@ type Props = {
 }
 
 export function AddToCartButton({ id, title, sku, price, variantId, thumbnail }: Props) {
-  const { addItem } = useCart()
+  const { status, add } = useAddToCart()
 
   return (
     <button
       aria-label={`Add ${title} to cart`}
+      data-status={status}
       onClick={(e) => {
+        // The button sits inside the card's link: stop the click reaching Link's
+        // handler AND the browser's own link-following, or adding would also
+        // leave the listing (#498).
         e.stopPropagation()
+        e.preventDefault()
+        // Once the add succeeds a bubble with the card's picture rises from this
+        // button to the cart in the navbar.
+        const card = e.currentTarget.closest('[data-product-card]')
         // Mirror the PDP: encode the variant in the cart id so the checkout can
         // reconstruct a Medusa line item. Falls back to product id for search
         // results that carry no variant (resolved by SKU at checkout).
-        addItem({
-          id: variantId ? `${id}-${variantId}` : id,
-          title,
-          sku,
-          price,
-          variantId,
-          thumbnail,
-        })
+        void add(
+          {
+            id: variantId ? `${id}-${variantId}` : id,
+            title,
+            sku,
+            price,
+            variantId,
+            thumbnail,
+          },
+          { from: e.currentTarget, image: bubbleImage(card, thumbnail) },
+        )
       }}
-      className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[var(--ink)] text-[var(--paper)] group-hover:bg-[#41e0f5] group-hover:text-[var(--on-accent)] transition-colors duration-200 cursor-pointer"
+      className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[var(--ink)] text-[var(--paper)] group-hover:bg-[#41e0f5] group-hover:text-[var(--on-accent)] data-[status=added]:bg-[#dfe344] data-[status=added]:text-[var(--ink)] active:scale-90 transition-[background-color,color,transform] duration-200 cursor-pointer"
     >
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 5v14M5 12h14" />
-      </svg>
+      <AddToCartIcon />
+      <AddStatusAnnouncer message={addStatusMessage(status, title)} />
     </button>
   )
 }

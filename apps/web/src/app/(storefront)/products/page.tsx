@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { Navbar } from '@/components/layout'
 import { FilterPanel } from './FilterPanel'
 import { SortSelect } from './SortSelect'
@@ -10,6 +9,7 @@ import { AddToCartButton } from './AddToCartButton'
 import { TYPE_PARENT, cartridgeTypeLabel, isBrandCategory } from '@/lib/taxonomy'
 import { CATEGORIES } from '@/lib/categories'
 import { siteUrl } from '@/lib/site-url'
+import { NAV_FORWARD, PageTransition, ProductImage, ProductMorph } from '@/components/motion'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
@@ -200,7 +200,8 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
 
       <Navbar categories={allCategories} />
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 pt-32 pb-10">
+      <PageTransition>
+      <div data-page-content className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 pt-32 pb-10">
         {/* Page heading */}
         <div className="mb-8">
           <h1 className="font-display font-light text-4xl sm:text-5xl tracking-tight leading-[0.95]">
@@ -244,7 +245,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
                 {isSearch ? `No results for "${q}".` : 'No products found.'}
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+              <div data-results className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                 {products.map((p: any, i: number) => {
                   const variant = p.variants?.[0]
                   const sku = variant?.sku ?? '—'
@@ -258,12 +259,16 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
                     <Link
                       key={p.id}
                       href={`/products/${p.handle}`}
-                      className="group relative bg-[var(--surface)] rounded-[16px] p-4 overflow-hidden hover:-translate-y-1 transition-transform duration-300"
+                      transitionTypes={NAV_FORWARD}
+                      data-product-card
+                      style={{ '--i': i } as React.CSSProperties}
+                      className="feed-in group relative bg-[var(--surface)] rounded-[16px] p-4 overflow-hidden hover:-translate-y-1 transition-transform duration-300"
                     >
-                      {/* Product image */}
+                      {/* Product image — morphs into the product page's image */}
                       <div className="relative h-28 flex items-end justify-center mb-3">
+                        <ProductMorph productId={p.id}>
                         {imageUrl ? (
-                          <Image
+                          <ProductImage
                             src={imageUrl}
                             alt={p.title}
                             width={180}
@@ -287,6 +292,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
                             </div>
                           </div>
                         )}
+                        </ProductMorph>
                       </div>
 
                       <div className="text-[9px] uppercase tracking-[0.16em] text-[var(--muted)] mb-1">{type}</div>
@@ -359,6 +365,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
           </ul>
         </section>
       </div>
+      </PageTransition>
     </div>
   )
 }

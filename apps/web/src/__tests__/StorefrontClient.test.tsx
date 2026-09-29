@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import StorefrontClient, {
   type TrendingProduct,
@@ -8,6 +8,7 @@ import StorefrontClient, {
 } from '@/app/(storefront)/StorefrontClient'
 import { CartProvider, useCart } from '@/contexts/CartContext'
 import { installCartMock } from './helpers/medusaCartMock'
+import { allowMotion, resetMotion } from './helpers/motion'
 import { useRouter } from 'next/navigation'
 import React from 'react'
 
@@ -98,9 +99,13 @@ describe('StorefrontClient — hero', () => {
     expect(screen.getAllByText('13')[0]).toBeInTheDocument()
   })
 
-  it('renders the hero "Add to cart" button', () => {
+  it('renders the Bestseller card: price, guarantee, add to cart and details', () => {
     renderStorefront()
-    expect(screen.getByText('Add to cart — R300')).toBeInTheDocument()
+    const card = within(screen.getByText('Bestseller').closest('article') as HTMLElement)
+    expect(card.getByText('R300')).toBeInTheDocument()
+    expect(card.getByText('Replacement guarantee')).toBeInTheDocument()
+    expect(card.getByRole('button', { name: /^Add to cart$/ })).toBeInTheDocument()
+    expect(card.getByRole('link', { name: 'Details' })).toHaveAttribute('href', '/products/canon-ca737')
   })
 
   it('renders the real hero product image when one is resolved', () => {
@@ -136,7 +141,7 @@ describe('StorefrontClient — hero', () => {
         <Observer />
       </CartProvider>,
     )
-    await userEvent.click(screen.getByText('Add to cart — R300'))
+    await userEvent.click(screen.getByRole('button', { name: /^Add to cart$/ }))
     await waitFor(() => expect(cartCount).toBe(1))
   })
 
@@ -146,7 +151,7 @@ describe('StorefrontClient — hero', () => {
         <StorefrontClient trendingProducts={[]} compatModels={[]} />
       </CartProvider>,
     )
-    await userEvent.click(screen.getByText('Add to cart — R300'))
+    await userEvent.click(screen.getByRole('button', { name: /^Add to cart$/ }))
     expect(mockPush).toHaveBeenCalledWith('/products/canon-ca737')
   })
 
@@ -370,7 +375,9 @@ describe('StorefrontClient — trending products', () => {
     renderStorefront([mockProduct])
     const card = document.querySelector('.product-card') as HTMLElement
     await userEvent.click(card)
-    expect(mockPush).toHaveBeenCalledWith('/products/hp-123-black')
+    // Tagged as a forward navigation so the product page rises in and the
+    // card's image morphs into it.
+    expect(mockPush).toHaveBeenCalledWith('/products/hp-123-black', { transitionTypes: ['nav-forward'] })
   })
 })
 
@@ -429,5 +436,82 @@ describe('StorefrontClient — IntersectionObserver', () => {
     const { unmount } = renderStorefront()
     unmount()
     expect(disconnect).toHaveBeenCalled()
+  })
+})
+
+describe('StorefrontClient — printer finder match', () => {
+  it('says how many cartridges fit once the typed model is one we know', async () => {
+    renderStorefront()
+    await userEvent.selectOptions(document.querySelector('select') as HTMLSelectElement, 'Canon')
+    await userEvent.type(screen.getByPlaceholderText(/P1102/i), 'mf273DW')
+    expect(screen.getByText(/cartridges fit the Canon MF273dw/)).toBeInTheDocument()
+    expect(document.querySelector('.finder-match')).toHaveAttribute('data-open', 'true')
+    expect(document.querySelector('.finder-match')?.textContent).toContain('4 cartridges fit')
+  })
+
+  it('uses the singular for a single cartridge', async () => {
+    renderStorefront()
+    await userEvent.selectOptions(document.querySelector('select') as HTMLSelectElement, 'Ricoh')
+    await userEvent.type(screen.getByPlaceholderText(/P1102/i), 'SP330')
+    expect(screen.getByText(/1?\s*cartridge fits the Ricoh SP330/)).toBeInTheDocument()
+  })
+
+  it('stays closed for a model it has no data for', async () => {
+    renderStorefront()
+    await userEvent.type(screen.getByPlaceholderText(/P1102/i), 'NOT-A-PRINTER')
+    expect(document.querySelector('.finder-match')).toHaveAttribute('data-open', 'false')
+    expect(screen.queryByText(/fits? the/)).not.toBeInTheDocument()
+  })
+})
+
+// #500: the hero used to sit at opacity 0 until hydration. Now nothing that is
+// on screen when the page loads is ever hidden; only sections still below the
+// fold are tucked away, and they come in as they scroll into view.
+describe('StorefrontClient — scroll reveals', () => {
+  afterEach(() => {
+    resetMotion()
+    Object.defineProperty(Element.prototype, 'getBoundingClientRect', {
+      configurable: true,
+      value: vi.fn(() => ({ left: 0, top: 0, right: 100, bottom: 100, width: 100, height: 100, x: 0, y: 0 })),
+    })
+  })
+
+  it('never hides content that is on screen at load', () => {
+    allowMotion()
+    renderStorefront([mockProduct])
+    expect(document.querySelectorAll('[data-reveal]').length).toBeGreaterThan(0)
+    expect(document.querySelectorAll('.pre-reveal')).toHaveLength(0)
+  })
+
+  it('tucks below-the-fold sections away and reveals them as they scroll in', () => {
+    allowMotion()
+    Object.defineProperty(Element.prototype, 'getBoundingClientRect', {
+      configurable: true,
+      value: function (this: Element) {
+        const top = this.hasAttribute('data-reveal') ? 5000 : 0
+        return { left: 0, top, right: 100, bottom: top + 100, width: 100, height: 100, x: 0, y: top }
+      },
+    })
+    let reveal!: (entries: Array<{ isIntersecting: boolean; target: Element }>) => void
+    vi.mocked(IntersectionObserver as any).mockImplementation(function (cb: typeof reveal) {
+      reveal = cb
+      return { observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn() }
+    })
+
+    renderStorefront([mockProduct])
+    const tucked = document.querySelectorAll('.pre-reveal')
+    expect(tucked.length).toBe(document.querySelectorAll('[data-reveal]').length)
+
+    reveal([{ isIntersecting: true, target: tucked[0]! }])
+    expect(tucked[0]!.classList.contains('pre-reveal')).toBe(false)
+  })
+
+  it('hides nothing when the shopper prefers reduced motion', () => {
+    Object.defineProperty(Element.prototype, 'getBoundingClientRect', {
+      configurable: true,
+      value: () => ({ left: 0, top: 5000, right: 100, bottom: 5100, width: 100, height: 100, x: 0, y: 5000 }),
+    })
+    renderStorefront([mockProduct])
+    expect(document.querySelectorAll('.pre-reveal')).toHaveLength(0)
   })
 })
