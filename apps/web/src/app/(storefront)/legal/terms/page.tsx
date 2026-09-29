@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { siteConfig } from '@/lib/site-config'
-import { SITE_HOST } from '@/lib/site-url'
+import { SITE_HOST, siteUrl } from '@/lib/site-url'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout'
 
@@ -13,6 +13,7 @@ export const metadata: Metadata = {
   title: 'Terms & Conditions — TSE Online',
   description:
     'The terms you agree to when buying from TSE Online: who we are, pricing, payment, delivery, and how disputes are handled.',
+  alternates: { canonical: siteUrl('/legal/terms') },
 }
 
 export default function TermsPage() {

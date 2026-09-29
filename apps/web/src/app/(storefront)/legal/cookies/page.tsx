@@ -1,12 +1,13 @@
 import type { Metadata } from 'next'
 import { siteConfig } from '@/lib/site-config'
-import { SITE_HOST } from '@/lib/site-url'
+import { SITE_HOST, siteUrl } from '@/lib/site-url'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout'
 
 export const metadata: Metadata = {
   title: 'Cookie Policy — TSE Online',
   description: 'How TSE uses cookies and how you can control them.',
+  alternates: { canonical: siteUrl('/legal/cookies') },
 }
 
 export default function CookiesPage() {
