@@ -227,8 +227,9 @@ resolvers and keep both origins available. Then point `tse.co.za` and
 Rollback is a DNS revert — hence the low TTL. It only helps while something still answers
 at the old address, which is what the Xneelo fallback host gives us for free (#473).
 
-### Phase 5 — Reverse the old redirect
-`tse-cartridges.co.za` now 301s to `tse.co.za`, path-preserving. Both domains stay
+### Phase 5 — Reverse the old redirect ✅ 2026-09-29
+`tse-cartridges.co.za` now 301s to `https://www.tse.co.za`, path-preserving, one hop (#438,
+#488). `api.tse-cartridges.co.za` and `/meili/` are deliberately not redirected. Both domains stay
 registered indefinitely; equity flows through a 301 only while it answers.
 
 ### Phase 6 — Re-verify third parties

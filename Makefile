@@ -36,7 +36,7 @@ help:
 	@echo "    make shell s=postgres  exec into any service container"
 	@echo ""
 	@echo "  Certs"
-	@echo "    make cert-renew      stop nginx → certbot renew → start nginx"
+	@echo "    make cert-renew      renew both certs by webroot (no downtime), reload nginx"
 	@echo ""
 
 # ── Status ─────────────────────────────────────────────────────────────────────
@@ -70,12 +70,14 @@ endif
 deploy:
 	git pull origin main
 	$(COMPOSE) build medusa web
-	$(COMPOSE) up medusa-migrate
-	$(COMPOSE) up -d medusa web
+	$(COMPOSE) --profile migrate build medusa-migrate
+	$(COMPOSE) run --rm medusa-migrate
+	$(COMPOSE) up -d --no-deps medusa web
+	$(COMPOSE) exec -T nginx nginx -s reload   # new container IPs, or nginx 502s
 	$(COMPOSE) ps
 
 migrate:
-	$(COMPOSE) up medusa-migrate
+	$(COMPOSE) run --rm medusa-migrate
 
 build:
 	$(COMPOSE) build medusa web
@@ -112,11 +114,6 @@ endif
 
 # ── Cert renewal ───────────────────────────────────────────────────────────────
 
+# Webroot renewal of both live certs; nginx stays up. Same script the cron runs.
 cert-renew:
-	$(COMPOSE) stop nginx
-	docker run --rm -p 80:80 \
-	  -v tse-ui_certbot_certs:/etc/letsencrypt \
-	  -v tse-ui_certbot_www:/var/www/certbot \
-	  certbot/certbot renew
-	$(COMPOSE) up -d nginx
-	@echo "Cert renewal done. nginx restarted."
+	./scripts/renew-certs.sh
