@@ -3,6 +3,7 @@ import { siteConfig } from '@/lib/site-config'
 import { ORGANIZATION_ID, SITE_URL, organizationRef } from '@/lib/structured-data'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout'
+import { siteUrl } from '@/lib/site-url'
 
 // Google Merchant Center requires contact details a reviewer can actually see.
 // Two problems this page solves:
@@ -23,6 +24,7 @@ export const metadata: Metadata = {
   title: 'Contact Us — TSE Online',
   description:
     'Phone, WhatsApp, email and physical address for TSE Online — printer cartridge supplier in Kya Sands, Johannesburg. Trading since 1987.',
+  alternates: { canonical: siteUrl('/contact') },
 }
 
 const ADDRESS = siteConfig.address

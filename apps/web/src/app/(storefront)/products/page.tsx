@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -8,6 +9,7 @@ import { MobileFilters } from './MobileFilters'
 import { AddToCartButton } from './AddToCartButton'
 import { TYPE_PARENT, cartridgeTypeLabel, isBrandCategory } from '@/lib/taxonomy'
 import { CATEGORIES } from '@/lib/categories'
+import { siteUrl } from '@/lib/site-url'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
@@ -121,6 +123,20 @@ async function getCategories(): Promise<any[]> {
     return (d.product_categories ?? []) as any[]
   } catch {
     return []
+  }
+}
+
+// Canonical policy (#492): unfiltered pagination is self-canonical, so page 2+
+// stays indexable and its products stay discoverable. Every filtered, sorted or
+// searched view canonicalises to the plain listing — they are re-orderings of
+// the same catalogue, and no legacy redirect lands on one (categories go to
+// /cartridges/[slug], which has its own canonical).
+export async function generateMetadata({ searchParams }: { searchParams: SearchParams }): Promise<Metadata> {
+  const { category = '', brand = '', type = '', sort = '', page = '1', q = '' } = await searchParams
+  const n = Math.max(1, parseInt(page, 10) || 1)
+  const filtered = Boolean(category || brand || type || sort || q)
+  return {
+    alternates: { canonical: siteUrl(!filtered && n > 1 ? `/products?page=${n}` : '/products') },
   }
 }
 

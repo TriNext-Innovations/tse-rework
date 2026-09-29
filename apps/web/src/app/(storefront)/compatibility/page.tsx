@@ -6,6 +6,7 @@ import { Suspense } from 'react'
 import { Logo } from '@/components/layout'
 import { CompatSearch } from './CompatSearch'
 import { ProductSearch } from './ProductSearch'
+import { siteUrl } from '@/lib/site-url'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const PUB_KEY  = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
@@ -19,6 +20,7 @@ const BRAND_CHIPS = [
 export const metadata: Metadata = {
   title: 'Find Cartridges for Your Printer — TSE Online',
   description: 'Search by printer model and instantly see compatible generic cartridges. Quality guaranteed.',
+  alternates: { canonical: siteUrl('/compatibility') },
 }
 
 async function searchCompatibility(model: string): Promise<any[]> {
