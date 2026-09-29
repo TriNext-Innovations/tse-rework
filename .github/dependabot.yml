@@ -63,8 +63,8 @@ updates:
     labels:
       - "dependencies"
       - "automerge"
-    # Dependency updates land on the release branch, not on develop: they are
-    # release content, and keeping them off develop means feature work is never
+    # Dependency updates land on the release branch, not on main: they are
+    # batched release content, and keeping them off main means feature work is never
     # entangled with a dependency bump. Update this when a new cycle is cut.
     target-branch: release/2026-09
 
@@ -79,7 +79,7 @@ updates:
     labels:
       - "dependencies"
       - "automerge"
-    # Dependency updates land on the release branch, not on develop: they are
-    # release content, and keeping them off develop means feature work is never
+    # Dependency updates land on the release branch, not on main: they are
+    # batched release content, and keeping them off main means feature work is never
     # entangled with a dependency bump. Update this when a new cycle is cut.
     target-branch: release/2026-09

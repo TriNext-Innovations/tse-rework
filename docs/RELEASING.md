@@ -5,18 +5,18 @@ How a change gets from a branch to production.
 ## The flow
 
 ```
-feature/*  ──PR──►  develop  ─────┐
-                                  ├──►  release/YYYY-MM  ──human PR──►  main  ──►  production
-dependabot/*  ──auto-merge────────┘        (rolling release PR)                    deploy.yml
+feature/*  ──PR──►  main  ──►  production (deploy.yml, scoped to what changed)
+
+dependabot/*  ──auto-merge──►  release/YYYY-MM  ──human PR──►  main
+                                  (rolling release PR)
 ```
 
-- **`develop`** is the default branch and the target for every feature PR.
-- **`release/YYYY-MM`** is the release branch, cut per cycle. Dependabot targets
-  it directly and its green PRs auto-merge there, source branch deleted.
-- **`release-pr.yml`** keeps a single `release/* → main` PR open and rewrites its
-  body with the changelog on every push to the release branch.
-- **Merging that PR is the release**, and it is always a human action. The push
-  to `main` triggers `deploy.yml`.
+- **`main`** is the default branch, the target for every feature and fix PR, and
+  what production runs. Merging a PR is the deploy, and it's always a human action.
+- **`release/YYYY-MM`** batches dependency updates only. Dependabot targets it,
+  its green PRs auto-merge there, and `release-pr.yml` keeps one
+  `release/* → main` PR open with a changelog. Merging that PR ships the batch.
+- **`develop` is retired** (29 Sep 2026). Don't branch from it or target it.
 
 ## Nothing deploys itself
 
@@ -32,40 +32,46 @@ health check and rolled back, but no automation should have been able to make
 that call. Auto-merge now only ever targets a `release/*` branch, so the worst
 it can do is put a dependency bump on a branch nobody has shipped yet.
 
-## Why not merge features straight into `main`
+## Why features go straight to `main`
 
-It works, and that is the problem — it deploys each change to production on its
-own, with no batching and nothing to announce. Between 2026-08-06 and 2026-08-29
-every feature went in that way. `develop` fell 58 commits behind, the rolling
-release PR had nothing to describe, and anyone cloning the repo got a two-month
-stale default branch. 248 commits reached production without ever appearing in a
-release.
+Until 29 Sep 2026 features went through `develop` so releases could be batched
+and announced. In practice `develop` drifted twice: 58 commits behind in August
+and 22 behind in September, both times because urgent work went to `main`
+directly. Every drift made the default branch lie to anyone cloning the repo, and
+made "Closes #N" in PRs to `main` silently do nothing.
 
-If you need a single urgent fix in production, that is what a hotfix PR into
-`main` is for — but backmerge `main` into `develop` immediately afterwards, or
-the same drift starts again.
+What made direct-to-`main` affordable is that deploys are now scoped
+(`PROD-DEPLOY.md` §6). A web-only change deploys in about a minute, an nginx
+change in about 20 seconds, and nothing reruns migrations unless the backend
+changed. Batching now lives in milestones and release notes, not in a branch.
 
-## Cutting a release
+## Shipping a change
 
-0. **Cut the branch.** `git checkout -b release/YYYY-MM develop`, push it, and
-   update `target-branch` in `.github/dependabot.yml` to match. The rolling
-   release PR opens itself on the first push.
-1. **Land the features.** Feature PRs merge into `develop`, then `develop`
-   merges into the release branch. CI must be green.
-2. **Triage Dependabot.** Its PRs target the release branch and auto-merge on
-   green. Major-version jumps are labelled `major-bump` and wait for a human —
-   they deserve their own release rather than riding along with features.
-3. **Check the release PR.** `release-pr.yml` keeps it current; confirm its
+1. **Branch from `main`** (`feat/…`, `fix/…`, `chore/…`) and open a PR into `main`.
+   CI must be green, and the PR carries the issue's milestone.
+2. **Merge it.** This deploys, scoped to what changed. Watch the run: it has to
+   reach `✓ Deploy complete`, and the public health checks are part of it.
+
+## Dependency releases
+
+0. **Cut the branch** once per cycle: `git checkout -b release/YYYY-MM main`, push
+   it, and update `target-branch` in `.github/dependabot.yml` to match. The
+   rolling release PR opens itself on the first push.
+1. **Triage Dependabot.** Its PRs target the release branch and auto-merge on
+   green. Major-version jumps are labelled `major-bump` and wait for a human.
+2. **Check the release PR.** `release-pr.yml` keeps it current. Confirm the
    changelog matches what you expect to ship.
-4. **Merge it.** This deploys. `scripts/prod-deploy.sh` smoke-tests the backend
-   image before swapping containers, and the workflow rolls back on a failed
-   health check.
-5. **Tag and publish.** Create the GitHub release with notes covering what
-   shipped. Milestone the issues so the next set of notes writes itself.
+3. **Merge it.** This deploys. The workflow rolls back on a failed health check.
+
+## Tagging
+
+When a milestone closes, create the GitHub release with notes covering what
+shipped in it.
 
 ## Verifying a deploy
 
-- `https://tse-cartridges.co.za` and `https://api.tse-cartridges.co.za/health`
+- `https://www.tse.co.za`, `https://tse-cartridges.co.za` (must 301 to www) and
+  `https://api.tse-cartridges.co.za/health`
 - The deploy workflow's own public health checks must pass before it completes.
 - Database backups run nightly to R2; see `docs/PROD-DEPLOY.md` for restore.
 
