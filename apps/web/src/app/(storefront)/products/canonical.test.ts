@@ -20,14 +20,15 @@ describe('/products canonical', () => {
   })
 
   it('folds every filtered, sorted or searched view into the plain listing', async () => {
-    for (const params of [
+    const variants: Record<string, string>[] = [
       { brand: 'hp' },
       { category: 'toner' },
       { type: 'laser' },
       { sort: 'price_asc' },
       { q: '85a' },
       { brand: 'hp', page: '2' },
-    ]) {
+    ]
+    for (const params of variants) {
       expect(await canonical(params)).toBe('https://www.tse.co.za/products')
     }
   })
