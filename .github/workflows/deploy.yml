@@ -121,8 +121,15 @@ jobs:
             # Through nginx via the public URLs — this is what customers hit; a
             # 502 here must fail the deploy instead of passing silently.
             echo "▶ Health check — storefront via nginx"
-            curl -sfo /dev/null --retry 3 --retry-delay 5 --retry-all-errors https://tse-cartridges.co.za \
+            curl -sfo /dev/null --retry 3 --retry-delay 5 --retry-all-errors https://www.tse.co.za \
               || { echo "✗ Public storefront check failed (nginx path)"; exit 1; }
+
+            # The old domain is a permanent 301 into www.tse.co.za (#438). A 200
+            # here means the redirect was lost; anything else means it broke.
+            echo "▶ Health check — old domain 301s to www.tse.co.za"
+            loc=$(curl -so /dev/null -w '%{http_code} %{redirect_url}' --retry 3 --retry-delay 5 --retry-all-errors https://tse-cartridges.co.za/products)
+            [ "$loc" = "301 https://www.tse.co.za/products" ] \
+              || { echo "✗ Old-domain redirect check failed: got '$loc'"; exit 1; }
 
             echo "▶ Health check — API via nginx"
             curl -sfo /dev/null --retry 3 --retry-delay 5 --retry-all-errors https://api.tse-cartridges.co.za/health \
@@ -131,7 +138,7 @@ jobs:
             # /products is SSR against Medusa+Postgres, so this one curl proves
             # the whole read path (nginx → next → medusa → db) end to end.
             echo "▶ Health check — product listing via nginx (SSR → Medusa → DB)"
-            curl -sfo /dev/null --retry 3 --retry-delay 5 --retry-all-errors https://tse-cartridges.co.za/products \
+            curl -sfo /dev/null --retry 3 --retry-delay 5 --retry-all-errors https://www.tse.co.za/products \
               || { echo "✗ Product listing check failed"; exit 1; }
 
             echo "✓ Deploy complete"
@@ -169,4 +176,4 @@ jobs:
             sleep 15
             curl -sf http://localhost:9000/health || echo "⚠ Medusa still unhealthy after rollback"
             curl -sf http://localhost:3000/api/health || echo "⚠ Next.js still unhealthy after rollback"
-            curl -sfo /dev/null https://tse-cartridges.co.za || echo "⚠ Public storefront still unhealthy after rollback"
+            curl -sfo /dev/null https://www.tse.co.za || echo "⚠ Public storefront still unhealthy after rollback"
