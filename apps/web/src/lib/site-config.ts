@@ -32,6 +32,10 @@ export const siteConfig = {
     opens: '08:00',
     closes: '17:00',
   },
+  // When a "Collect" order can be fetched from the counter. Matches the footer,
+  // which is tighter than `openingHours` (Fri closes at 3pm) — the safe figure
+  // to send a customer driving across town on.
+  collectionHours: 'Mon–Thu 8am–4:30pm · Fri 8am–3pm',
   // Sales landline
   phone: {
     display: '011 708 2304',

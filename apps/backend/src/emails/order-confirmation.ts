@@ -25,6 +25,20 @@ export interface OrderConfirmationData {
     postalCode?: string
   }
   serviceName: string
+  /** Customer chose "Collect from Kya Sands Warehouse" — nothing is couriered. */
+  isCollect?: boolean
+}
+
+// Kept in step with the storefront's site-config (address + collectionHours).
+const COLLECTION_POINT = {
+  lines: ['Unit 34, A.P.D. Industrial Park, Cnr Bernie &amp; Elsecar Street', 'Kya Sands, Johannesburg, 2163'],
+  hours: 'Mon–Thu 8am–4:30pm · Fri 8am–3pm',
+}
+
+// The option is admin-configured, so it is recognised by name (Pudo is also a
+// manual option, so the provider can't tell them apart).
+export function isCollectMethod(name: string | undefined | null): boolean {
+  return !!name && /\bcollect/i.test(name)
 }
 
 function row(label: string, value: string, bold = false): string {
@@ -102,7 +116,9 @@ export function orderConfirmationHtml(d: OrderConfirmationData): string {
                 Order confirmed ✓
               </p>
               <p style="margin:0 0 24px;font-size:15px;color:#6B7280;">
-                Hi ${d.customerName}, thanks for your order. We'll have it packed and ready for collection shortly.
+                Hi ${d.customerName}, thanks for your order. ${d.isCollect
+                  ? "We'll have it packed and ready for you to collect from our warehouse shortly. It will not be couriered."
+                  : "We'll have it packed and on its way to you shortly."}
               </p>
 
               <!-- Order meta -->
@@ -147,12 +163,18 @@ export function orderConfirmationHtml(d: OrderConfirmationData): string {
               <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
                 <tr>
                   <td style="width:50%;vertical-align:top;padding-right:16px;">
+                    ${d.isCollect ? `
+                    <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#111827;text-transform:uppercase;letter-spacing:0.5px;">Collect from</p>
+                    <p style="margin:0;font-size:14px;color:#374151;line-height:1.6;">
+                      ${COLLECTION_POINT.lines.join('<br/>')}<br/>
+                      ${COLLECTION_POINT.hours}
+                    </p>` : `
                     <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#111827;text-transform:uppercase;letter-spacing:0.5px;">Delivery address</p>
                     <p style="margin:0;font-size:14px;color:#374151;line-height:1.6;">
                       ${d.shippingAddress.name}<br/>
                       ${d.shippingAddress.line1}<br/>
                       ${d.shippingAddress.line2 ? d.shippingAddress.line2 + '<br/>' : ''}${d.shippingAddress.city}${d.shippingAddress.province ? ', ' + d.shippingAddress.province : ''}${d.shippingAddress.postalCode ? ', ' + d.shippingAddress.postalCode : ''}
-                    </p>
+                    </p>`}
                   </td>
                   <td style="width:50%;vertical-align:top;padding-left:16px;">
                     <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#111827;text-transform:uppercase;letter-spacing:0.5px;">Need help?</p>

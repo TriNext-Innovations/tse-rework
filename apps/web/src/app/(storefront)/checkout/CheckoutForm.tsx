@@ -14,6 +14,7 @@ import {
   type ShippingOption,
   type CartTotals,
 } from '@/lib/checkout-cart'
+import { isCollectOption, sortCollectLast, collectionPoint, isOutsideCollectionProvince } from '@/lib/collect'
 
 const SA_PROVINCES = [
   'Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Natal',
@@ -100,11 +101,15 @@ export default function CheckoutForm() {
   const [optionsLoading, setOptionsLoading] = useState(false)
   const [optionsError, setOptionsError] = useState('')
   const [optionsNotice, setOptionsNotice] = useState('')
+  // Collect must be confirmed explicitly: shoppers kept picking it as "free
+  // delivery" and then waiting for a courier that was never booked.
+  const [collectConfirmed, setCollectConfirmed] = useState(false)
 
   const formRef = useRef<HTMLFormElement>(null)
 
   const subtotal = goodsTotal
   const selectedOption = options.find((o) => o.id === selectedOptionId) ?? null
+  const collecting = isCollectOption(selectedOption)
 
   // Prefer authoritative cart totals once a method is chosen; fall back to the
   // local subtotal (+ selected delivery) before the cart has computed.
@@ -234,7 +239,7 @@ export default function CheckoutForm() {
         }).catch(() => {})
       }
 
-      setOptions(opts)
+      setOptions(sortCollectLast(opts))
       setStep(3)
     } catch (err: any) {
       setOptionsError(err?.message ?? 'Could not load delivery options. Please try again.')
@@ -246,6 +251,7 @@ export default function CheckoutForm() {
   async function chooseOption(optionId: string) {
     if (!cartId) return
     setSelectedOptionId(optionId)
+    setCollectConfirmed(false)
     setOptionsError('')
     try {
       const t = await selectShippingMethod(cartId, optionId)
@@ -595,6 +601,7 @@ export default function CheckoutForm() {
               <div className="space-y-3">
                 {options.map((o) => {
                   const isFree = o.amount === 0
+                  const isCollect = isCollectOption(o)
                   const selected = o.id === selectedOptionId
                   return (
                     <button
@@ -604,24 +611,57 @@ export default function CheckoutForm() {
                         selected ? 'border-[var(--ink)] bg-[var(--paper)]' : 'border-[var(--line-4)] hover:border-[var(--line-6)]'
                       }`}
                     >
-                      <div className="flex items-center gap-3">
-                        <span className={`w-4 h-4 rounded-full border flex-shrink-0 flex items-center justify-center ${selected ? 'border-[var(--ink)]' : 'border-[var(--line-6)]'}`}>
+                      <div className="flex items-start gap-3">
+                        <span className={`mt-0.5 w-4 h-4 rounded-full border flex-shrink-0 flex items-center justify-center ${selected ? 'border-[var(--ink)]' : 'border-[var(--line-6)]'}`}>
                           {selected && <span className="w-2 h-2 rounded-full bg-[var(--ink)]" />}
                         </span>
-                        <span className="font-medium text-sm text-[var(--ink)]">{o.name}</span>
-                        {o.priceType === 'calculated' && (
-                          <span className="text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#dfe344] text-[var(--ink)] px-2 py-0.5 rounded-full flex-shrink-0">
-                            Live rate
-                          </span>
-                        )}
+                        <div>
+                          <div className="flex items-center gap-3">
+                            <span className="font-medium text-sm text-[var(--ink)]">{o.name}</span>
+                            {o.priceType === 'calculated' && (
+                              <span className="text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#dfe344] text-[var(--ink)] px-2 py-0.5 rounded-full flex-shrink-0">
+                                Live rate
+                              </span>
+                            )}
+                          </div>
+                          {isCollect && (
+                            <p className="text-xs text-[var(--muted)] mt-1 leading-relaxed">
+                              You fetch it yourself from our warehouse — we don&apos;t courier it.
+                              <br />
+                              {collectionPoint.lines.join(', ')}
+                              <br />
+                              {collectionPoint.hours}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <span className="font-display text-base flex-shrink-0">
-                        {isFree ? 'Free' : `R${o.amount.toFixed(0)}`}
+                      <span className="font-display text-base flex-shrink-0 text-right">
+                        {isCollect && isFree ? 'R0 · you collect' : isFree ? 'Free' : `R${o.amount.toFixed(0)}`}
                       </span>
                     </button>
                   )
                 })}
               </div>
+              {collecting && (
+                <div className="mt-4 rounded-[16px] border border-[var(--line-4)] bg-[var(--surface)] p-5">
+                  {isOutsideCollectionProvince(address.province) && (
+                    <p className="text-xs text-[#B45309] mb-3">
+                      Your address is in {address.province}. Collect means coming to our warehouse in Kya Sands, Johannesburg — choose a courier option if you want it delivered.
+                    </p>
+                  )}
+                  <label className="flex items-start gap-3 cursor-pointer text-sm text-[var(--ink)]">
+                    <input
+                      type="checkbox"
+                      checked={collectConfirmed}
+                      onChange={(e) => setCollectConfirmed(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 accent-[var(--ink)] flex-shrink-0"
+                    />
+                    <span>
+                      I will collect this order myself from {collectionPoint.lines.join(', ')}. It will not be delivered.
+                    </span>
+                  </label>
+                </div>
+              )}
               {optionsNotice && <p className="text-xs text-[#B45309] mt-4">{optionsNotice}</p>}
               {optionsError && <p className="text-xs text-red-500 mt-4">{optionsError}</p>}
               <div className="flex gap-3 mt-8">
@@ -632,8 +672,8 @@ export default function CheckoutForm() {
                   ← Back
                 </button>
                 <button
-                  onClick={() => selectedOptionId && setStep(4)}
-                  disabled={!selectedOptionId}
+                  onClick={() => selectedOptionId && (!collecting || collectConfirmed) && setStep(4)}
+                  disabled={!selectedOptionId || (collecting && !collectConfirmed)}
                   className="flex-1 bg-[var(--ink)] text-[var(--paper)] rounded-full py-3 text-sm font-medium hover:bg-[#41e0f5] hover:text-[var(--on-accent)] transition-colors cursor-pointer disabled:opacity-40"
                 >
                   Review order →
@@ -657,14 +697,28 @@ export default function CheckoutForm() {
               </div>
 
               <div className="bg-[var(--surface)] rounded-[16px] p-5 mb-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-xs font-medium uppercase tracking-[0.12em] text-[var(--muted)]">Delivery address</h3>
-                  <button onClick={() => setStep(2)} className="text-xs text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer">Edit</button>
-                </div>
-                <p className="text-sm">{address.line1}</p>
-                {address.complex && <p className="text-sm text-[var(--muted)]">{address.complex}</p>}
-                <p className="text-sm text-[var(--muted)]">{address.suburb}, {address.city}</p>
-                <p className="text-sm text-[var(--muted)]">{address.province} {address.postalCode}</p>
+                {collecting ? (
+                  <>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-xs font-medium uppercase tracking-[0.12em] text-[var(--muted)]">Collection point</h3>
+                      <button onClick={() => setStep(3)} className="text-xs text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer">Change</button>
+                    </div>
+                    <p className="text-sm">You collect from our warehouse</p>
+                    {collectionPoint.lines.map((l) => <p key={l} className="text-sm text-[var(--muted)]">{l}</p>)}
+                    <p className="text-sm text-[var(--muted)]">{collectionPoint.hours}</p>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-xs font-medium uppercase tracking-[0.12em] text-[var(--muted)]">Delivery address</h3>
+                      <button onClick={() => setStep(2)} className="text-xs text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer">Edit</button>
+                    </div>
+                    <p className="text-sm">{address.line1}</p>
+                    {address.complex && <p className="text-sm text-[var(--muted)]">{address.complex}</p>}
+                    <p className="text-sm text-[var(--muted)]">{address.suburb}, {address.city}</p>
+                    <p className="text-sm text-[var(--muted)]">{address.province} {address.postalCode}</p>
+                  </>
+                )}
               </div>
 
               <div className="bg-[var(--surface)] rounded-[16px] p-5 mb-6">
@@ -673,7 +727,7 @@ export default function CheckoutForm() {
                   <button onClick={() => setStep(3)} className="text-xs text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer">Edit</button>
                 </div>
                 <p className="text-sm">{selectedOption?.name}</p>
-                <p className="text-sm text-[var(--muted)]">{selectedOption && selectedOption.amount === 0 ? 'Free' : `R${(selectedOption?.amount ?? 0).toFixed(0)}`}</p>
+                <p className="text-sm text-[var(--muted)]">{selectedOption && selectedOption.amount === 0 ? (collecting ? 'R0 · you collect' : 'Free') : `R${(selectedOption?.amount ?? 0).toFixed(0)}`}</p>
               </div>
 
               {/* Payment */}
@@ -748,8 +802,8 @@ export default function CheckoutForm() {
                 <span>VAT (incl.)</span><span>R{vatContent}</span>
               </div>
               <div className="flex justify-between text-[var(--muted)]">
-                <span>Delivery</span>
-                <span>{selectedOption ? (deliveryRand === 0 ? 'Free' : `R${deliveryRand.toFixed(0)}`) : 'Select at checkout'}</span>
+                <span>{collecting ? 'Collection' : 'Delivery'}</span>
+                <span>{selectedOption ? (deliveryRand === 0 ? (collecting ? 'R0 · you collect' : 'Free') : `R${deliveryRand.toFixed(0)}`) : 'Select at checkout'}</span>
               </div>
             </div>
             <PromoCodeField className="mt-4 pt-4 border-t border-[var(--line-2)]" />
