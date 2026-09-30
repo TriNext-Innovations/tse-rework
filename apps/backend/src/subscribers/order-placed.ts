@@ -2,6 +2,7 @@ import { type SubscriberArgs, type SubscriberConfig } from '@medusajs/framework'
 import { ContainerRegistrationKeys } from '@medusajs/framework/utils'
 import { sendEmail, salesEmail, salesCc } from '../lib/email'
 import { orderConfirmationHtml } from '../emails/order-confirmation'
+import { isCollectMethod } from '../lib/collection-point'
 import { teamOrderNotificationHtml } from '../emails/team-order-notification'
 
 function formatPrice(amount: number, currency: string): string {
@@ -116,6 +117,7 @@ export default async function orderPlacedHandler({
         }
       : { name: '', line1: '', city: '' },
     serviceName: shippingMethod?.name ?? 'Standard Courier',
+    isCollect: isCollectMethod(shippingMethod?.name),
   })
 
   try {
