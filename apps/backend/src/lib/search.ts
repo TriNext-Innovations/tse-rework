@@ -11,6 +11,8 @@ export type SearchDocument = {
   handle: string
   description: string | null
   sku: string | null
+  // HP's box codes ("85A" for CE285A). See hpShortCodes.
+  short_codes: string[]
   brand: string | null
   cartridge_type: string | null
   price_zar: number | null
@@ -122,6 +124,39 @@ export function buildSearchJoins(
   return [...out]
 }
 
+// Colour LaserJet parts whose digits do not give their box code. CE314A is
+// the HP 126A drum; the digit rule would call it 14A, which is CF214A.
+const HP_SHORT_CODE_EXCEPTIONS = new Set(['CE314A'])
+
+/**
+ * The code HP prints on the box, derived from the part number on the SKU.
+ *
+ * Customers search "85A"; the product is "HP CE285A". Meilisearch matches word
+ * prefixes, never text inside a word, so "85A" finds nothing (#483). For HP
+ * monochrome LaserJet parts the box code is the last two digits plus the
+ * A/X suffix: CE285A → 85A, Q2612A → 12A, CF259X → 59X. The W-series keeps
+ * three: W1106A → 106A.
+ *
+ * Colour sets (SKUs ending -K/-C/-M/-Y) are skipped on purpose. Their box
+ * codes are model numbers that do not follow the digits (CE310A is 126A
+ * black), and deriving one would point a "10A" search at the wrong product.
+ */
+export function hpShortCodes(sku: string | null): string[] {
+  const s = (sku ?? '').toUpperCase()
+  if (!s.startsWith('HP-')) return []
+  if (/-(K|C|M|Y|BK|LC|LM)$/.test(s)) return []
+  const part = s.slice(3)
+
+  const laser = part.match(/^(?:C[A-Z]|Q)(\d{1,2})(\d{2})([AX])/)
+  if (laser) {
+    if (HP_SHORT_CODE_EXCEPTIONS.has(laser[0])) return []
+    return [`${laser[2]}${laser[3]}`]
+  }
+  const wSeries = part.match(/^W\d(\d{3})([AX])/)
+  if (wSeries) return [`${wSeries[1]}${wSeries[2]}`]
+  return []
+}
+
 export function productToDocument(
   product: any,
   compatiblePrinters: string[] = [],
@@ -141,6 +176,7 @@ export function productToDocument(
     handle: product.handle ?? '',
     description: product.description ?? null,
     sku: variant?.sku ?? null,
+    short_codes: hpShortCodes(variant?.sku ?? null),
     brand,
     cartridge_type,
     price_zar: zarPrice?.amount != null ? Math.round(zarPrice.amount) : null,
@@ -171,7 +207,7 @@ export function compatiblePrintersForProduct(
 
 export async function configureIndex(client: Meilisearch): Promise<void> {
   const index = client.index(SEARCH_INDEX)
-  await index.updateSearchableAttributes(['title', 'sku', 'brand', 'compatible_printers', 'search_joins', 'categories', 'description'])
+  await index.updateSearchableAttributes(['title', 'sku', 'short_codes', 'brand', 'compatible_printers', 'search_joins', 'categories', 'description'])
   await index.updateFilterableAttributes(['brand', 'cartridge_type'])
   await index.updateSortableAttributes(['price_zar'])
   await index.updateRankingRules([

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { joinVariants, buildSearchJoins } from '../../lib/search'
+import { joinVariants, buildSearchJoins, hpShortCodes, productToDocument } from '../../lib/search'
 
 describe('joinVariants', () => {
   it('joins adjacent words into pair and triple tokens', () => {
@@ -66,5 +66,43 @@ describe('buildSearchJoins', () => {
     expect(() =>
       buildSearchJoins({ title: 'Loose Item', sku: null, brand: null, compatiblePrinters: [] }),
     ).not.toThrow()
+  })
+})
+
+describe('hpShortCodes (#483)', () => {
+  it('derives the box code from a monochrome LaserJet part', () => {
+    expect(hpShortCodes('HP-CE285A')).toEqual(['85A'])
+    expect(hpShortCodes('HP-Q2612A')).toEqual(['12A'])
+    expect(hpShortCodes('HP-CE505A')).toEqual(['05A'])
+    expect(hpShortCodes('HP-CF259X')).toEqual(['59X'])
+  })
+
+  it('reads through a drum-unit suffix on the SKU', () => {
+    expect(hpShortCodes('HP-CF232ADRUMUNIT')).toEqual(['32A'])
+  })
+
+  it('keeps three digits for the W-series', () => {
+    expect(hpShortCodes('HP-W1106A')).toEqual(['106A'])
+  })
+
+  it('derives nothing for colour sets, whose box codes do not follow the digits', () => {
+    expect(hpShortCodes('HP-CE310A-K')).toEqual([])
+    expect(hpShortCodes('HP-CF410A-K')).toEqual([])
+  })
+
+  it('derives nothing for the listed exceptions or other brands', () => {
+    expect(hpShortCodes('HP-CE314ADRUM')).toEqual([])
+    expect(hpShortCodes('BRO-TN2411')).toEqual([])
+    expect(hpShortCodes('HP-305XL-K')).toEqual([])
+    expect(hpShortCodes(null)).toEqual([])
+  })
+
+  it('puts the code on the search document', () => {
+    const doc = productToDocument({
+      id: 'p1',
+      title: 'HP CE285A',
+      variants: [{ sku: 'HP-CE285A', prices: [] }],
+    })
+    expect(doc.short_codes).toEqual(['85A'])
   })
 })

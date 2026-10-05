@@ -30,6 +30,14 @@ describe('configureIndex', () => {
     expect(attrs.indexOf('search_joins')).toBeGreaterThan(attrs.indexOf('sku'))
   })
 
+  it('makes short_codes searchable, right after sku (#483)', async () => {
+    const { client, index } = fakeClient()
+    await configureIndex(client)
+
+    const attrs = index.updateSearchableAttributes.mock.calls[0]![0] as string[]
+    expect(attrs.indexOf('short_codes')).toBe(attrs.indexOf('sku') + 1)
+  })
+
   it('disables typo tolerance on sku — W1106B must not find W1106A', async () => {
     const { client, index } = fakeClient()
     await configureIndex(client)
