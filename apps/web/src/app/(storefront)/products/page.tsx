@@ -23,6 +23,16 @@ const PAGE_SIZE = 24
 // matching set in one call and sort/paginate in memory. This lets us sort by
 // price, which the store API's `order` param doesn't support.
 const FETCH_ALL = 400
+const LISTING_FIELDS = [
+  'id',
+  'title',
+  'handle',
+  'metadata',
+  'images.url',
+  'variants.id',
+  'variants.sku',
+  'variants.calculated_price.calculated_amount',
+].join(',')
 
 type SortKey = 'featured' | 'price-asc' | 'price-desc' | 'name-asc' | 'name-desc'
 
@@ -169,7 +179,11 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
     const params = new URLSearchParams({ limit: String(FETCH_ALL) })
     if (regionId) params.append('region_id', regionId)
     for (const id of categoryIds) params.append('category_id[]', id)
-    params.append('fields', '+metadata,+categories.id,+categories.name,+categories.handle,+images,+variants.id,+variants.sku,*variants.calculated_price')
+    // Only what the grid renders (#499). The default product fields plus the
+    // full calculated_price object came to 1.6–2.1 MB for the whole catalogue,
+    // over Next's 2 MB data-cache limit, so revalidate never took effect and
+    // every render refetched it. This set is ~140 KB.
+    params.append('fields', LISTING_FIELDS)
 
     try {
       const data = await fetch(`${BACKEND}/store/products?${params}`, {
