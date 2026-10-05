@@ -13,7 +13,7 @@ import { Client } from "pg"
 import { randomUUID } from "crypto"
 import { buildSearchName } from "./canonicalize"
 
-const CSV_PATH = path.join(process.cwd(), "../../migration/raw/client-review.csv")
+export const CSV_PATH = path.join(process.cwd(), "../../migration/raw/client-review.csv")
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

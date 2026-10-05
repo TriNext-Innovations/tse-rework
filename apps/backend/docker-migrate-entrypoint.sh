@@ -1,25 +1,13 @@
 #!/bin/sh
 set -e
 
+# Two app boots, not seven (#490): each `medusa exec` boots the whole app
+# (~20s), so the TSE steps share one. See src/scripts/migrate-tse.ts.
+
 echo "[migrate] Running Medusa migrations..."
 /app/node_modules/.bin/medusa db:migrate
 
-echo "[migrate] Ensuring compatibility tables (idempotent)..."
-/app/node_modules/.bin/medusa exec src/scripts/migrate-compatibility.ts
-
-echo "[migrate] Adding search_name column + trigram index (idempotent)..."
-/app/node_modules/.bin/medusa exec src/scripts/migrate-compatibility-v2.ts
-
-echo "[migrate] Seeding compatibility data (idempotent upsert)..."
-/app/node_modules/.bin/medusa exec src/scripts/seed-compatibility.ts
-
-echo "[migrate] Ensuring PayFast pending-order table (idempotent)..."
-/app/node_modules/.bin/medusa exec src/scripts/migrate-payfast.ts
-
-echo "[migrate] Ensuring PayFast session-status bridge table (idempotent)..."
-/app/node_modules/.bin/medusa exec src/scripts/migrate-payfast-status.ts
-
-echo "[migrate] Re-denominating ZAR prices cents->rands (one-time, guarded)..."
-/app/node_modules/.bin/medusa exec src/scripts/migrate-prices-to-rands.ts
+echo "[migrate] Running TSE tables + compatibility seed (seed only if its CSV changed)..."
+/app/node_modules/.bin/medusa exec src/scripts/migrate-tse.ts
 
 echo "[migrate] All done."
