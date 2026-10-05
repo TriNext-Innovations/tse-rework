@@ -87,6 +87,14 @@ describe('StorefrontClient — hero', () => {
     expect(screen.getByText('Not generic')).toBeInTheDocument()
   })
 
+  it('never hides the first screen behind the scroll reveal (#500)', () => {
+    // [data-reveal] starts at opacity 0 until a useEffect reveals it, so
+    // anything under it is blank until the page hydrates.
+    renderStorefront()
+    expect(screen.getByRole('heading', { level: 1 }).closest('[data-reveal]')).toBeNull()
+    expect(screen.getByText('Add to cart — R300').closest('[data-reveal]')).toBeNull()
+  })
+
   it('renders the "Est. 1987" badge', () => {
     renderStorefront()
     expect(screen.getAllByText(/Est\. 198[07]/)[0]).toBeInTheDocument()
