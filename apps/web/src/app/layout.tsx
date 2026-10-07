@@ -25,8 +25,10 @@ const fraunces = Fraunces({
 })
 
 const SITE_NAME = siteConfig.company.brandName
+// Kept under ~155 characters: Google truncates longer snippets, and this also
+// feeds og:description and twitter:description (#521).
 const DESCRIPTION =
-  "South Africa's printer cartridge specialist since 1987. Quality generic compatibles for HP, Canon, Epson, Brother, Samsung and more — countrywide courier, with next-day delivery available to JHB & PTA."
+  "Printer cartridge specialist since 1987. Generic compatibles for HP, Canon, Epson, Brother & Samsung, couriered countrywide; next-day to JHB & PTA."
 
 export const metadata: Metadata = {
   title: {
