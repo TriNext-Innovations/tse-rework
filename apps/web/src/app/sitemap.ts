@@ -7,62 +7,83 @@ const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:
 const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
 const BASE = SITE_URL
 
+// lastmod must mean "this page changed then". A value that is always the build
+// time teaches Google to ignore the field for the whole sitemap (#525). Pages
+// we have no honest date for (printer models, contact, legal) omit it.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const staticPages: MetadataRoute.Sitemap = [
-    { url: BASE, lastModified: new Date(), changeFrequency: 'weekly', priority: 1 },
-    { url: `${BASE}/products`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
-    { url: `${BASE}/compatibility`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
-    { url: `${BASE}/printers`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.9 },
-    { url: `${BASE}/contact`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },
-    { url: `${BASE}/legal/returns`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.4 },
-    { url: `${BASE}/legal/terms`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.3 },
-    { url: `${BASE}/legal/privacy`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.2 },
-    { url: `${BASE}/legal/cookies`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.2 },
-  ]
-
+  let products: SitemapProduct[] = []
   try {
-    const products = await fetchAllProducts()
-    const productPages: MetadataRoute.Sitemap = products.map((p) => ({
-      url: `${BASE}/products/${p.handle}`,
-      lastModified: p.updated_at ? new Date(p.updated_at) : new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.7,
-    }))
+    products = await fetchAllProducts()
+  } catch {
+    // Fall through with no products: static pages only, no dates.
+  }
 
-    // Only categories that actually hold stock. The category page 404s when it
-    // is empty, so listing one here would submit a known-404 to Google — and an
-    // empty category page is thin content we do not want indexed anyway.
-    const stocked = new Set<string>()
-    for (const p of products) {
-      for (const c of p.categories ?? []) if (c.handle) stocked.add(c.handle)
+  // Category handle → newest product change in it. A key with no date still
+  // marks the category as stocked.
+  const stocked = new Map<string, Date | undefined>()
+  let newest: Date | undefined
+  for (const p of products) {
+    const d = p.updated_at ? new Date(p.updated_at) : undefined
+    const valid = d && !Number.isNaN(d.getTime()) ? d : undefined
+    if (valid && (!newest || valid > newest)) newest = valid
+    for (const c of p.categories ?? []) {
+      if (!c.handle) continue
+      const cur = stocked.get(c.handle)
+      stocked.set(c.handle, valid && (!cur || valid > cur) ? valid : cur)
     }
-    const categoryPages: MetadataRoute.Sitemap = CATEGORIES
-      .filter((c) => stocked.has(c.medusaHandle))
-      .map((c) => ({
+  }
+  // Listing pages change when any product does.
+  const catalogue = newest ? { lastModified: newest } : {}
+
+  const staticPages: MetadataRoute.Sitemap = [
+    { url: BASE, ...catalogue, changeFrequency: 'weekly', priority: 1 },
+    { url: `${BASE}/products`, ...catalogue, changeFrequency: 'daily', priority: 0.9 },
+    { url: `${BASE}/compatibility`, ...catalogue, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE}/printers`, ...catalogue, changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${BASE}/contact`, changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${BASE}/legal/returns`, changeFrequency: 'monthly', priority: 0.4 },
+    { url: `${BASE}/legal/terms`, changeFrequency: 'monthly', priority: 0.3 },
+    { url: `${BASE}/legal/privacy`, changeFrequency: 'monthly', priority: 0.2 },
+    { url: `${BASE}/legal/cookies`, changeFrequency: 'monthly', priority: 0.2 },
+  ]
+  if (products.length === 0) return staticPages
+
+  const productPages: MetadataRoute.Sitemap = products.map((p) => ({
+    url: `${BASE}/products/${p.handle}`,
+    ...(p.updated_at ? { lastModified: new Date(p.updated_at) } : {}),
+    changeFrequency: 'weekly' as const,
+    priority: 0.7,
+  }))
+
+  // Only categories that actually hold stock. The category page 404s when it
+  // is empty, so listing one here would submit a known-404 to Google — and an
+  // empty category page is thin content we do not want indexed anyway.
+  const categoryPages: MetadataRoute.Sitemap = CATEGORIES
+    .filter((c) => stocked.has(c.medusaHandle))
+    .map((c) => {
+      const d = stocked.get(c.medusaHandle)
+      return {
         url: `${BASE}/cartridges/${c.slug}`,
-        lastModified: new Date(),
+        ...(d ? { lastModified: d } : {}),
         changeFrequency: 'daily' as const,
         // Above product pages (0.7): these are the pages the legacy site ranks
         // on and the ones the cutover redirects will land against.
         priority: 0.8,
-      }))
+      }
+    })
 
-    // Printer-model pages. Every one of the 903 models was checked against the
-    // live compatibility lookup on 21 Aug and all returned at least one
-    // cartridge, so none of these is a known 404 — but the page still 404s on
-    // an empty result, so if that ever changes the sitemap is the thing to
-    // re-audit.
-    const printerPages: MetadataRoute.Sitemap = (await fetchPrinterModels()).map((m) => ({
-      url: `${BASE}/printers/${printerSlug(m.brand, m.model)}`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.6,
-    }))
+  // Printer-model pages. Every one of the 903 models was checked against the
+  // live compatibility lookup on 21 Aug and all returned at least one
+  // cartridge, so none of these is a known 404 — but the page still 404s on
+  // an empty result, so if that ever changes the sitemap is the thing to
+  // re-audit. The compatibility data carries no timestamps, so no lastmod.
+  const printerPages: MetadataRoute.Sitemap = (await fetchPrinterModels()).map((m) => ({
+    url: `${BASE}/printers/${printerSlug(m.brand, m.model)}`,
+    changeFrequency: 'weekly' as const,
+    priority: 0.6,
+  }))
 
-    return [...staticPages, ...categoryPages, ...printerPages, ...productPages]
-  } catch {
-    return staticPages
-  }
+  return [...staticPages, ...categoryPages, ...printerPages, ...productPages]
 }
 
 // A single capped fetch silently truncates once the catalog outgrows the
