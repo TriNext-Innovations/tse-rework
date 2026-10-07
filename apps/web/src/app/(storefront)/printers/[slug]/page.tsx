@@ -16,6 +16,7 @@ import {
 import { websiteRef } from '@/lib/structured-data'
 import { SITE_URL } from '@/lib/site-url'
 import { AddToCartButton } from '../../products/AddToCartButton'
+import { SkuLine } from '@/components/catalog/SkuLine'
 
 const BASE = SITE_URL
 
@@ -172,7 +173,7 @@ export default async function PrinterPage({ params }: Props) {
                   )}
                 </div>
                 <h2 className="font-display text-sm leading-tight tracking-tight line-clamp-2 mb-1">{c.title}</h2>
-                <div className="text-[10px] text-[var(--muted-2)] mb-3">SKU {c.sku}</div>
+                <SkuLine sku={c.sku} skus={c.skus} className="text-[10px] text-[var(--muted-2)] mb-3" />
 
                 <div className="flex items-end justify-between">
                   <div className="font-display text-lg">
