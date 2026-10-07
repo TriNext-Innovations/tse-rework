@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTransition } from 'react'
 import { TYPE_CATEGORIES as TYPES, isBrandCategory } from '@/lib/taxonomy'
+import { announceNavigation } from '@/lib/motion'
 
 type Category = {
   id: string
@@ -37,8 +38,10 @@ export function FilterPanel({ categories, onNavigate }: { categories: Category[]
   function update(next: URLSearchParams) {
     next.delete('page')
     next.delete('category') // legacy nav links — superseded by type/brand
+    const href = `/products?${next.toString()}`
+    announceNavigation(href) // top progress bar + dimmed results while the listing reloads
     startTransition(() => {
-      router.push(`/products?${next.toString()}`)
+      router.push(href)
       onNavigate?.()
     })
   }

@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { cartridgeTypeLabel } from '@/lib/taxonomy'
 import { useProductSearch, isSearchConfigured } from '@/lib/product-search'
+import { announceNavigation } from '@/lib/motion'
+import { DotOrb } from '@/components/motion'
 
 export function SearchModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const router = useRouter()
@@ -37,9 +39,16 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
     return () => document.removeEventListener('keydown', onKey)
   }, [open, onClose])
 
-  function navigate(handle: string) {
-    router.push(`/products/${handle}`)
+  // Every exit from the modal is announced to PageLoading: the modal closes at
+  // once, and the next page can take a moment to arrive.
+  function go(href: string) {
+    announceNavigation(href)
+    router.push(href)
     onClose()
+  }
+
+  function navigate(handle: string) {
+    go(`/products/${handle}`)
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -80,9 +89,7 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
             className="flex-1 bg-transparent text-[var(--ink)] placeholder:text-[var(--muted-2)] text-base outline-none"
             autoComplete="off"
           />
-          {loading && (
-            <div className="w-4 h-4 border-2 border-[var(--line-4)] border-t-[var(--ink)] rounded-full animate-spin flex-shrink-0" />
-          )}
+          {loading && <DotOrb size={22} className="orb-delayed" />}
           <kbd
             onClick={onClose}
             className="hidden sm:inline-flex items-center gap-0.5 text-[10px] font-medium text-[var(--muted-2)] bg-[var(--hover-1)] px-1.5 py-0.5 rounded cursor-pointer"
@@ -92,12 +99,12 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
         </div>
 
         {/* Results */}
-        <div className="max-h-[60vh] overflow-y-auto">
+        <div className="max-h-[60vh] overflow-y-auto" aria-busy={loading}>
           {!configured && (
             <div className="px-5 py-8 text-center">
               <p className="text-sm text-[var(--muted)]">Search not configured yet.</p>
               <button
-                onClick={() => { router.push('/products'); onClose() }}
+                onClick={() => go('/products')}
                 className="mt-3 text-sm underline underline-offset-4 hover:text-[var(--ink)] transition-colors cursor-pointer"
               >
                 Browse all cartridges →
@@ -122,11 +129,27 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
             </div>
           )}
 
+          {/* First results for a query: placeholder rows in the shape of the real ones */}
+          {configured && query.trim() && loading && hits.length === 0 && (
+            <ul aria-label="Searching">
+              {[0, 1, 2].map((i) => (
+                <li key={i} className="flex items-center gap-4 px-5 py-3.5">
+                  <div className="skeleton w-10 h-14 flex-shrink-0 rounded-[8px]" />
+                  <div className="flex-1 space-y-2">
+                    <div className="skeleton h-3 w-3/5 rounded" />
+                    <div className="skeleton h-2.5 w-2/5 rounded" />
+                  </div>
+                  <div className="skeleton h-3 w-10 rounded" />
+                </li>
+              ))}
+            </ul>
+          )}
+
           {configured && query.trim() && !loading && hits.length === 0 && (
             <div className="px-5 py-8 text-center">
               <p className="text-sm text-[var(--muted)]">No results for &ldquo;{query}&rdquo;</p>
               <button
-                onClick={() => { router.push(`/products?q=${encodeURIComponent(query)}`); onClose() }}
+                onClick={() => go(`/products?q=${encodeURIComponent(query)}`)}
                 className="mt-3 text-sm underline underline-offset-4 hover:text-[var(--ink)] transition-colors cursor-pointer"
               >
                 Browse all cartridges →
@@ -135,7 +158,8 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
           )}
 
           {hits.length > 0 && (
-            <ul>
+            // Earlier results stay put but step back while a newer query runs.
+            <ul className={`transition-opacity duration-200 ${loading ? 'opacity-50' : ''}`}>
               {hits.map((hit, i) => {
                 const active = cursor === i
                 const typeLabel = cartridgeTypeLabel(hit.cartridge_type)
@@ -206,7 +230,7 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
               </span>
             </div>
             <button
-              onClick={() => { router.push(`/products?q=${encodeURIComponent(query)}`); onClose() }}
+              onClick={() => go(`/products?q=${encodeURIComponent(query)}`)}
               className="text-[11px] text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer"
             >
               View all results →

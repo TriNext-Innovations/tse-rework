@@ -1,11 +1,14 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { Inter, Fraunces } from 'next/font/google'
 import './globals.css'
+import './motion.css'
 import { cn } from '@/lib/utils'
 import { CartProvider } from '@/contexts/CartContext'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { CookieBanner } from '@/components/CookieBanner'
 import { Analytics } from '@/components/Analytics'
+import { PageLoading } from '@/components/motion'
 import { siteConfig } from '@/lib/site-config'
 import { organizationJsonLd, websiteJsonLd } from '@/lib/structured-data'
 import { SITE_URL } from '@/lib/site-url'
@@ -82,6 +85,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
+        {/* useSearchParams inside needs its own Suspense boundary */}
+        <Suspense fallback={null}>
+          <PageLoading />
+        </Suspense>
         <AuthProvider>
           <CartProvider>{children}</CartProvider>
         </AuthProvider>

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CartProvider, useCart } from '@/contexts/CartContext'
 import { installCartMock } from '../helpers/medusaCartMock'
@@ -173,6 +173,88 @@ describe('CartProvider', () => {
     expect(screen.getByText('0 items')).toBeInTheDocument()
     await userEvent.click(screen.getByText('Add HP'))
     expect(await screen.findByText('1 item')).toBeInTheDocument()
+  })
+
+  it('addItem resolves true once the line is in the cart and counts the add', async () => {
+    let api!: ReturnType<typeof useCart>
+    function Grab() {
+      api = useCart()
+      return null
+    }
+    render(
+      <CartProvider>
+        <Grab />
+      </CartProvider>,
+    )
+    expect(api.addSeq).toBe(0)
+    let ok: boolean | undefined
+    await act(async () => {
+      ok = await api.addItem({ id: 'prod_1', title: 'HP 123', sku: 'HP-123', price: 300 })
+    })
+    expect(ok).toBe(true)
+    expect(api.addSeq).toBe(1)
+    expect(api.count).toBe(1)
+  })
+
+  it('addItem resolves false when Medusa rejects the line, and does not count it', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const cartApi = global.fetch
+    global.fetch = vi.fn(async (url: RequestInfo | URL, init?: RequestInit) =>
+      String(url).includes('/line-items')
+        ? ({ ok: false, status: 500, json: async () => ({}), text: async () => 'boom' } as Response)
+        : cartApi(url, init),
+    ) as typeof fetch
+    let api!: ReturnType<typeof useCart>
+    function Grab() {
+      api = useCart()
+      return null
+    }
+    render(
+      <CartProvider>
+        <Grab />
+      </CartProvider>,
+    )
+    let ok: boolean | undefined
+    await act(async () => {
+      ok = await api.addItem({ id: 'prod_1', title: 'HP 123', sku: 'HP-123', price: 300 })
+    })
+    expect(ok).toBe(false)
+    expect(api.addSeq).toBe(0)
+    spy.mockRestore()
+  })
+
+  it('shows placeholder lines, not "empty", while a saved cart is still loading', async () => {
+    localStorage.setItem('tse_cart_id', 'cart_saved')
+    let answer!: (v: unknown) => void
+    global.fetch = vi.fn(
+      () =>
+        new Promise((resolve) => {
+          answer = resolve
+        }),
+    ) as unknown as typeof fetch
+    renderCart()
+    await userEvent.click(screen.getByText('Open'))
+    expect(screen.getByLabelText('Loading your cart')).toHaveAttribute('aria-busy', 'true')
+    expect(screen.queryByText('Your cart is empty')).not.toBeInTheDocument()
+
+    // The saved cart turns out to be gone: the drawer settles on the empty state.
+    await act(async () => {
+      answer({ ok: false, status: 404, json: async () => ({}), text: async () => 'not found' })
+    })
+    expect(await screen.findByText('Your cart is empty')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Loading your cart')).not.toBeInTheDocument()
+  })
+
+  it('marks a line busy while its quantity is being updated', async () => {
+    renderCart()
+    await userEvent.click(screen.getByText('Add HP'))
+    await userEvent.click(screen.getByText('Open'))
+    const more = await screen.findByLabelText('Increase quantity')
+    const line = more.closest('li') as HTMLElement
+    fireEvent.click(more)
+    expect(line).toHaveAttribute('aria-busy', 'true')
+    await waitFor(() => expect(line).not.toHaveAttribute('aria-busy'))
+    expect(screen.getByTestId('count').textContent).toBe('2')
   })
 
   it('persists only the cart_id in localStorage', async () => {

@@ -1,9 +1,9 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import Image from 'next/image'
 import { Navbar } from '@/components/layout'
 import { AddToCartButton } from '../../products/AddToCartButton'
+import { NAV_FORWARD, ProductImage, ProductMorph } from '@/components/motion'
 import { CATEGORIES, categoryBySlug, type Category } from '@/lib/categories'
 import { websiteRef } from '@/lib/structured-data'
 import { SITE_URL } from '@/lib/site-url'
@@ -195,7 +195,7 @@ export default async function CategoryPage({ params }: Props) {
 
       <Navbar />
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 pt-32 pb-16">
+      <div data-page-content className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 pt-32 pb-16">
         <nav aria-label="Breadcrumb" className="mb-6 text-xs text-[var(--muted)]">
           <ol className="flex flex-wrap items-center gap-2">
             <li><Link href="/" className="hover:text-[var(--ink)] transition-colors">Home</Link></li>
@@ -228,7 +228,7 @@ export default async function CategoryPage({ params }: Props) {
               currently under our control. */}
         </header>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div data-results className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           {sorted.map((p, i) => {
             const variant = p.variants?.[0]
             const sku = variant?.sku ?? '—'
@@ -240,12 +240,15 @@ export default async function CategoryPage({ params }: Props) {
             return (
               <div
                 key={p.id}
-                className="group relative bg-[var(--surface)] rounded-[16px] p-4 overflow-hidden hover:-translate-y-1 transition-transform duration-300"
+                data-product-card
+                style={{ '--i': i } as React.CSSProperties}
+                className="feed-in group relative bg-[var(--surface)] rounded-[16px] p-4 overflow-hidden hover:-translate-y-1 transition-transform duration-300"
               >
-                <Link href={`/products/${p.handle}`} className="block">
+                <Link href={`/products/${p.handle}`} transitionTypes={NAV_FORWARD} className="block">
                   <div className="relative h-28 flex items-end justify-center mb-3">
+                    <ProductMorph productId={p.id}>
                     {imageUrl ? (
-                      <Image
+                      <ProductImage
                         src={imageUrl}
                         alt={p.title}
                         width={180}
@@ -265,6 +268,7 @@ export default async function CategoryPage({ params }: Props) {
                         <div className="absolute top-0 left-0 right-0 h-1.5 bg-white/25" />
                       </div>
                     )}
+                    </ProductMorph>
                   </div>
 
                   <div className="text-[9px] uppercase tracking-[0.16em] text-[var(--muted)] mb-1">{typeLabel}</div>

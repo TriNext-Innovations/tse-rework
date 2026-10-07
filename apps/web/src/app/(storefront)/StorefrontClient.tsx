@@ -4,9 +4,20 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { cartridgeTypeLabel } from '@/lib/taxonomy'
 import { siteConfig } from '@/lib/site-config'
-import Image from 'next/image'
+import Link from 'next/link'
 import { Navbar } from '@/components/layout'
-import { useCart } from '@/contexts/CartContext'
+import { useAddToCart, addStatusMessage } from '@/lib/add-to-cart'
+import { announceNavigation, bubbleImage, prefersReducedMotion } from '@/lib/motion'
+import {
+  AddStatusAnnouncer,
+  AddToCartIcon,
+  AddToCartLabel,
+  NAV_FORWARD,
+  PageTransition,
+  ProductImage,
+  ProductMorph,
+  RollingNumber,
+} from '@/components/motion'
 
 export type TrendingProduct = {
   id: string
@@ -32,6 +43,12 @@ export type HeroProduct = {
   image: string | null
 }
 
+// The hero image morphs into its product page only when it is the sole element
+// carrying that product's name on the page (a view-transition name must be unique).
+function HeroMorph({ productId, enabled, children }: { productId: string; enabled: boolean; children: React.ReactNode }) {
+  return enabled ? <ProductMorph productId={productId}>{children}</ProductMorph> : <>{children}</>
+}
+
 const faqs = [
   { q: 'Will a generic cartridge work in my printer?', a: "Yes. Our compatibles are engineered to spec for each printer model and meet or exceed OEM page yield. If it doesn't print as well as the original — we replace it." },
   { q: 'How does delivery work?', a: `Countrywide via The Courier Guy — Economy (3–4 business days) at R150, or Overnight (next business day) at R200. Free on orders over R2,000, and collection from our Kya Sands warehouse is always free. Need a local delivery or to pay on delivery? Call ${siteConfig.phone.display} — we arrange those by phone.` },
@@ -51,6 +68,8 @@ export default function StorefrontClient({
 }) {
   const heroPrice = heroProduct?.price ?? 300
   const heroSku = heroProduct?.sku ?? 'CAN-737'
+  const heroHref = `/products/${heroProduct?.handle ?? 'canon-ca737'}`
+  const heroMorphs = Boolean(heroProduct) && !trendingProducts.some((p) => p.id === heroProduct?.id)
   // Brands sorted alphabetically; models grouped per brand keeping the
   // DB ordering (which is by cartridge_count DESC) so the most-supported
   // printers appear first in the datalist.
@@ -86,13 +105,29 @@ export default function StorefrontClient({
     if (!finderBrand && brands[0]) setFinderBrand(brands[0])
   }, [brands, finderBrand])
   const heroRef = useRef<HTMLDivElement>(null)
+  const heroImageRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
-  const { addItem } = useCart()
+  // Every navigation from this page goes through openPage, so the top progress
+  // bar (NavigationProgress) runs while the next page loads.
+  const openPage = (href: string, options?: { transitionTypes: string[] }) => {
+    announceNavigation(href)
+    if (options) router.push(href, options)
+    else router.push(href)
+  }
+  const { status: heroAddStatus, add: addHero } = useAddToCart()
+
+  // The finder recognises a model it has data for before the shopper submits,
+  // and says how many cartridges fit it.
+  const finderMatch = useMemo(() => {
+    const model = finderModel.trim().toLowerCase()
+    if (!model) return null
+    return compatModels.find((m) => m.brand === finderBrand && m.model.toLowerCase() === model) ?? null
+  }, [compatModels, finderBrand, finderModel])
 
   function runFinder() {
     const query = [finderBrand, finderModel].filter(Boolean).join(' ').trim()
     if (!query) return
-    router.push(`/compatibility?model=${encodeURIComponent(query)}`)
+    openPage(`/compatibility?model=${encodeURIComponent(query)}`)
   }
 
   useEffect(() => {
@@ -111,20 +146,28 @@ export default function StorefrontClient({
     }
   }, [])
 
+  // Scroll reveals. Everything is visible in the server-rendered HTML (#500):
+  // only sections still below the fold when the page hydrates are tucked away,
+  // and they rise in as they scroll into view.
   useEffect(() => {
-    const els = document.querySelectorAll<HTMLElement>('[data-reveal]')
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
           if (e.isIntersecting) {
-            e.target.classList.add('is-revealed')
+            e.target.classList.remove('pre-reveal')
             io.unobserve(e.target)
           }
         }
       },
       { threshold: 0.12 },
     )
-    els.forEach((e) => io.observe(e))
+    if (!prefersReducedMotion()) {
+      for (const el of document.querySelectorAll<HTMLElement>('[data-reveal]')) {
+        if (el.getBoundingClientRect().top < window.innerHeight) continue
+        el.classList.add('pre-reveal')
+        io.observe(el)
+      }
+    }
     return () => io.disconnect()
   }, [])
 
@@ -142,12 +185,8 @@ export default function StorefrontClient({
         }
         @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
         .animate-ticker { animation: ticker 40s linear infinite; }
-        @keyframes float-slow { 0%,100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-14px) rotate(-4deg); } }
-        .animate-float { animation: float-slow 7s ease-in-out infinite; }
-        @keyframes spin-slow { to { transform: rotate(360deg); } }
-        .animate-spin-slow { animation: spin-slow 22s linear infinite; }
-        [data-reveal] { opacity: 0; transform: translateY(28px); transition: opacity .9s cubic-bezier(.22,1,.36,1), transform .9s cubic-bezier(.22,1,.36,1); }
-        [data-reveal].is-revealed { opacity: 1; transform: translateY(0); }
+        [data-reveal] { transition: opacity .9s cubic-bezier(.22,1,.36,1), transform .9s cubic-bezier(.22,1,.36,1); }
+        [data-reveal].pre-reveal { opacity: 0; transform: translateY(28px); }
         /* The hero is the first screen, so it is never hidden waiting for JS
            (#500): it rises on a CSS animation that moves it but never fades it. */
         @keyframes hero-in { from { transform: translateY(18px); } to { transform: none; } }
@@ -163,8 +202,8 @@ export default function StorefrontClient({
         .pill-nav-item::after { content:''; position:absolute; left: 12px; right: 12px; bottom: 4px; height: 2px; background: var(--magenta); transform: scaleX(0); transform-origin: left; transition: transform .35s cubic-bezier(.22,1,.36,1); }
         .pill-nav-item:hover::after { transform: scaleX(1); }
         @media (prefers-reduced-motion: reduce) {
-          .animate-ticker, .animate-float, .animate-spin-slow { animation: none; }
-          [data-reveal] { opacity: 1; transform: none; transition: none; }
+          .animate-ticker { animation: none; }
+          [data-reveal] { transition: none; }
           [data-hero-in] { animation: none; }
         }
       `}</style>
@@ -172,6 +211,8 @@ export default function StorefrontClient({
       {/* ─────────────── FLOATING NAV ─────────────── */}
       <Navbar />
 
+      <PageTransition>
+      <div data-page-content>
       {/* ─────────────── HERO ─────────────── */}
       <section id="top" ref={heroRef} className="relative pt-32 sm:pt-36 pb-16 sm:pb-24 px-4 sm:px-8 lg:px-12 overflow-hidden">
         <div
@@ -188,10 +229,13 @@ export default function StorefrontClient({
                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--magenta)]" /> Est. 1987 · South Africa
               </span>
             </div>
+            {/* On first paint the cyan and magenta plates of each line start a
+                hair out of register and slide into it, then lift off: the
+                headline prints in. The black text itself is never hidden. */}
             <h1 className="font-display font-light text-[15vw] sm:text-[clamp(4rem,_1.98rem_+_7.06vw,_7.625rem)] leading-[0.88] tracking-[-0.04em] text-[var(--ink)]">
-              <span className="font-display-italic font-light">Generic.</span>
+              <span className="print-register font-display-italic font-light" data-ink="Generic.">Generic.</span>
               <br />
-              <span className="relative inline-block">
+              <span className="print-register print-register-late relative inline-block" data-ink="Not generic.">
                 Not generic
                 <span className="text-[var(--magenta)]">.</span>
               </span>
@@ -230,87 +274,115 @@ export default function StorefrontClient({
             </div>
           </div>
 
+          {/* ── Bestseller ──
+              A white photo plate (the product photography is shot on white, so
+              it sits in the card instead of floating on it), the numbers that
+              matter, and one primary action. */}
           <div className="lg:col-span-5 relative" data-hero-in="late">
-            <div className="relative">
-              <div className="absolute -top-6 -right-2 sm:right-6 w-28 h-28 sm:w-36 sm:h-36 z-20 animate-spin-slow">
-                <svg viewBox="0 0 200 200" className="w-full h-full">
-                  <defs><path id="hero-ring" d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0" /></defs>
-                  <text fontSize="14" fontFamily="var(--font-fraunces), serif" letterSpacing="6" fill="var(--ink)">
-                    <textPath href="#hero-ring">GENERIC · GUARANTEED · GENERIC · GUARANTEED · </textPath>
-                  </text>
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="font-display text-[var(--magenta)] text-3xl sm:text-4xl">★</span>
-                </div>
-              </div>
-
-              <div className="panel-dark relative bg-[var(--ink)] text-[var(--paper)] rounded-[28px] p-6 sm:p-8 overflow-hidden">
-                <div className="absolute -bottom-12 -right-12 w-64 h-64 rounded-full bg-[var(--glow)] opacity-30 blur-3xl" />
-                <div className="relative flex items-start justify-between mb-8">
-                  <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-[var(--paper)]/70">
-                    <span className="w-1 h-1 rounded-full bg-[var(--magenta)] animate-pulse" /> Bestseller
-                  </span>
-                  <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--paper)]/50">№ 001</span>
-                </div>
-
-                <div className="relative flex justify-center py-6">
-                  <div className="animate-float relative">
-                    {heroProduct?.image ? (
-                      <Image
+            <article className="relative rounded-[26px] border border-[var(--line-3)] bg-[var(--surface)] p-3 sm:p-3.5 shadow-[0_40px_80px_-48px_rgba(17,24,39,0.55)]">
+              <Link
+                href={heroHref}
+                transitionTypes={NAV_FORWARD}
+                className="group relative block overflow-hidden rounded-[20px] bg-white aspect-[5/4]"
+              >
+                <span className="absolute left-4 top-4 z-[1] inline-flex items-center gap-1.5 rounded-full bg-[#111827] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--lime)]" aria-hidden /> Bestseller
+                </span>
+                <span aria-hidden className="absolute bottom-[12%] left-1/2 h-5 w-1/2 -translate-x-1/2 rounded-[50%] bg-[#111827]/15 blur-lg" />
+                <div ref={heroImageRef} className="absolute inset-0 flex items-center justify-center p-8 sm:p-10">
+                  {heroProduct?.image ? (
+                    <HeroMorph productId={heroProduct.id} enabled={heroMorphs}>
+                      <ProductImage
+                        orbSize={48}
                         src={heroProduct.image}
                         alt={heroProduct.title}
-                        width={280}
-                        height={360}
+                        width={420}
+                        height={340}
                         priority
-                        sizes="(max-width: 640px) 60vw, 240px"
-                        className="w-40 h-56 sm:w-48 sm:h-64 object-contain drop-shadow-[0_30px_60px_rgba(238,117,233,0.45)]"
+                        sizes="(max-width: 1024px) 70vw, 380px"
+                        className="max-h-full max-w-full w-auto h-auto object-contain transition-transform duration-700 ease-[cubic-bezier(.22,1,.36,1)] group-hover:scale-[1.04]"
                       />
-                    ) : (
-                      <div className="w-40 h-56 sm:w-48 sm:h-64 rounded-[14px] bg-gradient-to-br from-[#1a1a1a] via-[#2a2a2a] to-[#0A0A0A] shadow-[0_30px_60px_-20px_rgba(238,117,233,0.45)] relative overflow-hidden">
-                        <div className="absolute top-0 left-0 right-0 h-3 bg-[var(--magenta)]" />
-                        <div className="absolute top-6 left-4 right-4 text-[9px] uppercase tracking-[0.2em] text-[var(--paper)]/60">TSE Compatible</div>
-                        <div className="absolute top-12 left-4 font-display text-[var(--paper)] text-2xl leading-none">Canon</div>
-                        <div className="absolute top-[78px] left-4 font-display-italic text-[var(--magenta)] text-3xl leading-none">737</div>
-                        <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
-                          <div className="text-[9px] uppercase tracking-[0.2em] text-[var(--paper)]/60">Black<br/>Toner</div>
-                          <div className="w-6 h-6 rounded-full border border-[var(--paper)]/30" />
-                        </div>
-                        <div className="absolute inset-x-6 top-1/2 -translate-y-1/2 h-px bg-[var(--paper)]/15" />
+                    </HeroMorph>
+                  ) : (
+                    <div className="relative h-full aspect-[3/4] rounded-[14px] bg-gradient-to-br from-[#1f2937] to-[#111827] shadow-[0_24px_40px_-24px_rgba(17,24,39,0.6)] overflow-hidden">
+                      <div className="absolute top-0 left-0 right-0 h-2 bg-[var(--cyan)]" />
+                      <div className="absolute top-5 left-4 right-4 text-[9px] uppercase tracking-[0.2em] text-white/60">TSE Compatible</div>
+                      <div className="absolute bottom-4 left-4 font-display text-white text-2xl leading-none">
+                        Canon <span className="text-[var(--cyan)]">737</span>
                       </div>
-                    )}
+                    </div>
+                  )}
+                </div>
+              </Link>
+
+              <div className="px-2 pt-5 pb-2 sm:px-3">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--muted)]">Canon compatible · Laser toner</div>
+                    <div className="mt-1.5 font-display text-2xl sm:text-[1.7rem] leading-tight text-[var(--ink)]">737 Black Toner</div>
+                    <div className="mt-1 text-xs text-[var(--muted)]">SKU {heroSku} · Up to 2,400 pages</div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <div className="font-display text-3xl sm:text-4xl leading-none text-[var(--ink)]">R{heroPrice}</div>
+                    <div className="mt-1.5 text-[11px] text-[var(--muted)]">incl. VAT</div>
                   </div>
                 </div>
 
-                <div className="relative mt-6 flex items-end justify-between">
-                  <div>
-                    <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--paper)]/60 mb-1">Canon · Compatible</div>
-                    <div className="font-display text-xl sm:text-2xl leading-tight">737 Black Toner</div>
-                    <div className="text-[11px] text-[var(--paper)]/50 mt-1">SKU {heroSku} · Up to 2,400 pages</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-[10px] uppercase tracking-widest text-[var(--paper)]/50">From</div>
-                    <div className="font-display text-3xl sm:text-4xl">R{heroPrice}</div>
-                  </div>
-                </div>
+                {/* What backs the purchase: the guarantee and the delivery promise the site already makes */}
+                <ul className="mt-4 grid grid-cols-2 gap-2 text-xs text-[var(--ink-2)]">
+                  <li className="flex items-center gap-2 rounded-2xl bg-[var(--paper)] px-3.5 py-3">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="flex-shrink-0 text-[var(--ink)]">
+                      <path d="M12 3l7 3v5c0 5-3.4 8.4-7 10-3.6-1.6-7-5-7-10V6l7-3z" />
+                      <path d="M9 12l2 2 4-4" />
+                    </svg>
+                    Replacement guarantee
+                  </li>
+                  <li className="flex items-center gap-2 rounded-2xl bg-[var(--paper)] px-3.5 py-3">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="flex-shrink-0 text-[var(--ink)]">
+                      <path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z" />
+                      <circle cx="7" cy="17.5" r="1.5" />
+                      <circle cx="17" cy="17.5" r="1.5" />
+                    </svg>
+                    Overnight to JHB &amp; PTA
+                  </li>
+                </ul>
 
-                <button
-                  onClick={() =>
-                    heroProduct
-                      ? addItem({
-                          id: heroProduct.id,
-                          title: heroProduct.title,
-                          sku: heroProduct.sku,
-                          price: heroProduct.price,
-                          variantId: heroProduct.variantId,
-                        })
-                      : router.push('/products/canon-ca737')
-                  }
-                  className="relative mt-6 w-full bg-[var(--paper)] hover:bg-[var(--magenta)] text-[var(--ink)] hover:text-[var(--on-accent)] rounded-full py-3 text-sm font-medium transition-colors duration-300 cursor-pointer"
-                >
-                  Add to cart — R{heroPrice}
-                </button>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={(e) =>
+                      heroProduct
+                        ? void addHero(
+                            {
+                              id: heroProduct.id,
+                              title: heroProduct.title,
+                              sku: heroProduct.sku,
+                              price: heroProduct.price,
+                              variantId: heroProduct.variantId,
+                            },
+                            { from: e.currentTarget, image: bubbleImage(heroImageRef.current, heroProduct.image) },
+                          )
+                        : openPage(heroHref)
+                    }
+                    data-status={heroAddStatus}
+                    className={`atc-wide flex-1 rounded-full py-3 text-sm font-medium transition-colors duration-300 cursor-pointer active:scale-[.98] ${
+                      heroAddStatus === 'added'
+                        ? 'bg-[var(--lime)] text-[#111827]'
+                        : 'bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--cyan)] hover:text-[var(--on-accent)]'
+                    }`}
+                  >
+                    <AddToCartLabel status={heroAddStatus} idle="Add to cart" />
+                    <AddStatusAnnouncer message={addStatusMessage(heroAddStatus, heroProduct?.title ?? 'Canon 737')} />
+                  </button>
+                  <Link
+                    href={heroHref}
+                    transitionTypes={NAV_FORWARD}
+                    className="inline-flex items-center rounded-full border border-[var(--line-4)] px-5 text-sm font-medium text-[var(--ink)] hover:border-[var(--ink)] transition-colors"
+                  >
+                    Details
+                  </Link>
+                </div>
               </div>
-            </div>
+            </article>
           </div>
         </div>
       </section>
@@ -402,12 +474,30 @@ export default function StorefrontClient({
                   </button>
                 </div>
 
+                {/* Opens under the form as soon as the typed model is one we
+                    have compatibility data for. */}
+                <div className="finder-match" data-open={Boolean(finderMatch)} aria-live="polite">
+                  <div>
+                    {finderMatch && (
+                      <p className="flex items-center gap-2 pt-3 text-sm text-[var(--paper)]/85">
+                        <svg className="finder-match-tick" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--lime)" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                          <path d="M4.5 12.5l5 5L19.5 7" />
+                        </svg>
+                        <span>
+                          <RollingNumber value={finderMatch.cartridge_count} className="font-semibold text-[var(--paper)]" />{' '}
+                          {finderMatch.cartridge_count === 1 ? 'cartridge fits' : 'cartridges fit'} the {finderMatch.brand} {finderMatch.model}
+                        </span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+
                 <div className="mt-4 flex flex-wrap items-center gap-2">
                   <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--paper)]/50 mr-1">Popular:</span>
                   {popularSearches.map((label) => (
                     <button
                       key={label}
-                      onClick={() => router.push(`/compatibility?model=${encodeURIComponent(label)}`)}
+                      onClick={() => openPage(`/compatibility?model=${encodeURIComponent(label)}`)}
                       className="text-xs px-3 py-1.5 border border-[var(--paper)]/15 rounded-full hover:border-[var(--magenta)] hover:text-[var(--magenta)] transition-colors cursor-pointer"
                     >
                       {label}
@@ -428,29 +518,46 @@ export default function StorefrontClient({
               </p>
             </article>
 
-            <article data-reveal onClick={() => router.push('/products?type=inkjet')} className="bento-card sm:col-span-2 bg-[var(--magenta)] text-[var(--on-accent)] rounded-[24px] p-6 relative overflow-hidden min-h-[180px] flex flex-col justify-between cursor-pointer">
-              <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--on-accent)]/70">Category</div>
-              <div>
-                <div className="font-display font-light text-4xl sm:text-5xl leading-none">Inkjet</div>
-                <div className="mt-1 text-xs text-[var(--on-accent)]/80">For HP, Canon, Epson, Brother</div>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                {/* <span>170+ SKUs</span> */}
-                <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[var(--on-accent)] text-[var(--magenta)]">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            {/* The three things TSE sells, one card each, in the brand's three colours */}
+            {[
+              {
+                type: 'inkjet',
+                name: 'Inkjet',
+                note: 'Cartridges for HP, Canon, Epson & Brother',
+                card: 'bg-[var(--cyan)] text-[#111827]',
+                chip: 'bg-[#111827] text-[var(--cyan)]',
+              },
+              {
+                type: 'laser',
+                name: 'Laser',
+                note: 'Toner and drum units',
+                card: 'panel-dark bg-[#1f2937] text-white',
+                chip: 'bg-white text-[#111827]',
+              },
+              {
+                type: 'ink',
+                name: 'Ink',
+                note: 'Refill bottles for tank printers',
+                card: 'bg-[var(--lime)] text-[#111827]',
+                chip: 'bg-[#111827] text-[var(--lime)]',
+              },
+            ].map((c) => (
+              <article
+                key={c.type}
+                data-reveal
+                onClick={() => openPage(`/products?type=${c.type}`)}
+                className={`bento-card sm:col-span-1 ${c.card} rounded-[24px] p-5 relative overflow-hidden min-h-[180px] flex flex-col justify-between cursor-pointer`}
+              >
+                <div className="text-[10px] uppercase tracking-[0.22em] opacity-70">Category</div>
+                <div>
+                  <div className="font-display font-light text-3xl leading-none">{c.name}</div>
+                  <div className="mt-2 text-xs leading-snug opacity-80">{c.note}</div>
+                </div>
+                <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full ${c.chip}`}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </span>
-              </div>
-            </article>
-
-            <article data-reveal onClick={() => router.push('/products?type=laser')} className="panel-dark bento-card sm:col-span-1 bg-[var(--ink-2)] text-[var(--paper)] rounded-[24px] p-5 relative overflow-hidden min-h-[180px] flex flex-col justify-between cursor-pointer">
-              <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--paper)]/60">Category</div>
-              <div className="font-display font-light text-3xl leading-none">Laser</div> 
-              <div className="mt-1 text-xs text-[var(--on-accent)]/80">For HP, Canon, Epson, Brother</div>
-              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[var(--on-accent)] text-[var(--magenta)]">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-              </span>
-              {/* <div className="text-[10px] text-[var(--paper)]/70">380+ SKUs</div> */}
-            </article>
+              </article>
+            ))}
 
             <article id="delivery" data-reveal className="bento-card sm:col-span-3 scroll-mt-34 bg-[var(--paper-2)] rounded-[24px] p-7 relative overflow-hidden min-h-[180px]">
               <div className="flex items-start justify-between">
@@ -474,7 +581,7 @@ export default function StorefrontClient({
                 {brands.map((b) => (
                   <button
                     key={b}
-                    onClick={() => router.push(`/products?brand=${encodeURIComponent(b)}`)}
+                    onClick={() => openPage(`/products?brand=${encodeURIComponent(b)}`)}
                     className="text-[11px] font-medium px-2.5 py-1 border border-[var(--ink)]/10 hover:border-[var(--magenta)] hover:text-[var(--magenta)] rounded-full transition-colors cursor-pointer"
                   >
                     {b}
@@ -514,15 +621,22 @@ export default function StorefrontClient({
               const type = cartridgeTypeLabel(p.metadata?.cartridge_type) ?? 'Laser'
 
               return (
-                <article key={p.id} data-reveal onClick={() => router.push(`/products/${p.handle}`)} className="product-card group relative bg-[var(--paper-2)] rounded-[20px] p-5 sm:p-6 overflow-hidden cursor-pointer">
+                <article
+                  key={p.id}
+                  data-reveal
+                  data-product-card
+                  onClick={() => openPage(`/products/${p.handle}`, { transitionTypes: NAV_FORWARD })}
+                  className="product-card group relative bg-[var(--paper-2)] rounded-[20px] p-5 sm:p-6 overflow-hidden cursor-pointer"
+                >
                   <div className="flex items-start justify-between mb-4">
                     <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--muted)]">{type}</span>
                   </div>
 
                   <div className="relative h-32 sm:h-36 flex items-end justify-center mb-4">
                     <div className="product-img relative">
+                      <ProductMorph productId={p.id}>
                       {p.images?.[0]?.url ? (
-                        <Image
+                        <ProductImage
                           src={p.images[0].url}
                           alt={p.title}
                           width={220}
@@ -544,6 +658,7 @@ export default function StorefrontClient({
                           </div>
                         </div>
                       )}
+                      </ProductMorph>
                     </div>
                   </div>
 
@@ -554,16 +669,7 @@ export default function StorefrontClient({
                     <div className="font-display text-2xl sm:text-3xl">
                       {priceZar ? `R${priceZar}` : <span className="text-[var(--muted)] text-lg">POA</span>}
                     </div>
-                    <button
-                      aria-label={`Add ${p.title} to cart`}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        addItem({ id: p.id, title: p.title, sku, price: priceZar ? Number(priceZar) : null })
-                      }}
-                      className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[var(--ink)] text-[var(--paper)] group-hover:bg-[var(--magenta)] group-hover:text-[var(--on-accent)] transition-colors duration-300 cursor-pointer"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-                    </button>
+                    <TrendingAddButton id={p.id} title={p.title} sku={sku} price={priceZar ? Number(priceZar) : null} />
                   </div>
                 </article>
               )
@@ -653,7 +759,30 @@ export default function StorefrontClient({
           </div>
         </div>
       </section>
+      </div>
+      </PageTransition>
 
     </div>
+  )
+}
+
+// The round "+" on a trending card: its own add status, and a bubble with the
+// card's picture rises to the cart once the line is in.
+function TrendingAddButton({ id, title, sku, price }: { id: string; title: string; sku: string; price: number | null }) {
+  const { status, add } = useAddToCart()
+  return (
+    <button
+      aria-label={`Add ${title} to cart`}
+      data-status={status}
+      onClick={(e) => {
+        e.stopPropagation()
+        const card = e.currentTarget.closest('[data-product-card]')
+        void add({ id, title, sku, price }, { from: e.currentTarget, image: bubbleImage(card) })
+      }}
+      className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[var(--ink)] text-[var(--paper)] group-hover:bg-[var(--magenta)] group-hover:text-[var(--on-accent)] data-[status=added]:bg-[var(--lime)] data-[status=added]:text-[var(--ink)] active:scale-90 transition-[background-color,color,transform] duration-300 cursor-pointer"
+    >
+      <AddToCartIcon size={14} strokeWidth={2} />
+      <AddStatusAnnouncer message={addStatusMessage(status, title)} />
+    </button>
   )
 }

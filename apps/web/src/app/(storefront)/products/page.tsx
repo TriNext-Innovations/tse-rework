@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { Navbar } from '@/components/layout'
 import { FilterPanel } from './FilterPanel'
 import { SortSelect } from './SortSelect'
@@ -10,6 +9,7 @@ import { AddToCartButton } from './AddToCartButton'
 import { TYPE_PARENT, cartridgeTypeLabel, isBrandCategory } from '@/lib/taxonomy'
 import { CATEGORIES } from '@/lib/categories'
 import { siteUrl } from '@/lib/site-url'
+import { NAV_FORWARD, PageTransition, ProductImage, ProductMorph } from '@/components/motion'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
@@ -45,10 +45,11 @@ type SearchParams = Promise<{
   q?: string
 }>
 
-// Products are assigned to the brand category (e.g. "HP" under "Laser
-// Cartridges"), never the type category directly — so a type filter resolves to
-// the brand categories under that type. type+brand resolves to the single
-// matching brand-under-type category.
+// Cartridges are assigned to the brand category (e.g. "HP" under "Laser
+// Cartridges"), so a type filter resolves to the brand categories under that
+// type, and type+brand to the single matching brand-under-type category. Refill
+// ink can also sit directly in its "Ink" type category, which is why a
+// brandless type filter includes the type category itself.
 function resolveCategoryIds(
   categories: any[],
   opts: { type?: string; brand?: string; category?: string },
@@ -56,11 +57,16 @@ function resolveCategoryIds(
   if (opts.category) return opts.category.split(',').filter(Boolean)
   const parent = opts.type ? TYPE_PARENT[opts.type] : undefined
   if (!parent && !opts.brand) return []
-  return categories
+  const brands = categories
     .filter((c) => isBrandCategory(c))
     .filter((c) => (opts.brand ? c.name === opts.brand : true))
     .filter((c) => (parent ? c.parent_category?.name === parent : true))
     .map((c) => c.id as string)
+  const typeItself =
+    parent && !opts.brand
+      ? categories.filter((c) => c.name === parent && !c.parent_category).map((c) => c.id as string)
+      : []
+  return [...typeItself, ...brands]
 }
 
 function priceOf(p: any): number {
@@ -176,6 +182,9 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
     }))
   } else {
     const regionId = await getRegionId()
+    // A filter that matches no category must list nothing, not everything:
+    // without any category_id[] the store API returns the whole catalogue.
+    const filtered = Boolean(type || brand || category)
     const params = new URLSearchParams({ limit: String(FETCH_ALL) })
     if (regionId) params.append('region_id', regionId)
     for (const id of categoryIds) params.append('category_id[]', id)
@@ -185,16 +194,18 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
     // every render refetched it. This set is ~140 KB.
     params.append('fields', LISTING_FIELDS)
 
-    try {
-      const data = await fetch(`${BACKEND}/store/products?${params}`, {
-        headers: { 'x-publishable-api-key': PUB_KEY },
-        next: { revalidate: 60 },
-      }).then((r) => r.json())
-      const all = sortProducts(data.products ?? [], sort)
-      total = all.length
-      products = all.slice(offset, offset + PAGE_SIZE)
-    } catch {
-      // Medusa offline — page renders empty with filters still usable
+    if (!filtered || categoryIds.length > 0) {
+      try {
+        const data = await fetch(`${BACKEND}/store/products?${params}`, {
+          headers: { 'x-publishable-api-key': PUB_KEY },
+          next: { revalidate: 60 },
+        }).then((r) => r.json())
+        const all = sortProducts(data.products ?? [], sort)
+        total = all.length
+        products = all.slice(offset, offset + PAGE_SIZE)
+      } catch {
+        // Medusa offline — page renders empty with filters still usable
+      }
     }
   }
 
@@ -214,7 +225,8 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
 
       <Navbar categories={allCategories} />
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 pt-32 pb-10">
+      <PageTransition>
+      <div data-page-content className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 pt-32 pb-10">
         {/* Page heading */}
         <div className="mb-8">
           <h1 className="font-display font-light text-4xl sm:text-5xl tracking-tight leading-[0.95]">
@@ -258,7 +270,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
                 {isSearch ? `No results for "${q}".` : 'No products found.'}
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+              <div data-results className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                 {products.map((p: any, i: number) => {
                   const variant = p.variants?.[0]
                   const sku = variant?.sku ?? '—'
@@ -271,13 +283,16 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
                   return (
                     <div
                       key={p.id}
-                      className="group relative bg-[var(--surface)] rounded-[16px] p-4 overflow-hidden hover:-translate-y-1 transition-transform duration-300"
+                      data-product-card
+                      style={{ '--i': i } as React.CSSProperties}
+                      className="feed-in group relative bg-[var(--surface)] rounded-[16px] p-4 overflow-hidden hover:-translate-y-1 transition-transform duration-300"
                     >
-                      <Link href={`/products/${p.handle}`} className="block">
+                      <Link href={`/products/${p.handle}`} transitionTypes={NAV_FORWARD} className="block">
                         {/* Product image */}
                         <div className="relative h-28 flex items-end justify-center mb-3">
+                          <ProductMorph productId={p.id}>
                           {imageUrl ? (
-                            <Image
+                            <ProductImage
                               src={imageUrl}
                               alt={p.title}
                               width={180}
@@ -301,6 +316,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
                               </div>
                             </div>
                           )}
+                          </ProductMorph>
                         </div>
 
                         <div className="text-[9px] uppercase tracking-[0.16em] text-[var(--muted)] mb-1">{type}</div>
@@ -379,6 +395,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
           </ul>
         </section>
       </div>
+      </PageTransition>
     </div>
   )
 }

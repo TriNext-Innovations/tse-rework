@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import Image from 'next/image'
 import { Navbar } from '@/components/layout'
 import {
   findCartridges,
@@ -16,6 +15,7 @@ import {
 import { websiteRef } from '@/lib/structured-data'
 import { SITE_URL } from '@/lib/site-url'
 import { AddToCartButton } from '../../products/AddToCartButton'
+import { NAV_FORWARD, ProductImage, ProductMorph } from '@/components/motion'
 import { SkuLine } from '@/components/catalog/SkuLine'
 
 const BASE = SITE_URL
@@ -122,7 +122,7 @@ export default async function PrinterPage({ params }: Props) {
 
       <Navbar />
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 pt-32 pb-16">
+      <div data-page-content className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 pt-32 pb-16">
         <nav aria-label="Breadcrumb" className="mb-6 text-xs text-[var(--muted)]">
           <ol className="flex flex-wrap items-center gap-2">
             <li><Link href="/" className="hover:text-[var(--ink)] transition-colors">Home</Link></li>
@@ -142,23 +142,27 @@ export default async function PrinterPage({ params }: Props) {
           </p>
         </header>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div data-results className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           {cartridges.map((c, i) => (
             <div
               key={c.product_id ?? c.sku}
-              className="group relative bg-[var(--surface)] rounded-[16px] p-4 overflow-hidden hover:-translate-y-1 transition-transform duration-300"
+              data-product-card
+              style={{ '--i': i } as React.CSSProperties}
+              className="feed-in group relative bg-[var(--surface)] rounded-[16px] p-4 overflow-hidden hover:-translate-y-1 transition-transform duration-300"
             >
-              <Link href={`/products/${c.handle}`} className="block">
+              <Link href={`/products/${c.handle}`} transitionTypes={NAV_FORWARD} className="block">
                 <div className="relative h-28 flex items-end justify-center mb-3">
                   {c.image ? (
-                    <Image
-                      src={c.image}
-                      alt={c.title}
-                      width={180}
-                      height={220}
-                      sizes="180px"
-                      className="h-31 w-auto object-contain"
-                    />
+                    <ProductMorph productId={c.product_id}>
+                      <ProductImage
+                        src={c.image}
+                        alt={c.title}
+                        width={180}
+                        height={220}
+                        sizes="180px"
+                        className="h-31 w-auto object-contain"
+                      />
+                    </ProductMorph>
                   ) : (
                     <div
                       className={`w-16 h-24 rounded-[6px] shadow-[0_12px_24px_-12px_rgba(10,10,10,0.35)] relative overflow-hidden ${

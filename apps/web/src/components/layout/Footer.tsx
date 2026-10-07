@@ -11,6 +11,7 @@ const BRANDS = [
 const SHOP_LINKS = [
   { label: 'Inkjet cartridges', href: '/products?type=inkjet' },
   { label: 'Laser toner', href: '/products?type=laser' },
+  { label: 'Refill ink', href: '/products?type=ink' },
   { label: 'All cartridges', href: '/products' },
   { label: 'Find my cartridge', href: '/compatibility' },
   { label: 'B2B & business pricing', href: '/b2b' },
