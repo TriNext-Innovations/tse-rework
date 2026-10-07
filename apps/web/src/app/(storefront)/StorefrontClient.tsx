@@ -148,6 +148,11 @@ export default function StorefrontClient({
         .animate-spin-slow { animation: spin-slow 22s linear infinite; }
         [data-reveal] { opacity: 0; transform: translateY(28px); transition: opacity .9s cubic-bezier(.22,1,.36,1), transform .9s cubic-bezier(.22,1,.36,1); }
         [data-reveal].is-revealed { opacity: 1; transform: translateY(0); }
+        /* The hero is the first screen, so it is never hidden waiting for JS
+           (#500): it rises on a CSS animation that moves it but never fades it. */
+        @keyframes hero-in { from { transform: translateY(18px); } to { transform: none; } }
+        [data-hero-in] { animation: hero-in .9s cubic-bezier(.22,1,.36,1) both; }
+        [data-hero-in="late"] { animation-delay: .12s; }
         .bento-card { transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s; }
         .bento-card:hover { transform: translateY(-4px); box-shadow: 0 18px 40px -20px rgba(10,10,10,0.18); }
         .product-card { transition: transform .35s cubic-bezier(.22,1,.36,1); }
@@ -160,6 +165,7 @@ export default function StorefrontClient({
         @media (prefers-reduced-motion: reduce) {
           .animate-ticker, .animate-float, .animate-spin-slow { animation: none; }
           [data-reveal] { opacity: 1; transform: none; transition: none; }
+          [data-hero-in] { animation: none; }
         }
       `}</style>
 
@@ -176,7 +182,7 @@ export default function StorefrontClient({
         <div className="grain absolute inset-0" aria-hidden />
 
         <div className="relative mx-auto max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-6 items-end">
-          <div className="lg:col-span-7" data-reveal>
+          <div className="lg:col-span-7" data-hero-in>
             <div className="flex items-center gap-3 mb-6">
               <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[var(--muted)] font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--magenta)]" /> Est. 1987 · South Africa
@@ -209,22 +215,22 @@ export default function StorefrontClient({
             </div>
 
             <div className="mt-12 grid grid-cols-3 gap-4 max-w-md">
-              <div data-reveal>
+              <div>
                 <div className="font-display text-3xl sm:text-4xl font-light leading-none">39<span className="text-[var(--magenta)]">.</span></div>
                 <div className="text-[11px] uppercase tracking-widest text-[var(--muted)] mt-2">Yrs in business</div>
               </div>
-              <div data-reveal>
+              <div>
                 <div className="font-display text-3xl sm:text-4xl font-light leading-none">12</div>
                 <div className="text-[11px] uppercase tracking-widest text-[var(--muted)] mt-2">Brands</div>
               </div>
-              <div data-reveal>
+              <div>
                 <div className="font-display text-3xl sm:text-4xl font-light leading-none">R300<span className="text-[var(--magenta)]">+</span></div>
                 <div className="text-[11px] uppercase tracking-widest text-[var(--muted)] mt-2">From</div>
               </div>
             </div>
           </div>
 
-          <div className="lg:col-span-5 relative" data-reveal>
+          <div className="lg:col-span-5 relative" data-hero-in="late">
             <div className="relative">
               <div className="absolute -top-6 -right-2 sm:right-6 w-28 h-28 sm:w-36 sm:h-36 z-20 animate-spin-slow">
                 <svg viewBox="0 0 200 200" className="w-full h-full">
