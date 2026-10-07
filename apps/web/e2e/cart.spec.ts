@@ -9,7 +9,7 @@ test.describe('Cart', () => {
   })
 
   const heroAdd = (page: import('@playwright/test').Page) =>
-    page.getByRole('button', { name: /Add to cart — R300/ })
+    page.getByRole('button', { name: /^Add to cart$/ })
 
   // Clicks can land before hydration attaches handlers (especially on the CI
   // cold start), so retry the click until the cart badge confirms the add.
@@ -23,12 +23,14 @@ test.describe('Cart', () => {
   test('cart badge is hidden at zero', async ({ page }) => {
     const button = page.getByRole('button', { name: 'Cart (0 items)' })
     await expect(button).toBeVisible()
-    await expect(button.locator('span')).toHaveCount(0)
+    // The button also holds two aria-hidden ring spans for the add animation,
+    // so target the badge itself.
+    await expect(button.locator('[data-cart-badge]')).toHaveCount(0)
   })
 
   test('hero add-to-cart shows a 1-count badge', async ({ page }) => {
     await addHeroItem(page)
-    await expect(page.getByRole('button', { name: 'Cart (1 items)' }).locator('span').last()).toHaveText('1')
+    await expect(page.getByRole('button', { name: 'Cart (1 items)' }).locator('[data-cart-badge]')).toHaveText('1')
   })
 
   test('drawer lists the added item with subtotal', async ({ page }) => {

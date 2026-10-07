@@ -97,6 +97,7 @@ export function CartButton() {
       {shown > 0 && (
         <span
           ref={badgeRef}
+          data-cart-badge
           className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-0.5 rounded-full bg-[var(--ink)] text-[var(--paper)] text-[10px] font-medium flex items-center justify-center leading-none pointer-events-none"
         >
           <RollingNumber value={shown > 99 ? '99+' : shown} />
