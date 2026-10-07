@@ -88,6 +88,14 @@ describe('ProductsPage', () => {
     expect(screen.getByRole('heading', { name: 'Canon 737' })).toBeInTheDocument()
   })
 
+  it('keeps the add button outside the card link, so adding does not navigate (#498)', async () => {
+    setupFetch('reg_01', [], [makeProduct('p1', 'HP 123')], 1)
+    await renderProductsPage()
+    const add = screen.getByTestId('atc-p1')
+    expect(add.closest('a')).toBeNull()
+    expect(screen.getByRole('heading', { name: 'HP 123' }).closest('a')).toHaveAttribute('href', expect.stringContaining('/products/'))
+  })
+
   it('shows "No products found" when empty', async () => {
     setupFetch('reg_01', [], [], 0)
     await renderProductsPage()
