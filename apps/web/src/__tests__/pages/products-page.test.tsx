@@ -88,6 +88,25 @@ describe('ProductsPage', () => {
     expect(screen.getByRole('heading', { name: 'Canon 737' })).toBeInTheDocument()
   })
 
+  it('keeps the add button outside the card link, so adding does not navigate (#498)', async () => {
+    setupFetch('reg_01', [], [makeProduct('p1', 'HP 123')], 1)
+    await renderProductsPage()
+    const add = screen.getByTestId('atc-p1')
+    expect(add.closest('a')).toBeNull()
+    expect(screen.getByRole('heading', { name: 'HP 123' }).closest('a')).toHaveAttribute('href', expect.stringContaining('/products/'))
+  })
+
+  it('requests only the fields the grid renders, so the response fits the data cache (#499)', async () => {
+    setupFetch('reg_01', [], [makeProduct('p1', 'HP 123', 300)], 1)
+    await renderProductsPage()
+    const call = vi.mocked(fetch).mock.calls.map((c) => String(c[0])).find((u) => u.includes('/store/products?'))!
+    const fields = new URL(call).searchParams.get('fields')!.split(',')
+    expect(fields).toEqual(expect.arrayContaining(['handle', 'images.url', 'variants.sku', 'variants.calculated_price.calculated_amount']))
+    // A "+" or "*" prefix adds to Medusa's default fields instead of replacing them.
+    expect(fields.some((f) => f.startsWith('+') || f.startsWith('*'))).toBe(false)
+    expect(fields).not.toContain('description')
+  })
+
   it('shows "No products found" when empty', async () => {
     setupFetch('reg_01', [], [], 0)
     await renderProductsPage()

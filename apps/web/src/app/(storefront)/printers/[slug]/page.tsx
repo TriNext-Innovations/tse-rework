@@ -16,6 +16,7 @@ import { websiteRef } from '@/lib/structured-data'
 import { SITE_URL } from '@/lib/site-url'
 import { AddToCartButton } from '../../products/AddToCartButton'
 import { NAV_FORWARD, ProductImage, ProductMorph } from '@/components/motion'
+import { SkuLine } from '@/components/catalog/SkuLine'
 
 const BASE = SITE_URL
 
@@ -143,48 +144,53 @@ export default async function PrinterPage({ params }: Props) {
 
         <div data-results className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           {cartridges.map((c, i) => (
-            <Link
+            <div
               key={c.product_id ?? c.sku}
-              href={`/products/${c.handle}`}
-              transitionTypes={NAV_FORWARD}
               data-product-card
               style={{ '--i': i } as React.CSSProperties}
               className="feed-in group relative bg-[var(--surface)] rounded-[16px] p-4 overflow-hidden hover:-translate-y-1 transition-transform duration-300"
             >
-              <div className="relative h-28 flex items-end justify-center mb-3">
-                {c.image ? (
-                  <ProductMorph productId={c.product_id}>
-                    <ProductImage
-                      src={c.image}
-                      alt={c.title}
-                      width={180}
-                      height={220}
-                      sizes="180px"
-                      className="h-31 w-auto object-contain"
-                    />
-                  </ProductMorph>
-                ) : (
-                  <div
-                    className={`w-16 h-24 rounded-[6px] shadow-[0_12px_24px_-12px_rgba(10,10,10,0.35)] relative overflow-hidden ${
-                      i % 4 === 0 ? 'bg-gradient-to-br from-[#0A0A0A] to-[#2A2A2A]' :
-                      i % 4 === 1 ? 'bg-gradient-to-br from-[#41e0f5] to-[#0fb8d4]' :
-                      i % 4 === 2 ? 'bg-gradient-to-br from-[#1a1a2e] to-[#3a3a5c]' :
-                      'bg-gradient-to-br from-[#2d1a0e] to-[#5a3520]'
-                    }`}
-                  >
-                    <div className="absolute top-0 left-0 right-0 h-1.5 bg-white/25" />
-                  </div>
-                )}
-              </div>
-              <h2 className="font-display text-sm leading-tight tracking-tight line-clamp-2 mb-1">{c.title}</h2>
-              <div className="text-[10px] text-[var(--muted-2)] mb-3">SKU {c.sku}</div>
-
-              <div className="flex items-end justify-between">
-                <div className="font-display text-lg">
-                  {typeof c.price === 'number'
-                    ? `R${Math.round(c.price)}`
-                    : <span className="text-[var(--muted-2)] text-sm">POA</span>}
+              <Link href={`/products/${c.handle}`} transitionTypes={NAV_FORWARD} className="block">
+                <div className="relative h-28 flex items-end justify-center mb-3">
+                  {c.image ? (
+                    <ProductMorph productId={c.product_id}>
+                      <ProductImage
+                        src={c.image}
+                        alt={c.title}
+                        width={180}
+                        height={220}
+                        sizes="180px"
+                        className="h-31 w-auto object-contain"
+                      />
+                    </ProductMorph>
+                  ) : (
+                    <div
+                      className={`w-16 h-24 rounded-[6px] shadow-[0_12px_24px_-12px_rgba(10,10,10,0.35)] relative overflow-hidden ${
+                        i % 4 === 0 ? 'bg-gradient-to-br from-[#0A0A0A] to-[#2A2A2A]' :
+                        i % 4 === 1 ? 'bg-gradient-to-br from-[#41e0f5] to-[#0fb8d4]' :
+                        i % 4 === 2 ? 'bg-gradient-to-br from-[#1a1a2e] to-[#3a3a5c]' :
+                        'bg-gradient-to-br from-[#2d1a0e] to-[#5a3520]'
+                      }`}
+                    >
+                      <div className="absolute top-0 left-0 right-0 h-1.5 bg-white/25" />
+                    </div>
+                  )}
                 </div>
+                <h2 className="font-display text-sm leading-tight tracking-tight line-clamp-2 mb-1">{c.title}</h2>
+                <SkuLine sku={c.sku} skus={c.skus} className="text-[10px] text-[var(--muted-2)] mb-3" />
+
+                <div className="flex items-end justify-between">
+                  <div className="font-display text-lg">
+                    {typeof c.price === 'number'
+                      ? `R${Math.round(c.price)}`
+                      : <span className="text-[var(--muted-2)] text-sm">POA</span>}
+                  </div>
+                  {/* Keeps the row the height of the add button, which sits outside the link. */}
+                  <span aria-hidden="true" className="w-8 h-8" />
+                </div>
+              </Link>
+              {/* Outside the link: a button inside an <a> follows the href on click (#498). */}
+              <div className="absolute bottom-4 right-4">
                 <AddToCartButton
                   id={c.product_id}
                   title={c.title}
@@ -194,7 +200,7 @@ export default async function PrinterPage({ params }: Props) {
                   thumbnail={c.image ?? undefined}
                 />
               </div>
-            </Link>
+            </div>
           ))}
         </div>
 

@@ -83,14 +83,12 @@ export const organizationJsonLd = {
     addressCountry: siteConfig.address.countryCode,
   },
   areaServed: siteConfig.address.countryCode,
-  openingHoursSpecification: [
-    {
-      '@type': 'OpeningHoursSpecification',
-      dayOfWeek: [...siteConfig.openingHours.days],
-      opens: siteConfig.openingHours.opens,
-      closes: siteConfig.openingHours.closes,
-    },
-  ],
+  openingHoursSpecification: siteConfig.openingHours.map((h) => ({
+    '@type': 'OpeningHoursSpecification',
+    dayOfWeek: [...h.days],
+    opens: h.opens,
+    closes: h.closes,
+  })),
   contactPoint: [
     {
       '@type': 'ContactPoint',

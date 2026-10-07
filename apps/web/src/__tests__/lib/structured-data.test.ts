@@ -43,10 +43,11 @@ describe('the business entity', () => {
     expect(organizationJsonLd.email).toBe(siteConfig.email.sales)
     expect(organizationJsonLd.areaServed).toBe('ZA')
     expect(organizationJsonLd.contactPoint[0]?.telephone).toBe(siteConfig.phone.e164)
-    expect(organizationJsonLd.openingHoursSpecification[0]).toMatchObject({
-      opens: '08:00',
-      closes: '17:00',
-    })
+    // Split week: Mon–Thu to 16:30, Friday closes at 15:00.
+    expect(organizationJsonLd.openingHoursSpecification).toEqual([
+      expect.objectContaining({ dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday'], opens: '08:00', closes: '16:30' }),
+      expect.objectContaining({ dayOfWeek: ['Friday'], opens: '08:00', closes: '15:00' }),
+    ])
   })
 
   // Guardrails, not style points. This repo has twice shipped published claims it

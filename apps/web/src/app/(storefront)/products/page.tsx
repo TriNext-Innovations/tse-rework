@@ -23,6 +23,16 @@ const PAGE_SIZE = 24
 // matching set in one call and sort/paginate in memory. This lets us sort by
 // price, which the store API's `order` param doesn't support.
 const FETCH_ALL = 400
+const LISTING_FIELDS = [
+  'id',
+  'title',
+  'handle',
+  'metadata',
+  'images.url',
+  'variants.id',
+  'variants.sku',
+  'variants.calculated_price.calculated_amount',
+].join(',')
 
 type SortKey = 'featured' | 'price-asc' | 'price-desc' | 'name-asc' | 'name-desc'
 
@@ -178,7 +188,11 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
     const params = new URLSearchParams({ limit: String(FETCH_ALL) })
     if (regionId) params.append('region_id', regionId)
     for (const id of categoryIds) params.append('category_id[]', id)
-    params.append('fields', '+metadata,+categories.id,+categories.name,+categories.handle,+images,+variants.id,+variants.sku,*variants.calculated_price')
+    // Only what the grid renders (#499). The default product fields plus the
+    // full calculated_price object came to 1.6–2.1 MB for the whole catalogue,
+    // over Next's 2 MB data-cache limit, so revalidate never took effect and
+    // every render refetched it. This set is ~140 KB.
+    params.append('fields', LISTING_FIELDS)
 
     if (!filtered || categoryIds.length > 0) {
       try {
@@ -267,56 +281,61 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
                   const imageUrl = p.images?.[0]?.url
 
                   return (
-                    <Link
+                    <div
                       key={p.id}
-                      href={`/products/${p.handle}`}
-                      transitionTypes={NAV_FORWARD}
                       data-product-card
                       style={{ '--i': i } as React.CSSProperties}
                       className="feed-in group relative bg-[var(--surface)] rounded-[16px] p-4 overflow-hidden hover:-translate-y-1 transition-transform duration-300"
                     >
-                      {/* Product image — morphs into the product page's image */}
-                      <div className="relative h-28 flex items-end justify-center mb-3">
-                        <ProductMorph productId={p.id}>
-                        {imageUrl ? (
-                          <ProductImage
-                            src={imageUrl}
-                            alt={p.title}
-                            width={180}
-                            height={220}
-                            sizes="180px"
-                            className="h-31 w-auto object-contain"
-                          />
-                        ) : (
-                          <div
-                            className={`w-16 h-24 rounded-[6px] shadow-[0_12px_24px_-12px_rgba(10,10,10,0.35)] relative overflow-hidden ${
-                              i % 4 === 0 ? 'bg-gradient-to-br from-[#0A0A0A] to-[#2A2A2A]' :
-                              i % 4 === 1 ? 'bg-gradient-to-br from-[#41e0f5] to-[#0fb8d4]' :
-                              i % 4 === 2 ? 'bg-gradient-to-br from-[#1a1a2e] to-[#3a3a5c]' :
-                              'bg-gradient-to-br from-[#2d1a0e] to-[#5a3520]'
-                            }`}
-                          >
-                            <div className="absolute top-0 left-0 right-0 h-1.5 bg-white/25" />
-                            <div className="absolute bottom-2 left-2 right-2 flex items-end justify-between">
-                              <span className="font-display text-white text-[9px] leading-none">TSE</span>
-                              <span className="w-2 h-2 rounded-full border border-white/40" />
+                      <Link href={`/products/${p.handle}`} transitionTypes={NAV_FORWARD} className="block">
+                        {/* Product image */}
+                        <div className="relative h-28 flex items-end justify-center mb-3">
+                          <ProductMorph productId={p.id}>
+                          {imageUrl ? (
+                            <ProductImage
+                              src={imageUrl}
+                              alt={p.title}
+                              width={180}
+                              height={220}
+                              sizes="180px"
+                              className="h-31 w-auto object-contain"
+                            />
+                          ) : (
+                            <div
+                              className={`w-16 h-24 rounded-[6px] shadow-[0_12px_24px_-12px_rgba(10,10,10,0.35)] relative overflow-hidden ${
+                                i % 4 === 0 ? 'bg-gradient-to-br from-[#0A0A0A] to-[#2A2A2A]' :
+                                i % 4 === 1 ? 'bg-gradient-to-br from-[#41e0f5] to-[#0fb8d4]' :
+                                i % 4 === 2 ? 'bg-gradient-to-br from-[#1a1a2e] to-[#3a3a5c]' :
+                                'bg-gradient-to-br from-[#2d1a0e] to-[#5a3520]'
+                              }`}
+                            >
+                              <div className="absolute top-0 left-0 right-0 h-1.5 bg-white/25" />
+                              <div className="absolute bottom-2 left-2 right-2 flex items-end justify-between">
+                                <span className="font-display text-white text-[9px] leading-none">TSE</span>
+                                <span className="w-2 h-2 rounded-full border border-white/40" />
+                              </div>
                             </div>
-                          </div>
-                        )}
-                        </ProductMorph>
-                      </div>
-
-                      <div className="text-[9px] uppercase tracking-[0.16em] text-[var(--muted)] mb-1">{type}</div>
-                      <h2 className="font-display text-sm leading-tight tracking-tight line-clamp-2 mb-1">{p.title}</h2>
-                      <div className="text-[10px] text-[var(--muted-2)] mb-3">SKU {sku}</div>
-
-                      <div className="flex items-end justify-between">
-                        <div className="font-display text-lg">
-                          {priceZar ? `R${priceZar}` : <span className="text-[var(--muted-2)] text-sm">POA</span>}
+                          )}
+                          </ProductMorph>
                         </div>
+
+                        <div className="text-[9px] uppercase tracking-[0.16em] text-[var(--muted)] mb-1">{type}</div>
+                        <h2 className="font-display text-sm leading-tight tracking-tight line-clamp-2 mb-1">{p.title}</h2>
+                        <div className="text-[10px] text-[var(--muted-2)] mb-3">SKU {sku}</div>
+
+                        <div className="flex items-end justify-between">
+                          <div className="font-display text-lg">
+                            {priceZar ? `R${priceZar}` : <span className="text-[var(--muted-2)] text-sm">POA</span>}
+                          </div>
+                          {/* Keeps the row the height of the add button, which sits outside the link. */}
+                          <span aria-hidden="true" className="w-8 h-8" />
+                        </div>
+                      </Link>
+                      {/* Outside the link: a button inside an <a> follows the href on click (#498). */}
+                      <div className="absolute bottom-4 right-4">
                         <AddToCartButton id={p.id} title={p.title} sku={sku} price={priceZar} variantId={variant?.id} thumbnail={imageUrl} />
                       </div>
-                    </Link>
+                    </div>
                   )
                 })}
               </div>

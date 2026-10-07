@@ -70,7 +70,7 @@ export default function ContactPage() {
           >
             <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--muted)] mb-2">Phone</div>
             <div className="font-display text-xl">{siteConfig.phone.displayExt}</div>
-            <div className="text-xs text-[var(--muted)] mt-1">Mon–Fri, 08:00–17:00</div>
+            <div className="text-xs text-[var(--muted)] mt-1">{siteConfig.openingHours.map((h) => `${h.label} ${h.display}`).join(' · ')}</div>
           </a>
 
           <a
