@@ -1,20 +1,27 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Navbar } from '@/components/layout'
 import { AddressAutocomplete } from '@/components/AddressAutocomplete'
 import { useAuth } from '@/contexts/AuthContext'
+import { safeNextPath, withNext } from '@/lib/next-path'
 
 const SA_PROVINCES = [
   'Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Natal',
   'Limpopo', 'Mpumalanga', 'Northern Cape', 'North West', 'Western Cape',
 ]
 
-export default function RegisterPage() {
+function RegisterContent() {
   const { register, addAddress } = useAuth()
   const router = useRouter()
+  // Where the shopper was headed (e.g. /b2b#apply when an account is needed to
+  // apply for business pricing). Internal paths only — see safeNextPath.
+  const searchParams = useSearchParams()
+  const rawNext = searchParams.get('next')
+  const nextPath = safeNextPath(rawNext, '/account/orders')
+  const carriedNext = rawNext ? nextPath : null
 
   const [form, setForm] = useState({
     first_name: '', last_name: '', email: '', phone: '', password: '', confirm: '',
@@ -75,7 +82,7 @@ export default function RegisterPage() {
       })
     }
     setLoading(false)
-    router.push('/account/orders')
+    router.push(nextPath)
   }
 
   function field(key: keyof typeof form) {
@@ -91,163 +98,170 @@ export default function RegisterPage() {
   }
 
   return (
+    <div className="mx-auto max-w-md px-4 sm:px-6 pt-32 pb-20">
+      <div className="text-center mb-10">
+        <div className="text-[11px] uppercase tracking-[0.22em] text-[var(--muted)] mb-3">My account</div>
+        <h1 className="font-display font-light text-4xl sm:text-5xl tracking-tight leading-[0.95]">
+          Create an <span className="font-display-italic">account</span>.
+        </h1>
+        <p className="mt-4 text-sm text-[var(--muted)]">
+          Already registered?{' '}
+          <Link href={withNext('/account/login', carriedNext)} className="underline underline-offset-4 hover:text-[var(--ink)] transition-colors">
+            Sign in
+          </Link>
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} noValidate className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">First name</label>
+            <input type="text" autoComplete="given-name" placeholder="Jane" {...field('first_name')} />
+            {errors.first_name && <p className="text-xs text-red-500 mt-1">{errors.first_name}</p>}
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">Last name</label>
+            <input type="text" autoComplete="family-name" placeholder="Smith" {...field('last_name')} />
+            {errors.last_name && <p className="text-xs text-red-500 mt-1">{errors.last_name}</p>}
+          </div>
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">Email address</label>
+          <input type="email" autoComplete="email" placeholder="jane@example.com" {...field('email')} />
+          {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">
+            Phone <span className="normal-case text-[var(--muted-2)]">(optional)</span>
+          </label>
+          <input type="tel" autoComplete="tel" placeholder="082 123 4567" {...field('phone')} />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">Password</label>
+          <input type="password" autoComplete="new-password" placeholder="Minimum 8 characters" {...field('password')} />
+          {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">Confirm password</label>
+          <input type="password" autoComplete="new-password" placeholder="••••••••" {...field('confirm')} />
+          {errors.confirm && <p className="text-xs text-red-500 mt-1">{errors.confirm}</p>}
+        </div>
+
+        {/* ── Optional delivery address — saved as the account default ── */}
+        <div className="border-t border-[var(--line-2)] pt-5 mt-6">
+          <h2 className="text-xs font-medium text-[var(--ink-2)] uppercase tracking-[0.12em] mb-1.5">
+            Delivery address <span className="normal-case text-[var(--muted-2)]">(optional — speeds up checkout)</span>
+          </h2>
+          <div className="space-y-4 mt-3">
+            <div>
+              <AddressAutocomplete
+                value={address.line1}
+                placeholder="Start typing your address…"
+                autoComplete="address-line1"
+                className={inputClass(errors.line1)}
+                onChange={(v) => setAddress((a) => ({ ...a, line1: v }))}
+                onSelect={(p) =>
+                  setAddress((a) => ({
+                    ...a,
+                    line1: p.line1 ?? a.line1,
+                    suburb: p.suburb ?? a.suburb,
+                    city: p.city ?? a.city,
+                    province: p.province && SA_PROVINCES.includes(p.province) ? p.province : a.province,
+                    postalCode: p.postalCode ?? a.postalCode,
+                  }))
+                }
+              />
+              {errors.line1 && <p className="text-xs text-red-500 mt-1">{errors.line1}</p>}
+            </div>
+            {addressStarted && (
+              <>
+                <div>
+                  <input
+                    type="text" autoComplete="address-line2" placeholder="Complex / building / room no. (optional)"
+                    value={address.complex}
+                    onChange={(e) => setAddress({ ...address, complex: e.target.value })}
+                    className={inputClass()}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <input
+                      type="text" autoComplete="address-level3" placeholder="Suburb"
+                      value={address.suburb}
+                      onChange={(e) => setAddress({ ...address, suburb: e.target.value })}
+                      className={inputClass()}
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="text" autoComplete="address-level2" placeholder="City"
+                      value={address.city}
+                      onChange={(e) => setAddress({ ...address, city: e.target.value })}
+                      className={inputClass(errors.city)}
+                    />
+                    {errors.city && <p className="text-xs text-red-500 mt-1">{errors.city}</p>}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <select
+                      autoComplete="address-level1"
+                      value={address.province}
+                      onChange={(e) => setAddress({ ...address, province: e.target.value })}
+                      className={inputClass(errors.province)}
+                    >
+                      <option value="">Select province</option>
+                      {SA_PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
+                    </select>
+                    {errors.province && <p className="text-xs text-red-500 mt-1">{errors.province}</p>}
+                  </div>
+                  <div>
+                    <input
+                      type="text" autoComplete="postal-code" placeholder="Postal code" maxLength={4}
+                      value={address.postalCode}
+                      onChange={(e) => setAddress({ ...address, postalCode: e.target.value })}
+                      className={inputClass(errors.postalCode)}
+                    />
+                    {errors.postalCode && <p className="text-xs text-red-500 mt-1">{errors.postalCode}</p>}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {errors.general && (
+          <p className="text-sm text-red-500 bg-red-50 rounded-[10px] px-4 py-3">{errors.general}</p>
+        )}
+
+        <p className="text-[11px] text-[var(--muted)] leading-relaxed">
+          By creating an account you agree to our{' '}
+          <Link href="/legal/privacy" className="underline underline-offset-2">privacy policy</Link>.
+        </p>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-[var(--ink)] text-[var(--paper)] rounded-full py-3.5 text-sm font-medium hover:bg-[#41e0f5] hover:text-[var(--on-accent)] transition-colors disabled:opacity-60 cursor-pointer"
+        >
+          {loading ? 'Creating account…' : 'Create account'}
+        </button>
+      </form>
+    </div>
+  )
+}
+
+export default function RegisterPage() {
+  return (
     <div className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
       <style>{`
         .font-display { font-family: var(--font-fraunces), Georgia, serif; font-optical-sizing: auto; }
         .font-display-italic { font-family: var(--font-fraunces), Georgia, serif; font-style: italic; }
       `}</style>
       <Navbar />
-
-      <div className="mx-auto max-w-md px-4 sm:px-6 pt-32 pb-20">
-        <div className="text-center mb-10">
-          <div className="text-[11px] uppercase tracking-[0.22em] text-[var(--muted)] mb-3">My account</div>
-          <h1 className="font-display font-light text-4xl sm:text-5xl tracking-tight leading-[0.95]">
-            Create an <span className="font-display-italic">account</span>.
-          </h1>
-          <p className="mt-4 text-sm text-[var(--muted)]">
-            Already registered?{' '}
-            <Link href="/account/login" className="underline underline-offset-4 hover:text-[var(--ink)] transition-colors">
-              Sign in
-            </Link>
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} noValidate className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">First name</label>
-              <input type="text" autoComplete="given-name" placeholder="Jane" {...field('first_name')} />
-              {errors.first_name && <p className="text-xs text-red-500 mt-1">{errors.first_name}</p>}
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">Last name</label>
-              <input type="text" autoComplete="family-name" placeholder="Smith" {...field('last_name')} />
-              {errors.last_name && <p className="text-xs text-red-500 mt-1">{errors.last_name}</p>}
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">Email address</label>
-            <input type="email" autoComplete="email" placeholder="jane@example.com" {...field('email')} />
-            {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">
-              Phone <span className="normal-case text-[var(--muted-2)]">(optional)</span>
-            </label>
-            <input type="tel" autoComplete="tel" placeholder="082 123 4567" {...field('phone')} />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">Password</label>
-            <input type="password" autoComplete="new-password" placeholder="Minimum 8 characters" {...field('password')} />
-            {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-[var(--ink-2)] mb-1.5 uppercase tracking-[0.12em]">Confirm password</label>
-            <input type="password" autoComplete="new-password" placeholder="••••••••" {...field('confirm')} />
-            {errors.confirm && <p className="text-xs text-red-500 mt-1">{errors.confirm}</p>}
-          </div>
-
-          {/* ── Optional delivery address — saved as the account default ── */}
-          <div className="border-t border-[var(--line-2)] pt-5 mt-6">
-            <h2 className="text-xs font-medium text-[var(--ink-2)] uppercase tracking-[0.12em] mb-1.5">
-              Delivery address <span className="normal-case text-[var(--muted-2)]">(optional — speeds up checkout)</span>
-            </h2>
-            <div className="space-y-4 mt-3">
-              <div>
-                <AddressAutocomplete
-                  value={address.line1}
-                  placeholder="Start typing your address…"
-                  autoComplete="address-line1"
-                  className={inputClass(errors.line1)}
-                  onChange={(v) => setAddress((a) => ({ ...a, line1: v }))}
-                  onSelect={(p) =>
-                    setAddress((a) => ({
-                      ...a,
-                      line1: p.line1 ?? a.line1,
-                      suburb: p.suburb ?? a.suburb,
-                      city: p.city ?? a.city,
-                      province: p.province && SA_PROVINCES.includes(p.province) ? p.province : a.province,
-                      postalCode: p.postalCode ?? a.postalCode,
-                    }))
-                  }
-                />
-                {errors.line1 && <p className="text-xs text-red-500 mt-1">{errors.line1}</p>}
-              </div>
-              {addressStarted && (
-                <>
-                  <div>
-                    <input
-                      type="text" autoComplete="address-line2" placeholder="Complex / building / room no. (optional)"
-                      value={address.complex}
-                      onChange={(e) => setAddress({ ...address, complex: e.target.value })}
-                      className={inputClass()}
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <input
-                        type="text" autoComplete="address-level3" placeholder="Suburb"
-                        value={address.suburb}
-                        onChange={(e) => setAddress({ ...address, suburb: e.target.value })}
-                        className={inputClass()}
-                      />
-                    </div>
-                    <div>
-                      <input
-                        type="text" autoComplete="address-level2" placeholder="City"
-                        value={address.city}
-                        onChange={(e) => setAddress({ ...address, city: e.target.value })}
-                        className={inputClass(errors.city)}
-                      />
-                      {errors.city && <p className="text-xs text-red-500 mt-1">{errors.city}</p>}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <select
-                        autoComplete="address-level1"
-                        value={address.province}
-                        onChange={(e) => setAddress({ ...address, province: e.target.value })}
-                        className={inputClass(errors.province)}
-                      >
-                        <option value="">Select province</option>
-                        {SA_PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
-                      </select>
-                      {errors.province && <p className="text-xs text-red-500 mt-1">{errors.province}</p>}
-                    </div>
-                    <div>
-                      <input
-                        type="text" autoComplete="postal-code" placeholder="Postal code" maxLength={4}
-                        value={address.postalCode}
-                        onChange={(e) => setAddress({ ...address, postalCode: e.target.value })}
-                        className={inputClass(errors.postalCode)}
-                      />
-                      {errors.postalCode && <p className="text-xs text-red-500 mt-1">{errors.postalCode}</p>}
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-
-          {errors.general && (
-            <p className="text-sm text-red-500 bg-red-50 rounded-[10px] px-4 py-3">{errors.general}</p>
-          )}
-
-          <p className="text-[11px] text-[var(--muted)] leading-relaxed">
-            By creating an account you agree to our{' '}
-            <Link href="/legal/privacy" className="underline underline-offset-2">privacy policy</Link>.
-          </p>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-[var(--ink)] text-[var(--paper)] rounded-full py-3.5 text-sm font-medium hover:bg-[#41e0f5] hover:text-[var(--on-accent)] transition-colors disabled:opacity-60 cursor-pointer"
-          >
-            {loading ? 'Creating account…' : 'Create account'}
-          </button>
-        </form>
-      </div>
+      <Suspense>
+        <RegisterContent />
+      </Suspense>
     </div>
   )
 }

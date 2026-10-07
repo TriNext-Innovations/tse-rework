@@ -1,11 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { B2B_MAX_PERCENT, B2B_MIN_THRESHOLD_RAND, B2B_TIERS, formatRand } from '@tse/types'
+import { B2B_GROUP_NAME, B2B_MAX_PERCENT, B2B_MIN_THRESHOLD_RAND, B2B_TIERS, formatRand } from '@tse/types'
 import { siteConfig } from '@/lib/site-config'
 import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/layout'
+import { useAuth } from '@/contexts/AuthContext'
+import { withNext } from '@/lib/next-path'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
@@ -35,27 +37,45 @@ const BANDS = [
   })),
 ]
 
+// The application is made from a signed-in account: approval means adding
+// that customer to the B2B group, which needs an account to exist. The email
+// on the application is the account's own, so the form doesn't ask for one.
 type Form = {
-  company_name: string; contact_name: string; email: string; phone: string
+  company_name: string; contact_name: string; phone: string
   business_type: string; monthly_volume: string; message: string
 }
 const EMPTY: Form = {
-  company_name: '', contact_name: '', email: '', phone: '',
+  company_name: '', contact_name: '', phone: '',
   business_type: '', monthly_volume: '', message: '',
 }
 
+// Where the account pages send the shopper back to after signing in or up.
+const RETURN_TO_APPLY = '/b2b#apply'
+
 export default function B2BPage() {
   const router = useRouter()
+  const { customer, token, loading: authLoading } = useAuth()
   const [form, setForm] = useState<Form>(EMPTY)
   const [errors, setErrors] = useState<Partial<Form>>({})
   const [submitting, setSubmitting] = useState(false)
   const [apiError, setApiError] = useState('')
+  const approved = Boolean(customer?.groups?.some((g) => g.name === B2B_GROUP_NAME))
+
+  // Start the form from what the account already knows.
+  useEffect(() => {
+    if (!customer) return
+    const name = [customer.first_name, customer.last_name].filter(Boolean).join(' ')
+    setForm((f) => ({
+      ...f,
+      contact_name: f.contact_name || name,
+      phone: f.phone || customer.phone || '',
+    }))
+  }, [customer])
 
   function validate(): boolean {
     const errs: Partial<Form> = {}
     if (!form.company_name.trim()) errs.company_name = 'Required'
     if (!form.contact_name.trim()) errs.contact_name = 'Required'
-    if (!form.email.trim() || !/^[^@]+@[^@]+\.[^@]+$/.test(form.email)) errs.email = 'Valid email required'
     if (!form.phone.trim()) errs.phone = 'Required'
     if (!form.business_type) errs.business_type = 'Required'
     if (!form.monthly_volume) errs.monthly_volume = 'Required'
@@ -71,9 +91,17 @@ export default function B2BPage() {
     try {
       const res = await fetch(`${BACKEND}/store/b2b/apply`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-publishable-api-key': PUB_KEY },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-publishable-api-key': PUB_KEY,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify(form),
       })
+      if (res.status === 401) {
+        setApiError('Your session has expired. Sign in again to send the application.')
+        return
+      }
       if (!res.ok) {
         const d = await res.json().catch(() => ({}))
         setApiError(d.error ?? 'Submission failed — please try again')
@@ -219,11 +247,23 @@ export default function B2BPage() {
           <h2 className="font-display font-light text-4xl sm:text-5xl tracking-tight leading-[0.95] mb-3">
             Get started in <span className="font-display-italic">minutes</span>.
           </h2>
+
+          {authLoading ? (
+            <div className="skeleton h-72 rounded-[24px] mt-10" aria-busy="true" aria-label="Checking your account" />
+          ) : !customer ? (
+            <AccountFirst />
+          ) : approved ? (
+            <AlreadyApproved />
+          ) : (
+          <>
           <p className="text-sm text-[var(--muted)] mb-10">
             Fill in the form — we'll review your application and contact you within 1 business day.
           </p>
 
           <form onSubmit={handleSubmit} noValidate className="bg-[var(--surface)] rounded-[24px] p-6 sm:p-8 space-y-5">
+            <p className="text-xs text-[var(--muted)]">
+              Applying as <span className="font-medium text-[var(--ink)]">{customer.email}</span> — we approve this account.
+            </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
                 <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[var(--ink-2)] mb-1.5">Company name</label>
@@ -234,11 +274,6 @@ export default function B2BPage() {
                 <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[var(--ink-2)] mb-1.5">Contact name</label>
                 <input type="text" placeholder="Jane Smith" {...f('contact_name')} />
                 {errors.contact_name && <p className="text-xs text-red-500 mt-1">{errors.contact_name}</p>}
-              </div>
-              <div>
-                <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[var(--ink-2)] mb-1.5">Work email</label>
-                <input type="email" placeholder="jane@acme.co.za" {...f('email')} />
-                {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
               </div>
               <div>
                 <label className="block text-xs font-medium uppercase tracking-[0.12em] text-[var(--ink-2)] mb-1.5">Phone</label>
@@ -300,6 +335,8 @@ export default function B2BPage() {
               We respond within 1 business day. No spam, ever.
             </p>
           </form>
+          </>
+          )}
         </div>
       </section>
 
@@ -309,7 +346,7 @@ export default function B2BPage() {
           <h2 className="font-display font-light text-3xl sm:text-4xl tracking-tight mb-10">How it works</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[
-              { step: '01', title: 'Apply', body: 'Fill in the form above. We review every application manually — usually same business day.' },
+              { step: '01', title: 'Apply', body: 'Create your TSE account, then fill in the form above. We review every application manually — usually same business day.' },
               { step: '02', title: 'Get approved', body: 'We approve the account against your email address. Nothing to install, no code to remember — the discount is attached to the account itself.' },
               { step: '03', title: 'Order and save', body: `Sign in, fill the cart, and the ${B2B_TIERS[0]!.percent}% or ${B2B_MAX_PERCENT}% comes off at checkout on its own. Choose Overnight for next-business-day delivery to JHB/PTA, or arrange delivery on account with our team.` },
             ].map(({ step, title, body }) => (
@@ -341,6 +378,60 @@ export default function B2BPage() {
           </div>
         </div>
       </section>
+    </div>
+  )
+}
+
+// Signed out: the application needs an account first, and the account pages
+// bring the shopper straight back to the form.
+function AccountFirst() {
+  return (
+    <div className="mt-10 rounded-[24px] border border-[var(--line-3)] bg-[var(--surface)] p-6 sm:p-8">
+      <p className="font-display font-light text-2xl sm:text-3xl leading-tight">First, a TSE account.</p>
+      <p className="mt-3 max-w-xl text-sm text-[var(--ink-2)] leading-relaxed">
+        Business pricing is attached to your account, so we can only approve an application that
+        belongs to one. It takes a minute, and you&apos;ll come straight back here to finish.
+      </p>
+      <ol className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+        {['Create your account', 'Apply on this page', 'We approve it, usually the same business day'].map((step, i) => (
+          <li key={step} className="flex items-start gap-3 rounded-2xl bg-[var(--paper)] px-4 py-3">
+            <span className="font-display text-lg leading-none text-[var(--muted)] tabular-nums">{i + 1}</span>
+            <span className="text-[var(--ink-2)]">{step}</span>
+          </li>
+        ))}
+      </ol>
+      <div className="mt-7 flex flex-wrap items-center gap-3">
+        <Link
+          href={withNext('/account/register', RETURN_TO_APPLY)}
+          className="inline-flex items-center justify-center bg-[var(--ink)] text-[var(--paper)] rounded-full px-6 py-3 text-sm font-medium hover:bg-[#41e0f5] hover:text-[var(--on-accent)] transition-colors"
+        >
+          Create an account
+        </Link>
+        <Link
+          href={withNext('/account/login', RETURN_TO_APPLY)}
+          className="inline-flex items-center justify-center border border-[var(--line-4)] rounded-full px-6 py-3 text-sm font-medium hover:border-[var(--ink)] transition-colors"
+        >
+          I have an account — sign in
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+// Signed in and already in the B2B group: nothing to apply for.
+function AlreadyApproved() {
+  return (
+    <div className="mt-10 rounded-[24px] border border-[var(--line-3)] bg-[var(--surface)] p-6 sm:p-8">
+      <p className="font-display font-light text-2xl sm:text-3xl leading-tight">Your account has business pricing.</p>
+      <p className="mt-3 max-w-xl text-sm text-[var(--ink-2)] leading-relaxed">
+        Check out signed in and the discount for your order size comes off automatically.
+      </p>
+      <Link
+        href="/products"
+        className="mt-6 inline-flex items-center justify-center bg-[var(--ink)] text-[var(--paper)] rounded-full px-6 py-3 text-sm font-medium hover:bg-[#41e0f5] hover:text-[var(--on-accent)] transition-colors"
+      >
+        Shop cartridges
+      </Link>
     </div>
   )
 }
