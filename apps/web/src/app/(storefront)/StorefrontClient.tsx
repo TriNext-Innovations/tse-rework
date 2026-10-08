@@ -436,19 +436,21 @@ export default function StorefrontClient({
                 <div className="bg-[var(--paper)] text-[var(--ink)] rounded-2xl p-2 sm:p-3 flex flex-col gap-2">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <div className="relative">
-                      <label className="block text-[9px] uppercase tracking-[0.2em] text-[var(--muted)] px-3 pt-3">Brand</label>
+                      <label htmlFor="finder-brand" className="block text-[9px] uppercase tracking-[0.2em] text-[var(--muted)] px-3 pt-3">Brand</label>
                       <select
+                        id="finder-brand"
                         value={finderBrand}
                         onChange={(e) => setFinderBrand(e.target.value)}
                         className="w-full bg-transparent pl-3 pr-8 pb-3 text-sm font-medium focus:outline-none appearance-none cursor-pointer"
                       >
                         {brands.map((b) => <option key={b}>{b}</option>)}
                       </select>
-                      <svg className="absolute right-3 bottom-4 pointer-events-none" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m6 9 6 6 6-6"/></svg>
+                      <svg className="absolute right-3 bottom-4 pointer-events-none" aria-hidden width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m6 9 6 6 6-6"/></svg>
                     </div>
                     <div className="relative border-t sm:border-t-0 sm:border-l border-[var(--ink)]/10">
-                      <label className="block text-[9px] uppercase tracking-[0.2em] text-[var(--muted)] px-3 pt-3">Printer model</label>
+                      <label htmlFor="finder-model" className="block text-[9px] uppercase tracking-[0.2em] text-[var(--muted)] px-3 pt-3">Printer model</label>
                       <input
+                        id="finder-model"
                         type="text"
                         list="finder-models"
                         placeholder="e.g. P1102, MX494"
