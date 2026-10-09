@@ -9,7 +9,7 @@ import type {
   FulfillmentOrderDTO,
   Logger,
 } from '@medusajs/framework/types'
-import { CourierGuyClient } from './client'
+import { CourierGuyClient, FakeCourierGuyClient } from './client'
 import type {
   CourierGuyAddress,
   CourierGuyContact,
@@ -72,13 +72,15 @@ class CourierGuyFulfillmentProviderService extends AbstractFulfillmentProviderSe
     this.logger_ = logger
     this.options_ = options
 
-    if (!options?.apiKey) {
+    if (!options?.apiKey && !options?.fake) {
       this.logger_.warn(
         '[courier-guy] no apiKey configured — rate quoting and shipment creation will fail',
       )
     }
 
-    this.client_ = new CourierGuyClient(options.apiKey, options.baseUrl)
+    this.client_ = options?.fake
+      ? new FakeCourierGuyClient()
+      : new CourierGuyClient(options.apiKey, options.baseUrl)
   }
 
   override async getFulfillmentOptions(): Promise<FulfillmentOption[]> {
