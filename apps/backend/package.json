@@ -23,6 +23,7 @@
     "import:woocommerce": "medusa exec src/scripts/import-woocommerce.ts",
     "payfast:setup": "medusa exec src/scripts/setup-payfast.ts",
     "shipping:setup": "medusa exec src/scripts/setup-shipping.ts",
+    "local:setup": "medusa exec src/scripts/setup-local.ts",
     "test": "vitest run",
     "audit:compat": "medusa exec src/scripts/audit-compat-unresolvable.ts"
   },
