@@ -138,4 +138,20 @@ export default async function setupLocal({ container }: { container: MedusaConta
     })
     console.log(`[setup-local] created shipping options: ${wanted.map((o) => o.name).join(', ')}`)
   }
+
+  // Medusa's built-in test payment, next to PayFast, so the fulfilment emails
+  // can be run without a sandbox round trip. Local only: prod never runs this.
+  const { data: regions } = await query.graph({
+    entity: 'region',
+    fields: ['id', 'payment_providers.id'],
+    filters: { currency_code: 'zar' },
+  })
+  const region = regions[0] as any
+  if (region && !region.payment_providers?.some((p: any) => p.id === 'pp_system_default')) {
+    await link.create({
+      [Modules.REGION]: { region_id: region.id },
+      [Modules.PAYMENT]: { payment_provider_id: 'pp_system_default' },
+    })
+    console.log('[setup-local] enabled the test payment provider (pp_system_default)')
+  }
 }
