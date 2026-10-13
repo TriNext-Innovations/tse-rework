@@ -112,6 +112,7 @@ export default defineConfig({
             options: {
               apiKey: process.env.TCG_API_KEY,
               baseUrl: process.env.TCG_API_URL || undefined,
+              fake: process.env.TCG_FAKE === 'true',
               collectionAddress: {
                 street_address: process.env.TCG_COLLECTION_STREET ?? '',
                 local_area: process.env.TCG_COLLECTION_LOCAL_AREA ?? '',

@@ -1,0 +1,15 @@
+# Local order-flow test (#528): infra only, with Meilisearch reachable from the
+# host so the natively-run backend and storefront can index and search.
+# Used as: docker compose -p tse-local -f docker-compose.yml -f docker-compose.local.yml up -d postgres redis meilisearch
+services:
+  meilisearch:
+    environment:
+      MEILI_ENV: development
+    ports:
+      - "127.0.0.1:7700:7700"
+    # Prod's 256m cap is sized for the box's few cores; on a dev machine with
+    # more threads Meilisearch starts more workers and gets OOM-killed.
+    deploy:
+      resources:
+        limits:
+          memory: 1g
