@@ -138,4 +138,39 @@ describe('PageLoading', () => {
     expect(status()).toHaveAttribute('data-visible', 'false')
     expect(document.documentElement.dataset.navigating).toBeUndefined()
   })
+
+  // #517: a full page load leaves the orb up, and Back restores that page from
+  // the back/forward cache with the same route, so only these events clear it.
+  it('clears when the page is restored from the back/forward cache', () => {
+    render(<Page />)
+    fireEvent.click(screen.getByText('Shop'))
+    act(() => vi.advanceTimersByTime(350))
+    expect(status()).toHaveAttribute('data-visible', 'true')
+
+    act(() => {
+      window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }))
+    })
+    expect(status()).toHaveAttribute('data-visible', 'false')
+    expect(document.documentElement.dataset.navigating).toBeUndefined()
+  })
+
+  it('clears as the page is left for a full page load', () => {
+    render(<Page />)
+    fireEvent.click(screen.getByText('Shop'))
+    act(() => vi.advanceTimersByTime(350))
+    act(() => {
+      window.dispatchEvent(new PageTransitionEvent('pagehide', { persisted: true }))
+    })
+    expect(status()).toHaveAttribute('data-visible', 'false')
+  })
+
+  it('leaves a navigation in progress alone on a fresh pageshow', () => {
+    render(<Page />)
+    fireEvent.click(screen.getByText('Shop'))
+    act(() => {
+      window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: false }))
+    })
+    act(() => vi.advanceTimersByTime(350))
+    expect(status()).toHaveAttribute('data-visible', 'true')
+  })
 })
