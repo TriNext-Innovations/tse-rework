@@ -97,11 +97,14 @@ export const CATEGORIES: readonly Category[] = [
     legacyPaths: ['/product-category/canon-inkjet-cartridges'],
   },
   {
+    // Every live Epson product here is a refill bottle; they moved to Ink in
+    // #518, leaving the Inkjet category with drafts only. The slug stays: it
+    // carries the legacy ranking and its redirects.
     slug: 'epson-inkjet-cartridges',
-    medusaHandle: 'inkjet-epson',
+    medusaHandle: 'ink-epson',
     brand: 'Epson',
-    type: 'inkjet',
-    title: 'Epson Inkjet Cartridges',
+    type: 'ink',
+    title: 'Epson Refill Ink',
     legacyPaths: ['/product-category/epson-inkjet-cartridges', '/epson-ink-the-best-quality-and-service'],
   },
   {
