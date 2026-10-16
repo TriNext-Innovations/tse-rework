@@ -10,13 +10,13 @@ import type {
   Logger,
 } from '@medusajs/framework/types'
 import { CourierGuyClient, FakeCourierGuyClient } from './client'
+import { buildParcels } from './parcels'
 import type {
   CourierGuyAddress,
   CourierGuyContact,
   CourierGuyFulfillmentData,
   CourierGuyOptionData,
   CourierGuyOptions,
-  CourierGuyParcel,
   CourierGuyServiceCode,
 } from './types'
 
@@ -140,7 +140,7 @@ class CourierGuyFulfillmentProviderService extends AbstractFulfillmentProviderSe
       )
     }
 
-    const parcels = this.buildParcels(items)
+    const parcels = buildParcels(items, this.options_.defaultParcel)
     let rates
     try {
       const res = await this.client_.getRates({
@@ -202,8 +202,9 @@ class CourierGuyFulfillmentProviderService extends AbstractFulfillmentProviderSe
       email: (order as any)?.email ?? '',
     }
 
-    const parcels = this.buildParcels(
+    const parcels = buildParcels(
       items.map((i) => ({ quantity: i.quantity ?? 1 })),
+      this.options_.defaultParcel,
     )
 
     // The stored code is the checkout tier (ECO/OVN). Resolve it to the actual
@@ -305,39 +306,6 @@ class CourierGuyFulfillmentProviderService extends AbstractFulfillmentProviderSe
       type: 'residential',
       company: addr.company || undefined,
     }
-  }
-
-  /**
-   * Build one parcel per unit. Variant weight/dimensions are used when present
-   * (Medusa stores weight in grams), otherwise the configured default parcel —
-   * cartridges rarely carry dimensions, so the default covers most carts.
-   */
-  private buildParcels(items: any[]): CourierGuyParcel[] {
-    const def = this.options_.defaultParcel
-    const parcels: CourierGuyParcel[] = []
-
-    for (const item of items) {
-      const qty = Math.max(1, Number(item?.quantity ?? 1))
-      const variant = item?.variant ?? {}
-
-      const weightKg =
-        variant.weight > 0 ? variant.weight / 1000 : def.submitted_weight_kg
-      const length = variant.length > 0 ? variant.length : def.submitted_length_cm
-      const width = variant.width > 0 ? variant.width : def.submitted_width_cm
-      const height = variant.height > 0 ? variant.height : def.submitted_height_cm
-
-      for (let i = 0; i < qty; i++) {
-        parcels.push({
-          submitted_length_cm: length,
-          submitted_width_cm: width,
-          submitted_height_cm: height,
-          submitted_weight_kg: weightKg,
-          parcel_description: item?.title ?? def.parcel_description,
-        })
-      }
-    }
-
-    return parcels.length > 0 ? parcels : [def]
   }
 
   private trackingUrl(ref: string): string {
