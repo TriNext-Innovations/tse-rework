@@ -608,9 +608,9 @@ export default function StorefrontClient({
                 This month's <span className="font-display-italic">most ordered</span>.
               </h2>
             </div>
-            <a href="/products" className="hidden sm:inline-flex items-center gap-2 text-sm font-medium underline underline-offset-[6px] decoration-1 cursor-pointer hover:text-[var(--magenta)] transition-colors">
+            <Link href="/products" className="hidden sm:inline-flex items-center gap-2 text-sm font-medium underline underline-offset-[6px] decoration-1 cursor-pointer hover:text-[var(--magenta)] transition-colors">
               View all 559 cartridges →
-            </a>
+            </Link>
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">

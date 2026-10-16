@@ -253,8 +253,8 @@ const { customer, loading: authLoading } = useAuth()
             )}
           </div>
 
-          <a href="/#finder" className="nav-link">Find by printer</a>
-          <a href="/#delivery" className="nav-link">Delivery</a>
+          <Link href="/#finder" className="nav-link">Find by printer</Link>
+          <Link href="/#delivery" className="nav-link">Delivery</Link>
           <Link href="/b2b" className="nav-link">B2B</Link>
         </nav>
 

@@ -122,13 +122,26 @@ export function PageLoading() {
       start({ kind: 'page', label: destinationLabel(new URL(window.location.href)) })
     }
 
+    // A full page load (a plain <a>, a form) leaves this page with the orb up.
+    // The back/forward cache keeps it that way and restores it on Back, where
+    // the route never changes, so nothing would clear it. Clear on the way out,
+    // and again on a restore in case the hide did not render in time.
+    const onPageHide = () => finish.current()
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) finish.current()
+    }
+
     window.addEventListener('click', onClick, true)
     window.addEventListener(NAVIGATION_START_EVENT, onAnnounced)
     window.addEventListener('popstate', onPop)
+    window.addEventListener('pagehide', onPageHide)
+    window.addEventListener('pageshow', onPageShow)
     return () => {
       window.removeEventListener('click', onClick, true)
       window.removeEventListener(NAVIGATION_START_EVENT, onAnnounced)
       window.removeEventListener('popstate', onPop)
+      window.removeEventListener('pagehide', onPageHide)
+      window.removeEventListener('pageshow', onPageShow)
       clearTimers()
     }
   }, [])
