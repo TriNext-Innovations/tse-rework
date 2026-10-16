@@ -69,7 +69,9 @@ export default async function moveInkBottles({ container }: { container: MedusaC
           product_categories: [{ name: brand, handle, parent_category_id: ink.id, is_active: true, is_internal: false }],
         },
       })
-      brandIds[brand] = result[0].id
+      const created = result[0]
+      if (!created) throw new Error(`creating ${brand} under Ink returned nothing`)
+      brandIds[brand] = created.id
     }
   }
 
@@ -81,8 +83,15 @@ export default async function moveInkBottles({ container }: { container: MedusaC
   const missing = Object.keys(MOVES).filter((h) => !products.some((p: any) => p.handle === h))
   if (missing.length) throw new Error(`products not found: ${missing.join(', ')}`)
 
+  const brandId = (brand: string): string => {
+    const id = brandIds[brand]
+    if (!id) throw new Error(`no ${brand} category under Ink`)
+    return id
+  }
+
   for (const p of products as any[]) {
     const brand = MOVES[p.handle]
+    if (!brand) throw new Error(`no brand for ${p.handle}`)
     const from = (p.categories ?? []).map((c: any) => c.handle).join(', ') || '-'
     console.log(
       `  ${p.title}: [${from}] → [ink-${brand.toLowerCase()}], cartridge_type ${p.metadata?.cartridge_type ?? '-'} → ink`,
@@ -92,7 +101,7 @@ export default async function moveInkBottles({ container }: { container: MedusaC
         input: {
           selector: { id: p.id },
           update: {
-            category_ids: [brandIds[brand]],
+            category_ids: [brandId(brand)],
             metadata: { ...(p.metadata ?? {}), cartridge_type: 'ink' },
           },
         },
