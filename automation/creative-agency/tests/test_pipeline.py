@@ -223,7 +223,8 @@ def test_08_duplicate_and_concurrent_runs_publish_once(make_ctx, db, clock, grap
     pubs = db.query("SELECT platform, status, external_id, permalink FROM publications ORDER BY platform")
     assert [(p["platform"], p["status"]) for p in pubs] == [("facebook", "published"), ("instagram", "published")]
     assert pubs[0]["permalink"].startswith("https://facebook.example/")
-    assert graph_server.tokens == {"test-token"}
+    assert graph_server.tokens == {"Bearer test-token"}
+    assert not any("test-token" in u for u in graph_server.urls)
     assert db.one("SELECT status FROM schedule WHERE slot_at = %s", (clock.t,))["status"] == "done"
 
 
@@ -420,3 +421,20 @@ def test_health_reports_queue_and_spend(make_ctx, db):
     assert h["queue"]["approved_slots"] >= 2
     assert h["spend_month_usd"]["visual"] > 0 and h["spend_month_usd"]["claude"] > 0
     assert h["effective_mode"] == "dry_run"
+
+
+def test_09_instagram_retry_reuses_published_container(make_ctx, db, clock, graph_server):
+    """A pending IG row whose container was in fact published must be
+    reconciled, not marked failed and not re-published."""
+    ctx = _live_ready(make_ctx, db, clock, graph_server)
+    db.set_setting("platforms", ["instagram"])
+    publisher.publish_due(ctx)
+    assert len(graph_server.ig_media) == 1
+    # Simulate: the publish succeeded at Meta but our record says pending.
+    db.execute("UPDATE publications SET status = 'pending', external_id = NULL")
+    db.execute("UPDATE schedule SET status = 'publishing', updated_at = %s", (clock.t - publisher.SLOT_LEASE,))
+    clock.advance(minutes=1)
+    out = publisher.publish_due(ctx)
+    assert out["platforms"]["instagram"] == "published"
+    assert len(graph_server.ig_media) == 1
+    assert db.setting("publishing_paused") is False

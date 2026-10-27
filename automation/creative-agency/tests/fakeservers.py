@@ -115,6 +115,7 @@ class GraphServer(_Server):
         self.fb_transient = 0
         self.fb_drop_after_post = False
         self.tokens: set[str] = set()
+        self.urls: list[str] = []
         super().__init__(GraphHandler)
 
 
@@ -129,7 +130,8 @@ class GraphHandler(_Base):
         o = self.owner
         parts, _ = self._parts()
         form = {k: v[0] for k, v in parse_qs(self.rfile.read(int(self.headers["Content-Length"])).decode()).items()}
-        o.tokens.add(form.get("access_token", ""))
+        o.tokens.add(self.headers.get("Authorization", ""))
+        o.urls.append(self.path)
         if parts == [o.page_id, "photos"]:
             if o.fb_transient:
                 o.fb_transient -= 1
@@ -162,6 +164,8 @@ class GraphHandler(_Base):
     def do_GET(self):
         o = self.owner
         parts, q = self._parts()
+        o.tokens.add(self.headers.get("Authorization", ""))
+        o.urls.append(self.path)
         if parts == [o.page_id, "published_posts"]:
             return self._json(200, {"data": list(reversed(o.fb_posts))})
         if parts == [o.ig_id, "media"]:

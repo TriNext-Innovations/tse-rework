@@ -181,7 +181,7 @@ def _publish_one(ctx: Ctx, creative: dict, platform: str, slot_at, mode: str, gr
 
     assert graph is not None
     # Anything previously started but not confirmed is reconciled, never blindly retried.
-    if pub["status"] in ("in_progress", "unknown"):
+    if pub["status"] in ("in_progress", "unknown") or pub["container_id"]:
         started = pub["started_at"]
         if pub["status"] == "in_progress" and started and ctx.now() - started < STALE_IN_PROGRESS:
             return "in_progress"  # another run may still be inside the call

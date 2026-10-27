@@ -37,7 +37,8 @@ class GraphClient:
         self.page_id = page_id
         self.ig_user_id = ig_user_id
         self.token = token
-        self.http = httpx.Client(timeout=timeout)
+        # The token travels in a header, never the URL: request lines get logged.
+        self.http = httpx.Client(timeout=timeout, headers={"Authorization": f"Bearer {token}"})
 
     # -- transport -------------------------------------------------------------
 
@@ -45,9 +46,9 @@ class GraphClient:
         url = f"{self.base}/{path.lstrip('/')}"
         try:
             if method == "POST":
-                resp = self.http.post(url, data={**(data or {}), "access_token": self.token})
+                resp = self.http.post(url, data=data or {})
             else:
-                resp = self.http.get(url, params={**(params or {}), "access_token": self.token})
+                resp = self.http.get(url, params=params or {})
         except httpx.HTTPError as exc:
             # The request may or may not have reached Meta: callers treat a
             # write that fails this way as "unknown", never as "not posted".

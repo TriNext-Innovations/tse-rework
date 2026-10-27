@@ -1,6 +1,6 @@
 # Test report — 27 October 2026
 
-58 automated tests pass (`pytest -q`: 26 pipeline, 32 unit). Plus an
+67 automated tests pass (`pytest -q`: 27 pipeline, 32 unit, 8 HTTP). Plus an
 integration run of the n8n workflows inside a real n8n 2.37.9.
 
 **Nothing here has published to Meta, called fal.ai, or called the Claude API.**
@@ -27,6 +27,19 @@ Also tested: review mode needs a human approval; pause stops everything; preflig
 blocks a tampered asset and a fact whose evidence vanished from the site; fact
 checker keeps the last verdict on network failure; settings validation; API auth
 (no/bad token → 401, review page → 401 without password, media path traversal → 404).
+
+## Independent review (hive review, Claude Sonnet 5.5, read-only)
+
+First pass **blocked** on two findings, both fixed and covered by tests:
+1. Meta Page token sent as a URL query parameter would land in httpx INFO logs →
+   now an `Authorization` header; httpx/httpcore logs at WARNING; a test asserts no URL
+   contains the token.
+2. Review form had no CSRF guard (Basic auth is resent cross-site) → POSTs must carry
+   an Origin/Referer matching Host; tests cover cross-site, missing-origin and same-site.
+
+Also fixed: IG retry of a pending row whose container was already published is now
+reconciled (test added); bad ids/decisions on `/review` return 400; the API no longer
+lets callers choose the reviewer name.
 
 ## n8n integration (real n8n 2.37.9, service in Docker with fakes)
 

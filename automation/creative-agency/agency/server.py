@@ -88,6 +88,13 @@ class Handler(BaseHTTPRequestHandler):
             return False
         return user == "review" and hmac.compare_digest(pw, password)
 
+    def _same_origin(self) -> bool:
+        """CSRF guard for the cookie-less Basic-auth form: browsers resend Basic
+        credentials cross-site, so the request must name this host as its origin."""
+        source = self.headers.get("Origin") or self.headers.get("Referer") or ""
+        host = self.headers.get("X-Forwarded-Host") or self.headers.get("Host") or ""
+        return bool(source and host) and urlparse(source).netloc == host
+
     def log_message(self, fmt, *args):  # route access logs through logging
         log.info("%s %s", self.address_string(), fmt % args)
 
@@ -117,9 +124,14 @@ class Handler(BaseHTTPRequestHandler):
         if path.startswith("/review/"):
             if not self._basic_ok():
                 return self._challenge()
-            body = self._body()
-            ctx = build_ctx(self.env, self.db)
-            ops.review(ctx, int(path.rsplit("/", 1)[1]), body.get("decision", ""), body.get("note"), by="review-page")
+            if not self._same_origin():
+                return self._send(403, {"error": "cross-site request refused"})
+            try:
+                body = self._body()
+                ctx = build_ctx(self.env, self.db)
+                ops.review(ctx, int(path.rsplit("/", 1)[1]), body.get("decision", ""), body.get("note"), by="review-page")
+            except (ValueError, LookupError) as exc:
+                return self._send(400, {"error": str(exc)})
             self.send_response(HTTPStatus.SEE_OTHER)
             self.send_header("Location", "../review")  # relative: works behind a path prefix
             self.end_headers()
@@ -155,7 +167,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, self.db.settings())
             if method == "POST" and path.startswith("/v1/review/"):
                 return self._send(200, ops.review(ctx, int(path.rsplit("/", 1)[1]), body.get("decision", ""),
-                                                  body.get("note"), by=body.get("by", "api")))
+                                                  body.get("note"), by="api"))
             handler = ROUTES.get((method, path))
             if handler is None:
                 return self._send(404, {"error": "not found"})
@@ -216,6 +228,8 @@ def serve(host: str = "0.0.0.0", port: int = 8080) -> None:
     db.migrate()
     Handler.env, Handler.db = env, db
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    for noisy in ("httpx", "httpcore"):  # request lines would echo provider URLs into logs
+        logging.getLogger(noisy).setLevel(logging.WARNING)
     log.info("agency listening on %s:%s (live publishing %s)", host, port,
              "ENABLED" if env.live_publishing_enabled else "disabled")
     ThreadingHTTPServer((host, port), Handler).serve_forever()

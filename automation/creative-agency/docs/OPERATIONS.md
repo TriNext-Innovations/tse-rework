@@ -86,10 +86,11 @@ The box (`139.84.228.41`, 1 GB RAM, n8n 2.37.9 in `/opt/n8n`) is TriNext-owned.
 4. nginx, inside the `n8n.tse-cartridges.co.za` server block:
    ```nginx
    location /agency/media/  { proxy_pass http://127.0.0.1:8090/media/; }
-   location = /agency/review { proxy_pass http://127.0.0.1:8090/review; }
-   location /agency/review/ { proxy_pass http://127.0.0.1:8090/review/; }
+   location = /agency/review { proxy_pass http://127.0.0.1:8090/review; proxy_set_header Host $host; }
+   location /agency/review/ { proxy_pass http://127.0.0.1:8090/review/; proxy_set_header Host $host; }
    ```
-   The `/v1` API stays internal (n8n reaches it over the docker network).
+   `Host` must be forwarded: review POSTs are refused unless their Origin matches it
+   (CSRF guard — browsers resend Basic credentials cross-site). The `/v1` API stays internal (n8n reaches it over the docker network).
    `nginx -t && systemctl reload nginx`. Verify a media URL from outside the box.
 5. n8n: create credential **TSE Agency API** (Header Auth, name `Authorization`, value
    `Bearer <AGENCY_API_TOKEN>`); in each workflow file replace
