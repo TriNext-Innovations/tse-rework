@@ -1,6 +1,6 @@
 # Test report — 27 October 2026
 
-91 automated tests pass (`pytest -q`: 34 pipeline, 33 unit, 12 HTTP, 12 spotlight). Plus an
+97 automated tests pass (`pytest -q`: 34 pipeline, 33 unit, 12 HTTP, 18 spotlight). Plus an
 integration run of the n8n workflows inside a real n8n 2.37.9.
 
 **Nothing here has published to Meta, called fal.ai, or called the Claude API.**
@@ -87,6 +87,16 @@ repeats, compatibles only, brand alternation), the store being down at planning
 rejected, a price change re-rendered before publishing, a removed product held, and
 a "type over clutter" busyness gate (calibrated on real fal plates: calm 0–0.2 %,
 cluttered 3.4 %, threshold 1.5 %).
+
+Independent review of the spotlight branch **blocked** on three, all fixed with tests:
+prices were rounded to whole rand (a cents change went undetected) — now exact to the cent,
+shown as R449.50 when needed; a re-render failure at publish crashed the run — now reported
+and the slot failed with an alert; a re-priced image skipped vision QC and human approval —
+it now gets its own vision review and, in review mode, needs re-approval. A product renamed
+in the store is held (captions name it). Waived with evidence: the busyness gate applies to
+every layout by design (all four layouts pass it on calm plates in `test_render_layouts_*`);
+"incl. VAT" matches the verified fact `prices-incl-vat`, and the API's prices equal the
+site's displayed prices (Canon 737 R300, Brother TN 277 R450).
 
 Live: the real `Catalogue` client read all 313 products from the production store
 (read-only), and two spotlights were rendered from live data (Brother TN-3185 R400,

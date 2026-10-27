@@ -125,8 +125,8 @@ def test_price_in_caption_is_rejected(make_ctx, db, monday):
     assert not db.one("SELECT 1 AS x FROM concepts WHERE assignment_id = %s AND status = 'selected'", (spot["id"],))
 
 
-def _ready_to_publish(make_ctx, db, monday, store):
-    ctx = make_ctx(catalogue=store)
+def _ready_to_publish(make_ctx, db, monday, store, **ctx_kw):
+    ctx = make_ctx(catalogue=store, **ctx_kw)
     pipeline.ensure_planned(ctx)
     cr = _approve_first_spotlight(ctx, db)
     mark_facts_verified(db)
@@ -187,3 +187,78 @@ def test_busy_text_area_fails_qc():
     qc = QCResult()
     check_asset(r.jpeg, None, r.meta(), qc)
     assert "layout.busy" in {f.check for f in qc.findings}
+
+
+def test_prices_keep_cents():
+    from agency.catalogue import Product
+    p = Product("x", "Canon 054", "S", "Canon", "laser", True, 449.5)
+    assert p.price_label == "R449.50"
+    assert Product("y", "Kyocera TK-3060", "S", "Kyocera", "laser", True, 1450.0).price_label == "R1 450"
+    assert Catalogue_product_price({"calculated_amount": 99.99}) == 99.99
+
+
+def Catalogue_product_price(calculated: dict) -> float:
+    from agency.catalogue import Catalogue
+    p = Catalogue._product({"handle": "h", "title": "T", "metadata": {}, "variants": [
+        {"sku": "S", "calculated_price": calculated}]})
+    return p.price_zar
+
+
+def test_cents_only_price_change_is_rerendered(make_ctx, db, monday):
+    store = FakeCatalogue()
+    ctx, cr = _ready_to_publish(make_ctx, db, monday, store)
+    store.set_price(cr["product"]["handle"], cr["product"]["price_zar"] - 0.01)
+    assert publisher.publish_due(ctx)["status"] == "done"
+    assert db.one("SELECT final_sha256 FROM creatives WHERE id = %s", (cr["id"],))["final_sha256"] != cr["final_sha256"]
+
+
+def test_rerender_failure_is_reported_not_crashed(make_ctx, db, monday, monkeypatch):
+    from agency.render import RenderError
+    store = FakeCatalogue()
+    ctx, cr = _ready_to_publish(make_ctx, db, monday, store)
+    store.set_price(cr["product"]["handle"], 99999.99)
+
+    def boom(*a, **k):
+        raise RenderError("price does not fit")
+
+    monkeypatch.setattr(publisher, "render_creative", boom)
+    out = publisher.publish_due(ctx)
+    assert out["status"] == "preflight_failed" and "price does not fit" in out["problems"][0]
+    assert db.one("SELECT status FROM schedule WHERE slot_at = %s", (cr["slot_at"],))["status"] == "failed"
+
+
+def test_repriced_ad_gets_vision_review_and_fails_closed(make_ctx, db, monday):
+    from agency.schemas import VisionReview
+    store = FakeCatalogue()
+    ctx, cr = _ready_to_publish(make_ctx, db, monday, store)
+    ctx.llm.script["qc_vision"] = lambda u, i: VisionReview(
+        headline_as_read="x", headline_matches=False, logo_present_and_intact=True, stray_text_in_artwork=False,
+        issues=[], score=4.0, verdict="revise", summary="price unreadable")
+    store.set_price(cr["product"]["handle"], cr["product"]["price_zar"] + 10)
+    out = publisher.publish_due(ctx)
+    assert out["status"] == "preflight_failed" and "failed vision QC" in out["problems"][0]
+    assert db.one("SELECT final_sha256 FROM creatives WHERE id = %s", (cr["id"],))["final_sha256"] == cr["final_sha256"]
+
+
+def test_repriced_ad_needs_reapproval_in_review_mode(make_ctx, db, monday, graph_server):
+    from agency import ops
+    store = FakeCatalogue()
+    ctx, cr = _ready_to_publish(make_ctx, db, monday, store, graph=graph_server, live=True)
+    db.set_setting("mode", "review")
+    ops.review(ctx, cr["id"], "approved", None, by="test")
+    store.set_price(cr["product"]["handle"], cr["product"]["price_zar"] + 10)
+    assert publisher.publish_due(ctx)["status"] == "preflight_retry"
+    assert db.one("SELECT human_approval FROM creatives WHERE id = %s", (cr["id"],))["human_approval"] is None
+    monday.advance(minutes=11)
+    assert publisher.publish_due(ctx)["status"] == "awaiting_approval"
+    ops.review(ctx, cr["id"], "approved", "new price ok", by="test")
+    assert publisher.publish_due(ctx)["status"] == "done"
+    assert len(graph_server.fb_posts) == 1
+
+
+def test_renamed_product_is_held(make_ctx, db, monday):
+    store = FakeCatalogue()
+    ctx, cr = _ready_to_publish(make_ctx, db, monday, store)
+    store.rename(cr["product"]["handle"], "Something Else 999")
+    out = publisher.publish_due(ctx)
+    assert out["status"] == "preflight_failed" and "renamed" in out["problems"][0]

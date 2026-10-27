@@ -717,23 +717,10 @@ def _qc(ctx: Ctx, a: dict) -> dict:
         return _qc_reject(ctx, a, cr, concept, det.targets, [f.detail for f in det.findings])
 
     try:
-        vision = ctx.llm.run("qc_vision", VisionReview, (
-            f"Intended headline: {concept['headline']}\nIntended support line: {concept['support_line'] or '(none)'}\n"
-            + (f"Product spotlight: the image must also show the line '{_as_product(a['product']).eyebrow}' and the "
-               f"price '{_as_product(a['product']).price_label}' exactly, and no product, packaging or printer.\n"
-               if a.get("product") else "")
-            + f"Concept: {concept['idea']}\nVisual intent: {concept['visual']}\n"
-            f"Facebook caption:\n{cr['caption_facebook']}\n"), images=[Image(jpeg, "image/jpeg")],
-            ref=f"assignment:{a['id']}:qc:{cr['attempt']}")
+        passed, vision = vision_review(ctx, a, cr, concept, jpeg, settings)
     except LLMError as exc:
         release(ctx, a["id"], "produced", f"vision QC unavailable: {exc}")
         return {"status": "error", "error": str(exc)}
-    blockers = [i for i in vision.issues if i.severity in ("blocker", "major")]
-    passed = (vision.verdict == "approve" and vision.score >= float(settings["qc_min_vision_score"])
-              and vision.headline_matches and vision.logo_present_and_intact
-              and not vision.stray_text_in_artwork and not blockers)
-    ctx.db.execute("INSERT INTO qc_reviews (creative_id, kind, passed, score, findings) VALUES (%s, 'vision', %s, %s, %s)",
-                   (cr["id"], passed, vision.score, Jsonb(vision.model_dump())))
     if not passed:
         target = {"copy"} if vision.verdict == "reject" else {"image"}
         if any(i.category == "claim" for i in vision.issues):
@@ -750,6 +737,26 @@ def _qc(ctx: Ctx, a: dict) -> dict:
     release(ctx, a["id"], "approved")
     ctx.log("qc", "info", f"creative {cr['id']} approved (vision {vision.score})", {"slot_at": str(a["slot_at"])})
     return {"status": "approved", "creative_id": cr["id"], "score": vision.score}
+
+
+def vision_review(ctx: Ctx, a: dict, cr: dict, concept: dict, jpeg: bytes, settings: dict) -> tuple[bool, VisionReview]:
+    """Vision QC on the exact pixels; records the review. Raises LLMError."""
+    product = _as_product(a["product"]) if a.get("product") else None
+    vision = ctx.llm.run("qc_vision", VisionReview, (
+        f"Intended headline: {product.headline if product else concept['headline']}\n"
+        f"Intended support line: {concept['support_line'] or '(none)'}\n"
+        + (f"Product spotlight: the image must also show the line '{product.eyebrow}' and the "
+           f"price '{product.price_label}' exactly, and no product, packaging or printer.\n" if product else "")
+        + f"Concept: {concept['idea']}\nVisual intent: {concept['visual']}\n"
+        f"Facebook caption:\n{cr['caption_facebook']}\n"), images=[Image(jpeg, "image/jpeg")],
+        ref=f"assignment:{a['id']}:qc:{cr['attempt']}")
+    blockers = [i for i in vision.issues if i.severity in ("blocker", "major")]
+    passed = (vision.verdict == "approve" and vision.score >= float(settings["qc_min_vision_score"])
+              and vision.headline_matches and vision.logo_present_and_intact
+              and not vision.stray_text_in_artwork and not blockers)
+    ctx.db.execute("INSERT INTO qc_reviews (creative_id, kind, passed, score, findings) VALUES (%s, 'vision', %s, %s, %s)",
+                   (cr["id"], passed, vision.score, Jsonb(vision.model_dump())))
+    return passed, vision
 
 
 def _qc_reject(ctx: Ctx, a: dict, cr: dict, concept: dict, targets: set[str], details: list[str]) -> dict:

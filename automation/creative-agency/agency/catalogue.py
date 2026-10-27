@@ -26,7 +26,7 @@ class Product:
     brand: str
     cartridge_type: str  # laser | inkjet | ink (as the store records it)
     compatible: bool
-    price_zar: int
+    price_zar: float  # exact, incl. cents; never rounded for display or comparison
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -44,7 +44,9 @@ class Product:
 
     @property
     def price_label(self) -> str:
-        return f"R{self.price_zar:,}".replace(",", " ")
+        cents = round(self.price_zar * 100)
+        text = f"{cents // 100:,}".replace(",", " ")
+        return f"R{text}" if cents % 100 == 0 else f"R{text}.{cents % 100:02d}"
 
     @property
     def eyebrow(self) -> str:
@@ -93,7 +95,7 @@ class Catalogue:
             return None
         return Product(handle=p["handle"], title=p["title"].strip(), sku=v["sku"], brand=meta.get("brand") or "",
                        cartridge_type=meta.get("cartridge_type") or "", compatible=bool(meta.get("compatible")),
-                       price_zar=int(round(float(price))))
+                       price_zar=round(float(price), 2))
 
     def all(self) -> list[Product]:
         out: list[Product] = []

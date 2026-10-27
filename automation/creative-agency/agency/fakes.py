@@ -237,6 +237,10 @@ class FakeCatalogue:
             raise CatalogueError("fake store down")
         return self.products.get(handle)
 
-    def set_price(self, handle: str, price: int) -> None:
+    def set_price(self, handle: str, price: float) -> None:
         from dataclasses import replace
         self.products[handle] = replace(self.products[handle], price_zar=price)
+
+    def rename(self, handle: str, title: str) -> None:
+        from dataclasses import replace
+        self.products[handle] = replace(self.products[handle], title=title)

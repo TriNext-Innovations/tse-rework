@@ -20,8 +20,10 @@ from psycopg.types.json import Jsonb
 
 from .factcheck import unverified_recently, verify
 from .meta import GraphClient, MetaError
-from .catalogue import CatalogueError
-from .pipeline import Ctx, render_creative
+from .catalogue import CatalogueError, Product
+from .llm import LLMError
+from .pipeline import Ctx, render_creative, vision_review
+from .render import RenderError
 from .qc import QCResult, check_asset, stale_facts
 
 STALE_IN_PROGRESS = timedelta(minutes=10)
@@ -150,16 +152,30 @@ def refresh_spotlight(ctx: Ctx, creative: dict) -> list[str]:
         return [f"{RETRYABLE_PREFIX} store unreachable, price unchecked: {exc}"]
     if live is None:
         return [f"product {stored['title']!r} is no longer in the store"]
-    if live.price_zar == stored["price_zar"] and live.title == stored["title"]:
+    if live.title != stored["title"]:
+        # Captions name the product; a rename needs new copy, not a re-render.
+        return [f"product renamed in the store ({stored['title']!r} → {live.title!r}); creative needs new copy"]
+    if round(live.price_zar * 100) == round(float(stored["price_zar"]) * 100):
         return []
     updated = {**stored, **live.as_dict(), "fetched_at": ctx.now().isoformat()}
     concept = ctx.db.one("SELECT * FROM concepts WHERE id = %s", (creative["concept_id"],))
-    r = render_creative(ctx.storage.read(creative["raw_asset"]), {**a, "product": updated}, concept,
-                        creative["art_brief"], creative["layout"])
+    try:
+        r = render_creative(ctx.storage.read(creative["raw_asset"]), {**a, "product": updated}, concept,
+                            creative["art_brief"], creative["layout"])
+    except RenderError as exc:
+        return [f"re-render at the new price failed: {exc}"]
     qc = QCResult()
     check_asset(r.jpeg, None, r.meta(), qc)
     if not qc.passed:
         return [f"re-render at the new price failed QC: {[f.detail for f in qc.findings]}"]
+    # The new image is a new ad: it gets its own vision review before anything else.
+    candidate = {**creative, "final_asset": None}
+    try:
+        passed, _ = vision_review(ctx, {**a, "product": updated}, candidate, concept, r.jpeg, ctx.db.settings())
+    except LLMError as exc:
+        return [f"{RETRYABLE_PREFIX} vision QC unavailable for the re-priced ad: {exc}"]
+    if not passed:
+        return ["re-priced ad failed vision QC"]
     key, digest = ctx.storage.put(f"final/a{a['id']}-c{creative['id']}", r.jpeg, "jpg")
     with ctx.db.tx() as conn:
         conn.execute("UPDATE assignments SET product = %s WHERE id = %s", (Jsonb(updated), a["id"]))
@@ -169,8 +185,14 @@ def refresh_spotlight(ctx: Ctx, creative: dict) -> list[str]:
         conn.execute("INSERT INTO qc_reviews (creative_id, kind, passed, findings) VALUES (%s, 'deterministic', true, %s)",
                      (creative["id"], Jsonb([{"check": "spotlight.price_refresh",
                                               "detail": f"{stored['price_zar']} -> {live.price_zar}"}])))
-    ctx.log("publish", "warn", f"{live.title}: store price changed R{stored['price_zar']} → R{live.price_zar}; "
-            f"creative {creative['id']} re-rendered before publishing")
+    old_label = Product(**{k: stored[k] for k in Product.__dataclass_fields__}).price_label
+    ctx.log("publish", "warn", f"{live.title}: store price changed {old_label} → {live.price_label}; "
+            f"creative {creative['id']} re-rendered and re-checked before publishing")
+    if creative["human_approval"] == "approved" and ctx.db.setting("mode") == "review":
+        # A reviewer approved the old image, not this one.
+        ctx.db.execute("UPDATE creatives SET human_approval = NULL WHERE id = %s", (creative["id"],))
+        ctx.log("publish", "alert", f"creative {creative['id']} re-priced; needs re-approval on /review")
+        return [f"{RETRYABLE_PREFIX} re-priced ad awaits re-approval"]
     return []
 
 
