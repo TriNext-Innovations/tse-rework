@@ -438,3 +438,37 @@ def test_09_instagram_retry_reuses_published_container(make_ctx, db, clock, grap
     assert out["platforms"]["instagram"] == "published"
     assert len(graph_server.ig_media) == 1
     assert db.setting("publishing_paused") is False
+
+
+def test_preflight_asset_host_blip_is_retried_not_lost(make_ctx, db, clock, graph_server):
+    ctx = _live_ready(make_ctx, db, clock, graph_server)
+    real_url = ctx.storage.url
+    ctx.storage.url = lambda key: "http://127.0.0.1:9/media/" + key  # nothing listening
+    out = publisher.publish_due(ctx)
+    assert out["status"] == "preflight_retry" and graph_server.fb_posts == []
+    assert publisher.publish_due(ctx)["status"] == "nothing_due"  # backoff lease holds
+    ctx.storage.url = real_url
+    clock.advance(minutes=11)
+    assert publisher.publish_due(ctx)["status"] == "done"
+    assert len(graph_server.fb_posts) == 1
+
+
+def test_11_reconcile_matches_normalised_caption_by_tracking_link(make_ctx, db, clock, graph_server):
+    ctx = _live_ready(make_ctx, db, clock, graph_server)
+    db.set_setting("platforms", ["facebook"])
+    graph_server.fb_drop_after_post = True
+    publisher.publish_due(ctx)
+    graph_server.fb_posts[0]["message"] = "  " + graph_server.fb_posts[0]["message"].replace("\n\n", "\n") + " "
+    clock.advance(minutes=15)
+    assert publisher.publish_due(ctx)["platforms"]["facebook"] == "published"
+    assert len(graph_server.fb_posts) == 1
+
+
+def test_dry_run_consumes_its_slot(make_ctx, db, clock, graph_server):
+    ctx = _live_ready(make_ctx, db, clock, graph_server)
+    db.set_setting("mode", "dry_run")
+    publisher.publish_due(ctx)
+    db.set_setting("mode", "autonomous")
+    clock.advance(minutes=30)
+    assert publisher.publish_due(ctx)["status"] == "nothing_due"
+    assert graph_server.fb_posts == []

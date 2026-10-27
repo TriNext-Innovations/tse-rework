@@ -75,7 +75,7 @@ class Handler(BaseHTTPRequestHandler):
     def _bearer_ok(self) -> bool:
         token = self.env.api_token
         got = self.headers.get("Authorization", "")
-        return bool(token) and hmac.compare_digest(got, f"Bearer {token}")
+        return bool(token) and hmac.compare_digest(got.encode("utf-8", "surrogateescape"), f"Bearer {token}".encode())
 
     def _basic_ok(self) -> bool:
         password = os.environ.get("AGENCY_REVIEW_PASSWORD", "")
@@ -84,9 +84,9 @@ class Handler(BaseHTTPRequestHandler):
             return False
         try:
             user, _, pw = base64.b64decode(got[6:]).decode().partition(":")
-        except ValueError:
+        except (ValueError, UnicodeError):
             return False
-        return user == "review" and hmac.compare_digest(pw, password)
+        return user == "review" and hmac.compare_digest(pw.encode("utf-8", "surrogateescape"), password.encode())
 
     def _same_origin(self) -> bool:
         """CSRF guard for the cookie-less Basic-auth form: browsers resend Basic
@@ -109,8 +109,9 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 self.db.one("SELECT 1")
                 return self._send(200, {"ok": True})
-            except Exception as exc:  # noqa: BLE001
-                return self._send(503, {"ok": False, "error": str(exc)})
+            except Exception as exc:  # noqa: BLE001 — detail to the log, not to an anonymous caller
+                log.error("healthz: database unreachable: %s", exc)
+                return self._send(503, {"ok": False})
         if path.startswith("/media/"):
             return self._media(path[len("/media/"):])
         if path == "/review":

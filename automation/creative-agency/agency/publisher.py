@@ -24,6 +24,7 @@ from .qc import QCResult, check_asset, stale_facts
 
 STALE_IN_PROGRESS = timedelta(minutes=10)
 SLOT_LEASE = timedelta(minutes=10)
+RETRYABLE_PREFIX = "[retryable]"
 
 
 def graph_client(ctx: Ctx) -> GraphClient | None:
@@ -70,7 +71,7 @@ def publish_due(ctx: Ctx, graph: GraphClient | None = None) -> dict:
             """SELECT s.*, c.human_approval FROM schedule s JOIN creatives c ON c.id = s.creative_id
                WHERE s.status IN ('filled', 'publishing', 'partial') AND s.slot_at <= %s AND s.slot_at > %s
                  AND c.status = 'approved'
-                 AND NOT (s.status = 'publishing' AND s.updated_at > %s)  -- another run holds the lease
+                 AND NOT (s.status IN ('publishing', 'filled') AND s.updated_at > %s)  -- lease / retry backoff
                ORDER BY s.slot_at LIMIT 1 FOR UPDATE OF s SKIP LOCKED""",
             (now, now - window, now - SLOT_LEASE)).fetchone()
         if not slot:
@@ -88,6 +89,12 @@ def publish_due(ctx: Ctx, graph: GraphClient | None = None) -> dict:
 
     creative = ctx.db.one("SELECT * FROM creatives WHERE id = %s", (slot["creative_id"],))
     problems = preflight(ctx, creative)
+    if problems and all(p.startswith(RETRYABLE_PREFIX) for p in problems):
+        # The asset host blinked (nginx reload, network): keep the slot and its
+        # lease; the next run inside the retry window tries again.
+        ctx.db.execute("UPDATE schedule SET status = 'filled' WHERE slot_at = %s", (slot["slot_at"],))
+        ctx.log("publish", "warn", f"creative {creative['id']} preflight will retry: {problems}")
+        return {"status": "preflight_retry", "creative_id": creative["id"], "problems": problems}
     if problems:
         ctx.db.execute("UPDATE schedule SET status = 'failed', updated_at = now() WHERE slot_at = %s", (slot["slot_at"],))
         ctx.log("publish", "alert", f"creative {creative['id']} failed pre-publish checks; not published",
@@ -139,9 +146,9 @@ def preflight(ctx: Ctx, creative: dict) -> list[str]:
     try:
         resp = httpx.head(url, timeout=20, follow_redirects=True)
         if resp.status_code != 200 or "image/jpeg" not in resp.headers.get("content-type", ""):
-            problems.append(f"public asset URL not serving a JPEG: {resp.status_code} {resp.headers.get('content-type')}")
+            problems.append(f"{RETRYABLE_PREFIX} public asset URL not serving a JPEG: {resp.status_code} {resp.headers.get('content-type')}")
     except httpx.HTTPError as exc:
-        problems.append(f"public asset URL unreachable: {exc}")
+        problems.append(f"{RETRYABLE_PREFIX} public asset URL unreachable: {exc}")
     return problems
 
 
@@ -165,11 +172,8 @@ def _publish_one(ctx: Ctx, creative: dict, platform: str, slot_at, mode: str, gr
             return pub["status"]
         if pub["status"] == "failed":
             return "failed"
-        if pub["mode"] == "dry_run" and pub_mode == "live":
-            # A dry-run row exists from an earlier run; a live run starts its own record.
-            conn.execute("UPDATE publications SET mode = 'live', status = 'pending' WHERE id = %s", (pub["id"],))
-            pub = {**pub, "mode": "live", "status": "pending"}
-
+        # A dry run completes its slot, so a creative is never re-published live
+        # after one; the early return above covers that row.
         if pub_mode == "dry_run":
             conn.execute(
                 """UPDATE publications SET status = 'dry_run', attempts = attempts + 1, run_id = %s, started_at = %s,
@@ -249,6 +253,10 @@ def _safe(fn):
         return None
 
 
+def _norm(text: str | None) -> str:
+    return " ".join((text or "").split()).lower()
+
+
 def _reconcile(ctx: Ctx, graph: GraphClient, pub: dict, caption: str) -> bool:
     """Did an earlier, unconfirmed attempt actually publish?"""
     try:
@@ -260,9 +268,11 @@ def _reconcile(ctx: Ctx, graph: GraphClient, pub: dict, caption: str) -> bool:
                 ctx.log("publish", "warn", f"reconciled instagram publication {pub['id']} as already published")
                 return True
             return False
-        recent = graph.facebook_recent() if pub["platform"] == "facebook" else graph.instagram_recent()
+        recent = graph.facebook_recent(limit=50) if pub["platform"] == "facebook" else graph.instagram_recent(limit=50)
         key = "message" if pub["platform"] == "facebook" else "caption"
-        match = next((p for p in recent if (p.get(key) or "").strip() == caption.strip()), None)
+        marker = f"utm_content=c{pub['creative_id']}"  # unique per creative; survives text normalisation
+        match = next((p for p in recent if marker in (p.get(key) or "")
+                      or _norm(p.get(key)) == _norm(caption)), None)
         if match:
             _mark_published(ctx, pub["id"], match["id"], match.get("permalink_url") or match.get("permalink"),
                             {"reconciled": True})

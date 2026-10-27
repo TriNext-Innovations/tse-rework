@@ -1,6 +1,6 @@
 # Test report — 27 October 2026
 
-67 automated tests pass (`pytest -q`: 27 pipeline, 32 unit, 8 HTTP). Plus an
+72 automated tests pass (`pytest -q`: 30 pipeline, 32 unit, 10 HTTP). Plus an
 integration run of the n8n workflows inside a real n8n 2.37.9.
 
 **Nothing here has published to Meta, called fal.ai, or called the Claude API.**
@@ -40,6 +40,17 @@ First pass **blocked** on two findings, both fixed and covered by tests:
 Also fixed: IG retry of a pending row whose container was already published is now
 reconciled (test added); bad ids/decisions on `/review` return 400; the API no longer
 lets callers choose the reviewer name.
+
+Second pass **blocked** on three more, all fixed with tests:
+- A transient failure reaching the public asset URL failed the slot for good → now
+  retried within the window, behind a 10-minute backoff.
+- A non-ASCII `Authorization` header crashed the handler → bytes comparison, 401.
+- Unauthenticated `/healthz` echoed database connection errors → bare 503, detail logged.
+Also: Facebook reconciliation now matches the creative's unique tracking link (survives
+Meta's text normalisation) across the last 50 posts; dead dry-run→live code removed.
+**Residual risk, accepted:** if Meta accepts a Facebook post but it is missing from the
+Page's last 50 posts when reconciliation runs, the retry could post twice. Instagram has
+no such gap (the container records publication).
 
 ## n8n integration (real n8n 2.37.9, service in Docker with fakes)
 

@@ -81,3 +81,23 @@ def test_media_serves_only_final_assets(server):
     assert httpx.get(f"{base}/media/{cr['raw_asset']}").status_code == 404
     for evil in ("final/../plates/x.png", "..%2F..%2Fetc%2Fpasswd", "final/%2e%2e/%2e%2e/etc/passwd"):
         assert httpx.get(f"{base}/media/{evil}").status_code == 404
+
+
+def test_non_ascii_auth_header_is_401_not_a_crash(server):
+    import http.client
+    base, _, _ = server
+    host, port = base.removeprefix("http://").split(":")
+    for path, value in (("/v1/health", "Bearer tést"), ("/review", "Basic " + base64.b64encode("review:pé".encode()).decode())):
+        conn = http.client.HTTPConnection(host, int(port))
+        conn.putrequest("GET", path)
+        conn.putheader("Authorization", value.encode("latin-1"))
+        conn.endheaders()
+        assert conn.getresponse().status == 401
+
+
+def test_healthz_does_not_leak_connection_details(media_server, monkeypatch):
+    from agency.server import Handler
+    base, _ = media_server
+    monkeypatch.setattr(Handler.db, "url", "postgresql://agency:secret@127.0.0.1:1/agency")
+    r = httpx.get(f"{base}/healthz")
+    assert r.status_code == 503 and r.json() == {"ok": False}
