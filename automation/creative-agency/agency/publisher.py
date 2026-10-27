@@ -152,6 +152,10 @@ def refresh_spotlight(ctx: Ctx, creative: dict) -> list[str]:
         return [f"{RETRYABLE_PREFIX} store unreachable, price unchecked: {exc}"]
     if live is None:
         return [f"product {stored['title']!r} is no longer in the store"]
+    if live.price_zar <= 0:
+        return [f"store shows a non-positive price ({live.price_label}) for {live.title!r}; not publishing"]
+    if live.compatible != bool(stored.get("compatible")):
+        return [f"{live.title!r} changed between compatible and original in the store; creative needs new copy"]
     if live.title != stored["title"]:
         # Captions name the product; a rename needs new copy, not a re-render.
         return [f"product renamed in the store ({stored['title']!r} → {live.title!r}); creative needs new copy"]

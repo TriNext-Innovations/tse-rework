@@ -194,7 +194,7 @@ def check_spotlight_copy(product: dict, support: str, caption_facebook: str, cap
     be re-rendered when the store changes it); the product is named and, when
     it is a compatible, called compatible — never passed off as the OEM item."""
     words = " ".join([support, caption_facebook, caption_instagram])
-    if re.search(r"\bR\s?\d", words):
+    if re.search(r"\bR\s?\d|\bZAR\s?\d|\d[\d ,.]*\s?(rand|ZAR)\b", words, flags=re.IGNORECASE):
         result.fail("spotlight.price_in_copy", "price belongs only in the rendered image, not in captions or support line")
     name = re.sub(r"(?i)^generic ", "", product["title"])
     title = re.sub(r"[^a-z0-9]", "", name.lower())

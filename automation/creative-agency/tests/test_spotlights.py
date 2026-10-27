@@ -262,3 +262,29 @@ def test_renamed_product_is_held(make_ctx, db, monday):
     store.rename(cr["product"]["handle"], "Something Else 999")
     out = publisher.publish_due(ctx)
     assert out["status"] == "preflight_failed" and "renamed" in out["problems"][0]
+
+
+@pytest.mark.parametrize("price", [0, -5])
+def test_non_positive_store_price_is_never_published(make_ctx, db, monday, price):
+    store = FakeCatalogue()
+    ctx, cr = _ready_to_publish(make_ctx, db, monday, store)
+    store.set_price(cr["product"]["handle"], price)
+    out = publisher.publish_due(ctx)
+    assert out["status"] == "preflight_failed" and "non-positive price" in out["problems"][0]
+
+
+def test_compatible_flag_flip_is_held(make_ctx, db, monday):
+    from dataclasses import replace
+    store = FakeCatalogue()
+    ctx, cr = _ready_to_publish(make_ctx, db, monday, store)
+    h = cr["product"]["handle"]
+    store.products[h] = replace(store.products[h], compatible=False)
+    assert "compatible and original" in publisher.publish_due(ctx)["problems"][0]
+
+
+@pytest.mark.parametrize("caption", ["Only ZAR 399 today", "Just 399 rand", "R 399"])
+def test_any_price_form_in_spotlight_copy_is_caught(caption):
+    from agency.qc import check_spotlight_copy
+    q = QCResult()
+    check_spotlight_copy({"title": "Canon 054", "compatible": True}, "", f"Canon 054 compatible. {caption}", "compatible", q)
+    assert "spotlight.price_in_copy" in {f.check for f in q.findings}

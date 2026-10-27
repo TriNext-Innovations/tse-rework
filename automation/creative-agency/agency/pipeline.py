@@ -133,6 +133,9 @@ def plan_week(ctx: Ctx, week_start: date) -> dict:
         for a in sorted(plan.assignments, key=lambda x: x.slot_index):
             slot = all_slots[a.slot_index]
             if slot not in slots:
+                if a.slot_index in spotlights:
+                    ctx.log("plan", "info", f"spotlight slot {a.slot_index} already past; "
+                            f"{spotlights[a.slot_index].display_title} not used", conn=conn)
                 continue  # already in the past
             product = spotlights.get(a.slot_index)
             row = conn.execute(

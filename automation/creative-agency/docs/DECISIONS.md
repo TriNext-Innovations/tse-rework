@@ -8,7 +8,7 @@ publishing, budget reservation under a lock, lease-based recovery and
 asset rendering are not things n8n Code nodes do reliably or testably — and
 the existing TSE workflows show the cost (a stray field killed the caption
 pipeline for four days in September). So the logic lives in one Python service
-with 97 tests, and n8n calls it.
+with 103 tests, and n8n calls it.
 
 Trade-off: one more container on the box. Alternative considered: everything in
 n8n with Postgres nodes — rejected for the locking and rendering alone.

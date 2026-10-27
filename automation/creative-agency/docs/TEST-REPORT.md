@@ -1,6 +1,6 @@
 # Test report — 27 October 2026
 
-97 automated tests pass (`pytest -q`: 34 pipeline, 33 unit, 12 HTTP, 18 spotlight). Plus an
+103 automated tests pass (`pytest -q`: 34 pipeline, 33 unit, 12 HTTP, 24 spotlight). Plus an
 integration run of the n8n workflows inside a real n8n 2.37.9.
 
 **Nothing here has published to Meta, called fal.ai, or called the Claude API.**
@@ -97,6 +97,11 @@ in the store is held (captions name it). Waived with evidence: the busyness gate
 every layout by design (all four layouts pass it on calm plates in `test_render_layouts_*`);
 "incl. VAT" matches the verified fact `prices-incl-vat`, and the API's prices equal the
 site's displayed prices (Canon 737 R300, Brother TN 277 R450).
+
+Second review **blocked** on one, fixed with a test: a store price of R0 or less would have
+been re-rendered and posted — now held. Also fixed: a product flipping between compatible
+and original is held; "ZAR 399" / "399 rand" in captions are caught; spotlight slots that
+fall in the past are logged. Not done: stock re-check (the store API doesn't expose stock).
 
 Live: the real `Catalogue` client read all 313 products from the production store
 (read-only), and two spotlights were rendered from live data (Brother TN-3185 R400,
