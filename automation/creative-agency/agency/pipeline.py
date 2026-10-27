@@ -545,6 +545,10 @@ def _submit(ctx: Ctx, a: dict, cr: dict, settings: dict) -> str:
     payload = spec["input"](cr["image_prompt"], None)  # type: ignore[operator]
     job = ctx.db.one("SELECT * FROM generation_jobs WHERE creative_id = %s AND status = 'reserved' ORDER BY id DESC LIMIT 1",
                      (cr["id"],))
+    if job is None and ctx.fal is None:
+        # Reserve nothing until there is a provider to spend it on.
+        ctx.log("produce", "error", "FAL_KEY not configured; cannot generate", {"creative_id": cr["id"]})
+        return "no_provider"
     if job is None:
         try:
             with ctx.db.tx() as conn:
@@ -783,14 +787,19 @@ def _qc_reject(ctx: Ctx, a: dict, cr: dict, concept: dict, targets: set[str], de
 # One production cycle (what the n8n production workflow calls)
 # =============================================================================
 
-def cycle(ctx: Ctx, max_steps: int = 8) -> dict:
+def cycle(ctx: Ctx, max_steps: int = 8, time_budget_s: float = 420) -> dict:
     """Advance the pipeline a few steps. Finishing work beats starting it:
     QC, then collecting generations, then submitting, then new concepts.
     Each stage is tried until it is idle; a stage that is only waiting on a
     provider is not retried within the same cycle."""
     steps: list[dict] = []
     waiting: set[str] = set()
-    for _ in range(max_steps):
+    started = time.monotonic()
+    for i in range(max_steps):
+        # No new step once the budget is spent: a Claude round can take minutes, and the
+        # n8n call that started this cycle gives up after 15. The next tick continues.
+        if i and time.monotonic() - started > time_budget_s:
+            break
         did = False
         for name, fn in (("qc", quality_control), ("collect", collect), ("produce", produce), ("develop", develop)):
             if name in waiting:

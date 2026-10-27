@@ -113,7 +113,8 @@ def build() -> dict[str, dict]:
     wfs["2-production.tseAgencyProd01.json"] = workflow(
         "tseAgencyProd01", "TSE Agency — 2 Creative production loop",
         [schedule("Every 20 minutes", "*/20 * * * *", [0, 0]),
-         agency("Advance pipeline", "POST", "/v1/cycle", [240, 0], {"max_steps": 6}, timeout_ms=900_000, retries=0),
+         agency("Advance pipeline", "POST", "/v1/cycle", [240, 0], {"max_steps": 6, "time_budget_s": 420},
+                timeout_ms=900_000, retries=0),
          code("Summarise", "const steps = ($json.result && $json.result.steps) || [];\n"
               "const notable = steps.filter(s => ['approved', 'failed', 'render_failed'].includes(s.status));\n"
               "return notable.map(s => ({ json: s }));", [480, 0]),

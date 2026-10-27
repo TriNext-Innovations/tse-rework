@@ -514,3 +514,21 @@ def test_unapproved_slot_lapses_with_alert(make_ctx, db, clock, graph_server):
     slot = db.one("SELECT status FROM schedule WHERE creative_id IS NOT NULL ORDER BY slot_at LIMIT 1")
     assert slot["status"] == "skipped"
     assert any("never published" in a["message"] for a in ops.claim_alerts(ctx))
+
+
+def test_cycle_stops_starting_steps_after_time_budget(make_ctx, db):
+    ctx = make_ctx()
+    pipeline.ensure_planned(ctx)
+    out = pipeline.cycle(ctx, max_steps=8, time_budget_s=0)
+    assert len(out["steps"]) == 1  # the first step runs; none start after the budget
+
+
+def test_no_provider_reserves_nothing(make_ctx, db):
+    ctx = make_ctx()
+    ctx.fal = None
+    pipeline.ensure_planned(ctx)
+    pipeline.develop(ctx)
+    assert pipeline.produce(ctx)["status"] == "no_provider"
+    assert db.one("SELECT count(*) AS n FROM generation_jobs")["n"] == 0
+    with db.tx() as conn:
+        assert float(month_spend(conn, "visual")) == 0.0
