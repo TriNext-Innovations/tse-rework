@@ -40,6 +40,10 @@ class Env:
     # Hard gate. Even with mode=autonomous in the database, nothing reaches
     # Meta's write endpoints unless the deployment itself opts in.
     live_publishing_enabled: bool
+    # Medusa Store API, for product spotlights (publishable key: public by design).
+    medusa_store_url: str | None
+    medusa_publishable_key: str | None
+    medusa_region_id: str | None
     # Offline mode: fakes stand in for Claude and fal (demo + tests).
     use_fakes: bool
     models: dict[str, str] = field(default_factory=dict)
@@ -62,6 +66,9 @@ class Env:
             media_public_base_url=os.environ.get("MEDIA_PUBLIC_BASE_URL", "http://localhost:8080/media").rstrip("/"),
             site_url=os.environ.get("SITE_URL", "https://www.tse.co.za").rstrip("/"),
             live_publishing_enabled=_bool("LIVE_PUBLISHING_ENABLED", False),
+            medusa_store_url=os.environ.get("MEDUSA_STORE_URL"),
+            medusa_publishable_key=os.environ.get("MEDUSA_PUBLISHABLE_KEY"),
+            medusa_region_id=os.environ.get("MEDUSA_REGION_ID"),
             use_fakes=_bool("AGENCY_USE_FAKES", False),
             models={
                 # Per-stage model choice. All default to Opus 5.5; the
@@ -100,6 +107,9 @@ DEFAULT_SETTINGS: dict[str, object] = {
     "video_enabled": False,
     "utm_campaign_prefix": "tse-agency",
     "consecutive_failure_pause": 3,
+    # Product spotlights: one real product every 4–5 posts, at random.
+    "spotlight_gap_min": 4,
+    "spotlight_gap_max": 5,
 }
 
 # fal.ai models the art director may pick from. Prices verified on

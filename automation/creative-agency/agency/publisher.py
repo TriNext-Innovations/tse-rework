@@ -20,7 +20,8 @@ from psycopg.types.json import Jsonb
 
 from .factcheck import unverified_recently, verify
 from .meta import GraphClient, MetaError
-from .pipeline import Ctx
+from .catalogue import CatalogueError
+from .pipeline import Ctx, render_creative
 from .qc import QCResult, check_asset, stale_facts
 
 STALE_IN_PROGRESS = timedelta(minutes=10)
@@ -94,7 +95,10 @@ def publish_due(ctx: Ctx, graph: GraphClient | None = None) -> dict:
                      (now, slot["slot_at"]))
 
     creative = ctx.db.one("SELECT * FROM creatives WHERE id = %s", (slot["creative_id"],))
-    problems = preflight(ctx, creative)
+    problems = refresh_spotlight(ctx, creative)
+    creative = ctx.db.one("SELECT * FROM creatives WHERE id = %s", (slot["creative_id"],))
+    if not problems:
+        problems = preflight(ctx, creative)
     if problems and all(p.startswith(RETRYABLE_PREFIX) for p in problems):
         # The asset host blinked (nginx reload, network): keep the slot and its
         # lease; the next run inside the retry window tries again.
@@ -128,6 +132,46 @@ def publish_due(ctx: Ctx, graph: GraphClient | None = None) -> dict:
         ctx.log("publish", "alert", f"slot {slot['slot_at']} ended {final}: {results}", {"creative_id": creative["id"]})
     _maybe_pause(ctx, settings)
     return {"status": final, "creative_id": creative["id"], "mode": mode, "platforms": results}
+
+
+def refresh_spotlight(ctx: Ctx, creative: dict) -> list[str]:
+    """A spotlight shows a price in the image. Re-read it from the store now;
+    if it changed, re-render the ad with the current price (same plate, same
+    layout — type only) so nothing is ever posted with a stale price."""
+    a = ctx.db.one("SELECT * FROM assignments WHERE id = %s", (creative["assignment_id"],))
+    if not a or not a["product"]:
+        return []
+    stored = a["product"]
+    if ctx.catalogue is None:
+        return ["spotlight price cannot be checked: the store is not configured"]
+    try:
+        live = ctx.catalogue.get(stored["handle"])
+    except CatalogueError as exc:
+        return [f"{RETRYABLE_PREFIX} store unreachable, price unchecked: {exc}"]
+    if live is None:
+        return [f"product {stored['title']!r} is no longer in the store"]
+    if live.price_zar == stored["price_zar"] and live.title == stored["title"]:
+        return []
+    updated = {**stored, **live.as_dict(), "fetched_at": ctx.now().isoformat()}
+    concept = ctx.db.one("SELECT * FROM concepts WHERE id = %s", (creative["concept_id"],))
+    r = render_creative(ctx.storage.read(creative["raw_asset"]), {**a, "product": updated}, concept,
+                        creative["art_brief"], creative["layout"])
+    qc = QCResult()
+    check_asset(r.jpeg, None, r.meta(), qc)
+    if not qc.passed:
+        return [f"re-render at the new price failed QC: {[f.detail for f in qc.findings]}"]
+    key, digest = ctx.storage.put(f"final/a{a['id']}-c{creative['id']}", r.jpeg, "jpg")
+    with ctx.db.tx() as conn:
+        conn.execute("UPDATE assignments SET product = %s WHERE id = %s", (Jsonb(updated), a["id"]))
+        conn.execute("""UPDATE creatives SET final_asset = %s, final_sha256 = %s,
+                            art_brief = art_brief || %s, updated_at = now() WHERE id = %s""",
+                     (key, digest, Jsonb({"render": r.meta()}), creative["id"]))
+        conn.execute("INSERT INTO qc_reviews (creative_id, kind, passed, findings) VALUES (%s, 'deterministic', true, %s)",
+                     (creative["id"], Jsonb([{"check": "spotlight.price_refresh",
+                                              "detail": f"{stored['price_zar']} -> {live.price_zar}"}])))
+    ctx.log("publish", "warn", f"{live.title}: store price changed R{stored['price_zar']} → R{live.price_zar}; "
+            f"creative {creative['id']} re-rendered before publishing")
+    return []
 
 
 def preflight(ctx: Ctx, creative: dict) -> list[str]:

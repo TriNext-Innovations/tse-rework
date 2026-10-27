@@ -114,3 +114,11 @@ def test_settings_validation(db):
         db.set_setting("nonsense", 1)
     db.set_setting("publish_times", ["07:30", "19:30"])
     assert db.setting("publish_times") == ["07:30", "19:30"]
+
+
+def test_spotlight_display_title_and_eyebrow():
+    from agency.catalogue import Product
+    p = Product("generic-brother-tn-3185", "Generic Brother TN-3185", "S", "Brother", "laser", True, 400)
+    assert p.headline == "Brother TN-3185." and p.eyebrow == "Compatible laser toner" and p.price_label == "R400"
+    assert Product("x", "Epson 664 Black", "S", "Epson", "ink", True, 120).eyebrow == "Compatible refill ink"
+    assert Product("y", "Kyocera TK-3060", "S", "Kyocera", "laser", True, 1450).price_label == "R1 450"

@@ -16,6 +16,7 @@ from collections.abc import Callable
 from PIL import Image as PILImage
 from PIL import ImageDraw, ImageFilter
 
+from .catalogue import Product
 from .imagegen import GenerationError
 from .schemas import (ArtBrief, CampaignPlan, Concept, ConceptScore, ConceptSet, DirectorReview, Learning,
                       PerformanceReport, PlannedAssignment, VisionReview)
@@ -81,18 +82,36 @@ class FakeLLM:
         return getattr(self, f"_{stage}")(user, images)
 
     def _strategist(self, user, images):
-        pillars = (["brand"] * 5 + ["product"] * 3 + ["educational"] * 3 + ["commercial"] * 3)
-        order = [0, 5, 8, 11, 1, 6, 9, 12, 2, 7, 10, 13, 3, 4]
+        import re
+        spot = {int(m) for m in re.findall(r"- slot_index (\d+):", user)}
+        if spot:
+            rest = iter(["brand", "educational", "commercial"] * 5)
+            per_slot = ["product" if i in spot else next(rest) for i in range(14)]
+        else:
+            pillars = (["brand"] * 5 + ["product"] * 3 + ["educational"] * 3 + ["commercial"] * 3)
+            order = [0, 5, 8, 11, 1, 6, 9, 12, 2, 7, 10, 13, 3, 4]
+            per_slot = [pillars[order[i]] for i in range(14)]
         return CampaignPlan(
             name="[fixture] The quiet people behind the noisy printer",
             proposition="When the printer lets you down, TSE is the calm, competent people who sort it out.",
             insight="Nobody thinks about toner until it is the only thing they can think about.",
             rationale="Fixture plan for offline runs.", territories_to_avoid=[],
-            assignments=[PlannedAssignment(slot_index=i, pillar=pillars[order[i]],
+            assignments=[PlannedAssignment(slot_index=i, pillar=per_slot[i],
                                            angle=f"[fixture] angle {i}", audience="office administrators",
                                            fact_ids=[]) for i in range(14)])
 
     def _copywriter(self, user, images):
+        if "PRODUCT SPOTLIGHT" in user:
+            title = user.split("Product: ", 1)[1].split(" (SKU", 1)[0]
+            return ConceptSet(concepts=[Concept(
+                territory="product spotlight", idea=f"[fixture] {title}, plainly priced.",
+                insight="People buy the cartridge their printer asks for, at a price they can see.",
+                headline=f"{title}.", support_line=line, visual="A quiet desk corner, morning light, a stack of fresh paper.",
+                caption_facebook=f"{title}, compatible and ready to ship. See which printers it fits: {{link}}",
+                caption_instagram=f"{title}. Compatible, and on the shelf. tse.co.za",
+                hashtags=[], claims=[], why_it_works="fixture") for line in (
+                    "For the printer that never takes a day off.", "The one your printer keeps asking for.",
+                    "Same pages. Smaller invoice.")])
         start = next(self._concept_cycle)
         picked = [FIXTURE_CONCEPTS[(start + k) % len(FIXTURE_CONCEPTS)] for k in range(3)]
         return ConceptSet(concepts=[c.model_copy() for c in picked])
@@ -106,6 +125,13 @@ class FakeLLM:
                               headline_edit="")
 
     def _art_director(self, user, images):
+        if "PRODUCT SPOTLIGHT" in user:
+            title = user.split("Product: ", 1)[1].split(" (SKU", 1)[0]
+            return ArtBrief(layout="spotlight", text_zone="top", tone="dark", accent="lime", model="fal-ai/flux-2-pro",
+                            subject="fixture", composition="fixture", camera="50mm", lighting="window",
+                            materials_and_palette="paper", negative_space="top 64%",
+                            prompt=f"[fixture for {title}] A ream of fresh paper on a desk corner in early "
+                                   "light, an even pale wall filling the top two thirds.", must_avoid=["text"])
         for i, c in enumerate(FIXTURE_CONCEPTS):
             if c.headline in user:
                 prompt = GOOD_PROMPTS[i]
@@ -180,3 +206,37 @@ class FakeFal:
     def download(self, url):
         rid = url.split("/")[2]
         return synthetic_plate(self.jobs[rid]["seed"])
+
+
+FIXTURE_PRODUCTS = [
+    Product("brother-tn-277", "Brother TN 277", "BRO-TN277-C", "Brother", "laser", True, 450),
+    Product("canon-054", "Canon 054", "CAN-054-K", "Canon", "laser", True, 350),
+    Product("hp-106a", "HP 106A", "HP-106A-K", "HP", "laser", True, 299),
+    Product("epson-664", "Epson 664", "EPS-664-K", "Epson", "inkjet", True, 120),
+    Product("kyocera-tk-3060", "Kyocera TK-3060", "KYO-TK3060-K", "Kyocera", "laser", True, 1450),
+    Product("hp-original-85a", "HP 85A Original", "HP-85A-O", "HP", "laser", False, 1600),
+]
+
+
+class FakeCatalogue:
+    """Fixture store; `prices` overrides let tests change a price mid-flight."""
+
+    def __init__(self, products: list[Product] | None = None):
+        self.products = {p.handle: p for p in (products or FIXTURE_PRODUCTS)}
+        self.down = False
+
+    def all(self):
+        from .catalogue import CatalogueError
+        if self.down:
+            raise CatalogueError("fake store down")
+        return list(self.products.values())
+
+    def get(self, handle):
+        from .catalogue import CatalogueError
+        if self.down:
+            raise CatalogueError("fake store down")
+        return self.products.get(handle)
+
+    def set_price(self, handle: str, price: int) -> None:
+        from dataclasses import replace
+        self.products[handle] = replace(self.products[handle], price_zar=price)

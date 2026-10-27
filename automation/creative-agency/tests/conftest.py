@@ -82,7 +82,8 @@ def graph_server():
 def make_ctx(db, clock, media_server, tmp_path):
     base, env = media_server
 
-    def _make(*, llm=None, fal=None, live=False, graph: GraphServer | None = None, **env_over) -> Ctx:
+    def _make(*, llm=None, fal=None, live=False, graph: GraphServer | None = None, catalogue=None,
+              **env_over) -> Ctx:
         e = replace(env, media_public_base_url=f"{base}/media", live_publishing_enabled=live,
                     meta_graph_base=graph.url if graph else env.meta_graph_base,
                     meta_page_id=graph.page_id if graph else None, meta_ig_user_id=graph.ig_id if graph else None,
@@ -90,7 +91,7 @@ def make_ctx(db, clock, media_server, tmp_path):
         Handler.env = e
         return Ctx(db=db, env=e, llm=llm or FakeLLM(db), fal=fal if fal is not None else FakeFal(),
                    storage=Storage(e.media_dir, e.media_public_base_url), now=clock, poll_seconds=2,
-                   poll_interval=0.01)
+                   poll_interval=0.01, catalogue=catalogue)
     return _make
 
 

@@ -10,7 +10,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 Pillar = Literal["brand", "product", "educational", "commercial"]
-Layout = Literal["gallery", "poster", "editorial", "caption_band"]
+Layout = Literal["gallery", "poster", "editorial", "caption_band", "spotlight"]
 
 
 class PlannedAssignment(BaseModel):

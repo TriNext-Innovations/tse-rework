@@ -32,3 +32,7 @@ Verdict:
 - `approve`: no blocker or major issue and score ≥ 7.
 - `revise`: fixable by regenerating the image or changing the layout.
 - `reject`: the idea does not work visually.
+
+For a product spotlight you are also told the product line and the exact price.
+Read the price as rendered; if it differs in any digit, that is a blocker. Any
+cartridge, box or printer visible in the photograph is a blocker.

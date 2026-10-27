@@ -8,7 +8,7 @@ publishing, budget reservation under a lock, lease-based recovery and
 asset rendering are not things n8n Code nodes do reliably or testably — and
 the existing TSE workflows show the cost (a stray field killed the caption
 pipeline for four days in September). So the logic lives in one Python service
-with 78 tests, and n8n calls it.
+with 91 tests, and n8n calls it.
 
 Trade-off: one more container on the box. Alternative considered: everything in
 n8n with Postgres nodes — rejected for the locking and rendering alone.
@@ -54,6 +54,16 @@ unbranded supplier boxes and its catalogue photos are supplier stock, so generat
 packaging would depict something that does not ship. A cartridge may appear only as
 an unbranded prop. Real product photography is the single biggest upgrade available
 (see the asset-ingestion note below).
+
+## Product spotlights are type-led and priced from the live store
+
+Chosen by Ryno, 27 Oct 2026: every 4th–5th post (random interval) promotes one real
+product, so the feed says "we sell cartridges", not "we like printers". The product
+name and price are the hero, set in type from store data — never written by a model
+and never shown as a generated cartridge (it would not be what ships). Prices live
+only in the image, never in captions, so a price change can be re-rendered at publish
+time instead of going out stale. Slots and products are chosen by code (seeded per
+week, so a retried plan picks the same), not by the strategist.
 
 ## Models
 

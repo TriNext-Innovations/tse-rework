@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .catalogue import Catalogue
 from .config import Env
 from .db import Database
 from .imagegen import FalClient
@@ -26,7 +27,12 @@ def build_ctx(env: Env | None = None, db: Database | None = None) -> Ctx:
         from .fakes import FakeFal, FakeLLM
 
         _fake_fal = _fake_fal or FakeFal()
-        return Ctx(db=db, env=env, llm=FakeLLM(db), fal=_fake_fal, storage=storage, poll_interval=0)
+        from .fakes import FakeCatalogue
+
+        return Ctx(db=db, env=env, llm=FakeLLM(db), fal=_fake_fal, storage=storage, poll_interval=0,
+                   catalogue=FakeCatalogue())
     llm = ClaudeLLM(db, env.anthropic_api_key, env.models) if env.anthropic_api_key else UnconfiguredLLM()
     fal = FalClient(env.fal_key, env.fal_queue_base) if env.fal_key else None
-    return Ctx(db=db, env=env, llm=llm, fal=fal, storage=storage)
+    catalogue = (Catalogue(env.medusa_store_url, env.medusa_publishable_key, env.medusa_region_id)
+                 if env.medusa_store_url and env.medusa_publishable_key else None)
+    return Ctx(db=db, env=env, llm=llm, fal=fal, storage=storage, catalogue=catalogue)
