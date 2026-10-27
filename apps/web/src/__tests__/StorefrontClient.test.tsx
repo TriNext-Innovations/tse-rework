@@ -199,6 +199,28 @@ describe('StorefrontClient — brand marquee', () => {
   })
 })
 
+describe('StorefrontClient — "Compatible with" brand chips (#399)', () => {
+  const chip = (name: string) => {
+    const card = screen.getByText('Compatible with').parentElement!
+    return within(card).getByRole('link', { name })
+  }
+
+  it('links a single-category brand to its category page', () => {
+    renderStorefront()
+    expect(chip('Kyocera')).toHaveAttribute('href', '/cartridges/kyocera-laserjet-cartridges')
+  })
+
+  it('links a brand with laser and inkjet pages to the filtered listing', () => {
+    renderStorefront()
+    expect(chip('HP')).toHaveAttribute('href', '/products?brand=HP')
+  })
+
+  it('links a brand with no category page to the filtered listing', () => {
+    renderStorefront()
+    expect(chip('Dell')).toHaveAttribute('href', '/products?brand=Dell')
+  })
+})
+
 describe('StorefrontClient — FAQ accordion', () => {
   it('renders all 4 FAQ questions', () => {
     renderStorefront()
@@ -401,15 +423,6 @@ describe('StorefrontClient — bento grid', () => {
     expect(mockPush).toHaveBeenCalledWith('/products?type=inkjet')
   })
 
-  it('brand compatibility pills navigate to the brand-filtered catalogue', async () => {
-    renderStorefront()
-    // Find brand pills in the bento section (not the marquee)
-    const allHpButtons = screen.getAllByText('HP')
-    // Click the button version (not a span in the marquee)
-    const hpPill = allHpButtons.find((el) => el.tagName === 'BUTTON')
-    if (hpPill) await userEvent.click(hpPill)
-    expect(mockPush).toHaveBeenCalledWith('/products?brand=HP')
-  })
 })
 
 describe('StorefrontClient — footer & CTA', () => {
