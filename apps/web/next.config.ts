@@ -74,6 +74,11 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: '/(.*)', headers: securityHeaders }]
   },
+  // /faq was a guess visitors made on the legacy site (#479). /help/ needs no
+  // rule: Next already 308s a trailing slash to the bare path.
+  async redirects() {
+    return [{ source: '/faq', destination: '/help', permanent: true }]
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '*.supabase.co', pathname: '/storage/v1/object/public/**' },
