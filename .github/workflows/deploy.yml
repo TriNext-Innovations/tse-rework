@@ -185,7 +185,28 @@ jobs:
             echo "▶ Syncing remaining services (nginx/bugsink/config changes)"
             docker compose up -d --no-build --remove-orphans
             docker compose up -d --no-deps --no-build nginx
-            docker compose exec -T nginx nginx -s reload
+
+            # nginx.conf is bind-mounted as a single file. `git reset` replaces
+            # it with a new inode and the running container keeps the old one,
+            # so a reload re-reads the stale copy (#523: #512 shipped 7 Oct and
+            # stayed inert). Only a new container sees the new file. conf.d/ is
+            # a directory mount, so a reload is enough there. Compare the file
+            # nginx actually sees with the commit rather than trusting the diff,
+            # so a container left stale by an earlier deploy is caught as well.
+            nginx_conf_current() {
+              docker compose exec -T nginx cat /etc/nginx/nginx.conf </dev/null | cmp -s - infrastructure/nginx/nginx.conf
+            }
+            if nginx_conf_current; then
+              docker compose exec -T nginx nginx -s reload
+            else
+              echo "▶ Recreating nginx (its nginx.conf is stale — a reload would keep the old file)"
+              docker compose up -d --no-deps --no-build --force-recreate nginx
+              for i in 1 2 3 4 5 6; do
+                nginx_conf_current && break
+                [ "$i" = 6 ] && { echo "✗ nginx is still running a stale nginx.conf"; exit 1; }
+                sleep 2
+              done
+            fi
 
             # Through nginx via the public URLs — this is what customers hit; a
             # 502 here must fail the deploy instead of passing silently.
