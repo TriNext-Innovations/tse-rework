@@ -39,6 +39,8 @@ describe('sitemap lastmod (#525)', () => {
     expect(at('/printers/hp-laserjet-p1102')).toBeDefined()
     expect(at('/printers/hp-laserjet-p1102')?.lastModified).toBeUndefined()
     expect(at('/legal/terms')?.lastModified).toBeUndefined()
+    expect(at('/help')).toBeDefined()
+    expect(at('/help')?.lastModified).toBeUndefined()
 
     const now = Date.now()
     for (const e of entries) {
