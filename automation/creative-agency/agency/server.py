@@ -89,7 +89,7 @@ class Handler(BaseHTTPRequestHandler):
             user, _, pw = base64.b64decode(got[6:]).decode().partition(":")
         except (ValueError, UnicodeError):
             return False
-        return user == "review" and hmac.compare_digest(pw.encode("utf-8", "surrogateescape"), password.encode())
+        return hmac.compare_digest(user.encode("utf-8", "surrogateescape"), b"review") & hmac.compare_digest(pw.encode("utf-8", "surrogateescape"), password.encode())
 
     def _same_origin(self) -> bool:
         """CSRF guard for the cookie-less Basic-auth form: browsers resend Basic
@@ -205,7 +205,7 @@ def review_page(ctx) -> str:
         cards.append(f"""<article>
 <h3>{r['slot_at']:%a %d %b %H:%M} · {html.escape(r['pillar'] or '')} · <span class="d {decision.split()[0]}">{decision}</span></h3>
 <img src="{html.escape(img)}" alt="{html.escape(r['headline'] or '')}" loading="lazy">
-<p class="meta">#{r['creative_id']} · {html.escape(r['territory'] or '')} · {r['layout']} · {r['model']} · vision {r['vision_score']} · {html.escape(pubs)}</p>
+<p class="meta">#{r['creative_id']} · {html.escape(r['territory'] or '')} · {html.escape(r['layout'] or '')} · {html.escape(r['model'] or '')} · vision {r['vision_score']} · {html.escape(pubs)}</p>
 <details><summary>Captions</summary><h4>Facebook</h4><pre>{html.escape(r['caption_facebook'] or '')}</pre>
 <h4>Instagram</h4><pre>{html.escape(r['caption_instagram'] or '')}</pre></details>
 <form method="post" action="review/{r['creative_id']}"><input name="note" placeholder="Note (optional)">

@@ -1,6 +1,6 @@
 # Test report — 27 October 2026
 
-77 automated tests pass (`pytest -q`: 33 pipeline, 32 unit, 12 HTTP). Plus an
+78 automated tests pass (`pytest -q`: 34 pipeline, 32 unit, 12 HTTP). Plus an
 integration run of the n8n workflows inside a real n8n 2.37.9.
 
 **Nothing here has published to Meta, called fal.ai, or called the Claude API.**
@@ -57,6 +57,11 @@ Fourth pass **blocked** on two, fixed with tests: a Graph 5xx on a write was ret
 if nothing had posted (now `unknown` → reconciled first; only rate-limit refusals are a
 clean retry); a reviewer's rejection was honoured only in review mode (now a veto in every
 mode). Non-object JSON bodies return 400.
+
+Fifth pass: **done** (not blocked). Its non-blocking findings were also fixed: slots that
+lapse with an unpublished creative now alert; partial slots share the retry backoff;
+review-page fields escaped; constant-time username compare. Not done: rate limiting on
+`/v1` and `/review` (the API is not exposed publicly; `/review` sits behind Basic auth).
 
 **Residual risk, accepted:** if Meta accepts a Facebook post but it is missing from the
 Page's last 50 posts when reconciliation runs, the retry could post twice. Instagram has

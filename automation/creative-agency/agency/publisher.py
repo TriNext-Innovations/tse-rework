@@ -65,15 +65,19 @@ def publish_due(ctx: Ctx, graph: GraphClient | None = None) -> dict:
         conn.execute("SELECT pg_advisory_xact_lock(hashtext('agency-publisher'))")
         # Slots whose window has passed without a creative are recorded as missed.
         missed = conn.execute(
-            """UPDATE schedule SET status = 'skipped', updated_at = now()
-               WHERE status = 'open' AND slot_at < %s RETURNING slot_at""", (now - window,)).fetchall()
+            """UPDATE schedule SET status = CASE WHEN status = 'partial' THEN 'partial' ELSE 'skipped' END,
+                      updated_at = now()
+               WHERE status IN ('open', 'filled', 'publishing') AND slot_at < %s
+               RETURNING slot_at, creative_id, status""", (now - window,)).fetchall()
         for m in missed:
-            ctx.log("publish", "alert", f"slot {m['slot_at']} passed with no approved creative", conn=conn)
+            why = "no approved creative" if m["creative_id"] is None else (
+                f"creative {m['creative_id']} was never published (unapproved in review mode, or failing)")
+            ctx.log("publish", "alert", f"slot {m['slot_at']} lapsed: {why}", conn=conn)
         slot = conn.execute(
             """SELECT s.*, c.human_approval FROM schedule s JOIN creatives c ON c.id = s.creative_id
                WHERE s.status IN ('filled', 'publishing', 'partial') AND s.slot_at <= %s AND s.slot_at > %s
                  AND c.status = 'approved'
-                 AND NOT (s.status IN ('publishing', 'filled') AND s.updated_at > %s)  -- lease / retry backoff
+                 AND NOT (s.status IN ('publishing', 'filled', 'partial') AND s.updated_at > %s)  -- lease / retry backoff
                ORDER BY s.slot_at LIMIT 1 FOR UPDATE OF s SKIP LOCKED""",
             (now, now - window, now - SLOT_LEASE)).fetchone()
         if not slot:
@@ -118,7 +122,8 @@ def publish_due(ctx: Ctx, graph: GraphClient | None = None) -> dict:
     if final != "done" and open_rows == 0:
         final = "partial" if done else "failed"
     # A slot left 'publishing' keeps this run's lease timestamp: retries wait SLOT_LEASE.
-    ctx.db.execute("UPDATE schedule SET status = %s WHERE slot_at = %s", (final, slot["slot_at"]))
+    ctx.db.execute("UPDATE schedule SET status = %s, updated_at = %s WHERE slot_at = %s",
+                   (final, ctx.now(), slot["slot_at"]))
     if final in ("partial", "failed"):
         ctx.log("publish", "alert", f"slot {slot['slot_at']} ended {final}: {results}", {"creative_id": creative["id"]})
     _maybe_pause(ctx, settings)

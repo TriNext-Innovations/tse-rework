@@ -503,3 +503,14 @@ def test_reviewer_rejection_blocks_autonomous_mode(make_ctx, db, clock, graph_se
     ops.review(ctx, first_filled_slot(db)["creative_id"], "rejected", "off-brand", by="test")
     assert publisher.publish_due(ctx)["status"] == "rejected_by_reviewer"
     assert graph_server.fb_posts == []
+
+
+def test_unapproved_slot_lapses_with_alert(make_ctx, db, clock, graph_server):
+    ctx = _live_ready(make_ctx, db, clock, graph_server)
+    db.set_setting("mode", "review")
+    assert publisher.publish_due(ctx)["status"] == "awaiting_approval"
+    clock.advance(hours=7)  # past publish_retry_window_hours
+    publisher.publish_due(ctx)
+    slot = db.one("SELECT status FROM schedule WHERE creative_id IS NOT NULL ORDER BY slot_at LIMIT 1")
+    assert slot["status"] == "skipped"
+    assert any("never published" in a["message"] for a in ops.claim_alerts(ctx))
