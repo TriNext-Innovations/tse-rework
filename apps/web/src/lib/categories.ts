@@ -189,6 +189,18 @@ export function categoryBySlug(slug: string): Category | undefined {
   return CATEGORIES.find((c) => c.slug === slug)
 }
 
+/**
+ * Where a brand link should land. A brand with one category page goes straight
+ * to it, so the homepage passes links to the category layer (#399). A brand
+ * with several (HP laser and inkjet) goes to the filtered listing, because
+ * picking one type for the shopper would send half of them to the wrong page.
+ */
+export function brandPageHref(brand: string): string {
+  const pages = CATEGORIES.filter((c) => c.brand === brand)
+  if (pages.length === 1) return `/cartridges/${pages[0]!.slug}`
+  return `/products?brand=${encodeURIComponent(brand)}`
+}
+
 /** Every legacy path → the slug that should receive it. For the cutover map. */
 export function legacyRedirectMap(): Record<string, string> {
   const map: Record<string, string> = {}

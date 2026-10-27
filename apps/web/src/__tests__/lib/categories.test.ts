@@ -1,7 +1,7 @@
 import { readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, it, expect } from 'vitest'
-import { CATEGORIES, categoryBySlug, legacyRedirectMap } from '@/lib/categories'
+import { CATEGORIES, brandPageHref, categoryBySlug, legacyRedirectMap } from '@/lib/categories'
 import { TYPE_CATEGORIES } from '@/lib/taxonomy'
 
 describe('category registry', () => {
@@ -126,5 +126,21 @@ describe.skipIf(!CONF_PRESENT)('cutover redirect map', () => {
       expect(target.startsWith('/')).toBe(true)
       expect(target).not.toMatch(/^\/(product|product-category)\//)
     }
+  })
+})
+
+describe('brandPageHref', () => {
+  it('sends a brand with one category page straight to it', () => {
+    expect(brandPageHref('Kyocera')).toBe('/cartridges/kyocera-laserjet-cartridges')
+    expect(brandPageHref('Konica Minolta')).toBe('/cartridges/konica-minolta-laserjet-cartridges')
+  })
+
+  it('sends a brand with several category pages to the filtered listing', () => {
+    expect(CATEGORIES.filter((c) => c.brand === 'HP').length).toBeGreaterThan(1)
+    expect(brandPageHref('HP')).toBe('/products?brand=HP')
+  })
+
+  it('falls back to the filtered listing for a brand with no category page', () => {
+    expect(brandPageHref('Dell')).toBe('/products?brand=Dell')
   })
 })
