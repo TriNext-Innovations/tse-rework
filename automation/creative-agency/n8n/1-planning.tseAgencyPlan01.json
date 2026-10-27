@@ -1,0 +1,203 @@
+{
+  "id": "tseAgencyPlan01",
+  "name": "TSE Agency — 1 Planning",
+  "description": "Stage A. Re-verifies the fact sheet against the live site, then plans any week in the next 8 days without a campaign (current week included). Idempotent.",
+  "active": false,
+  "nodes": [
+    {
+      "id": "fd4d0302-2a59-5e83-90e2-df9851ee6dce",
+      "name": "Run now",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        120
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "7b6f1305-cdb3-53a2-9054-fa24a735808c",
+      "name": "Daily 05:30",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 5 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "3294b5f4-a55b-5861-a95f-2688a59fe176",
+      "name": "Verify facts on tse.co.za",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://tse-agency:8080/v1/facts/verify",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 120000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_AGENCY_CREDENTIAL_ID",
+          "name": "TSE Agency API"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "a3065597-2c6d-5b4e-b979-7c7a7f7943c0",
+      "name": "Plan unplanned weeks",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://tse-agency:8080/v1/plan",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 600000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_AGENCY_CREDENTIAL_ID",
+          "name": "TSE Agency API"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "aa04f474-7aa9-534c-911f-beafe3e39e27",
+      "name": "New campaigns",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const planned = ($json.result && $json.result.planned) || [];\nreturn planned.filter(p => p.created).map(p => ({ json: p }));"
+      }
+    },
+    {
+      "id": "db8faae1-832e-5f8f-9c70-4919c8c19f06",
+      "name": "Announce campaign",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        960,
+        0
+      ],
+      "parameters": {
+        "authentication": "webhook",
+        "content": "={{ '🗓️ **New TSE campaign planned** — week of ' + $json.week_start + '\\n**' + $json.name + '**\\n' + $json.proposition + '\\n' + $json.assignments + ' assignments queued.' }}",
+        "options": {}
+      },
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "hK9mTseDiscordW1",
+          "name": "TSE Social Discord Webhook"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Daily 05:30": {
+      "main": [
+        [
+          {
+            "node": "Verify facts on tse.co.za",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify facts on tse.co.za": {
+      "main": [
+        [
+          {
+            "node": "Plan unplanned weeks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Plan unplanned weeks": {
+      "main": [
+        [
+          {
+            "node": "New campaigns",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New campaigns": {
+      "main": [
+        [
+          {
+            "node": "Announce campaign",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run now": {
+      "main": [
+        [
+          {
+            "node": "Verify facts on tse.co.za",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Africa/Johannesburg",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "tseAgencyAlert01"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

@@ -1,0 +1,299 @@
+{
+  "id": "tseAgencyMon01",
+  "name": "TSE Agency — 7 Monitoring",
+  "description": "Stage: monitoring. Hourly: release expired leases, flag interrupted publications, deliver new alerts (each exactly once). Daily: queue depth, spend against limits, mode and pause state.",
+  "active": false,
+  "nodes": [
+    {
+      "id": "fd4d0302-2a59-5e83-90e2-df9851ee6dce",
+      "name": "Run now",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        120
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "9cfd459f-82c4-5803-9003-d6b305896ff4",
+      "name": "Hourly",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "5 * * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "26a3fa6f-155c-53a5-b798-25ea4dd58ee5",
+      "name": "Recover",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://tse-agency:8080/v1/recover",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 600000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_AGENCY_CREDENTIAL_ID",
+          "name": "TSE Agency API"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "e1241cc4-4376-5449-89e6-7f026641a13e",
+      "name": "Claim alerts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://tse-agency:8080/v1/alerts/claim",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 600000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_AGENCY_CREDENTIAL_ID",
+          "name": "TSE Agency API"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "c6d9d4c6-89b5-5d94-aa9a-928aab3eaa1a",
+      "name": "One item per alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        0
+      ],
+      "parameters": {
+        "jsCode": "return (($json.result && $json.result.alerts) || []).map(a => ({ json: a }));"
+      }
+    },
+    {
+      "id": "bfe4b74c-81e9-5606-8db0-02618d8fb799",
+      "name": "Send alert",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        960,
+        0
+      ],
+      "parameters": {
+        "authentication": "webhook",
+        "content": "={{ '🚨 **TSE agency** [' + $json.stage + '] ' + $json.message }}",
+        "options": {}
+      },
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "hK9mTseDiscordW1",
+          "name": "TSE Social Discord Webhook"
+        }
+      }
+    },
+    {
+      "id": "ae5979f1-2bbd-5f35-9b61-4ad41a242cc9",
+      "name": "Daily 07:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        220
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "6bf4aded-f6eb-5e69-b0ee-8100c1917d73",
+      "name": "Health",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        220
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "http://tse-agency:8080/v1/health",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_AGENCY_CREDENTIAL_ID",
+          "name": "TSE Agency API"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "634e504d-bc21-5514-b1a9-16986197c24a",
+      "name": "Daily digest",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        480,
+        220
+      ],
+      "parameters": {
+        "authentication": "webhook",
+        "content": "={{ ($json.result.ok ? '🟢' : '🟠') + ' **TSE agency daily** — mode ' + $json.result.mode + ' (effective ' + $json.result.effective_mode + ')' + ($json.result.paused ? ' · **PAUSED**' : '') + '\\nQueue: ' + $json.result.queue.days_covered + ' days ready (' + $json.result.queue.approved_slots + '/' + $json.result.queue.expected_slots + ' slots)' + '\\nSpend this month: visual $' + $json.result.spend_month_usd.visual + ' / $' + $json.result.spend_month_usd.visual_limit + ' · Claude $' + $json.result.spend_month_usd.claude + ($json.result.problems.length ? '\\nProblems: ' + $json.result.problems.join('; ') : '') }}",
+        "options": {}
+      },
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "hK9mTseDiscordW1",
+          "name": "TSE Social Discord Webhook"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Hourly": {
+      "main": [
+        [
+          {
+            "node": "Recover",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recover": {
+      "main": [
+        [
+          {
+            "node": "Claim alerts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim alerts": {
+      "main": [
+        [
+          {
+            "node": "One item per alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One item per alert": {
+      "main": [
+        [
+          {
+            "node": "Send alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily 07:00": {
+      "main": [
+        [
+          {
+            "node": "Health",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Health": {
+      "main": [
+        [
+          {
+            "node": "Daily digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run now": {
+      "main": [
+        [
+          {
+            "node": "Recover",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Health",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Africa/Johannesburg",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "tseAgencyAlert01"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

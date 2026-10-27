@@ -1,0 +1,183 @@
+{
+  "id": "tseAgencyPub01",
+  "name": "TSE Agency — 5 Publishing",
+  "description": "Stage: publishing. Fires every 15 minutes so the 08:00/20:00 slots (configurable in the service's settings, not here) are met to within the quarter-hour. Duplicate-safe by construction: the service locks the slot, writes one row per creative+platform under a UNIQUE constraint, and reconciles interrupted calls against Meta instead of re-posting. No n8n retries — never retry a publish blindly.",
+  "active": false,
+  "nodes": [
+    {
+      "id": "fd4d0302-2a59-5e83-90e2-df9851ee6dce",
+      "name": "Run now",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        120
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "22996169-6133-51fe-9147-0f5c32962f56",
+      "name": "Every 15 minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "*/15 * * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "68587571-aef0-5927-a5ca-135f0a7f937d",
+      "name": "Publish due slot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://tse-agency:8080/v1/publish",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 300000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_AGENCY_CREDENTIAL_ID",
+          "name": "TSE Agency API"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 1,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "c25c2300-8e74-5768-9858-bb717ce07028",
+      "name": "Something happened?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4f19dac1-8fe6-5444-a4e9-9aca3d84cbeb",
+              "leftValue": "={{ ['done','partial','failed','preflight_failed'].includes($json.result.status) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "6433376b-fbd3-5e9e-ab65-5c047d4152e1",
+      "name": "Report publication",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        720,
+        -80
+      ],
+      "parameters": {
+        "authentication": "webhook",
+        "content": "={{ ($json.result.mode === 'dry_run' ? '🧪 DRY RUN ' : '📣 ') + 'Slot result: **' + $json.result.status + '** — creative #' + $json.result.creative_id + '\\n' + JSON.stringify($json.result.platforms || $json.result.problems || {}) }}",
+        "options": {}
+      },
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "hK9mTseDiscordW1",
+          "name": "TSE Social Discord Webhook"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every 15 minutes": {
+      "main": [
+        [
+          {
+            "node": "Publish due slot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish due slot": {
+      "main": [
+        [
+          {
+            "node": "Something happened?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Something happened?": {
+      "main": [
+        [
+          {
+            "node": "Report publication",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Run now": {
+      "main": [
+        [
+          {
+            "node": "Publish due slot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Africa/Johannesburg",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "tseAgencyAlert01"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}
