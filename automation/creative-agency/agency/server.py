@@ -31,7 +31,8 @@ log = logging.getLogger("agency")
 
 ROUTES = {
     ("POST", "/v1/plan"): lambda ctx, body: {"planned": pipeline.ensure_planned(ctx)},
-    ("POST", "/v1/cycle"): lambda ctx, body: pipeline.cycle(ctx, int(body.get("max_steps", 8))),
+    ("POST", "/v1/cycle"): lambda ctx, body: pipeline.cycle(ctx, int(body.get("max_steps", 8)),
+                                                         float(body.get("time_budget_s", 420))),
     ("POST", "/v1/publish"): lambda ctx, body: publisher.publish_due(ctx),
     ("POST", "/v1/recover"): lambda ctx, body: ops.recover(ctx),
     ("POST", "/v1/facts/verify"): lambda ctx, body: {"facts": factcheck.verify(ctx.db)},

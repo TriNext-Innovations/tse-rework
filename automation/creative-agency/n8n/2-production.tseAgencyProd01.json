@@ -54,7 +54,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "{\"max_steps\": 6}"
+        "jsonBody": "{\"max_steps\": 6, \"time_budget_s\": 420}"
       },
       "credentials": {
         "httpHeaderAuth": {
