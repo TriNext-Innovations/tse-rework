@@ -109,7 +109,10 @@ def _raw_get(base: str, raw_path: str) -> int:
     host, port = base.removeprefix("http://").split(":")
     with socket.create_connection((host, int(port))) as sock:
         sock.sendall(f"GET {raw_path} HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n".encode())
-        return int(sock.recv(64).split()[1])
+        data = b""
+        while chunk := sock.recv(65536):  # read to EOF so the server isn't reset mid-write
+            data += chunk
+        return int(data.split()[1])
 
 
 def test_media_dot_segments_cannot_reach_plates(server):
@@ -119,3 +122,9 @@ def test_media_dot_segments_cannot_reach_plates(server):
     assert _raw_get(base, "/media/final/../../../../etc/passwd") == 404
     final = ctx.db.one("SELECT final_asset FROM creatives WHERE id = %s", (cid,))["final_asset"]
     assert _raw_get(base, f"/media/{final}") == 200
+
+
+def test_non_object_json_body_is_400(server):
+    base, ctx, _ = server
+    r = httpx.post(f"{base}/v1/settings", headers={"Authorization": f"Bearer {ctx.env.api_token}"}, json=[1, 2])
+    assert r.status_code == 400

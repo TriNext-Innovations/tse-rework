@@ -114,6 +114,7 @@ class GraphServer(_Server):
         self.ig_error = False
         self.fb_transient = 0
         self.fb_drop_after_post = False
+        self.fb_500_after_post = False
         self.tokens: set[str] = set()
         self.urls: list[str] = []
         super().__init__(GraphHandler)
@@ -138,6 +139,9 @@ class GraphHandler(_Base):
                 return self._json(500, {"error": {"message": "temporary", "code": 2, "is_transient": True}})
             pid = f"{o.page_id}_{len(o.fb_posts) + 1}"
             o.fb_posts.append({"id": pid, "message": form["caption"], "url": form["url"]})
+            if o.fb_500_after_post:
+                o.fb_500_after_post = False
+                return self._json(500, {"error": {"message": "internal", "code": 1, "is_transient": True}})
             if o.fb_drop_after_post:
                 o.fb_drop_after_post = False
                 self.close_connection = True

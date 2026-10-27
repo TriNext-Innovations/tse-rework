@@ -70,7 +70,10 @@ class Handler(BaseHTTPRequestHandler):
         ctype = self.headers.get("Content-Type", "")
         if "application/x-www-form-urlencoded" in ctype:
             return {k: v[0] for k, v in parse_qs(raw.decode()).items()}
-        return json.loads(raw or b"{}")
+        body = json.loads(raw or b"{}")
+        if not isinstance(body, dict):
+            raise ValueError("request body must be a JSON object")
+        return body
 
     def _bearer_ok(self) -> bool:
         token = self.env.api_token

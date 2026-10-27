@@ -26,6 +26,7 @@ from .qc import QCResult, check_asset, stale_facts
 STALE_IN_PROGRESS = timedelta(minutes=10)
 SLOT_LEASE = timedelta(minutes=10)
 RETRYABLE_PREFIX = "[retryable]"
+RATE_LIMIT_CODES = {4, 17, 32, 341, 613, 80001, 80002}  # Meta refused before acting
 
 
 def graph_client(ctx: Ctx) -> GraphClient | None:
@@ -77,12 +78,12 @@ def publish_due(ctx: Ctx, graph: GraphClient | None = None) -> dict:
             (now, now - window, now - SLOT_LEASE)).fetchone()
         if not slot:
             return {"status": "nothing_due", "skipped_slots": len(missed)}
+        if slot["human_approval"] == "rejected":  # a reviewer's veto holds in every mode
+            conn.execute("UPDATE schedule SET status = 'skipped', updated_at = now() WHERE slot_at = %s",
+                         (slot["slot_at"],))
+            ctx.log("publish", "warn", f"creative {slot['creative_id']} rejected by reviewer; slot skipped", conn=conn)
+            return {"status": "rejected_by_reviewer", "creative_id": slot["creative_id"]}
         if mode == "review" and slot["human_approval"] != "approved":
-            if slot["human_approval"] == "rejected":
-                conn.execute("UPDATE schedule SET status = 'skipped', updated_at = now() WHERE slot_at = %s",
-                             (slot["slot_at"],))
-                ctx.log("publish", "warn", f"creative {slot['creative_id']} rejected by reviewer; slot skipped", conn=conn)
-                return {"status": "rejected_by_reviewer", "creative_id": slot["creative_id"]}
             ctx.log("publish", "warn", f"creative {slot['creative_id']} awaits human approval (review mode)", conn=conn)
             return {"status": "awaiting_approval", "creative_id": slot["creative_id"]}
         conn.execute("UPDATE schedule SET status = 'publishing', updated_at = %s WHERE slot_at = %s",
@@ -230,8 +231,10 @@ def _publish_one(ctx: Ctx, creative: dict, platform: str, slot_at, mode: str, gr
         ctx.log("publish", "info", f"published {platform}: creative {creative['id']}", {"publication_id": pub["id"]})
         return "published"
     except MetaError as exc:
-        transport = "transport error" in str(exc)
-        status = "unknown" if transport else ("pending" if exc.retryable else "failed")
+        # A write that may have landed (no reply, 5xx, unknown error) is 'unknown' and is
+        # reconciled before any retry; only a rate-limit refusal is a clean 'pending'.
+        maybe_created = "transport error" in str(exc) or (exc.retryable and exc.code not in RATE_LIMIT_CODES)
+        status = "unknown" if maybe_created else ("pending" if exc.retryable else "failed")
         ctx.db.execute("UPDATE publications SET status = %s, error = %s, response = %s, updated_at = now() WHERE id = %s",
                        (status, str(exc)[:2000], Jsonb(exc.payload), pub["id"]))
         level = "alert" if (exc.auth or status == "failed") else "error"

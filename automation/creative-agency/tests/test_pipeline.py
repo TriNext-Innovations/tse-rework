@@ -291,7 +291,7 @@ def test_09_transient_facebook_error_retries_within_window(make_ctx, db, clock, 
     ctx = _live_ready(make_ctx, db, clock, graph_server)
     graph_server.fb_transient = 1
     first = publisher.publish_due(ctx)
-    assert first["platforms"]["facebook"] == "pending"
+    assert first["platforms"]["facebook"] == "unknown"  # a 5xx may have posted: reconcile first
     clock.advance(minutes=30)
     second = publisher.publish_due(ctx)
     assert second["platforms"]["facebook"] == "published" and second["status"] == "done"
@@ -486,3 +486,20 @@ def test_11_reconcile_marker_does_not_match_longer_creative_id(make_ctx, db, clo
     assert out["platforms"]["facebook"] == "published"
     ext = db.one("SELECT external_id FROM publications WHERE creative_id = %s", (cid,))["external_id"]
     assert ext != "PAGE1_99"
+
+
+def test_09_server_error_after_post_created_is_not_reposted(make_ctx, db, clock, graph_server):
+    ctx = _live_ready(make_ctx, db, clock, graph_server)
+    db.set_setting("platforms", ["facebook"])
+    graph_server.fb_500_after_post = True  # Meta created the post, then answered 500
+    assert publisher.publish_due(ctx)["platforms"]["facebook"] == "unknown"
+    clock.advance(minutes=15)
+    assert publisher.publish_due(ctx)["platforms"]["facebook"] == "published"
+    assert len(graph_server.fb_posts) == 1
+
+
+def test_reviewer_rejection_blocks_autonomous_mode(make_ctx, db, clock, graph_server):
+    ctx = _live_ready(make_ctx, db, clock, graph_server)
+    ops.review(ctx, first_filled_slot(db)["creative_id"], "rejected", "off-brand", by="test")
+    assert publisher.publish_due(ctx)["status"] == "rejected_by_reviewer"
+    assert graph_server.fb_posts == []

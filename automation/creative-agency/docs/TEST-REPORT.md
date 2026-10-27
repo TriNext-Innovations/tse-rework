@@ -1,6 +1,6 @@
 # Test report — 27 October 2026
 
-74 automated tests pass (`pytest -q`: 31 pipeline, 32 unit, 11 HTTP). Plus an
+77 automated tests pass (`pytest -q`: 33 pipeline, 32 unit, 12 HTTP). Plus an
 integration run of the n8n workflows inside a real n8n 2.37.9.
 
 **Nothing here has published to Meta, called fal.ai, or called the Claude API.**
@@ -52,6 +52,11 @@ Third pass **blocked** on two, fixed with tests: `/media/final/../plates/…` se
 raw dot-segments could serve private plates (now judged on the resolved path; tested over
 a raw socket because HTTP clients normalise `..`); the reconcile marker `c1` matched
 `c12` (now boundary-matched). Negative Content-Length clamped.
+
+Fourth pass **blocked** on two, fixed with tests: a Graph 5xx on a write was retried as
+if nothing had posted (now `unknown` → reconciled first; only rate-limit refusals are a
+clean retry); a reviewer's rejection was honoured only in review mode (now a veto in every
+mode). Non-object JSON bodies return 400.
 
 **Residual risk, accepted:** if Meta accepts a Facebook post but it is missing from the
 Page's last 50 posts when reconciliation runs, the retry could post twice. Instagram has
