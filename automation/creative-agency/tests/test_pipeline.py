@@ -472,3 +472,17 @@ def test_dry_run_consumes_its_slot(make_ctx, db, clock, graph_server):
     clock.advance(minutes=30)
     assert publisher.publish_due(ctx)["status"] == "nothing_due"
     assert graph_server.fb_posts == []
+
+
+def test_11_reconcile_marker_does_not_match_longer_creative_id(make_ctx, db, clock, graph_server):
+    ctx = _live_ready(make_ctx, db, clock, graph_server)
+    db.set_setting("platforms", ["facebook"])
+    cid = first_filled_slot(db)["creative_id"]
+    # Another creative's post whose id merely starts with this one's.
+    graph_server.fb_posts.append({"id": "PAGE1_99", "message": f"other ad utm_content=c{cid}2", "url": "x"})
+    db.execute("""INSERT INTO publications (creative_id, platform, slot_at, mode, status, attempts, started_at)
+                  VALUES (%s, 'facebook', %s, 'live', 'unknown', 1, %s)""", (cid, clock.t, clock.t))
+    out = publisher.publish_due(ctx)
+    assert out["platforms"]["facebook"] == "published"
+    ext = db.one("SELECT external_id FROM publications WHERE creative_id = %s", (cid,))["external_id"]
+    assert ext != "PAGE1_99"

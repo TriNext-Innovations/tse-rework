@@ -12,6 +12,7 @@ Duplicate safety, in layers:
 
 from __future__ import annotations
 
+import re
 from datetime import timedelta
 
 import httpx
@@ -270,8 +271,10 @@ def _reconcile(ctx: Ctx, graph: GraphClient, pub: dict, caption: str) -> bool:
             return False
         recent = graph.facebook_recent(limit=50) if pub["platform"] == "facebook" else graph.instagram_recent(limit=50)
         key = "message" if pub["platform"] == "facebook" else "caption"
-        marker = f"utm_content=c{pub['creative_id']}"  # unique per creative; survives text normalisation
-        match = next((p for p in recent if marker in (p.get(key) or "")
+        # The tracking link is unique per creative and survives text normalisation;
+        # the boundary stops c1 matching c12.
+        marker = re.compile(rf"utm_content=c{pub['creative_id']}(?!\d)")
+        match = next((p for p in recent if marker.search(p.get(key) or "")
                       or _norm(p.get(key)) == _norm(caption)), None)
         if match:
             _mark_published(ctx, pub["id"], match["id"], match.get("permalink_url") or match.get("permalink"),

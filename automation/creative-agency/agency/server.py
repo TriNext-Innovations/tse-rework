@@ -63,7 +63,7 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(data)
 
     def _body(self) -> dict:
-        n = int(self.headers.get("Content-Length") or 0)
+        n = max(0, int(self.headers.get("Content-Length") or 0))
         if not n:
             return {}
         raw = self.rfile.read(min(n, 1_000_000))
@@ -145,12 +145,14 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def _media(self, key: str):
-        ctx_storage = build_ctx(self.env, self.db).storage
+        storage = build_ctx(self.env, self.db).storage
+        public_root = (storage.root / "final").resolve()
         try:
-            path = ctx_storage.path(key)
+            path = storage.path(key)
         except ValueError:
             return self._send(404, {"error": "not found"})
-        if not path.is_file() or not key.startswith("final/"):
+        # Judge the *resolved* path: "final/../plates/x" must not escape final/.
+        if public_root not in path.parents or not path.is_file():
             return self._send(404, {"error": "not found"})
         ctype = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
         return self._send(200, path.read_bytes(), ctype)

@@ -101,3 +101,21 @@ def test_healthz_does_not_leak_connection_details(media_server, monkeypatch):
     monkeypatch.setattr(Handler.db, "url", "postgresql://agency:secret@127.0.0.1:1/agency")
     r = httpx.get(f"{base}/healthz")
     assert r.status_code == 503 and r.json() == {"ok": False}
+
+
+def _raw_get(base: str, raw_path: str) -> int:
+    """Send the path byte-for-byte (clients normalise '..' otherwise)."""
+    import socket
+    host, port = base.removeprefix("http://").split(":")
+    with socket.create_connection((host, int(port))) as sock:
+        sock.sendall(f"GET {raw_path} HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n".encode())
+        return int(sock.recv(64).split()[1])
+
+
+def test_media_dot_segments_cannot_reach_plates(server):
+    base, ctx, cid = server
+    raw = ctx.db.one("SELECT raw_asset FROM creatives WHERE id = %s", (cid,))["raw_asset"]
+    assert _raw_get(base, f"/media/final/../{raw}") == 404
+    assert _raw_get(base, "/media/final/../../../../etc/passwd") == 404
+    final = ctx.db.one("SELECT final_asset FROM creatives WHERE id = %s", (cid,))["final_asset"]
+    assert _raw_get(base, f"/media/{final}") == 200
