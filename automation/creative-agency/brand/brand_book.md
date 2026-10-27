@@ -68,10 +68,12 @@ Typography: **Fraunces** (display serif, the storefront's heading face) and
 
 ## Content mix per week (14 slots)
 
-- Brand (5): who TSE is, the 1987 story, the "Generic. Not generic." idea
-- Product (3): what fits which printer, ink vs toner, refill bottles — no invented specs
-- Educational (3): warranty myth, how to read a yield, when to buy, printer care
-- Commercial (3): the price of originals vs compatibles (unquantified), delivery, business quotes
+- Product spotlights (about 3, every 4th–5th post at random): one real product
+  from the store — its name and live price are the hero, set in type. This is how
+  people learn TSE sells cartridges, not printers.
+- Brand (4–5): who TSE is, the 1987 story, the "Generic. Not generic." idea
+- Educational (2–3): warranty myth, ink vs toner, when to buy, printer care
+- Commercial (2–3): the price of originals vs compatibles (unquantified), delivery, business quotes
 
 ## Repetition guard
 

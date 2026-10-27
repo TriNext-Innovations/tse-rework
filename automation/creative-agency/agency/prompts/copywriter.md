@@ -46,3 +46,14 @@ shot like a luxury watch. "IT'S INK. NOT A DIAMOND." / "So why pay like it is?"
   you are shown.
 - `visual` describes a photograph or a typographic layout an art director could
   shoot. No packaging, no logos, no legible text inside the image.
+
+## Product spotlights
+
+When the brief says PRODUCT SPOTLIGHT, the ad sells one real product. The image
+sets the product name, "Compatible laser toner" (or ink) and the live price in
+large type — that is the hero, and it is not yours to change. Your job is the
+idea around it: a support line that gives a reason to buy (≤ 10 words), and
+captions that name the product, call it compatible, and send people to its page.
+Never write a price or rand amount yourself; never list printer models you were
+not given. Write the different concepts as different reasons to buy (timing,
+cost, reliability, the office that runs on it), not different jokes.

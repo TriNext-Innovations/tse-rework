@@ -61,6 +61,18 @@ rebuild. Offers and discounts are deliberately impossible until a fact for them 
 | `qc_min_vision_score` | 7 | out of 10 |
 | `image_model` | `fal-ai/flux-2-pro` | fallback if the art director names an unknown model |
 | `video_enabled` | false | reserved; video is not built (see DECISIONS) |
+| `spotlight_gap_min` / `spotlight_gap_max` | 4 / 5 | a product spotlight every 4–5 posts, at random |
+
+## Product spotlights
+
+About every 4th–5th post (random, continuing week to week) sells one real product.
+The system picks it from the live store (`MEDUSA_STORE_URL` + `MEDUSA_PUBLISHABLE_KEY`):
+compatibles only, no product repeated within 8 weeks, no brand twice in a row. The
+product name, "Compatible laser toner" and the price are set in type from store data;
+the image is product-free (TSE has no photography of its own stock). Before publishing,
+the price is read again: if it changed, the ad is re-rendered with the new price; if the
+product is gone, the slot is held and alerted; if the store is unreachable, it retries.
+Without the store settings, spotlights are simply skipped.
 
 ## Costs (estimates — measure after the first live week)
 

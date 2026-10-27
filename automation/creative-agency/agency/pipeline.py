@@ -12,6 +12,7 @@ to expire and the next tick resumes from the last committed state.
 from __future__ import annotations
 
 import json
+import random
 import time
 import uuid
 from collections.abc import Callable
@@ -22,6 +23,7 @@ from psycopg.types.json import Jsonb
 
 from . import memory
 from .budget import BudgetExceeded, release_visual, reserve_visual
+from .catalogue import Catalogue, CatalogueError, Product, choose_products, spotlight_indexes
 from .config import IMAGE_MODELS, SAST, Env
 from .db import Database
 from .imagegen import FalClient, GenerationError
@@ -49,6 +51,7 @@ class Ctx:
     poll_seconds: float = 120.0
     poll_interval: float = 4.0
     fetch_page: Callable[[str], str] | None = None  # fact re-verification transport (tests inject)
+    catalogue: Catalogue | None = None  # live store; None disables product spotlights
 
     def log(self, stage: str, level: str, message: str, data: dict | None = None, conn=None) -> None:
         self.db.event(stage, level, message, data, run_id=self.run_id, conn=conn)
@@ -95,10 +98,12 @@ def plan_week(ctx: Ctx, week_start: date) -> dict:
         return {"week_start": str(week_start), "created": False, "reason": "no future slots"}
 
     n = len(slot_times(week_start, settings["publish_times"]))
+    spotlights = plan_spotlights(ctx, week_start, n, settings)
     user = (
         f"Plan the campaign for the week starting Monday {week_start:%d %B %Y}.\n"
         f"Publishing slots this week: {n} ({', '.join(settings['publish_times'])} SAST daily). "
         f"Plan exactly {n} assignments, slot_index 0..{n - 1}.\n\n"
+        f"{_spotlight_brief(spotlights)}"
         f"{memory.brief_for_strategist(ctx.db)}"
     )
     plan: CampaignPlan | None = None
@@ -106,7 +111,7 @@ def plan_week(ctx: Ctx, week_start: date) -> dict:
     for _ in range(2):
         candidate = ctx.llm.run("strategist", CampaignPlan, user + (
             "\n\nYour previous plan was invalid: " + "; ".join(problems) if problems else ""), ref=f"plan:{week_start}")
-        problems = validate_plan(candidate, n)
+        problems = validate_plan(candidate, n, set(spotlights))
         if not problems:
             plan = candidate
             break
@@ -128,22 +133,72 @@ def plan_week(ctx: Ctx, week_start: date) -> dict:
         for a in sorted(plan.assignments, key=lambda x: x.slot_index):
             slot = all_slots[a.slot_index]
             if slot not in slots:
+                if a.slot_index in spotlights:
+                    ctx.log("plan", "info", f"spotlight slot {a.slot_index} already past; "
+                            f"{spotlights[a.slot_index].display_title} not used", conn=conn)
                 continue  # already in the past
+            product = spotlights.get(a.slot_index)
             row = conn.execute(
-                """INSERT INTO assignments (campaign_id, slot_at, pillar, angle, audience)
-                   VALUES (%s, %s, %s, %s, %s) ON CONFLICT (slot_at) DO NOTHING RETURNING id""",
+                """INSERT INTO assignments (campaign_id, slot_at, pillar, angle, audience, product)
+                   VALUES (%s, %s, %s, %s, %s, %s) ON CONFLICT (slot_at) DO NOTHING RETURNING id""",
                 (camp["id"], slot, a.pillar, a.angle + (f" [facts: {', '.join(a.fact_ids)}]" if a.fact_ids else ""),
-                 a.audience),
+                 a.audience, Jsonb({**product.as_dict(), "fetched_at": ctx.now().isoformat()}) if product else None),
             ).fetchone()
             conn.execute("INSERT INTO schedule (slot_at) VALUES (%s) ON CONFLICT DO NOTHING", (slot,))
             created += bool(row)
         ctx.log("plan", "info", f"planned {plan.name!r} for {week_start}: {created} assignments",
                 {"campaign_id": camp["id"]}, conn=conn)
     return {"campaign_id": camp["id"], "week_start": str(week_start), "created": True, "assignments": created,
-            "name": plan.name, "proposition": plan.proposition}
+            "name": plan.name, "proposition": plan.proposition,
+            "spotlights": [f"{p.display_title} ({p.price_label})" for _, p in sorted(spotlights.items())]}
 
 
-def validate_plan(plan: CampaignPlan, n: int) -> list[str]:
+def plan_spotlights(ctx: Ctx, week_start: date, n: int, settings: dict) -> dict[int, Product]:
+    """Choose which slots promote a real product, and which product.
+
+    One spotlight every `spotlight_gap_min`..`spotlight_gap_max` posts at
+    random, continuing last week's rhythm. Seeded by the week, so a retried
+    plan picks the same slots. No catalogue (or an unreachable store) means
+    no spotlights this week — planning never blocks on the store."""
+    if ctx.catalogue is None:
+        return {}
+    gap_min, gap_max = int(settings["spotlight_gap_min"]), int(settings["spotlight_gap_max"])
+    week_dt = datetime(week_start.year, week_start.month, week_start.day, tzinfo=SAST)
+    last = ctx.db.one("SELECT max(slot_at) AS at FROM assignments WHERE product IS NOT NULL AND slot_at < %s", (week_dt,))
+    if last and last["at"]:
+        since = ctx.db.one("SELECT count(*) AS n FROM assignments WHERE slot_at > %s AND slot_at < %s",
+                           (last["at"], week_dt))["n"]
+    else:
+        since = gap_min - 1  # first ever: a spotlight lands early in the week
+    rng = random.Random(f"spotlights:{week_start.isoformat()}")
+    indexes = spotlight_indexes(n, since, rng, gap_min, gap_max)
+    if not indexes:
+        return {}
+    recent = ctx.db.query(
+        """SELECT product->>'handle' AS handle, product->>'brand' AS brand FROM assignments
+           WHERE product IS NOT NULL AND slot_at > %s ORDER BY slot_at""", (week_dt - timedelta(days=56),))
+    try:
+        candidates = ctx.catalogue.all()
+    except CatalogueError as exc:
+        ctx.log("plan", "warn", f"store unreachable; no product spotlights this week: {exc}")
+        return {}
+    products = choose_products(candidates, len(indexes), {r["handle"] for r in recent}, rng,
+                               [r["brand"] for r in recent])
+    return dict(zip(indexes, products))
+
+
+def _spotlight_brief(spotlights: dict[int, Product]) -> str:
+    if not spotlights:
+        return ""
+    lines = ["## Product spotlights (fixed — plan these slots around them)",
+             "These slots promote one real product from the store. Give each pillar `product` and an angle about "
+             "that product and who buys it. Use pillar `product` for no other slot.", ""]
+    lines += [f"- slot_index {i}: {p.display_title} — {p.eyebrow.lower()} ({p.brand}), {p.price_label}"
+              for i, p in sorted(spotlights.items())]
+    return "\n".join(lines) + "\n\n"
+
+
+def validate_plan(plan: CampaignPlan, n: int, spotlight_slots: set[int] | None = None) -> list[str]:
     problems = []
     idx = sorted(a.slot_index for a in plan.assignments)
     if idx != list(range(n)):
@@ -154,7 +209,15 @@ def validate_plan(plan: CampaignPlan, n: int) -> list[str]:
         bad = set(a.fact_ids) - usable_fact_ids()
         if bad:
             problems.append(f"slot {a.slot_index} cites unknown/restricted facts {sorted(bad)}")
-    if n == 14 and counts != PILLAR_MIX:
+    if spotlight_slots:
+        product_slots = {a.slot_index for a in plan.assignments if a.pillar == "product"}
+        if product_slots != spotlight_slots:
+            problems.append(f"pillar 'product' must be used exactly at slots {sorted(spotlight_slots)}, "
+                            f"got {sorted(product_slots)}")
+        if n == 14 and (counts.get("brand", 0) < 4 or counts.get("educational", 0) < 2
+                        or counts.get("commercial", 0) < 2):
+            problems.append(f"need at least 4 brand, 2 educational, 2 commercial; got {counts}")
+    elif n == 14 and counts != PILLAR_MIX:
         problems.append(f"pillar mix must be {PILLAR_MIX}, got {counts}")
     return problems
 
@@ -224,7 +287,31 @@ def _assignment_context(ctx: Ctx, a: dict) -> str:
         f"Territories to avoid: {', '.join(avoid) or 'none'}\n\n"
         f"## Assignment\nPillar: {a['pillar']}\nAngle: {a['angle']}\nAudience: {a['audience']}\n"
         f"Publishes: {a['slot_at'].astimezone(SAST):%A %d %B, %H:%M} SAST\n"
+        + (_product_context(a["product"]) if a.get("product") else "")
     )
+
+
+def _product_context(p: dict) -> str:
+    product = _as_product(p)
+    return (
+        "\n## PRODUCT SPOTLIGHT — this ad sells one real product\n"
+        f"Product: {product.display_title} (SKU {product.sku}), {product.eyebrow.lower()}, brand {product.brand}.\n"
+        f"Price today: {product.price_label} incl. VAT. Page: /products/{product.handle}\n"
+        "The renderer sets the product name, the line "
+        f"'{product.eyebrow}' and the price large in the image, from live store data. You write:\n"
+        f"- `headline`: exactly '{product.headline}' (it is replaced by the store title anyway)\n"
+        "- `support_line`: one short line (≤ 10 words) giving the reason to buy — the idea of the ad\n"
+        "- captions that name the product and send people to the product page. NEVER write the price "
+        "or any rand amount in the captions or support line: the price lives only in the image so it "
+        "can be updated if the store changes it. Don't list compatible printer models — they are not in "
+        "your brief; say the page shows which printers it fits.\n"
+        "- `visual`: a product-free still life that suits this product (no cartridges, no boxes, no "
+        "printers with logos) — the type is the hero.\n"
+    )
+
+
+def _as_product(p: dict) -> Product:
+    return Product(**{k: p[k] for k in ("handle", "title", "sku", "brand", "cartridge_type", "compatible", "price_zar")})
 
 
 def _develop_round(ctx: Ctx, a: dict, settings: dict) -> dict:
@@ -287,10 +374,14 @@ def _develop_round(ctx: Ctx, a: dict, settings: dict) -> dict:
                 c = concepts[i]
                 headline = (review.headline_edit.strip() if i == review.selected_index and review.headline_edit.strip()
                             else c.headline.strip())
+                if a.get("product"):
+                    headline = _as_product(a["product"]).headline  # store data, never the model's wording
                 qc = QCResult()
                 check_copy({"headline": headline, "support_line": c.support_line, "claims": c.claims},
-                           c.caption_facebook.replace("{link}", ""), c.caption_instagram, c.hashtags, qc, stale)
-                check_repetition(headline, "", history, qc)
+                           c.caption_facebook.replace("{link}", ""), c.caption_instagram, c.hashtags, qc, stale,
+                           product=a.get("product"))
+                if not a.get("product"):  # a product's own name is not a repeated idea
+                    check_repetition(headline, "", history, qc)
                 if qc.passed:
                     chosen = i
                     conn.execute("UPDATE concepts SET status = 'selected', headline = %s WHERE id = %s",
@@ -327,9 +418,11 @@ def _total(s) -> int:
 # Production: art direction → generation (async) → render
 # =============================================================================
 
-def utm_link(ctx: Ctx, campaign_week: date, creative_id: int, platform: str = "facebook") -> str:
+def utm_link(ctx: Ctx, campaign_week: date, creative_id: int, platform: str = "facebook",
+             product: dict | None = None) -> str:
     prefix = ctx.db.setting("utm_campaign_prefix")
-    return (f"{ctx.env.site_url}/?utm_source={platform}&utm_medium=social"
+    path = f"/products/{product['handle']}" if product else "/"
+    return (f"{ctx.env.site_url}{path}?utm_source={platform}&utm_medium=social"
             f"&utm_campaign={prefix}-{campaign_week:%Y-%m-%d}&utm_content=c{creative_id}")
 
 
@@ -419,7 +512,11 @@ def _art_direct(ctx: Ctx, a: dict, attempt: int) -> dict:
         f"{recent_prompts or '- none yet'}\n{feedback}"), ref=f"assignment:{a['id']}:art:{attempt}")
     if brief.model not in IMAGE_MODELS:
         brief.model = ctx.db.setting("image_model")
+    if a.get("product"):
+        brief.layout = "spotlight"  # the product name and price are the hero
     prompt = brief.prompt.strip()
+    if a.get("product") and "no cartridges" not in prompt.lower():
+        prompt += " No cartridges, toner, ink bottles, packaging, boxes or printers in the frame."
     if "no text" not in prompt.lower():
         prompt += " No text, letters, numbers, labels, logos or watermarks anywhere in the image."
     hashtags = " ".join(h if h.startswith("#") else f"#{h}" for h in data.get("hashtags", [])[:2])
@@ -431,7 +528,7 @@ def _art_direct(ctx: Ctx, a: dict, attempt: int) -> dict:
                VALUES (%s, %s, %s, %s, %s, %s, %s, '', '') RETURNING id""",
             (a["id"], concept["id"], attempt, Jsonb(brief.model_dump()), prompt, brief.model, brief.layout),
         ).fetchone()
-        link = utm_link(ctx, camp_week, row["id"])
+        link = utm_link(ctx, camp_week, row["id"], product=a.get("product"))
         fb = data["caption_facebook"]
         fb = fb.replace("{link}", link) if "{link}" in fb else f"{fb.rstrip()}\n\n{link}"
         ig = data["caption_instagram"].rstrip() + (f"\n\n{hashtags}" if hashtags else "")
@@ -544,21 +641,31 @@ def _fail_job(ctx: Ctx, a: dict, cr: dict, job: dict, error: str) -> str:
     return "generation_failed"
 
 
+def render_creative(plate: bytes, a: dict, concept: dict, brief: dict, preferred: str):
+    """Render one creative. Spotlights take name and price from the assignment's
+    store data; other ads fall back to safer layouts if the type won't fit."""
+    common = dict(support_line=concept["support_line"] or "", text_zone=brief.get("text_zone", "bottom"),
+                  tone=brief.get("tone", "dark"), accent=brief.get("accent", "none"))
+    if a.get("product"):
+        p = _as_product(a["product"])
+        return render(plate, layout="spotlight", headline=p.headline, eyebrow=p.eyebrow, price=p.price_label, **common)
+    last: RenderError | None = None
+    for layout in [preferred] + [x for x in ("editorial", "poster") if x != preferred]:
+        try:
+            return render(plate, layout=layout, headline=concept["headline"], **common)
+        except RenderError as exc:
+            last = exc
+    raise last  # type: ignore[misc]
+
+
 def _render(ctx: Ctx, a: dict, cr: dict) -> dict:
     concept = ctx.db.one("SELECT * FROM concepts WHERE id = %s", (cr["concept_id"],))
     brief = cr["art_brief"]
     plate = ctx.storage.read(cr["raw_asset"])
-    layouts = [cr["layout"]] + [x for x in ("editorial", "poster") if x != cr["layout"]]
-    last_error = None
-    for layout in layouts:
-        try:
-            r = render(plate, layout=layout, headline=concept["headline"], support_line=concept["support_line"] or "",
-                       text_zone=brief.get("text_zone", "bottom"), tone=brief.get("tone", "dark"),
-                       accent=brief.get("accent", "none"))
-            break
-        except RenderError as exc:
-            last_error = str(exc)
-    else:
+    try:
+        r = render_creative(plate, a, concept, brief, cr["layout"])
+    except RenderError as exc:
+        last_error = str(exc)
         ctx.db.execute("UPDATE creatives SET status = 'rejected', last_error = %s WHERE id = %s", (last_error, cr["id"]))
         ctx.db.execute("UPDATE concepts SET status = 'rejected', rejection = %s WHERE id = %s",
                        (f"render: {last_error}", concept["id"]))
@@ -602,8 +709,9 @@ def _qc(ctx: Ctx, a: dict) -> dict:
     det = QCResult()
     check_copy({"headline": concept["headline"], "support_line": concept["support_line"], "claims": concept["claims"]},
                cr["caption_facebook"].replace(cr["link_url"] or "", ""), cr["caption_instagram"],
-               concept["data"].get("hashtags", []), det, stale_facts(ctx.db))
-    check_repetition(concept["headline"], cr["image_prompt"],
+               concept["data"].get("hashtags", []), det, stale_facts(ctx.db), product=a.get("product"))
+    # A product's name is not a repeated idea ("Brother TN 277." vs "TN 279."); compositions still are.
+    check_repetition("" if a.get("product") else concept["headline"], cr["image_prompt"],
                      memory.recent_work(ctx.db, days=120, exclude_assignment=a["id"]), det)
     check_asset(jpeg, cr["final_sha256"], cr["art_brief"].get("render", {}), det)
     ctx.db.execute("INSERT INTO qc_reviews (creative_id, kind, passed, findings) VALUES (%s, 'deterministic', %s, %s)",
@@ -612,20 +720,10 @@ def _qc(ctx: Ctx, a: dict) -> dict:
         return _qc_reject(ctx, a, cr, concept, det.targets, [f.detail for f in det.findings])
 
     try:
-        vision = ctx.llm.run("qc_vision", VisionReview, (
-            f"Intended headline: {concept['headline']}\nIntended support line: {concept['support_line'] or '(none)'}\n"
-            f"Concept: {concept['idea']}\nVisual intent: {concept['visual']}\n"
-            f"Facebook caption:\n{cr['caption_facebook']}\n"), images=[Image(jpeg, "image/jpeg")],
-            ref=f"assignment:{a['id']}:qc:{cr['attempt']}")
+        passed, vision = vision_review(ctx, a, cr, concept, jpeg, settings)
     except LLMError as exc:
         release(ctx, a["id"], "produced", f"vision QC unavailable: {exc}")
         return {"status": "error", "error": str(exc)}
-    blockers = [i for i in vision.issues if i.severity in ("blocker", "major")]
-    passed = (vision.verdict == "approve" and vision.score >= float(settings["qc_min_vision_score"])
-              and vision.headline_matches and vision.logo_present_and_intact
-              and not vision.stray_text_in_artwork and not blockers)
-    ctx.db.execute("INSERT INTO qc_reviews (creative_id, kind, passed, score, findings) VALUES (%s, 'vision', %s, %s, %s)",
-                   (cr["id"], passed, vision.score, Jsonb(vision.model_dump())))
     if not passed:
         target = {"copy"} if vision.verdict == "reject" else {"image"}
         if any(i.category == "claim" for i in vision.issues):
@@ -642,6 +740,26 @@ def _qc(ctx: Ctx, a: dict) -> dict:
     release(ctx, a["id"], "approved")
     ctx.log("qc", "info", f"creative {cr['id']} approved (vision {vision.score})", {"slot_at": str(a["slot_at"])})
     return {"status": "approved", "creative_id": cr["id"], "score": vision.score}
+
+
+def vision_review(ctx: Ctx, a: dict, cr: dict, concept: dict, jpeg: bytes, settings: dict) -> tuple[bool, VisionReview]:
+    """Vision QC on the exact pixels; records the review. Raises LLMError."""
+    product = _as_product(a["product"]) if a.get("product") else None
+    vision = ctx.llm.run("qc_vision", VisionReview, (
+        f"Intended headline: {product.headline if product else concept['headline']}\n"
+        f"Intended support line: {concept['support_line'] or '(none)'}\n"
+        + (f"Product spotlight: the image must also show the line '{product.eyebrow}' and the "
+           f"price '{product.price_label}' exactly, and no product, packaging or printer.\n" if product else "")
+        + f"Concept: {concept['idea']}\nVisual intent: {concept['visual']}\n"
+        f"Facebook caption:\n{cr['caption_facebook']}\n"), images=[Image(jpeg, "image/jpeg")],
+        ref=f"assignment:{a['id']}:qc:{cr['attempt']}")
+    blockers = [i for i in vision.issues if i.severity in ("blocker", "major")]
+    passed = (vision.verdict == "approve" and vision.score >= float(settings["qc_min_vision_score"])
+              and vision.headline_matches and vision.logo_present_and_intact
+              and not vision.stray_text_in_artwork and not blockers)
+    ctx.db.execute("INSERT INTO qc_reviews (creative_id, kind, passed, score, findings) VALUES (%s, 'vision', %s, %s, %s)",
+                   (cr["id"], passed, vision.score, Jsonb(vision.model_dump())))
+    return passed, vision
 
 
 def _qc_reject(ctx: Ctx, a: dict, cr: dict, concept: dict, targets: set[str], details: list[str]) -> dict:

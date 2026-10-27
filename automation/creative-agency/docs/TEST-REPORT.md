@@ -1,6 +1,6 @@
 # Test report — 27 October 2026
 
-78 automated tests pass (`pytest -q`: 34 pipeline, 32 unit, 12 HTTP). Plus an
+103 automated tests pass (`pytest -q`: 34 pipeline, 33 unit, 12 HTTP, 24 spotlight). Plus an
 integration run of the n8n workflows inside a real n8n 2.37.9.
 
 **Nothing here has published to Meta, called fal.ai, or called the Claude API.**
@@ -79,13 +79,43 @@ All six workflows import. Executed via `n8n execute`:
 | 6 Performance | `no_credentials` / `no_published_posts` handled |
 | 7 Monitoring | recover, alerts claim, health digest to Discord |
 
+## Product spotlights (added 27 Oct)
+
+13 more tests: the 4–5 post rhythm across weeks, randomness, product rotation (no
+repeats, compatibles only, brand alternation), the store being down at planning
+(plan proceeds without spotlights) and at publish (retried), a price in a caption
+rejected, a price change re-rendered before publishing, a removed product held, and
+a "type over clutter" busyness gate (calibrated on real fal plates: calm 0–0.2 %,
+cluttered 3.4 %, threshold 1.5 %).
+
+Independent review of the spotlight branch **blocked** on three, all fixed with tests:
+prices were rounded to whole rand (a cents change went undetected) — now exact to the cent,
+shown as R449.50 when needed; a re-render failure at publish crashed the run — now reported
+and the slot failed with an alert; a re-priced image skipped vision QC and human approval —
+it now gets its own vision review and, in review mode, needs re-approval. A product renamed
+in the store is held (captions name it). Waived with evidence: the busyness gate applies to
+every layout by design (all four layouts pass it on calm plates in `test_render_layouts_*`);
+"incl. VAT" matches the verified fact `prices-incl-vat`, and the API's prices equal the
+site's displayed prices (Canon 737 R300, Brother TN 277 R450).
+
+Second review **blocked** on one, fixed with a test: a store price of R0 or less would have
+been re-rendered and posted — now held. Also fixed: a product flipping between compatible
+and original is held; "ZAR 399" / "399 rand" in captions are caught; spotlight slots that
+fall in the past are logged. Not done: stock re-check (the store API doesn't expose stock).
+
+Live: the real `Catalogue` client read all 313 products from the production store
+(read-only), and two spotlights were rendered from live data (Brother TN-3185 R400,
+Canon 067 R700) over real fal plates. Both passed the deterministic checks; the Canon
+plate has pseudo-text on a filing-cabinet label that only the vision review would catch.
+
 ## Live services touched
 
 | Service | What | Result |
 |---------|------|--------|
 | www.tse.co.za | fact re-verification (read-only GETs) | all 18 facts' evidence found |
 | Claude API | — | not called |
-| fal.ai | — | not called |
+| fal.ai | 5 FLUX.2 [pro] images via the fal connector (27 Oct, ~$0.23) | rendered and checked; see above |
+| Medusa store | product list + single product reads (read-only) | 313 products, prices match the site |
 | Meta Graph | — | not called |
 
 ## Still to prove live (in this order)

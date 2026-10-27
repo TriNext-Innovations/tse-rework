@@ -33,6 +33,8 @@ BANNED_PHRASES = [
     r"unlock", r"elevate your",
 ]
 
+MAX_BUSY_PCT = 1.5  # calibrated 27 Oct: calm grounds 0–0.2 %, type over an object 3.4 %
+
 EMOJI_RE = re.compile("[\U0001F300-\U0001FAFF\U00002600-\U000027BF\U0001F000-\U0001F02F]")
 
 
@@ -150,7 +152,7 @@ def check_claims(text: str, cited: list[str], result: QCResult, stale: set[str] 
 # -- copy ------------------------------------------------------------------------
 
 def check_copy(concept: dict, caption_facebook: str, caption_instagram: str, hashtags: list[str],
-               result: QCResult, stale: set[str] | None = None) -> None:
+               result: QCResult, stale: set[str] | None = None, product: dict | None = None) -> None:
     headline = concept["headline"].strip()
     support = (concept.get("support_line") or "").strip()
     if not headline:
@@ -181,7 +183,27 @@ def check_copy(concept: dict, caption_facebook: str, caption_instagram: str, has
     if re.search(r"\b(color|organize|favorite|center)\b", (caption_facebook + caption_instagram + headline).lower()):
         result.fail("copy.spelling", "US spelling; use South African English")
     text = " ".join([headline, support, caption_facebook, caption_instagram])
+    if product:
+        check_spotlight_copy(product, support, caption_facebook, caption_instagram, result)
     check_claims(text, list(concept.get("claims") or []), result, stale)
+
+
+def check_spotlight_copy(product: dict, support: str, caption_facebook: str, caption_instagram: str,
+                         result: QCResult) -> None:
+    """Spotlight rules: the price appears only in the rendered image (so it can
+    be re-rendered when the store changes it); the product is named and, when
+    it is a compatible, called compatible — never passed off as the OEM item."""
+    words = " ".join([support, caption_facebook, caption_instagram])
+    if re.search(r"\bR\s?\d|\bZAR\s?\d|\d[\d ,.]*\s?(rand|ZAR)\b", words, flags=re.IGNORECASE):
+        result.fail("spotlight.price_in_copy", "price belongs only in the rendered image, not in captions or support line")
+    name = re.sub(r"(?i)^generic ", "", product["title"])
+    title = re.sub(r"[^a-z0-9]", "", name.lower())
+    if title not in re.sub(r"[^a-z0-9]", "", caption_facebook.lower()):
+        result.fail("spotlight.unnamed", f"Facebook caption does not name {product['title']!r}")
+    if product.get("compatible"):
+        for name, cap in (("Facebook", caption_facebook), ("Instagram", caption_instagram)):
+            if "compatible" not in cap.lower():
+                result.fail("spotlight.compatible", f"{name} caption must call it a compatible cartridge")
 
 
 # -- repetition ------------------------------------------------------------------
@@ -190,7 +212,7 @@ def check_repetition(headline: str, image_prompt: str, history: list[dict], resu
     """history: rows with headline, image_prompt (may be None), from recent
     selected/published work, excluding the current assignment."""
     for row in history:
-        if row.get("headline") and similarity(headline, row["headline"]) >= 0.6:
+        if headline and row.get("headline") and similarity(headline, row["headline"]) >= 0.6:
             result.fail("memory.headline", f"too close to earlier headline {row['headline']!r}")
         if image_prompt and row.get("image_prompt") and similarity(image_prompt, row["image_prompt"]) >= 0.8:
             result.fail("memory.composition", f"image prompt repeats creative #{row.get('creative_id')}", "image")
@@ -224,7 +246,9 @@ def check_asset(jpeg: bytes, expected_sha256: str | None, layout_meta: dict, res
         if b["x"] < MARGIN - 1 or b["x"] + b["w"] > FEED_WIDTH - MARGIN + 1 or b["y"] < 32 or b["y"] + b["h"] > FEED_HEIGHT - 32:
             result.fail("layout.safe_area", f"{name} outside the safe area", "layout")
     contrast = layout_meta.get("contrast", {})
-    for key in ("headline", "support"):
+    if contrast.get("busy_pct", 0) > MAX_BUSY_PCT:
+        result.fail("layout.busy", f"type sits on a busy part of the image ({contrast['busy_pct']}% strong edges)", "image")
+    for key in ("headline", "support", "price"):
         if key in contrast and contrast[key] < MIN_CONTRAST:
             result.fail("layout.contrast", f"{key} contrast {contrast[key]} < {MIN_CONTRAST}", "image")
 

@@ -34,3 +34,12 @@ angles fit there. Mornings reach people at work.
 
 Do not plan discounts, competitions, testimonials or anything the fact sheet
 cannot support.
+
+## Product spotlights
+
+Some weeks you are given fixed product spotlights: slots where the ad sells one
+real product from the store, chosen by the system (a real SKU and price, roughly
+every fourth or fifth post). Plan those slots with pillar `product` and an angle
+about who buys that product and why now. Use pillar `product` nowhere else; the
+rest of the week carries the campaign's point of view, so the spotlights read as
+the campaign's proof rather than interruptions.

@@ -15,7 +15,7 @@ import io
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageStat
+from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps, ImageStat
 
 from .config import BRAND_DIR, FEED_HEIGHT, FEED_WIDTH
 
@@ -229,8 +229,11 @@ def _logo(tone: str, width: int) -> Image.Image:
 
 def render(plate_bytes: bytes, *, layout: str, headline: str, support_line: str = "",
            text_zone: str = "bottom", tone: str = "dark", accent: str = "none",
-           cta: str = "tse.co.za") -> RenderResult:
-    if layout not in {"gallery", "poster", "editorial", "caption_band"}:
+           cta: str = "tse.co.za", eyebrow: str = "", price: str = "") -> RenderResult:
+    """`eyebrow` and `price` are for product spotlights: a small line above the
+    headline ("Compatible laser toner") and the price set large below it, both
+    straight from store data."""
+    if layout not in {"gallery", "poster", "editorial", "caption_band", "spotlight"}:
         raise RenderError(f"unknown layout {layout}")
     if not headline.strip():
         raise RenderError("empty headline")
@@ -259,6 +262,10 @@ def render(plate_bytes: bytes, *, layout: str, headline: str, support_line: str 
         band_h = 420
         zone = Box(0, H - band_h, W, band_h) if text_zone == "bottom" else Box(0, 0, W, band_h)
         size_range, max_lines = (44, 64), 2
+    elif layout == "spotlight":
+        canvas = cover(plate, W, H, "top" if text_zone == "bottom" else "bottom")
+        zone = Box(0, 0, W, int(H * 0.64)) if text_zone == "top" else Box(0, int(H * 0.36), W, H - int(H * 0.36))
+        size_range, max_lines = (64, 112), 2
     else:  # gallery
         canvas = cover(plate, W, H, "top" if text_zone == "bottom" else "bottom")
         zone = Box(0, int(H * 0.62), W, H - int(H * 0.62)) if text_zone == "bottom" else Box(0, 0, W, int(H * 0.38))
@@ -272,14 +279,24 @@ def render(plate_bytes: bytes, *, layout: str, headline: str, support_line: str 
     support_h = int(len(support_lines) * 34 * 1.3)
     logo_row_h = max(logo.height + 34, support_h)
     gap = 28
-    available = zone.h - 2 * 56 - logo_row_h - gap
+    eyebrow_font = sans_font(26, 650)
+    eyebrow = eyebrow.strip().upper()
+    eyebrow_h = 26 + 22 if eyebrow else 0
+    price_size = 0
+    available = zone.h - 2 * 56 - logo_row_h - gap - eyebrow_h
+    if price:
+        # The price gets the largest type on the page, then the name fits what is left.
+        price_size = min(176, max(96, int(available * 0.5)))
+        available -= int(price_size * 1.05)
     font, lines, size = fit_headline(headline, measure, available, max_lines, size_range)
     headline_h = int(len(lines) * size * 1.02)
+    price_h = int(price_size * 1.05) if price else 0
+    block_h = eyebrow_h + headline_h + price_h
 
     # Ensure the ground under the type is calm enough: scrim until contrast holds.
-    text_block_top = zone.y + 56 if text_zone == "top" else zone.y + zone.h - 56 - logo_row_h - gap - headline_h
+    text_block_top = zone.y + 56 if text_zone == "top" else zone.y + zone.h - 56 - logo_row_h - gap - block_h
     text_area = Box(MARGIN - 8, max(0, text_block_top - 8), measure + 16,
-                    min(H, headline_h + gap + logo_row_h + 16))
+                    min(H, block_h + gap + logo_row_h + 16))
     if layout != "editorial":
         strength = 0.0
         while region_worst_contrast(canvas, text_area, text_rgb) < MIN_CONTRAST and strength < 0.92:
@@ -296,11 +313,22 @@ def render(plate_bytes: bytes, *, layout: str, headline: str, support_line: str 
         if bar_y > zone.y + 8:
             draw.rectangle((MARGIN, bar_y, MARGIN + 64, bar_y + 6), fill=ACCENTS[accent])
 
-    boxes["headline"] = _draw_lines(draw, lines, font, MARGIN, text_block_top, 1.02, text_rgb)
-    row_y = text_block_top + headline_h + gap
-
     support_rgb = ACCENTS[accent] if (accent != "none" and tone == "dark") else (
         (200, 200, 200) if tone == "dark" else (42, 42, 42))
+    y = text_block_top
+    if eyebrow:
+        draw.text((MARGIN, y), eyebrow, font=eyebrow_font, fill=support_rgb)
+        boxes["eyebrow"] = Box(MARGIN, y, int(eyebrow_font.getlength(eyebrow)), 30)
+        y += eyebrow_h
+    boxes["headline"] = _draw_lines(draw, lines, font, MARGIN, y, 1.02, text_rgb)
+    y += headline_h
+    if price:
+        price_font = headline_font(price_size)
+        price_rgb = ACCENTS[accent] if (accent != "none" and tone == "dark") else text_rgb
+        draw.text((MARGIN, y), price, font=price_font, fill=price_rgb)
+        boxes["price"] = Box(MARGIN, y, int(price_font.getlength(price)), price_h)
+        y += price_h
+    row_y = y + gap
     if support_lines:
         boxes["support"] = _draw_lines(draw, support_lines, support_font, MARGIN, row_y, 1.3, support_rgb)
     logo_x, logo_y = W - MARGIN - logo.width, row_y
@@ -313,12 +341,30 @@ def render(plate_bytes: bytes, *, layout: str, headline: str, support_line: str 
     contrast = {"headline": round(region_worst_contrast(ground, boxes["headline"], text_rgb), 2)}
     if "support" in boxes:
         contrast["support"] = round(region_worst_contrast(ground, boxes["support"], support_rgb), 2)
+    if "price" in boxes:
+        contrast["price"] = round(region_worst_contrast(ground, boxes["price"], price_rgb), 2)
     contrast["logo_ground_luma"] = round(_lum(_mean(ground, boxes["logo"])), 3)
+    text_boxes = [b for k, b in boxes.items() if k in ("eyebrow", "headline", "price", "support")]
+    union = Box(MARGIN, min(b.y for b in text_boxes), measure,
+                max(b.y + b.h for b in text_boxes) - min(b.y for b in text_boxes))
+    contrast["busy_pct"] = busyness(ground, union)
 
     out = io.BytesIO()
     canvas.convert("RGB").save(out, "JPEG", quality=92, optimize=True, subsampling=0)
     return RenderResult(jpeg=out.getvalue(), width=W, height=H, layout=layout, headline_lines=lines,
                         headline_size=size, support_lines=support_lines, boxes=boxes, contrast=contrast)
+
+
+def busyness(img: Image.Image, box: Box, threshold: int = 10) -> float:
+    """Share (%) of strong edges behind the type, after a blur that ignores film
+    grain. Calibrated on real fal plates: calm grounds 0–0.2 %, type over an object 3.4 %."""
+    pad = 6  # filter on a padded crop, then drop the pad: the crop border itself reads as an edge
+    x0, y0 = max(0, box.x - pad), max(0, box.y - pad)
+    x1, y1 = min(img.width, box.x + box.w + pad), min(img.height, box.y + box.h + pad)
+    edges = img.crop((x0, y0, x1, y1)).convert("L").filter(ImageFilter.GaussianBlur(2)).filter(ImageFilter.FIND_EDGES)
+    edges = edges.crop((box.x - x0, box.y - y0, box.x - x0 + box.w, box.y - y0 + box.h))
+    px = _pixels(edges)
+    return round(100 * sum(p > threshold for p in px) / max(1, len(px)), 2)
 
 
 def _mean(img: Image.Image, box: Box) -> tuple[float, float, float]:

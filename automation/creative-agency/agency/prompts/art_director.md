@@ -52,3 +52,15 @@ paper documents", "chrome reflections with text", "extra cartridges").
 Prefer photographic realism and restraint over spectacle. One idea, one subject,
 real materials, controlled light. Never the glossy, over-saturated "AI look":
 ask for natural imperfection, real surfaces, believable shadows.
+
+## Product spotlights
+
+For a PRODUCT SPOTLIGHT the layout is always `spotlight`: product name and price
+set very large in the text zone, over your plate. The plate must contain **no
+cartridges, toner, ink bottles, packaging or printers** — the real product has no
+photography we can use, and a generated one would not be what ships. Shoot an
+atmosphere that suits the product and its buyer instead: morning light on a desk
+corner, a ream of fresh paper, a filing cabinet, ink-dark water for an ink cartridge.
+Leave the text zone (top or bottom 64%) exceptionally calm: an even wall, sky,
+fabric or tabletop with no objects or edges, because three lines of large type
+sit there.
