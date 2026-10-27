@@ -1,0 +1,161 @@
+{
+  "id": "tseAgencyProd01",
+  "name": "TSE Agency — 2 Creative production loop",
+  "description": "Stages B–F. Each run does QC → collect finished generations → submit new generations → develop new concepts, a few steps at a time. State lives in Postgres; an interrupted run resumes on the next tick. No retries on this node: the next tick is the retry.",
+  "active": false,
+  "nodes": [
+    {
+      "id": "fd4d0302-2a59-5e83-90e2-df9851ee6dce",
+      "name": "Run now",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        120
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "5bcef2c9-e47a-52d8-991b-e1520da5a7b6",
+      "name": "Every 20 minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "*/20 * * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "3eae0dd2-62f7-59a1-bc3b-695f471251b5",
+      "name": "Advance pipeline",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://tse-agency:8080/v1/cycle",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 900000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"max_steps\": 6}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_AGENCY_CREDENTIAL_ID",
+          "name": "TSE Agency API"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 1,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "d9747967-c73d-54f5-b68f-c514d0169730",
+      "name": "Summarise",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const steps = ($json.result && $json.result.steps) || [];\nconst notable = steps.filter(s => ['approved', 'failed', 'render_failed'].includes(s.status));\nreturn notable.map(s => ({ json: s }));"
+      }
+    },
+    {
+      "id": "b04a055b-b246-5a3d-8cdb-91414d02032f",
+      "name": "Report approvals",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        720,
+        0
+      ],
+      "parameters": {
+        "authentication": "webhook",
+        "content": "={{ ($json.status === 'approved' ? '✅ Creative #' + $json.creative_id + ' approved (vision ' + $json.score + ')' : '⚠️ ' + $json.stage + ' ' + $json.status + ' ' + JSON.stringify($json).slice(0, 300)) }}",
+        "options": {}
+      },
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "hK9mTseDiscordW1",
+          "name": "TSE Social Discord Webhook"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every 20 minutes": {
+      "main": [
+        [
+          {
+            "node": "Advance pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Advance pipeline": {
+      "main": [
+        [
+          {
+            "node": "Summarise",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarise": {
+      "main": [
+        [
+          {
+            "node": "Report approvals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run now": {
+      "main": [
+        [
+          {
+            "node": "Advance pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Africa/Johannesburg",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "tseAgencyAlert01"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

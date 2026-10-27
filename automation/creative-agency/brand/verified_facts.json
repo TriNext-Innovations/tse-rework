@@ -1,0 +1,163 @@
+{
+  "_about": "The only business facts the agency may state. Every fact carries the exact text that proves it on the live site; `agency facts verify` re-fetches each source and blocks any creative that relies on a fact whose evidence has disappeared. status=usable may be stated; status=restricted needs an operator to substantiate it before copy may rely on it.",
+  "verified_at": "2026-10-27",
+  "facts": [
+    {
+      "id": "est-1987",
+      "statement": "TSE has supplied printer consumables in South Africa since 1987.",
+      "allowed_phrasings": ["Since 1987", "Est. 1987", "39 years"],
+      "source_url": "https://www.tse.co.za/legal/terms",
+      "evidence": "TSE has supplied printer consumables in South Africa since 1987",
+      "status": "usable"
+    },
+    {
+      "id": "family-run-kya-sands",
+      "statement": "TSE is family-run, from Unit 34, A.P.D. Industrial Park, Kya Sands, Johannesburg.",
+      "allowed_phrasings": ["Family-run", "Kya Sands, Johannesburg"],
+      "source_url": "https://www.tse.co.za/",
+      "evidence": "Family-run from Unit 34, Kya Sands Industrial",
+      "status": "usable"
+    },
+    {
+      "id": "compatibles-not-oem",
+      "statement": "TSE's compatible cartridges are made by third parties to fit the listed printers; brand names identify printers only.",
+      "allowed_phrasings": ["Compatible with <printer>", "generic", "compatible"],
+      "source_url": "https://www.tse.co.za/legal/terms",
+      "evidence": "they are not made by the printer manufacturer, and we don't claim otherwise",
+      "status": "usable",
+      "rule": "Never say 'HP toner' or 'genuine'. Say 'compatible with HP ...'."
+    },
+    {
+      "id": "warranty-not-void",
+      "statement": "Using a compatible cartridge does not void your printer's warranty.",
+      "allowed_phrasings": ["Using a compatible cartridge doesn't void your printer's warranty"],
+      "source_url": "https://www.tse.co.za/legal/terms",
+      "evidence": "Using a compatible cartridge does not void your printer's warranty",
+      "status": "usable"
+    },
+    {
+      "id": "replacement-guarantee",
+      "statement": "If a TSE cartridge is faulty, TSE replaces it.",
+      "allowed_phrasings": ["If a cartridge fails, we replace it", "Faulty? We replace it."],
+      "source_url": "https://www.tse.co.za/",
+      "evidence": "If a cartridge fails, we replace it",
+      "status": "usable"
+    },
+    {
+      "id": "six-month-faulty-cover",
+      "statement": "Faulty cartridges are covered for 6 months from delivery: repair, replacement or refund, at the customer's choice; TSE pays collection.",
+      "allowed_phrasings": ["6-month cover on faulty cartridges"],
+      "source_url": "https://www.tse.co.za/delivery",
+      "evidence": "Faulty cartridges — 6-month guarantee",
+      "status": "usable"
+    },
+    {
+      "id": "overnight-jhb-pta",
+      "statement": "Order before noon and choose Overnight for next-business-day delivery to Johannesburg and Pretoria.",
+      "allowed_phrasings": ["Order by noon, on your desk tomorrow (Overnight, JHB & PTA)"],
+      "source_url": "https://www.tse.co.za/",
+      "evidence": "Next-day delivery to JHB/PTA on Overnight",
+      "status": "usable",
+      "rule": "Always carry both conditions: before noon AND Overnight AND JHB/PTA only. Never 'next-day nationwide'."
+    },
+    {
+      "id": "same-day-dispatch",
+      "statement": "Orders placed before noon are dispatched the same day.",
+      "allowed_phrasings": ["Order before noon for same-day dispatch"],
+      "source_url": "https://www.tse.co.za/",
+      "evidence": "Order before noon for same-day dispatch",
+      "status": "usable"
+    },
+    {
+      "id": "nationwide-courier",
+      "statement": "TSE delivers countrywide by courier (The Courier Guy); collection from the Kya Sands warehouse is free.",
+      "allowed_phrasings": ["Delivered nationwide", "Free collection in Kya Sands"],
+      "source_url": "https://www.tse.co.za/",
+      "evidence": "collection from our Kya Sands warehouse is always free",
+      "status": "usable"
+    },
+    {
+      "id": "free-delivery-over-2000",
+      "statement": "Delivery is free on orders over R2,000.",
+      "allowed_phrasings": ["Free delivery over R2,000"],
+      "source_url": "https://www.tse.co.za/",
+      "evidence": "Free on orders over R2,000",
+      "status": "usable",
+      "rule": "Commercial terms change: re-verified before every publish."
+    },
+    {
+      "id": "brands-covered",
+      "statement": "TSE stocks cartridges for 12 printer brands: Brother, Canon, Epson, HP, Konica Minolta, Kyocera, Lexmark, OKI, Pantum, Ricoh, Samsung and Xerox.",
+      "allowed_phrasings": ["12 printer brands"],
+      "source_url": "https://www.tse.co.za/",
+      "evidence": "12 brands",
+      "status": "usable"
+    },
+    {
+      "id": "printer-finder",
+      "statement": "The site finds every cartridge that fits a given printer model.",
+      "allowed_phrasings": ["Tell us your printer. We'll do the rest."],
+      "source_url": "https://www.tse.co.za/",
+      "evidence": "Tell us your printer. We'll do the rest.",
+      "status": "usable"
+    },
+    {
+      "id": "business-quotes",
+      "statement": "Offices, schools and print shops can get business pricing by quote (011 708 2304, sales@tse.co.za).",
+      "allowed_phrasings": ["Business pricing on request"],
+      "source_url": "https://www.tse.co.za/",
+      "evidence": "Offices, schools, print shops",
+      "status": "usable"
+    },
+    {
+      "id": "prices-incl-vat",
+      "statement": "Prices on the site include VAT.",
+      "allowed_phrasings": ["incl. VAT"],
+      "source_url": "https://www.tse.co.za/",
+      "evidence": "Prices include VAT",
+      "status": "usable"
+    },
+    {
+      "id": "fraction-of-oem-price",
+      "statement": "TSE's compatibles cost a fraction of the original-brand price.",
+      "allowed_phrasings": ["a fraction of the price"],
+      "source_url": "https://www.tse.co.za/",
+      "evidence": "at a fraction of the price",
+      "status": "usable",
+      "rule": "General, unquantified only. Any number (%, rand saving) must come from a live product comparison, which this system does not yet have."
+    },
+    {
+      "id": "cost-per-page-60",
+      "statement": "Average 60% cost-per-page reduction vs matching OEM across the top 50 SKUs.",
+      "source_url": "https://www.tse.co.za/",
+      "evidence": "Average cost-per-page reduction",
+      "status": "restricted",
+      "rule": "Client-stated statistic with no substantiation on file. Blocked until the client supplies the calculation."
+    },
+    {
+      "id": "meets-oem-yield",
+      "statement": "Compatibles meet or exceed OEM page yield.",
+      "source_url": "https://www.tse.co.za/",
+      "evidence": "meet or exceed OEM page yield",
+      "status": "restricted",
+      "rule": "Comparative performance claim; blocked until substantiated. Page yields are disputed (tse-rework #519)."
+    },
+    {
+      "id": "prints-as-well-as-original",
+      "statement": "Compatibles are guaranteed to work as well as the original; if not, TSE replaces them.",
+      "allowed_phrasings": ["If it doesn't print like the original, we replace it"],
+      "source_url": "https://www.tse.co.za/",
+      "evidence": "If it doesn't print as well as the original — we replace it",
+      "status": "usable",
+      "rule": "Always pair with the replacement promise. Never 'better than the original'."
+    }
+  ],
+  "never": [
+    "Discounts, sales, promo codes or limited-time offers unless an operator adds them here with dates",
+    "Specific prices, page yields or percentages not in this file",
+    "Testimonials, review scores or customer counts",
+    "'Better than original', 'genuine', 'OEM', or a printer brand's logo or packaging",
+    "Delivery promises beyond the exact conditions above",
+    "Fake scarcity ('only 3 left', 'ends tonight')"
+  ]
+}
