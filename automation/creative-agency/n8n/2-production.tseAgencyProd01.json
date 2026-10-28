@@ -65,40 +65,6 @@
       "retryOnFail": true,
       "maxTries": 1,
       "waitBetweenTries": 5000
-    },
-    {
-      "id": "d9747967-c73d-54f5-b68f-c514d0169730",
-      "name": "Summarise",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        480,
-        0
-      ],
-      "parameters": {
-        "jsCode": "const steps = ($json.result && $json.result.steps) || [];\nconst notable = steps.filter(s => ['approved', 'failed', 'render_failed'].includes(s.status));\nreturn notable.map(s => ({ json: s }));"
-      }
-    },
-    {
-      "id": "b04a055b-b246-5a3d-8cdb-91414d02032f",
-      "name": "Report approvals",
-      "type": "n8n-nodes-base.discord",
-      "typeVersion": 2,
-      "position": [
-        720,
-        0
-      ],
-      "parameters": {
-        "authentication": "webhook",
-        "content": "={{ ($json.status === 'approved' ? '✅ Creative #' + $json.creative_id + ' approved (vision ' + $json.score + ')' : '⚠️ ' + $json.stage + ' ' + $json.status + ' ' + JSON.stringify($json).slice(0, 300)) }}",
-        "options": {}
-      },
-      "credentials": {
-        "discordWebhookApi": {
-          "id": "hK9mTseDiscordW1",
-          "name": "TSE Social Discord Webhook"
-        }
-      }
     }
   ],
   "connections": {
@@ -107,28 +73,6 @@
         [
           {
             "node": "Advance pipeline",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Advance pipeline": {
-      "main": [
-        [
-          {
-            "node": "Summarise",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Summarise": {
-      "main": [
-        [
-          {
-            "node": "Report approvals",
             "type": "main",
             "index": 0
           }

@@ -75,7 +75,7 @@ def publish_due(ctx: Ctx, graph: GraphClient | None = None) -> dict:
         for m in missed:
             why = "no approved creative" if m["creative_id"] is None else (
                 f"creative {m['creative_id']} was never published (unapproved in review mode, or failing)")
-            ctx.log("publish", "alert", f"slot {m['slot_at']} lapsed: {why}", conn=conn)
+            ctx.log("publish", "alert", f"slot {m['slot_at']} lapsed: {why}", {"urgent": mode != "dry_run"}, conn=conn)
         slot = conn.execute(
             """SELECT s.*, c.human_approval FROM schedule s JOIN creatives c ON c.id = s.creative_id
                WHERE s.status IN ('filled', 'publishing', 'partial') AND s.slot_at <= %s AND s.slot_at > %s
@@ -110,7 +110,7 @@ def publish_due(ctx: Ctx, graph: GraphClient | None = None) -> dict:
     if problems:
         ctx.db.execute("UPDATE schedule SET status = 'failed', updated_at = now() WHERE slot_at = %s", (slot["slot_at"],))
         ctx.log("publish", "alert", f"creative {creative['id']} failed pre-publish checks; not published",
-                {"problems": problems})
+                {"problems": problems, "urgent": mode != "dry_run"})
         return {"status": "preflight_failed", "creative_id": creative["id"], "problems": problems}
 
     if mode != "dry_run" and graph is None:
@@ -131,7 +131,8 @@ def publish_due(ctx: Ctx, graph: GraphClient | None = None) -> dict:
     ctx.db.execute("UPDATE schedule SET status = %s, updated_at = %s WHERE slot_at = %s",
                    (final, ctx.now(), slot["slot_at"]))
     if final in ("partial", "failed"):
-        ctx.log("publish", "alert", f"slot {slot['slot_at']} ended {final}: {results}", {"creative_id": creative["id"]})
+        ctx.log("publish", "alert", f"slot {slot['slot_at']} ended {final}: {results}",
+                {"creative_id": creative["id"], "urgent": mode != "dry_run"})
     _maybe_pause(ctx, settings)
     return {"status": final, "creative_id": creative["id"], "mode": mode, "platforms": results}
 
@@ -195,7 +196,7 @@ def refresh_spotlight(ctx: Ctx, creative: dict) -> list[str]:
     if creative["human_approval"] == "approved" and ctx.db.setting("mode") == "review":
         # A reviewer approved the old image, not this one.
         ctx.db.execute("UPDATE creatives SET human_approval = NULL WHERE id = %s", (creative["id"],))
-        ctx.log("publish", "alert", f"creative {creative['id']} re-priced; needs re-approval on /review")
+        ctx.log("publish", "alert", f"creative {creative['id']} re-priced; needs re-approval on /review", {"urgent": True})
         return [f"{RETRYABLE_PREFIX} re-priced ad awaits re-approval"]
     return []
 
@@ -314,7 +315,7 @@ def _publish_one(ctx: Ctx, creative: dict, platform: str, slot_at, mode: str, gr
                        (status, str(exc)[:2000], Jsonb(exc.payload), pub["id"]))
         level = "alert" if (exc.auth or status == "failed") else "error"
         ctx.log("publish", level, f"{platform} publish failed for creative {creative['id']}: {exc}",
-                {"publication_id": pub["id"], "status": status, "auth": exc.auth})
+                {"publication_id": pub["id"], "status": status, "auth": exc.auth, "urgent": level == "alert"})
         return status
 
 
@@ -372,4 +373,4 @@ def _maybe_pause(ctx: Ctx, settings: dict) -> None:
     rows = ctx.db.query("SELECT status FROM publications WHERE mode = 'live' ORDER BY updated_at DESC LIMIT %s", (n,))
     if len(rows) == n and all(r["status"] == "failed" for r in rows):
         ctx.db.set_setting("publishing_paused", True, by="auto-pause")
-        ctx.log("publish", "alert", f"{n} consecutive live publications failed; publishing auto-paused")
+        ctx.log("publish", "alert", f"{n} consecutive live publications failed; publishing auto-paused", {"urgent": True})

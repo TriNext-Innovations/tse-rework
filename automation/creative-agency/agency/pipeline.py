@@ -484,6 +484,11 @@ def _produce(ctx: Ctx, a: dict) -> dict:
             release(ctx, a["id"], "concept_ready", str(exc))
             return {"status": "error", "error": str(exc)}
     outcome = _submit(ctx, a, cr, settings)
+    if outcome == "post_budget_spent":
+        ctx.log("produce", "alert", f"assignment {a['id']} spent its per-ad image budget without an approved ad",
+                {"assignment_id": a["id"]})
+        release(ctx, a["id"], "failed", "per-ad image budget spent")
+        return {"status": "failed", "assignment_id": a["id"]}
     release(ctx, a["id"], "in_production", None if outcome == "submitted" else outcome)
     return {"status": outcome, "creative_id": cr["id"]}
 
@@ -559,9 +564,17 @@ def _submit(ctx: Ctx, a: dict, cr: dict, settings: dict) -> str:
                 reserve_visual(conn, settings=settings, assignment_id=a["id"], job_ref=f"job:{job['id']}",
                                provider="fal", model=model, amount=est)
         except BudgetExceeded as exc:
+            if exc.scope == "post":
+                # This ad has spent its image allowance: more ticks can't change that.
+                ctx.db.execute("UPDATE creatives SET status = 'failed', last_error = %s, updated_at = now() WHERE id = %s",
+                               (str(exc), cr["id"]))
+                return "post_budget_spent"
             ctx.db.execute("UPDATE creatives SET status = 'budget_blocked', last_error = %s, updated_at = now() WHERE id = %s",
                            (str(exc), cr["id"]))
-            ctx.log("produce", "alert", f"budget stop: {exc}", {"creative_id": cr["id"]})
+            # Retried every tick until the month turns: say so once a day, not every tick.
+            if not ctx.db.one("""SELECT 1 AS x FROM events WHERE level = 'alert' AND message LIKE 'monthly visual budget%%'
+                                 AND created_at > now() - interval '24 hours'"""):
+                ctx.log("produce", "alert", f"monthly visual budget: {exc}; image generation paused until next month")
             return "budget_blocked"
     if ctx.fal is None:
         ctx.log("produce", "error", "FAL_KEY not configured; cannot generate", {"creative_id": cr["id"]})

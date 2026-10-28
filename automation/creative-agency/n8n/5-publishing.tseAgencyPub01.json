@@ -65,61 +65,6 @@
       "retryOnFail": true,
       "maxTries": 1,
       "waitBetweenTries": 5000
-    },
-    {
-      "id": "c25c2300-8e74-5768-9858-bb717ce07028",
-      "name": "Something happened?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        480,
-        0
-      ],
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "4f19dac1-8fe6-5444-a4e9-9aca3d84cbeb",
-              "leftValue": "={{ ['done','partial','failed','preflight_failed'].includes($json.result.status) }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      }
-    },
-    {
-      "id": "6433376b-fbd3-5e9e-ab65-5c047d4152e1",
-      "name": "Report publication",
-      "type": "n8n-nodes-base.discord",
-      "typeVersion": 2,
-      "position": [
-        720,
-        -80
-      ],
-      "parameters": {
-        "authentication": "webhook",
-        "content": "={{ ($json.result.mode === 'dry_run' ? '🧪 DRY RUN ' : '📣 ') + 'Slot result: **' + $json.result.status + '** — creative #' + $json.result.creative_id + '\\n' + JSON.stringify($json.result.platforms || $json.result.problems || {}) }}",
-        "options": {}
-      },
-      "credentials": {
-        "discordWebhookApi": {
-          "id": "hK9mTseDiscordW1",
-          "name": "TSE Social Discord Webhook"
-        }
-      }
     }
   ],
   "connections": {
@@ -132,29 +77,6 @@
             "index": 0
           }
         ]
-      ]
-    },
-    "Publish due slot": {
-      "main": [
-        [
-          {
-            "node": "Something happened?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Something happened?": {
-      "main": [
-        [
-          {
-            "node": "Report publication",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        []
       ]
     },
     "Run now": {

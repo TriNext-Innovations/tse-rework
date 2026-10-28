@@ -1,7 +1,7 @@
 {
   "id": "tseAgencyPerf01",
   "name": "TSE Agency — 6 Performance",
-  "description": "Stage: performance analysis. Metrics feed the weekly report, which feeds the next planning cycle.",
+  "description": "Stage: performance analysis. Metrics feed the weekly report, which feeds the next planning cycle and is summarised in Monday's daily digest.",
   "active": false,
   "nodes": [
     {
@@ -67,8 +67,8 @@
       "waitBetweenTries": 5000
     },
     {
-      "id": "5b0a71e6-ceac-57f2-8cfb-fdd501663401",
-      "name": "Monday 07:30",
+      "id": "ac4d0f03-c803-5780-900f-af2296329f24",
+      "name": "Monday 06:30",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
@@ -80,7 +80,7 @@
           "interval": [
             {
               "field": "cronExpression",
-              "expression": "30 7 * * 1"
+              "expression": "30 6 * * 1"
             }
           ]
         }
@@ -116,61 +116,6 @@
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000
-    },
-    {
-      "id": "6b1a94fd-7b61-5248-b1b7-276bd593f750",
-      "name": "Report created?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        480,
-        220
-      ],
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "c3c5384a-3f7a-5e2a-b181-4d56119d973d",
-              "leftValue": "={{ $json.result.created === true }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      }
-    },
-    {
-      "id": "e0f68530-7113-5984-bc1e-0d0afd38a904",
-      "name": "Post weekly report",
-      "type": "n8n-nodes-base.discord",
-      "typeVersion": 2,
-      "position": [
-        720,
-        160
-      ],
-      "parameters": {
-        "authentication": "webhook",
-        "content": "={{ '📊 **TSE ads — week of ' + $json.result.week_start + '**\\n' + $json.result.summary.headline_summary + '\\n\\n**Next week:** ' + $json.result.summary.next_week_guidance }}",
-        "options": {}
-      },
-      "credentials": {
-        "discordWebhookApi": {
-          "id": "hK9mTseDiscordW1",
-          "name": "TSE Social Discord Webhook"
-        }
-      }
     }
   ],
   "connections": {
@@ -185,7 +130,7 @@
         ]
       ]
     },
-    "Monday 07:30": {
+    "Monday 06:30": {
       "main": [
         [
           {
@@ -194,29 +139,6 @@
             "index": 0
           }
         ]
-      ]
-    },
-    "Weekly report": {
-      "main": [
-        [
-          {
-            "node": "Report created?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Report created?": {
-      "main": [
-        [
-          {
-            "node": "Post weekly report",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        []
       ]
     },
     "Run now": {

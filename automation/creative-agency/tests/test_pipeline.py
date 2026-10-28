@@ -339,7 +339,8 @@ def test_10_monthly_visual_budget_hard_stop(make_ctx, db):
         pipeline.cycle(ctx, 8)
     assert len(fal.submitted) == 1
     assert db.one("SELECT count(*) AS n FROM creatives WHERE status = 'budget_blocked'")["n"] >= 1
-    assert db.one("SELECT count(*) AS n FROM events WHERE level = 'alert' AND message LIKE 'budget stop%%'")["n"] >= 1
+    # One alert a day, however many ticks hit the cap.
+    assert db.one("SELECT count(*) AS n FROM events WHERE level = 'alert' AND message LIKE 'monthly visual budget%%'")["n"] == 1
     assert not ops.health(ctx)["ok"]
 
 
@@ -359,6 +360,9 @@ def test_10_per_post_budget(make_ctx, db):
     jobs = db.one("SELECT count(*) AS n FROM generation_jobs j JOIN creatives c ON c.id = j.creative_id "
                   "WHERE c.assignment_id = %s", (first,))["n"]
     assert jobs == 1  # the second attempt would exceed $0.05 for this post
+    assert db.one("SELECT status FROM assignments WHERE id = %s", (first,))["status"] == "failed"
+    assert db.one("SELECT count(*) AS n FROM events WHERE level = 'alert' AND message LIKE %s",
+                  (f"assignment {first} spent its per-ad image budget%",))["n"] == 1  # once, not every tick
 
 
 def test_10_claude_budget_stops_llm_stages(make_ctx, db):
@@ -532,3 +536,32 @@ def test_no_provider_reserves_nothing(make_ctx, db):
     assert db.one("SELECT count(*) AS n FROM generation_jobs")["n"] == 0
     with db.tx() as conn:
         assert float(month_spend(conn, "visual")) == 0.0
+
+
+def test_digest_groups_and_claims_alerts(make_ctx, db):
+    ctx = make_ctx()
+    for i in (3, 7, 12):
+        ctx.log("develop", "alert", f"assignment {i} exhausted 3 concept rounds")
+    ctx.log("publish", "alert", "2 consecutive live publications failed; publishing auto-paused", {"urgent": True})
+    d = ops.digest(ctx, "https://example/agency/review")
+    assert "assignment N exhausted N concept rounds (×3)" in d["text"]
+    assert "https://example/agency/review" in d["text"] and d["alerts"] == 4
+    assert ops.claim_alerts(ctx) == []  # the digest delivered them
+
+
+def test_hourly_claim_takes_only_urgent(make_ctx, db):
+    ctx = make_ctx()
+    ctx.log("develop", "alert", "assignment 3 exhausted 3 concept rounds")
+    ctx.log("publish", "alert", "facebook publish failed for creative 9", {"urgent": True})
+    urgent = ops.claim_alerts(ctx, urgent_only=True)
+    assert [a["message"] for a in urgent] == ["facebook publish failed for creative 9"]
+    assert "exhausted" in ops.digest(ctx)["text"]  # the rest waits for the digest
+
+
+def test_dry_run_publishing_raises_no_urgent_alerts(make_ctx, db, clock):
+    ctx = make_ctx()
+    pipeline.ensure_planned(ctx)
+    clock.advance(days=3)  # every early slot lapses with nothing approved
+    publisher.publish_due(ctx)
+    assert db.one("SELECT count(*) AS n FROM events WHERE level = 'alert'")["n"] > 0
+    assert ops.claim_alerts(ctx, urgent_only=True) == []

@@ -40,7 +40,8 @@ ROUTES = {
     ("POST", "/v1/report/weekly"): lambda ctx, body: ops.weekly_report(
         ctx, date.fromisoformat(body["week_start"]) if body.get("week_start") else None),
     ("GET", "/v1/health"): lambda ctx, body: ops.health(ctx),
-    ("POST", "/v1/alerts/claim"): lambda ctx, body: {"alerts": ops.claim_alerts(ctx)},
+    ("POST", "/v1/alerts/claim"): lambda ctx, body: {"alerts": ops.claim_alerts(ctx, urgent_only=bool(body.get("urgent_only")))},
+    ("POST", "/v1/digest"): lambda ctx, body: ops.digest(ctx, body.get("dashboard_url")),
     ("GET", "/v1/settings"): lambda ctx, body: ctx.db.settings(),
     ("GET", "/v1/upcoming"): lambda ctx, body: {"slots": ops.upcoming(ctx)},
 }
@@ -194,6 +195,11 @@ class Handler(BaseHTTPRequestHandler):
 def review_page(ctx) -> str:
     rows = ops.upcoming(ctx)
     h = ops.health(ctx)
+    recent = ctx.db.query("SELECT message FROM events WHERE level = 'alert' AND created_at > now() - interval '24 hours'")
+    notes = "".join(f"<li>{html.escape(m)}{f' <b>×{n}</b>' if n > 1 else ''}</li>" for m, n in ops.alert_summary(recent)[:10])
+    problems = "".join(f"<li>{html.escape(p)}</li>" for p in h["problems"])
+    status_panel = (f"<section class='status'><h2>Needs a look</h2><ul>{problems}{notes}</ul></section>"
+                    if problems or notes else "")
     cards = []
     for r in rows:
         if not r["creative_id"]:
@@ -218,13 +224,15 @@ body{{font:15px/1.5 system-ui,sans-serif;margin:0;background:#0a0a0a;color:#eded
 header{{padding:16px 20px;border-bottom:1px solid #2a2a2a}} main{{display:grid;gap:20px;padding:20px;grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}}
 article{{background:#151515;border:1px solid #2a2a2a;border-radius:10px;padding:14px}} img{{width:100%;border-radius:6px}}
 h3{{font-size:15px;margin:0 0 10px}} .meta{{color:#9a9a9a;font-size:13px}} pre{{white-space:pre-wrap;font:13px/1.45 system-ui}}
+.status{{margin:16px 20px 0;padding:12px 16px;border:1px solid #3a3a1a;border-radius:10px;background:#16160c}}
+.status h2{{font-size:14px;margin:0 0 6px;color:#dfe344}} .status ul{{margin:0;padding-left:18px;color:#cfcfcf}}
 .d.approved{{color:#dfe344}} .d.rejected{{color:#f57272}} .d.pending{{color:#41e0f5}} .empty{{opacity:.6}}
 form{{display:flex;gap:8px;flex-wrap:wrap}} input{{flex:1;min-width:120px;background:#0a0a0a;color:#ededed;border:1px solid #333;border-radius:6px;padding:6px}}
 button{{background:#41e0f5;border:0;border-radius:6px;padding:6px 12px;font-weight:600;cursor:pointer}} button[value=rejected]{{background:#333;color:#ededed}}
 </style></head><body><header><strong>TSE creative agency</strong> · mode <b>{h['mode']}</b> (effective {h['effective_mode']})
 {' · <b style="color:#f57272">PAUSED</b>' if h['paused'] else ''} · queue {h['queue']['days_covered']} days ·
 visual ${h['spend_month_usd']['visual']}/{h['spend_month_usd']['visual_limit']} · Claude ${h['spend_month_usd']['claude']}</header>
-<main>{''.join(cards) or '<p>Nothing scheduled.</p>'}</main></body></html>"""
+{status_panel}<main>{''.join(cards) or '<p>Nothing scheduled.</p>'}</main></body></html>"""
 
 
 def serve(host: str = "0.0.0.0", port: int = 8080) -> None:
