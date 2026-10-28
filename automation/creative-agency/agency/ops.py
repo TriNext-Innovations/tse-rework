@@ -87,13 +87,59 @@ def recover(ctx: Ctx) -> dict:
             "cancelled_past_assignments": len(expired)}
 
 
-def claim_alerts(ctx: Ctx, limit: int = 20) -> list[dict]:
+def claim_alerts(ctx: Ctx, limit: int = 20, urgent_only: bool = False) -> list[dict]:
+    """Alerts not yet sent anywhere, marked sent. `urgent_only` takes just the
+    ones that can't wait for the daily digest (live publishing problems)."""
+    urgent = "AND coalesce((data->>'urgent')::boolean, false)" if urgent_only else ""
     with ctx.db.tx() as conn:
         return conn.execute(
-            """UPDATE events SET notified_at = now() WHERE id IN (
-                   SELECT id FROM events WHERE level = 'alert' AND notified_at IS NULL ORDER BY id LIMIT %s
+            f"""UPDATE events SET notified_at = now() WHERE id IN (
+                   SELECT id FROM events WHERE level = 'alert' AND notified_at IS NULL {urgent} ORDER BY id LIMIT %s
                    FOR UPDATE SKIP LOCKED)
                RETURNING id, stage, message, data, created_at""", (limit,)).fetchall()
+
+
+def alert_summary(rows: list[dict]) -> list[tuple[str, int]]:
+    """Group alerts that differ only in numbers ("assignment 12 …", "assignment 31 …")."""
+    import re
+    counts: dict[str, int] = {}
+    for r in rows:
+        key = re.sub(r"\d[\d.:\- ]*\d|\d", "N", r["message"])[:140]
+        counts[key] = counts.get(key, 0) + 1
+    return sorted(counts.items(), key=lambda kv: -kv[1])
+
+
+def digest(ctx: Ctx, dashboard_url: str | None = None) -> dict:
+    """The one daily message: queue, spend, what happened, what needs a human."""
+    h = health(ctx)
+    alerts = claim_alerts(ctx, limit=500)
+    day = ctx.db.one(
+        """SELECT count(*) FILTER (WHERE status = 'approved' AND updated_at > now() - interval '24 hours') AS approved,
+                  count(*) FILTER (WHERE status = 'rejected' AND updated_at > now() - interval '24 hours') AS rejected
+           FROM creatives""")
+    pubs = ctx.db.one("""SELECT count(*) FILTER (WHERE status = 'published') AS live,
+                                count(*) FILTER (WHERE status = 'dry_run') AS dry
+                         FROM publications WHERE updated_at > now() - interval '24 hours'""")
+    report = ctx.db.one("SELECT week_start, summary FROM performance_reports WHERE created_at > now() - interval '24 hours'")
+    q, spend = h["queue"], h["spend_month_usd"]
+    lines = [
+        f"{'🟢' if h['ok'] else '🟠'} **TSE agency — daily** · mode {h['effective_mode']}"
+        + (" · **PAUSED**" if h["paused"] else ""),
+        f"Queue: {q['days_covered']} days ready ({q['approved_slots']}/{q['expected_slots']} slots this week)",
+        f"Last 24 h: {day['approved']} ads approved, {day['rejected']} rejected by QC"
+        + (f", {pubs['live']} posted" if pubs["live"] else "") + (f", {pubs['dry']} dry-run slots" if pubs["dry"] else ""),
+        f"Spend this month: images ${spend['visual']:.2f} / ${spend['visual_limit']:.0f} · Claude ${spend['claude']:.2f} / ${spend['claude_limit']:.0f}",
+    ]
+    if h["problems"]:
+        lines.append("Needs a look: " + "; ".join(h["problems"]))
+    if alerts:
+        lines.append("Alerts:")
+        lines += [f"• {msg}" + (f" (×{n})" if n > 1 else "") for msg, n in alert_summary(alerts)[:8]]
+    if report:
+        lines.append(f"📊 Weekly report ({report['week_start']}): {report['summary'].get('headline_summary', '')}")
+    if dashboard_url:
+        lines.append(dashboard_url)
+    return {"text": "\n".join(lines)[:1900], "ok": h["ok"], "alerts": len(alerts)}
 
 
 # -- performance ------------------------------------------------------------------

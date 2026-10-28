@@ -18,7 +18,9 @@ from .config import LLM_PRICES, SAST
 
 
 class BudgetExceeded(RuntimeError):
-    pass
+    def __init__(self, message: str, scope: str = "monthly"):
+        super().__init__(message)
+        self.scope = scope  # "monthly" (resets next month) | "post" (final for this ad)
 
 
 def month_start(now: datetime | None = None) -> datetime:
@@ -56,7 +58,7 @@ def reserve_visual(conn: psycopg.Connection, *, settings: dict, assignment_id: i
         raise BudgetExceeded(f"monthly visual budget: spent/reserved ${spent:.2f} + ${amount_d:.3f} > ${monthly:.2f}")
     post_spent = creative_visual_spend(conn, assignment_id)
     if post_spent + amount_d > per_post:
-        raise BudgetExceeded(f"per-post visual budget: ${post_spent:.3f} + ${amount_d:.3f} > ${per_post:.2f}")
+        raise BudgetExceeded(f"per-post visual budget: ${post_spent:.3f} + ${amount_d:.3f} > ${per_post:.2f}", scope="post")
     conn.execute(
         """INSERT INTO spend_ledger (category, provider, model, amount_usd, kind, ref)
            VALUES ('visual', %s, %s, %s, 'reservation', %s)""",

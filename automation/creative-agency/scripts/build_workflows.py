@@ -99,13 +99,8 @@ def build() -> dict[str, dict]:
         "tseAgencyPlan01", "TSE Agency — 1 Planning",
         [schedule("Daily 05:30", "30 5 * * *", [0, 0]),
          agency("Verify facts on tse.co.za", "POST", "/v1/facts/verify", [240, 0], {}, timeout_ms=120_000),
-         agency("Plan unplanned weeks", "POST", "/v1/plan", [480, 0], {}),
-         code("New campaigns", "const planned = ($json.result && $json.result.planned) || [];\n"
-              "return planned.filter(p => p.created).map(p => ({ json: p }));", [720, 0]),
-         discord("Announce campaign",
-                 "={{ '🗓️ **New TSE campaign planned** — week of ' + $json.week_start + '\\n**' + $json.name + '**\\n'"
-                 " + $json.proposition + '\\n' + $json.assignments + ' assignments queued.' }}", [960, 0])],
-        chain("Daily 05:30", "Verify facts on tse.co.za", "Plan unplanned weeks", "New campaigns", "Announce campaign"),
+         agency("Plan unplanned weeks", "POST", "/v1/plan", [480, 0], {})],
+        chain("Daily 05:30", "Verify facts on tse.co.za", "Plan unplanned weeks"),
         "Stage A. Re-verifies the fact sheet against the live site, then plans any week in the next 8 days "
         "without a campaign (current week included). Idempotent.", run_now=("Verify facts on tse.co.za",))
 
@@ -115,75 +110,56 @@ def build() -> dict[str, dict]:
         [schedule("Every 20 minutes", "*/20 * * * *", [0, 0]),
          agency("Advance pipeline", "POST", "/v1/cycle", [240, 0], {"max_steps": 6, "time_budget_s": 420},
                 timeout_ms=900_000, retries=0),
-         code("Summarise", "const steps = ($json.result && $json.result.steps) || [];\n"
-              "const notable = steps.filter(s => ['approved', 'failed', 'render_failed'].includes(s.status));\n"
-              "return notable.map(s => ({ json: s }));", [480, 0]),
-         discord("Report approvals",
-                 "={{ ($json.status === 'approved' ? '✅ Creative #' + $json.creative_id + ' approved (vision ' + $json.score + ')'"
-                 " : '⚠️ ' + $json.stage + ' ' + $json.status + ' ' + JSON.stringify($json).slice(0, 300)) }}", [720, 0])],
-        chain("Every 20 minutes", "Advance pipeline", "Summarise", "Report approvals"),
+        ],
+        chain("Every 20 minutes", "Advance pipeline"),
         "Stages B–F. Each run does QC → collect finished generations → submit new generations → develop new "
         "concepts, a few steps at a time. State lives in Postgres; an interrupted run resumes on the next tick. "
         "No retries on this node: the next tick is the retry.", run_now=("Advance pipeline",))
 
     # 5 — Publishing. Runs every 15 minutes; the service publishes only slots that are due.
+    # No message per slot: results appear on the dashboard and in the daily digest; a live
+    # failure raises an urgent alert that Monitoring sends within the hour.
     wfs["5-publishing.tseAgencyPub01.json"] = workflow(
         "tseAgencyPub01", "TSE Agency — 5 Publishing",
         [schedule("Every 15 minutes", "*/15 * * * *", [0, 0]),
-         agency("Publish due slot", "POST", "/v1/publish", [240, 0], {}, timeout_ms=300_000, retries=0),
-         if_true("Something happened?", "={{ ['done','partial','failed','preflight_failed'].includes($json.result.status) }}",
-                 [480, 0]),
-         discord("Report publication",
-                 "={{ ($json.result.mode === 'dry_run' ? '🧪 DRY RUN ' : '📣 ') + 'Slot result: **' + $json.result.status"
-                 " + '** — creative #' + $json.result.creative_id + '\\n' + JSON.stringify($json.result.platforms || $json.result.problems || {}) }}",
-                 [720, -80])],
-        {**chain("Every 15 minutes", "Publish due slot", "Something happened?"),
-         "Something happened?": {"main": [[{"node": "Report publication", "type": "main", "index": 0}], []]}},
+         agency("Publish due slot", "POST", "/v1/publish", [240, 0], {}, timeout_ms=300_000, retries=0)],
+        chain("Every 15 minutes", "Publish due slot"),
         "Stage: publishing. Fires every 15 minutes so the 08:00/20:00 slots (configurable in the service's "
         "settings, not here) are met to within the quarter-hour. Duplicate-safe by construction: the service "
         "locks the slot, writes one row per creative+platform under a UNIQUE constraint, and reconciles "
         "interrupted calls against Meta instead of re-posting. No n8n retries — never retry a publish blindly.",
         run_now=("Publish due slot",))
 
-    # 6 — Performance: daily metrics, Monday report.
+    # 6 — Performance: daily metrics, Monday report (summarised in the next daily digest).
     wfs["6-performance.tseAgencyPerf01.json"] = workflow(
         "tseAgencyPerf01", "TSE Agency — 6 Performance",
         [schedule("Daily 06:15", "15 6 * * *", [0, 0]),
          agency("Collect Meta metrics", "POST", "/v1/metrics/collect", [240, 0], {}, timeout_ms=300_000),
-         schedule("Monday 07:30", "30 7 * * 1", [0, 220]),
-         agency("Weekly report", "POST", "/v1/report/weekly", [240, 220], {}),
-         if_true("Report created?", "={{ $json.result.created === true }}", [480, 220]),
-         discord("Post weekly report",
-                 "={{ '📊 **TSE ads — week of ' + $json.result.week_start + '**\\n' + $json.result.summary.headline_summary"
-                 " + '\\n\\n**Next week:** ' + $json.result.summary.next_week_guidance }}", [720, 160])],
-        {**chain("Daily 06:15", "Collect Meta metrics"), **chain("Monday 07:30", "Weekly report", "Report created?"),
-         "Report created?": {"main": [[{"node": "Post weekly report", "type": "main", "index": 0}], []]}},
-        "Stage: performance analysis. Metrics feed the weekly report, which feeds the next planning cycle.",
+         schedule("Monday 06:30", "30 6 * * 1", [0, 220]),
+         agency("Weekly report", "POST", "/v1/report/weekly", [240, 220], {})],
+        {**chain("Daily 06:15", "Collect Meta metrics"), **chain("Monday 06:30", "Weekly report")},
+        "Stage: performance analysis. Metrics feed the weekly report, which feeds the next planning cycle "
+        "and is summarised in Monday's daily digest.",
         run_now=("Collect Meta metrics", "Weekly report"))
 
-    # 7 — Monitoring and recovery.
+    # 7 — Monitoring: the only workflow that talks to Discord.
     wfs["7-monitoring.tseAgencyMon01.json"] = workflow(
         "tseAgencyMon01", "TSE Agency — 7 Monitoring",
         [schedule("Hourly", "5 * * * *", [0, 0]),
          agency("Recover", "POST", "/v1/recover", [240, 0], {}),
-         agency("Claim alerts", "POST", "/v1/alerts/claim", [480, 0], {}),
+         agency("Claim urgent alerts", "POST", "/v1/alerts/claim", [480, 0], {"urgent_only": True}),
          code("One item per alert", "return (($json.result && $json.result.alerts) || []).map(a => ({ json: a }));", [720, 0]),
-         discord("Send alert", "={{ '🚨 **TSE agency** [' + $json.stage + '] ' + $json.message }}", [960, 0]),
+         discord("Send urgent alert", "={{ '🚨 **TSE agency** ' + $json.message }}", [960, 0]),
          schedule("Daily 07:00", "0 7 * * *", [0, 220]),
-         agency("Health", "GET", "/v1/health", [240, 220], timeout_ms=60_000),
-         discord("Daily digest",
-                 "={{ ($json.result.ok ? '🟢' : '🟠') + ' **TSE agency daily** — mode ' + $json.result.mode"
-                 " + ' (effective ' + $json.result.effective_mode + ')' + ($json.result.paused ? ' · **PAUSED**' : '')"
-                 " + '\\nQueue: ' + $json.result.queue.days_covered + ' days ready (' + $json.result.queue.approved_slots + '/'"
-                 " + $json.result.queue.expected_slots + ' slots)'"
-                 " + '\\nSpend this month: visual $' + $json.result.spend_month_usd.visual + ' / $' + $json.result.spend_month_usd.visual_limit"
-                 " + ' · Claude $' + $json.result.spend_month_usd.claude"
-                 " + ($json.result.problems.length ? '\\nProblems: ' + $json.result.problems.join('; ') : '') }}", [480, 220])],
-        {**chain("Hourly", "Recover", "Claim alerts", "One item per alert", "Send alert"),
-         **chain("Daily 07:00", "Health", "Daily digest")},
-        "Stage: monitoring. Hourly: release expired leases, flag interrupted publications, deliver new alerts "
-        "(each exactly once). Daily: queue depth, spend against limits, mode and pause state.",
-        run_now=("Recover", "Health"))
+         agency("Build digest", "POST", "/v1/digest", [240, 220],
+                {"dashboard_url": "https://n8n.tse-cartridges.co.za/agency/review"}, timeout_ms=60_000),
+         discord("Daily digest", "={{ $json.result.text }}", [480, 220])],
+        {**chain("Hourly", "Recover", "Claim urgent alerts", "One item per alert", "Send urgent alert"),
+         **chain("Daily 07:00", "Build digest", "Daily digest")},
+        "Stage: monitoring. Hourly: release expired leases, flag interrupted publications, and send only urgent "
+        "alerts (live publishing failures, auto-pause, re-approval needed) — silent in dry run. Daily 07:00: one "
+        "digest with queue, spend, the day's results and every other alert, grouped.",
+        run_now=("Recover", "Build digest"))
 
     # Error workflow for all of the above: n8n-level failures (service down, auth broken).
     wfs["0-alert.tseAgencyAlert01.json"] = workflow(

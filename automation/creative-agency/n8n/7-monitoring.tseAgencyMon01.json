@@ -1,7 +1,7 @@
 {
   "id": "tseAgencyMon01",
   "name": "TSE Agency — 7 Monitoring",
-  "description": "Stage: monitoring. Hourly: release expired leases, flag interrupted publications, deliver new alerts (each exactly once). Daily: queue depth, spend against limits, mode and pause state.",
+  "description": "Stage: monitoring. Hourly: release expired leases, flag interrupted publications, and send only urgent alerts (live publishing failures, auto-pause, re-approval needed) — silent in dry run. Daily 07:00: one digest with queue, spend, the day's results and every other alert, grouped.",
   "active": false,
   "nodes": [
     {
@@ -67,8 +67,8 @@
       "waitBetweenTries": 5000
     },
     {
-      "id": "e1241cc4-4376-5449-89e6-7f026641a13e",
-      "name": "Claim alerts",
+      "id": "f6c59bde-42b8-5411-b9c3-229a4e9551ae",
+      "name": "Claim urgent alerts",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
@@ -85,7 +85,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "{}"
+        "jsonBody": "{\"urgent_only\": true}"
       },
       "credentials": {
         "httpHeaderAuth": {
@@ -111,8 +111,8 @@
       }
     },
     {
-      "id": "bfe4b74c-81e9-5606-8db0-02618d8fb799",
-      "name": "Send alert",
+      "id": "d82fe588-a7b4-57cb-8fdc-34a1895a0fe2",
+      "name": "Send urgent alert",
       "type": "n8n-nodes-base.discord",
       "typeVersion": 2,
       "position": [
@@ -121,7 +121,7 @@
       ],
       "parameters": {
         "authentication": "webhook",
-        "content": "={{ '🚨 **TSE agency** [' + $json.stage + '] ' + $json.message }}",
+        "content": "={{ '🚨 **TSE agency** ' + $json.message }}",
         "options": {}
       },
       "credentials": {
@@ -152,8 +152,8 @@
       }
     },
     {
-      "id": "6bf4aded-f6eb-5e69-b0ee-8100c1917d73",
-      "name": "Health",
+      "id": "690ce3a3-bacb-5e16-8c8b-31d8f98c48e0",
+      "name": "Build digest",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
@@ -161,13 +161,16 @@
         220
       ],
       "parameters": {
-        "method": "GET",
-        "url": "http://tse-agency:8080/v1/health",
+        "method": "POST",
+        "url": "http://tse-agency:8080/v1/digest",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "options": {
           "timeout": 60000
-        }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"dashboard_url\": \"https://n8n.tse-cartridges.co.za/agency/review\"}"
       },
       "credentials": {
         "httpHeaderAuth": {
@@ -190,7 +193,7 @@
       ],
       "parameters": {
         "authentication": "webhook",
-        "content": "={{ ($json.result.ok ? '🟢' : '🟠') + ' **TSE agency daily** — mode ' + $json.result.mode + ' (effective ' + $json.result.effective_mode + ')' + ($json.result.paused ? ' · **PAUSED**' : '') + '\\nQueue: ' + $json.result.queue.days_covered + ' days ready (' + $json.result.queue.approved_slots + '/' + $json.result.queue.expected_slots + ' slots)' + '\\nSpend this month: visual $' + $json.result.spend_month_usd.visual + ' / $' + $json.result.spend_month_usd.visual_limit + ' · Claude $' + $json.result.spend_month_usd.claude + ($json.result.problems.length ? '\\nProblems: ' + $json.result.problems.join('; ') : '') }}",
+        "content": "={{ $json.result.text }}",
         "options": {}
       },
       "credentials": {
@@ -217,14 +220,14 @@
       "main": [
         [
           {
-            "node": "Claim alerts",
+            "node": "Claim urgent alerts",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Claim alerts": {
+    "Claim urgent alerts": {
       "main": [
         [
           {
@@ -239,7 +242,7 @@
       "main": [
         [
           {
-            "node": "Send alert",
+            "node": "Send urgent alert",
             "type": "main",
             "index": 0
           }
@@ -250,14 +253,14 @@
       "main": [
         [
           {
-            "node": "Health",
+            "node": "Build digest",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Health": {
+    "Build digest": {
       "main": [
         [
           {
@@ -277,7 +280,7 @@
             "index": 0
           },
           {
-            "node": "Health",
+            "node": "Build digest",
             "type": "main",
             "index": 0
           }
