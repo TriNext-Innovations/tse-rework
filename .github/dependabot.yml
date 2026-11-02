@@ -51,6 +51,15 @@ updates:
       # Runtime is Node 20 (node:20-alpine images) — typings must not lead it.
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
+      # TypeScript 7 (the native compiler) ships no compiler API: ts-node, which
+      # `medusa exec` uses to run scripts on prod, crashes on it, and so do the
+      # Medusa build and typescript-eslint (peer <6.1). Tried 16 Oct 2026 (#520).
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      # jsdom 30 needs Node >=22.22; vitest workers die on Node 20. Lift with
+      # the Node upgrade.
+      - dependency-name: "jsdom"
+        update-types: ["version-update:semver-major"]
       # Medusa upgrades are never routine here: the @medusajs/dashboard patch is
       # pinned to an exact version, the root overrides pin admin-sdk/admin-shared
       # to match, and minor bumps have changed query load-strategy behaviour under
@@ -66,7 +75,7 @@ updates:
     # Dependency updates land on the release branch, not on main: they are
     # batched release content, and keeping them off main means feature work is never
     # entangled with a dependency bump. Update this when a new cycle is cut.
-    target-branch: release/2026-09
+    target-branch: release/2026-10
 
   # ── GitHub Actions ───────────────────────────────────────────────────────────
   - package-ecosystem: github-actions
@@ -82,4 +91,4 @@ updates:
     # Dependency updates land on the release branch, not on main: they are
     # batched release content, and keeping them off main means feature work is never
     # entangled with a dependency bump. Update this when a new cycle is cut.
-    target-branch: release/2026-09
+    target-branch: release/2026-10
