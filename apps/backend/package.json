@@ -37,8 +37,8 @@
     "@sentry/node": "^10.68.0",
     "@tse/types": "workspace:*",
     "meilisearch": "^0.62.0",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
   },
   "devDependencies": {
     "@tse/config": "workspace:*",
