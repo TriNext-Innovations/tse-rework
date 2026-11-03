@@ -5,15 +5,84 @@ import { Pool } from "pg"
 // Only pass through thumbnails stored in our own infrastructure.
 // WooCommerce import leaves WordPress URLs in the DB — drop them until
 // the import pipeline re-uploads images to S3/R2.
-const ALLOWED_THUMBNAIL_HOSTS = [".supabase.co", ".r2.dev"]
-function ownThumbnail(url: string | null | undefined): string | null {
+//
+// Keep this in step with the remotePatterns in apps/web/next.config.ts: a host
+// missing here renders the placeholder instead of the product, silently.
+// images.tse-cartridges.co.za is the R2 custom domain that product images moved
+// onto; pub-*.r2.dev stays allowed while the DB URLs finish migrating.
+const ALLOWED_THUMBNAIL_SUFFIXES = [".supabase.co", ".r2.dev"]
+const ALLOWED_THUMBNAIL_HOSTS = ["images.tse-cartridges.co.za"]
+
+export function ownThumbnail(url: string | null | undefined): string | null {
   if (!url) return null
   try {
-    const host = new URL(url).hostname
-    return ALLOWED_THUMBNAIL_HOSTS.some((h) => host.endsWith(h)) ? url : null
+    const host = new URL(url).hostname.toLowerCase()
+    // Exact match for named hosts — a suffix test would also accept
+    // "anythingimages.tse-cartridges.co.za".
+    if (ALLOWED_THUMBNAIL_HOSTS.includes(host)) return url
+    return ALLOWED_THUMBNAIL_SUFFIXES.some((s) => host.endsWith(s)) ? url : null
   } catch {
     return null
   }
+}
+
+export type CompatResult = {
+  sku: string
+  skus: string[]
+  printer_brand: string
+  printer_model: string
+  product_id: string
+  title: string
+  thumbnail: string | null
+  handle: string
+}
+
+/**
+ * Collapse compat rows into one card per product.
+ *
+ * Colour variants of one cartridge share a product, and four near-identical
+ * cards would be worse than one. But the surviving card must not present its
+ * first SKU as the only one — a shopper after yellow seeing "SKU HP-177-K"
+ * concludes we do not stock yellow. `skus` carries every variant the card
+ * stands for so the storefront can say so.
+ *
+ * Rows whose SKU resolves to no published product are dropped: a
+ * compatibility fact with nothing to sell rendered as a dead link.
+ */
+export function collapseByProduct(
+  rows: { sku: string; brand: string; model: string }[],
+  variantMap: Map<string, { product_id: string; title: string; thumbnail: string | null; handle: string }>,
+): { results: CompatResult[]; dropped: number } {
+  const byProduct = new Map<string, CompatResult>()
+  const results: CompatResult[] = []
+  let dropped = 0
+
+  for (const r of rows) {
+    const product = variantMap.get(r.sku)
+    if (!product?.handle) {
+      dropped++
+      continue
+    }
+    const existing = byProduct.get(product.product_id)
+    if (existing) {
+      if (!existing.skus.includes(r.sku)) existing.skus.push(r.sku)
+      continue
+    }
+    const entry: CompatResult = {
+      sku:           r.sku,
+      skus:          [r.sku],
+      printer_brand: r.brand,
+      printer_model: r.model,
+      product_id:    product.product_id,
+      title:         product.title,
+      thumbnail:     product.thumbnail,
+      handle:        product.handle,
+    }
+    byProduct.set(product.product_id, entry)
+    results.push(entry)
+  }
+
+  return { results, dropped }
 }
 
 let _pool: Pool | null = null
@@ -147,31 +216,15 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   // null title and an `href="/products/null"`, which is a dead end for a shopper
   // who arrived on a buying query and a broken link for a crawler. The endpoint's
   // contract is "cartridges you can buy that fit this printer".
-  const seen = new Set<string>()
-  const results: any[] = []
-  let dropped = 0
-  for (const r of rows) {
-    const product = variantMap.get(r.sku)
-    if (!product?.handle) {
-      dropped++
-      continue
-    }
-    if (seen.has(product.product_id)) continue
-    seen.add(product.product_id)
-    results.push({
-      sku:           r.sku,
-      printer_brand: r.brand,
-      printer_model: r.model,
-      product_id:    product.product_id,
-      title:         product.title,
-      thumbnail:     product.thumbnail,
-      handle:        product.handle,
-    })
-  }
+  const { results, dropped } = collapseByProduct(rows, variantMap)
   if (dropped) {
     console.log(`[compat] dropped ${dropped} rows with no published product`)
   }
 
-  console.log(`[compat] returning ${results.length} deduped results (from ${rows.length} rows)`)
+  const purchasable = results.reduce((n, r) => n + r.skus.length, 0)
+  console.log(
+    `[compat] returning ${results.length} deduped results covering ${purchasable} ` +
+    `purchasable cartridges (from ${rows.length} rows)`,
+  )
   return res.json({ results })
 }

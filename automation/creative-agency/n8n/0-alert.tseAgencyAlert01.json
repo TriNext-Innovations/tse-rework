@@ -1,0 +1,63 @@
+{
+  "id": "tseAgencyAlert01",
+  "name": "TSE Agency — Failure Alert",
+  "description": "Error workflow wired into every TSE Agency workflow.",
+  "active": false,
+  "nodes": [
+    {
+      "id": "1ab691d7-e3a6-5a77-8489-c95548826acc",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "4cccef5a-a1cc-537b-abf3-e9b95148e728",
+      "name": "Alert",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "authentication": "webhook",
+        "content": "={{ '🚨 **TSE agency workflow FAILED**\\nWorkflow: **' + $json.workflow.name + '**\\nNode: `' + ($json.execution.lastNodeExecuted || 'unknown') + '`\\nError: ' + ($json.execution.error ? $json.execution.error.message : 'unknown') }}",
+        "options": {}
+      },
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "hK9mTseDiscordW1",
+          "name": "TSE Social Discord Webhook"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Africa/Johannesburg",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

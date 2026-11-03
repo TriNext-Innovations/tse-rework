@@ -88,6 +88,25 @@ describe('ProductsPage', () => {
     expect(screen.getByRole('heading', { name: 'Canon 737' })).toBeInTheDocument()
   })
 
+  it('keeps the add button outside the card link, so adding does not navigate (#498)', async () => {
+    setupFetch('reg_01', [], [makeProduct('p1', 'HP 123')], 1)
+    await renderProductsPage()
+    const add = screen.getByTestId('atc-p1')
+    expect(add.closest('a')).toBeNull()
+    expect(screen.getByRole('heading', { name: 'HP 123' }).closest('a')).toHaveAttribute('href', expect.stringContaining('/products/'))
+  })
+
+  it('requests only the fields the grid renders, so the response fits the data cache (#499)', async () => {
+    setupFetch('reg_01', [], [makeProduct('p1', 'HP 123', 300)], 1)
+    await renderProductsPage()
+    const call = vi.mocked(fetch).mock.calls.map((c) => String(c[0])).find((u) => u.includes('/store/products?'))!
+    const fields = new URL(call).searchParams.get('fields')!.split(',')
+    expect(fields).toEqual(expect.arrayContaining(['handle', 'images.url', 'variants.sku', 'variants.calculated_price.calculated_amount']))
+    // A "+" or "*" prefix adds to Medusa's default fields instead of replacing them.
+    expect(fields.some((f) => f.startsWith('+') || f.startsWith('*'))).toBe(false)
+    expect(fields).not.toContain('description')
+  })
+
   it('shows "No products found" when empty', async () => {
     setupFetch('reg_01', [], [], 0)
     await renderProductsPage()
@@ -191,5 +210,31 @@ describe('ProductsPage', () => {
     await renderProductsPage()
     const homeLinks = screen.getAllByRole('link').filter((a) => a.getAttribute('href') === '/')
     expect(homeLinks.length).toBeGreaterThan(0)
+  })
+})
+
+describe('ProductsPage — Ink (refill ink for tank printers)', () => {
+  const inkCategories = [
+    { id: 'cat_ink', name: 'Ink', parent_category: null },
+    { id: 'cat_laser', name: 'Laser Cartridges', parent_category: null },
+    { id: 'cat_hp_laser', name: 'HP', parent_category: { id: 'cat_laser', name: 'Laser Cartridges' } },
+  ]
+
+  it('lists refill ink filed directly in the "Ink" type category', async () => {
+    setupFetch('reg_01', inkCategories, [makeProduct('canon-gi-21', 'Canon GI-21')], 1)
+    await renderProductsPage({ type: 'ink' })
+    const productCall = vi.mocked(fetch).mock.calls.map((c) => String(c[0])).find((u) => u.includes('/store/products?'))
+    expect(productCall).toContain('category_id%5B%5D=cat_ink')
+    expect(productCall).not.toContain('cat_hp_laser')
+    expect(screen.getByRole('heading', { name: 'Canon GI-21' })).toBeInTheDocument()
+  })
+
+  it('lists nothing — not the whole catalogue — when a filter matches no category', async () => {
+    setupFetch('reg_01', inkCategories.slice(1), [makeProduct('hp-85a', 'HP 85A')], 1)
+    await renderProductsPage({ type: 'ink' })
+    const productCalls = vi.mocked(fetch).mock.calls.filter((c) => String(c[0]).includes('/store/products?'))
+    expect(productCalls).toHaveLength(0)
+    expect(screen.queryByText('HP 85A')).not.toBeInTheDocument()
+    expect(screen.getByText('No products found.')).toBeInTheDocument()
   })
 })

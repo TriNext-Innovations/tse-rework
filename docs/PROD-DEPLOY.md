@@ -27,7 +27,7 @@ Before touching the server, confirm all of these. Skipping any one of them turns
 
 ## 2. First-run deploy sequence
 
-The dependency chain is `postgres → redis → medusa-migrate → medusa → web → nginx`. Compose handles most of this via `depends_on: condition: service_healthy`, but **nginx has a chicken-and-egg with TLS certs** — it won't start without certs, and certbot needs port 80, which nginx normally owns. The sequence below sidesteps that.
+The dependency chain is `postgres → redis → medusa-migrate → medusa → web → nginx`. Compose handles most of this via `depends_on: condition: service_healthy` — except `medusa-migrate`, which sits behind the `migrate` profile and is **not** a dependency of `medusa`, so run it explicitly first (step 1), but **nginx has a chicken-and-egg with TLS certs** — it won't start without certs, and certbot needs port 80, which nginx normally owns. The sequence below sidesteps that.
 
 ```bash
 # All commands run from /opt/tse-ui on the VPS
@@ -148,41 +148,45 @@ This will bite you again any time you change `command:` or `environment:` on an 
 
 ## 4. Cert renewal
 
-The Let's Encrypt cert issued on 2026-05-20 **expires 2026-08-18** (90-day lifetime).
+Two live Let's Encrypt certs, both renewed by **webroot** (nginx keeps running):
 
-### 4.1 Manual renewal (works today)
+| Cert name | Covers | Expires |
+|---|---|---|
+| `tse.co.za` | `tse.co.za`, `www.tse.co.za` | 2026-12-27 |
+| `tse-cartridges.co.za` | `tse-cartridges.co.za`, `api.tse-cartridges.co.za` | 2026-12-27 |
+
+Every port-80 server block serves `/.well-known/acme-challenge/` from the `certbot_www`
+volume (including the old domain, which otherwise only 301s). `www.tse-cartridges.co.za`
+uses the Cloudflare Origin CA cert (valid to 2041) and needs no renewal.
+
+### 4.1 Automatic renewal
+
+`scripts/renew-certs.sh` renews both certs with the pinned `tse-certbot:pinned` image,
+then runs `nginx -t` and reloads. certbot only renews within 30 days of expiry, so running
+it often is a no-op. Installed in `linuxuser`'s crontab on 2026-09-29:
+
+```
+17 3,15 * * * /opt/tse-ui/scripts/renew-certs.sh >> /home/linuxuser/logs/cert-renew.log 2>&1
+```
+
+A failed renewal prints `RENEW FAILED: <name>` and exits non-zero. Check the log after
+the first renewal window opens (late November 2026).
+
+### 4.2 Dry run / manual
 
 ```bash
 cd /opt/tse-ui
-make cert-renew
+for n in tse.co.za tse-cartridges.co.za; do
+  docker run --rm -v tse-ui_certbot_certs:/etc/letsencrypt -v tse-ui_certbot_www:/var/www/certbot \
+    tse-certbot:pinned renew --cert-name "$n" --dry-run --non-interactive
+done
 ```
 
-Or without make:
+Both passed on 2026-09-29. Drop `--dry-run` (or just run the script) to renew for real.
 
-```bash
-docker compose stop nginx
-docker run --rm -p 80:80 \
-  -v tse-ui_certbot_certs:/etc/letsencrypt \
-  -v tse-ui_certbot_www:/var/www/certbot \
-  certbot/certbot renew
-docker compose up -d nginx
-```
-
-Run on or before **2026-08-04** to leave headroom. Certs are valid 30 days past renewal, so the worst-case downtime if you forget is ~2 weeks of warning emails from Let's Encrypt before they expire.
-
-### 4.2 Automate it
-
-Add a host cron on the VPS that does the above on the first of every odd month:
-
-```bash
-sudo crontab -e
-```
-
-```
-0 3 1 */2 * cd /opt/tse-ui && docker compose stop nginx && docker run --rm -p 80:80 -v tse-ui_certbot_certs:/etc/letsencrypt -v tse-ui_certbot_www:/var/www/certbot certbot/certbot renew --quiet && docker compose up -d nginx >> /var/log/cert-renew.log 2>&1
-```
-
-A cleaner long-term solution is a dedicated `certbot` service in compose with the `--webroot` mode (no nginx stop needed) — left for a follow-up PR.
+Never use `--standalone` here: it needs port 80, which means stopping nginx and taking
+every site down. That is how the `tse-cartridges.co.za` cert got within 24h of expiry on
+2026-09-28 with no working renewal path.
 
 ---
 
@@ -192,15 +196,17 @@ A cleaner long-term solution is a dedicated `certbot` service in compose with th
 |---|---|---|---|---|---|
 | Postgres | `tse-ui-postgres-1` | `postgres:16-alpine` | 5432 | 5432 | `pg_isready` |
 | Redis | `tse-ui-redis-1` | `redis:7-alpine` | 6379 | 6379 | `redis-cli ping` |
-| Medusa migrate | `tse-ui-medusa-migrate-1` | built locally | — | — | exit 0 |
+| Medusa migrate | one-shot (`profiles: [migrate]`) | built locally | — | — | exit 0 |
 | Medusa API + admin | `tse-ui-medusa-1` | built locally | 9000 | 9000 | `GET /health` |
 | Next.js storefront | `tse-ui-web-1` | built locally | 3000 | 3000 | `GET /api/health` (todo, see 3.6) |
 | nginx reverse proxy | `tse-ui-nginx-1` | `nginx:alpine` | 80 / 443 | 80 / 443 | — |
 
-External routing (production apex, live 2026-07-01):
+External routing (storefront on `www.tse.co.za` since 2026-09-28):
 
-- `https://tse-cartridges.co.za` → nginx → `web:3000` (storefront)
-- `https://api.tse-cartridges.co.za` → nginx → `medusa:9000` (REST API + `/app` admin dashboard)
+- `https://www.tse.co.za` → nginx → `web:3000` (storefront; `/meili/` → Meilisearch)
+- `tse.co.za`, `http://` → 301 to `https://www.tse.co.za` in one hop (legacy Woo URLs straight to their mapped target)
+- `tse-cartridges.co.za`, `www.tse-cartridges.co.za` → 301 to `https://www.tse.co.za`, path kept — **except** `/meili/` (the web image is still built against it) and the ACME webroot
+- `https://api.tse-cartridges.co.za` → nginx → `medusa:9000` (REST API, `/app` admin, PayFast ITN, Bugsink ingestion) — deliberately not redirected
 
 The `dev.tse-cartridges.co.za` / `api.dev.tse-cartridges.co.za` blocks still exist for
 overlap but the app no longer functions there (CORS + baked `NEXT_PUBLIC_*` are apex-only).
@@ -211,19 +217,36 @@ See section 9 for the apex cutover. All four hosts are DNS-only (grey) Cloudflar
 
 ## 6. Updating the deployment
 
-For a code-only change (no infra):
+Merging to `main` deploys (`.github/workflows/deploy.yml`). The box diffs the commit it is
+running against `origin/main` and only does what the change needs:
 
-```bash
-cd /opt/tse-ui
-git pull origin main
-docker compose build medusa web                 # only rebuild what changed
-docker compose up -d medusa-migrate            # foreground — wait for exit 0 if migrations changed
-docker compose up -d medusa web
-```
+| Changed | Deploy does |
+|---|---|
+| `apps/web/**` | build + roll `web` |
+| `apps/backend/**`, `migration/**` | build backend, run `medusa-migrate` **only if its image layers changed**, roll `medusa` |
+| `packages/**`, `patches/`, lockfile, `package.json`, `docker-compose.yml` | both of the above |
+| `infrastructure/nginx/**` | `nginx -t` + reload |
+| anything else (e.g. only the workflow) | exits early |
+| `docs/**`, `*.md` only | not triggered |
 
-If `Dockerfile`, `docker-compose.yml`, `medusa-config.ts`, or any nginx config changed, also `--force-recreate` the affected services so config is reapplied (see 3.3).
+Every run does the `nginx -t` gate, tags both running images for rollback, and does the
+public health checks (www, old-domain 301, API, `/products`). A manual run
+(**Actions → Deploy to Production → Run workflow**) takes `scope`: `auto`, `web`,
+`backend` (forces migrations) or `full` (everything, forces migrations).
 
-If schema-impacting migrations were added, **always** run `medusa-migrate` to exit 0 before bringing the live `medusa` container back up. The compose `depends_on: service_completed_successfully` enforces this when starting from scratch but doesn't help on a rolling update.
+Typical times: web-only ~1 min plus the Next build, backend with migrations ~3 min (a
+migration run is ~2¼ min: it boots Medusa seven times, see #490).
+
+Rules the workflow depends on, learned the hard way:
+
+- **Every `docker compose up` names its service and passes `--no-deps`.** nginx
+  `depends_on` web, so a bare `up nginx` recreates web out of order. That took the
+  storefront down for 2m45s on 2026-09-29.
+- **`medusa-migrate` is behind `profiles: [migrate]` and is not a `depends_on` of
+  `medusa`.** Before that, every `up` touching medusa re-ran all migrations: five runs and
+  12½ minutes in one deploy. Run it by hand with `docker compose run --rm medusa-migrate`.
+- **Compare images by `RootFS.Layers`, never by ID.** The box uses the containerd image
+  store, where the image ID changes on every build even when nothing in it did.
 
 ### 6.1 Break-glass: deploying manually when GitHub Actions is down
 
@@ -314,6 +337,110 @@ The two stateful pieces are:
 2. **`certbot_certs` volume** — TLS certs. Can be reissued from scratch on a new host as long as DNS still resolves (see section 2 step 4); not strictly backup-critical.
 
 Redis and Next.js / Medusa containers are stateless: rebuild from git + image and the data volumes are enough to restore.
+
+---
+
+## 7a. Legacy domain cutover — storefront on `tse.co.za`
+
+> **Current direction: storefront on `tse.co.za`.** The earlier opposite plan
+> is superseded. See [the execution pack](CUTOVER-EXECUTION-2026-09-23.md).
+>
+> **Settled 2026-09-16: #13 goes ahead.** `tse.co.za` serves the storefront;
+> `tse-cartridges.co.za` becomes a permanent 301 into it. The legacy 301s are therefore
+> **same-host**, and the certificate is issued by **HTTP-01 after the A record moves**
+> (revised 2026-09-21). The `--standalone` flow that used to be in step 4 is gone, along
+> with the ~30s of storefront downtime it cost. See DOMAIN-CUTOVER.md Phase 3 for the
+> trade-off this accepts: a short TLS-error window on `tse.co.za`, dependent on successful certificate issuance.
+
+Retiring the WooCommerce site is a **one-shot** SEO event. A ranking legacy page
+that 301s to a non-equivalent is read as a soft 404, and Google drops the
+ranking instead of transferring it. There is no second attempt, so the redirect
+map goes in before the DNS moves, not after.
+
+### What is already in the repo
+
+| File | State |
+|---|---|
+| `infrastructure/nginx/conf.d/00-legacy-redirects.conf` | **Deployed and inert.** Defines `$legacy_target` for all 832 indexed legacy URLs. Nothing reads it yet. |
+| `infrastructure/nginx/conf.d/tse-co-za.conf.disabled` | The `tse.co.za` server block — **serves** the storefront (#13). Not included by nginx until renamed. |
+| `scripts/build-legacy-redirects.ts` | Regenerates the map from the live legacy + new sitemaps. |
+| `migration/raw/legacy-redirects.json` | Per-URL rationale, for review and for arguing with the result. |
+
+Coverage: 832/832 indexed legacy URLs. 532 resolve to the exact product or
+category, 52 through a known spelling difference between the two catalogues
+(`canon-725` → `canon-ca725`, `samsung-mlt-101` → `samsung-mlt-d101s`), 206 fall
+back to the brand's category page because the product no longer exists, and 42
+are manual rules. Every target is asserted to be a live route at generation
+time — the script fails rather than emit a 301 into a 404.
+
+### Cutover sequence
+
+**Current execution checklist:** [23 September cutover pack](CUTOVER-EXECUTION-2026-09-23.md).
+Enable its HTTP-only bootstrap before the DNS switch. The TTL does not bound
+certificate issuance time. The historical commands below are not the complete checklist.
+
+```bash
+# 1. Regenerate. The catalogue moves; a map built weeks ago will point at
+#    products that have since been delisted. The script hard-fails on any
+#    target that is no longer a live route, so this is also the pre-flight check.
+npx tsx scripts/build-legacy-redirects.ts
+git commit -am 'chore(seo): refresh the cutover redirect map' && git push
+
+# 2. Deploy so 00-legacy-redirects.conf is on the box (still inert).
+
+# 3. Move the A record for tse.co.za + www.tse.co.za in GAM (#433 has already
+#    dropped the TTL to 300, at least two days earlier). Off-peak.
+
+# 4. Issue the cert by HTTP-01 as soon as it resolves here. Until this lands,
+#    https://tse.co.za gives a certificate error — that is the one visibly
+#    broken moment, dependent on successful certificate issuance. Do not wander off between 3 and 4.
+cd /opt/tse-ui
+docker run --rm \
+  -v tse-ui_certbot_certs:/etc/letsencrypt \
+  -v tse-ui_certbot_www:/var/www/certbot \
+  certbot/certbot certonly --webroot -w /var/www/certbot \
+  -d tse.co.za -d www.tse.co.za \
+  --email ryno@trinextinnovations.co.za --agree-tos --no-eff-email
+
+# Confirm the cert landed where the server block expects it.
+docker compose exec nginx ls /etc/letsencrypt/live/tse.co.za/fullchain.pem
+
+# 5. Enable the server block and verify BEFORE reloading. nginx refuses to
+#    start on a missing cert path and would take the live storefront down with
+#    it, so never reload without a green -t.
+mv infrastructure/nginx/conf.d/tse-co-za.conf.disabled \
+   infrastructure/nginx/conf.d/tse-co-za.conf
+docker compose exec nginx nginx -t     # must print "syntax is ok" + "test is successful"
+docker compose exec nginx nginx -s reload
+
+#    Rollback is reverting the A record, subject to DNS caching and continued availability of the old origin. The
+#    Xneelo fallback host (#473) keeps the old site reachable meanwhile.
+
+# 6. Spot-check the three tiers.
+for u in /product-category/hp-laserjet-cartridges/ \
+         /hp-12a-cartridges-buy-the-best-quality-generics/ \
+         /product/brother-tn-277-black/; do
+  curl -sI "https://tse.co.za$u" | grep -iE '^(HTTP|location)'
+done
+```
+
+### Gotchas
+
+- **`nginx -t` before `-s reload`, always.** A missing cert path aborts the
+  whole config, which takes the storefront down with the redirect host. That is
+  the entire reason the server block ships disabled.
+- **The map keys on `$uri`, not `$request_uri`.** `$request_uri` carries the
+  query string, so `?utm_source=…` would miss every entry. A companion map
+  strips the trailing slash first, since the legacy site links everything with
+  one.
+- **Unmapped paths return 404, deliberately.** Bulk-redirecting the long tail
+  (wp-admin, feeds, cart URLs) onto the homepage is the classic soft-404
+  generator. Every *indexed* URL is in the map, so nothing that ranks 404s.
+- **Do not decommission Woo until the redirects are verified.** Once the DNS
+  moves, the old site is unreachable and the legacy sitemap — the input to the
+  generator — goes with it. Regenerate first (step 1).
+- Keep `tse.co.za` **registered and pointed here indefinitely**. Link equity
+  flows through the 301 only for as long as it answers.
 
 ---
 

@@ -11,6 +11,7 @@ const BRANDS = [
 const SHOP_LINKS = [
   { label: 'Inkjet cartridges', href: '/products?type=inkjet' },
   { label: 'Laser toner', href: '/products?type=laser' },
+  { label: 'Refill ink', href: '/products?type=ink' },
   { label: 'All cartridges', href: '/products' },
   { label: 'Find my cartridge', href: '/compatibility' },
   { label: 'B2B & business pricing', href: '/b2b' },
@@ -18,6 +19,7 @@ const SHOP_LINKS = [
 ]
 
 const HELP_LINKS = [
+  { label: 'Help centre', href: '/help' },
   { label: 'Delivery info', href: '/#delivery' },
   { label: 'Returns & refunds', href: '/legal/returns' },
   { label: 'FAQ', href: '/#faq' },
@@ -126,9 +128,11 @@ export function Footer() {
               </li>
               <li className="pt-3 border-t border-white/8">
                 <span className="text-white/35 text-[10px] uppercase tracking-[0.15em] block mb-2">Hours</span>
-                <span>Mon–Thu · 8am–4:30pm</span>
+                <span>{siteConfig.openingHours[0].label} · {siteConfig.openingHours[0].display}</span>
               </li>
-              <li>Fri · 8am–3pm</li>
+              {siteConfig.openingHours.slice(1).map((h) => (
+                <li key={h.label}>{h.label} · {h.display}</li>
+              ))}
               <li className="text-white/40 text-xs leading-relaxed pt-2">
                 Order before noon for same-day dispatch. Next-day delivery to JHB/PTA on Overnight.
               </li>

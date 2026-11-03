@@ -1,9 +1,10 @@
 'use client'
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { createContext, startTransition, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { CartLottie } from '@/components/CartLottie'
+import { DotOrb, RollingNumber, ViewTransition } from '@/components/motion'
 import {
   type MedusaCart,
   type CartPromotion,
@@ -67,7 +68,10 @@ type CartContextType = {
   applyPromo: (code: string) => Promise<boolean>
   removePromo: (code: string) => Promise<void>
   clearPromoError: () => void
-  addItem: (item: AddToCartInput, quantity?: number) => void
+  /** Resolves true once the line is in the Medusa cart, false if the call failed. */
+  addItem: (item: AddToCartInput, quantity?: number) => Promise<boolean>
+  /** Increments on every successful add, so UI can react to adds (and not to a stored cart loading). */
+  addSeq: number
   removeItem: (lineId: string) => void
   updateQty: (lineId: string, qty: number) => void
   clearCart: () => void
@@ -92,12 +96,28 @@ function toItems(cart: MedusaCart | null): CartItem[] {
   }))
 }
 
+// State updater that takes one line out of the busy set.
+function releaseLine(lineId: string) {
+  return (s: ReadonlySet<string>) => {
+    const next = new Set(s)
+    next.delete(lineId)
+    return next
+  }
+}
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<MedusaCart | null>(null)
   const [isOpen, setIsOpen] = useState(false)
   const [pending, setPending] = useState(false)
   const [promoPending, setPromoPending] = useState(false)
   const [promoError, setPromoError] = useState('')
+  const [addSeq, setAddSeq] = useState(0)
+  // Lines with an update or remove in flight: dimmed, with a loading line,
+  // until Medusa answers.
+  const [busyLines, setBusyLines] = useState<ReadonlySet<string>>(() => new Set())
+  // A saved cart is being fetched: the drawer shows placeholder lines rather
+  // than claiming the cart is empty.
+  const [hydrating, setHydrating] = useState(false)
   // cartId lives in a ref too so concurrent adds don't each create a new cart.
   const cartIdRef = useRef<string | null>(null)
   // In-flight cart creation, shared by concurrent first-adds so they don't each
@@ -130,15 +150,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } catch {}
     if (!saved) return
     cartIdRef.current = saved
-    getCart(saved).then(async (c) => {
-      if (!c) {
-        setCartId(null)
-        return
-      }
-      // A cart carried over from a signed-out session still has no customer, so
-      // group-gated promotions can't match it. Claim it before first render.
-      setCart(c.customer_id ? c : ((await transferCartToCustomer(saved!)) ?? c))
-    })
+    setHydrating(true)
+    getCart(saved)
+      .then(async (c) => {
+        if (!c) {
+          setCartId(null)
+          return
+        }
+        // A cart carried over from a signed-out session still has no customer, so
+        // group-gated promotions can't match it. Claim it before first render.
+        setCart(c.customer_id ? c : ((await transferCartToCustomer(saved!)) ?? c))
+      })
+      .finally(() => setHydrating(false))
   }, [setCartId])
 
   // Re-associate the cart with the customer whenever auth changes. A cart
@@ -170,10 +193,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   // Lazily create the Medusa cart and add the variant. The returned cart
   // (server-computed prices/totals) becomes the new state. Adding does NOT
-  // open the drawer — the header cart count updates as the only feedback, so
+  // open the drawer — the button that was pressed confirms the add and the
+  // product flies to the header cart, whose count ticks over as it lands, so
   // the shopper isn't interrupted; they open the cart themselves when ready.
   const addItem = useCallback(
-    async (item: AddToCartInput, quantity = 1) => {
+    async (item: AddToCartInput, quantity = 1): Promise<boolean> => {
       setPending(true)
       try {
         const id = await ensureCartId()
@@ -183,8 +207,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           quantity,
         )
         setCart(updated)
+        setAddSeq((n) => n + 1)
+        return true
       } catch (err) {
         console.error('[cart] add failed:', err)
+        return false
       } finally {
         setPending(false)
       }
@@ -192,25 +219,41 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     [ensureCartId],
   )
 
+  // Removing waits for Medusa, then commits inside a transition so the drawer's
+  // <ViewTransition> rows can fold the line away and close the gap.
   const removeItem = useCallback(async (lineId: string) => {
     const id = cartIdRef.current
     if (!id) return
+    const release = releaseLine(lineId)
+    setBusyLines((s) => new Set(s).add(lineId))
     try {
-      setCart(await removeLineItem(id, lineId))
+      const updated = await removeLineItem(id, lineId)
+      startTransition(() => {
+        setCart(updated)
+        setBusyLines(release)
+      })
     } catch (err) {
       console.error('[cart] remove failed:', err)
+      setBusyLines(release)
     }
   }, [])
 
-  const updateQty = useCallback(async (lineId: string, qty: number) => {
-    const id = cartIdRef.current
-    if (!id) return
-    try {
-      setCart(qty <= 0 ? await removeLineItem(id, lineId) : await updateLineItem(id, lineId, qty))
-    } catch (err) {
-      console.error('[cart] update failed:', err)
-    }
-  }, [])
+  const updateQty = useCallback(
+    async (lineId: string, qty: number) => {
+      const id = cartIdRef.current
+      if (!id) return
+      if (qty <= 0) return removeItem(lineId)
+      setBusyLines((s) => new Set(s).add(lineId))
+      try {
+        setCart(await updateLineItem(id, lineId, qty))
+      } catch (err) {
+        console.error('[cart] update failed:', err)
+      } finally {
+        setBusyLines(releaseLine(lineId))
+      }
+    },
+    [removeItem],
+  )
 
   // Apply a shopper-entered promo code. Errors are surfaced as state rather than
   // thrown, because every caller is a form that needs to render the reason
@@ -289,6 +332,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         removePromo,
         clearPromoError,
         addItem,
+        addSeq,
         removeItem,
         updateQty,
         clearCart,
@@ -299,9 +343,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     >
       {children}
 
-      {/* Cart Drawer */}
+      {/* Cart Drawer — .cart-drawer[data-open] feeds the lines in on open (motion.css) */}
       <div
-        className={`fixed inset-0 z-[60] overflow-hidden transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+        className={`cart-drawer fixed inset-0 z-[60] overflow-hidden transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+        data-open={isOpen}
         aria-hidden={!isOpen}
       >
         <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
@@ -334,7 +379,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
           {/* Items */}
           <div className="flex-1 overflow-y-auto px-6 py-4">
-            {items.length === 0 ? (
+            {items.length === 0 && hydrating ? (
+              <ul aria-busy="true" aria-label="Loading your cart">
+                {[0, 1].map((i) => (
+                  <li key={i} className="flex items-start gap-4 py-4 border-b border-[var(--line-2)] last:border-0">
+                    <div className="skeleton w-12 h-16 rounded-[6px] flex-shrink-0" />
+                    <div className="flex-1 space-y-2 pt-1">
+                      <div className="skeleton h-3 w-4/5 rounded" />
+                      <div className="skeleton h-2.5 w-1/3 rounded" />
+                      <div className="skeleton h-6 w-28 rounded-full mt-3" />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : items.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center gap-4 py-16">
                 <CartLottie />
                 <div>
@@ -352,50 +410,70 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               </div>
             ) : (
               <ul className="space-y-1">
-                {items.map((item) => (
-                  <li key={item.id} className="flex items-start gap-4 py-4 border-b border-[var(--line-2)] last:border-0">
-                    <div className="w-12 h-16 rounded-[6px] bg-gradient-to-br from-[#0A0A0A] to-[#2A2A2A] flex-shrink-0 relative overflow-hidden">
-                      {item.thumbnail ? (
-                        <Image src={item.thumbnail} alt={item.title} width={48} height={64} className="w-full h-full object-contain p-1" />
-                      ) : (
-                        <>
-                          <div className="absolute top-0 left-0 right-0 h-1.5 bg-white/20" />
-                          <div className="absolute bottom-2 left-2 text-white text-[8px] font-light" style={{ fontFamily: 'var(--font-fraunces, Georgia, serif)' }}>TSE</div>
-                        </>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium leading-tight line-clamp-2">{item.title}</p>
-                      <p className="text-[10px] text-[var(--muted)] mt-0.5">SKU {item.sku}</p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <div className="flex items-center border border-[var(--line-4)] rounded-full overflow-hidden">
-                          <button
-                            onClick={() => updateQty(item.id, item.qty - 1)}
-                            className="w-6 h-6 flex items-center justify-center text-[var(--ink)] hover:bg-[var(--hover-1)] transition-colors text-sm"
-                            aria-label="Decrease quantity"
-                          >−</button>
-                          <span className="w-6 text-center text-xs font-medium tabular-nums">{item.qty}</span>
-                          <button
-                            onClick={() => updateQty(item.id, item.qty + 1)}
-                            className="w-6 h-6 flex items-center justify-center text-[var(--ink)] hover:bg-[var(--hover-1)] transition-colors text-sm"
-                            aria-label="Increase quantity"
-                          >+</button>
-                        </div>
-                        <p className="text-base font-light" style={{ fontFamily: 'var(--font-fraunces, Georgia, serif)' }}>
-                          {item.price ? `R${(item.price * item.qty).toFixed(0)}` : 'POA'}
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => removeItem(item.id)}
-                      className="w-6 h-6 rounded-full flex items-center justify-center hover:bg-[var(--hover-3)] transition-colors flex-shrink-0 text-[var(--muted)] cursor-pointer mt-0.5"
-                      aria-label="Remove item"
+                {items.map((item, i) => (
+                  // A removed line folds out (cart-line-exit); the lines below
+                  // close the gap on a spring (cart-line-move).
+                  <ViewTransition
+                    key={item.id}
+                    name={`cart-line-${item.id.replace(/[^a-zA-Z0-9_-]/g, '_')}`}
+                    exit="cart-line-exit"
+                    update="cart-line-move"
+                    default="none"
+                  >
+                    <li
+                      className="cart-line flex items-start gap-4 py-4 border-b border-[var(--line-2)] last:border-0"
+                      style={{ '--i': i } as React.CSSProperties}
+                      data-busy={busyLines.has(item.id) || undefined}
+                      aria-busy={busyLines.has(item.id) || undefined}
                     >
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <path d="M18 6 6 18M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </li>
+                      <div className="w-12 h-16 rounded-[6px] bg-gradient-to-br from-[#0A0A0A] to-[#2A2A2A] flex-shrink-0 relative overflow-hidden">
+                        {busyLines.has(item.id) && (
+                          <span className="absolute inset-0 z-10 grid place-items-center">
+                            <DotOrb size={24} ink="light" className="orb-delayed" />
+                          </span>
+                        )}
+                        {item.thumbnail ? (
+                          <Image src={item.thumbnail} alt={item.title} width={48} height={64} className="w-full h-full object-contain p-1" />
+                        ) : (
+                          <>
+                            <div className="absolute top-0 left-0 right-0 h-1.5 bg-white/20" />
+                            <div className="absolute bottom-2 left-2 text-white text-[8px] font-light" style={{ fontFamily: 'var(--font-fraunces, Georgia, serif)' }}>TSE</div>
+                          </>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium leading-tight line-clamp-2">{item.title}</p>
+                        <p className="text-[10px] text-[var(--muted)] mt-0.5">SKU {item.sku}</p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <div className="flex items-center border border-[var(--line-4)] rounded-full overflow-hidden">
+                            <button
+                              onClick={() => updateQty(item.id, item.qty - 1)}
+                              className="w-6 h-6 flex items-center justify-center text-[var(--ink)] hover:bg-[var(--hover-1)] transition-colors text-sm"
+                              aria-label="Decrease quantity"
+                            >−</button>
+                            <span className="w-6 text-center text-xs font-medium tabular-nums"><RollingNumber value={item.qty} /></span>
+                            <button
+                              onClick={() => updateQty(item.id, item.qty + 1)}
+                              className="w-6 h-6 flex items-center justify-center text-[var(--ink)] hover:bg-[var(--hover-1)] transition-colors text-sm"
+                              aria-label="Increase quantity"
+                            >+</button>
+                          </div>
+                          <p className="text-base font-light" style={{ fontFamily: 'var(--font-fraunces, Georgia, serif)' }}>
+                            {item.price ? <>R<RollingNumber value={(item.price * item.qty).toFixed(0)} /></> : 'POA'}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => removeItem(item.id)}
+                        className="w-6 h-6 rounded-full flex items-center justify-center hover:bg-[var(--hover-3)] transition-colors flex-shrink-0 text-[var(--muted)] cursor-pointer mt-0.5"
+                        aria-label="Remove item"
+                      >
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <path d="M18 6 6 18M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </li>
+                  </ViewTransition>
                 ))}
               </ul>
             )}
@@ -421,7 +499,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                   {discountTotal > 0 ? 'Goods total' : 'Subtotal'}
                 </span>
                 <span className="text-xl font-light" style={{ fontFamily: 'var(--font-fraunces, Georgia, serif)' }}>
-                  R{total.toFixed(0)}
+                  R<RollingNumber value={total.toFixed(0)} />
                 </span>
               </div>
               <Link

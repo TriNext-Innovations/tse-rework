@@ -52,3 +52,7 @@ migration/images/
 npm-debug.log*
 yarn-debug.log*
 pnpm-debug.log*
+.local-mail/
+
+# Printerland crawl cache (#482) — resumable state, not data of record
+.cache/

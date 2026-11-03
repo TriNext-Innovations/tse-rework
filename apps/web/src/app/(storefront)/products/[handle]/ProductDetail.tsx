@@ -1,11 +1,22 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useLayoutEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useCart } from '@/contexts/CartContext'
 import { cartridgeTypeLabel } from '@/lib/taxonomy'
 import { htmlToParagraphs } from '@/lib/html-text'
+import { useAddToCart, addStatusMessage } from '@/lib/add-to-cart'
+import { bubbleImage, prefersReducedMotion } from '@/lib/motion'
+import {
+  AddStatusAnnouncer,
+  AddToCartLabel,
+  NAV_BACK,
+  NAV_FORWARD,
+  PageTransition,
+  ProductImage,
+  ProductMorph,
+  RollingNumber,
+} from '@/components/motion'
 
 type Category = { id: string; name: string; handle: string }
 type ProductImage = { url: string }
@@ -49,17 +60,33 @@ type Props = {
   typeCategory: Category | null
 }
 
+// Where the lightbox image starts from and returns to: the main image's box.
+function flipFrom(from: DOMRect, to: DOMRect): string {
+  const dx = from.left + from.width / 2 - (to.left + to.width / 2)
+  const dy = from.top + from.height / 2 - (to.top + to.height / 2)
+  const s = Math.min(from.width / to.width, from.height / to.height)
+  return `translate(${dx}px, ${dy}px) scale(${s})`
+}
+
 export default function ProductDetail({ product, related, brandCategory, typeCategory }: Props) {
-  const { addItem } = useCart()
+  const { status: addStatus, add } = useAddToCart()
 
   const images = product.images ?? []
   const variants = product.variants ?? []
 
   const [activeImage, setActiveImage] = useState(0)
+  // Set once a thumbnail has been picked: only then does the main image
+  // cross-fade, so it doesn't fade in on arrival (or fight the grid morph).
+  const [gallerySwapped, setGallerySwapped] = useState(false)
   const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lightboxPoster, setLightboxPoster] = useState('')
   const [qty, setQty] = useState(1)
-  const [added, setAdded] = useState(false)
   const [selectedVariantId, setSelectedVariantId] = useState<string>(variants[0]?.id ?? '')
+  const mainImageRef = useRef<HTMLDivElement>(null)
+  const lightboxRef = useRef<HTMLDivElement>(null)
+  const lightboxFrameRef = useRef<HTMLDivElement>(null)
+  const variantGroupRef = useRef<HTMLDivElement>(null)
+  const [variantPill, setVariantPill] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
 
   const variant = variants.find((v) => v.id === selectedVariantId) ?? variants[0]
   const sku = variant?.sku ?? '—'
@@ -71,22 +98,83 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
   const colourOption = product.options?.find((o) => /colou?r/i.test(o.title))
   const hasMultipleVariants = variants.length > 1
 
-  const handleAddToCart = useCallback(() => {
-    if (!variant) return
-    addItem(
-      {
-        id: `${product.id}-${variant.id}`,
-        title: product.title,
-        sku,
-        price: priceZar,
-        thumbnail: images[0]?.url,
-        variantId: variant.id,
-      },
-      qty,
+  // The button reports the real outcome (lib/add-to-cart): "Adding…" while the
+  // cart call runs, then the tick draws and a bubble carrying the product's
+  // picture rises from the button to the cart in the navbar.
+  const handleAddToCart = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (!variant) return
+      void add(
+        {
+          id: `${product.id}-${variant.id}`,
+          title: product.title,
+          sku,
+          price: priceZar,
+          thumbnail: images[0]?.url,
+          variantId: variant.id,
+        },
+        { quantity: qty, from: e.currentTarget, image: bubbleImage(mainImageRef.current, images[0]?.url) },
+      )
+    },
+    [variant, qty, product, sku, priceZar, images, add],
+  )
+
+  // The selected variant sits on a single ink pill that slides to whichever
+  // option is picked, rather than one button going dark as another goes light.
+  useLayoutEffect(() => {
+    const group = variantGroupRef.current
+    if (!group) return
+    const measure = () => {
+      const btn = group.querySelector<HTMLElement>('[aria-pressed="true"]')
+      setVariantPill(btn ? { x: btn.offsetLeft, y: btn.offsetTop, w: btn.offsetWidth, h: btn.offsetHeight } : null)
+    }
+    measure()
+    if (typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(measure)
+    ro.observe(group)
+    return () => ro.disconnect()
+  }, [variant?.id])
+
+  // Lightbox: the enlarged image grows out of the main image and shrinks back
+  // into it on close, so it reads as the same picture brought closer.
+  useLayoutEffect(() => {
+    if (!lightboxOpen) return
+    const frame = lightboxFrameRef.current
+    const source = mainImageRef.current?.querySelector('img') ?? mainImageRef.current
+    if (!frame || !source || prefersReducedMotion() || typeof frame.animate !== 'function') return
+    frame.animate(
+      [{ transform: flipFrom(source.getBoundingClientRect(), frame.getBoundingClientRect()) }, { transform: 'none' }],
+      { duration: 420, easing: 'cubic-bezier(.22, 1, .36, 1)' },
     )
-    setAdded(true)
-    setTimeout(() => setAdded(false), 2000)
-  }, [variant, qty, product, sku, priceZar, images, addItem])
+    lightboxRef.current?.animate([{ backgroundColor: 'rgba(0,0,0,0)' }, { backgroundColor: 'rgba(0,0,0,0.9)' }], {
+      duration: 320,
+      easing: 'ease-out',
+    })
+  }, [lightboxOpen])
+
+  const openLightbox = useCallback(() => {
+    if (images.length === 0) return
+    setLightboxPoster(mainImageRef.current?.querySelector('img')?.currentSrc ?? '')
+    setLightboxOpen(true)
+  }, [images.length])
+
+  const closeLightbox = useCallback(() => {
+    const frame = lightboxFrameRef.current
+    const source = mainImageRef.current?.querySelector('img') ?? mainImageRef.current
+    if (!frame || !source || prefersReducedMotion() || typeof frame.animate !== 'function') {
+      setLightboxOpen(false)
+      return
+    }
+    const shrink = frame.animate(
+      [{ transform: 'none' }, { transform: flipFrom(source.getBoundingClientRect(), frame.getBoundingClientRect()) }],
+      { duration: 300, easing: 'cubic-bezier(.55, 0, .45, 1)', fill: 'forwards' },
+    )
+    lightboxRef.current?.animate([{ backgroundColor: 'rgba(0,0,0,0.9)' }, { backgroundColor: 'rgba(0,0,0,0)' }], {
+      duration: 300,
+      fill: 'forwards',
+    })
+    shrink.finished.then(() => setLightboxOpen(false), () => setLightboxOpen(false))
+  }, [])
 
   const cartridgeType = cartridgeTypeLabel(product.metadata?.cartridge_type) ?? 'Laser'
 
@@ -102,36 +190,46 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
       {/* Lightbox */}
       {lightboxOpen && images[activeImage] && (
         <div
+          ref={lightboxRef}
           className="lightbox-backdrop"
-          onClick={() => setLightboxOpen(false)}
+          onClick={closeLightbox}
           role="dialog"
           aria-modal="true"
           aria-label="Product image lightbox"
         >
           <button
-            onClick={() => setLightboxOpen(false)}
+            onClick={closeLightbox}
             className="absolute top-4 right-4 text-white/70 hover:text-white text-3xl leading-none"
             aria-label="Close lightbox"
           >
             ×
           </button>
-          <Image
-            src={images[activeImage].url}
-            alt={product.title}
-            width={800}
-            height={800}
-            className="max-h-[85vh] max-w-[85vw] object-contain"
+          {/* The frame starts painted with the main image the browser already
+              has, so the zoom never shows an empty box while the larger file loads. */}
+          <div
+            ref={lightboxFrameRef}
+            className="bg-center bg-no-repeat bg-contain"
+            style={lightboxPoster ? { backgroundImage: `url("${lightboxPoster}")` } : undefined}
             onClick={(e) => e.stopPropagation()}
-          />
+          >
+            <Image
+              src={images[activeImage].url}
+              alt={product.title}
+              width={800}
+              height={800}
+              className="max-h-[85vh] max-w-[85vw] object-contain"
+            />
+          </div>
         </div>
       )}
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 pt-32 pb-16">
-        {/* Breadcrumb */}
+      <PageTransition>
+      <div data-page-content className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 pt-32 pb-16">
+        {/* Breadcrumb — links back up the hierarchy carry nav-back */}
         <nav aria-label="Breadcrumb" className="mb-8 flex items-center gap-2 text-xs text-[var(--muted)]">
-          <Link href="/" className="hover:text-[var(--ink)] transition-colors">Home</Link>
+          <Link href="/" transitionTypes={NAV_BACK} className="hover:text-[var(--ink)] transition-colors">Home</Link>
           <span>/</span>
-          <Link href="/products" className="hover:text-[var(--ink)] transition-colors">
+          <Link href="/products" transitionTypes={NAV_BACK} className="hover:text-[var(--ink)] transition-colors">
             {typeCategory?.name ?? 'Products'}
           </Link>
           {brandCategory && (
@@ -139,6 +237,7 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
               <span>/</span>
               <Link
                 href={`/products?category=${brandCategory.id}`}
+                transitionTypes={NAV_BACK}
                 className="hover:text-[var(--ink)] transition-colors"
               >
                 {brandCategory.name}
@@ -159,7 +258,10 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
                 {images.slice(0, 6).map((img, i) => (
                   <button
                     key={i}
-                    onClick={() => setActiveImage(i)}
+                    onClick={() => {
+                      setActiveImage(i)
+                      setGallerySwapped(true)
+                    }}
                     className={`w-14 h-14 rounded-[8px] bg-[var(--surface)] overflow-hidden border border-[var(--line-3)] ${i === activeImage ? 'thumb-active' : ''}`}
                     aria-label={`View image ${i + 1}`}
                   >
@@ -175,25 +277,30 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
               </div>
             )}
 
-            {/* Main image */}
+            {/* Main image — the grid card's image morphs into this one */}
             <div
-              className="flex-1 bg-[var(--surface)] rounded-[20px] flex items-center justify-center p-8 cursor-zoom-in min-h-[360px] sm:min-h-[440px]"
-              onClick={() => images.length > 0 && setLightboxOpen(true)}
+              ref={mainImageRef}
+              className="relative flex-1 bg-[var(--surface)] rounded-[20px] flex items-center justify-center p-8 cursor-zoom-in min-h-[360px] sm:min-h-[440px]"
+              onClick={openLightbox}
             >
-              {images[activeImage] ? (
-                <Image
-                  src={images[activeImage].url}
-                  alt={product.title}
-                  width={400}
-                  height={400}
-                  className="max-h-[340px] w-auto object-contain"
-                  priority
-                />
-              ) : (
-                <div className="w-32 h-48 rounded-[10px] bg-gradient-to-br from-[#0A0A0A] to-[#2A2A2A] shadow-[0_24px_48px_-12px_rgba(10,10,10,0.45)] flex flex-col justify-end p-4">
-                  <span className="font-display text-white text-sm">TSE</span>
-                </div>
-              )}
+              <ProductMorph productId={product.id}>
+                {images[activeImage] ? (
+                  <ProductImage
+                    key={activeImage}
+                    orbSize={48}
+                    src={images[activeImage].url}
+                    alt={product.title}
+                    width={400}
+                    height={400}
+                    className={`max-h-[340px] w-auto object-contain ${gallerySwapped ? 'gallery-swap' : ''}`}
+                    priority
+                  />
+                ) : (
+                  <div className="w-32 h-48 rounded-[10px] bg-gradient-to-br from-[#0A0A0A] to-[#2A2A2A] shadow-[0_24px_48px_-12px_rgba(10,10,10,0.45)] flex flex-col justify-end p-4">
+                    <span className="font-display text-white text-sm">TSE</span>
+                  </div>
+                )}
+              </ProductMorph>
             </div>
           </div>
 
@@ -227,7 +334,7 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
             <div className="mb-6">
               {priceZar ? (
                 <div className="font-display text-4xl">
-                  R{priceZar.toLocaleString('en-ZA')}
+                  R<RollingNumber value={priceZar.toLocaleString('en-ZA')} />
                   <span className="text-base text-[var(--muted)] ml-2 font-sans font-normal">incl. VAT</span>
                 </div>
               ) : (
@@ -253,7 +360,20 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
                   </span>
                   <span className="text-sm text-[var(--ink)] font-medium">{variant?.title ?? ''}</span>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div ref={variantGroupRef} className="relative flex flex-wrap gap-2">
+                  {/* One pill travels to the selection (see useLayoutEffect above). Until
+                      it has been measured the selected button paints its own fill. */}
+                  {variantPill && (
+                    <span
+                      aria-hidden
+                      className="variant-pill"
+                      style={{
+                        transform: `translate(${variantPill.x}px, ${variantPill.y}px)`,
+                        width: variantPill.w,
+                        height: variantPill.h,
+                      }}
+                    />
+                  )}
                   {variants.map((v) => {
                     const label = v.title ?? v.sku ?? ''
                     const isSelected = v.id === variant?.id
@@ -261,9 +381,9 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
                       <button
                         key={v.id}
                         onClick={() => setSelectedVariantId(v.id)}
-                        className={`flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full border text-xs transition-colors ${
+                        className={`relative flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full border text-xs transition-colors duration-300 ${
                           isSelected
-                            ? 'border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]'
+                            ? `border-[var(--ink)] text-[var(--paper)] ${variantPill ? 'bg-transparent' : 'bg-[var(--ink)]'}`
                             : 'border-[var(--line-4)] text-[var(--ink-2)] hover:border-[var(--line-7)]'
                         }`}
                         aria-pressed={isSelected}
@@ -290,7 +410,7 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
                 >
                   −
                 </button>
-                <span className="w-10 text-center text-sm font-medium tabular-nums">{qty}</span>
+                <span className="w-10 text-center text-sm font-medium tabular-nums"><RollingNumber value={qty} /></span>
                 <button
                   onClick={() => setQty((q) => q + 1)}
                   className="w-10 h-10 flex items-center justify-center text-[var(--ink)] hover:bg-[var(--hover-1)] transition-colors"
@@ -303,13 +423,15 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
               <button
                 onClick={handleAddToCart}
                 disabled={!variant}
-                className={`flex-1 h-10 rounded-full font-medium text-sm transition-all duration-200 ${
-                  added
+                data-status={addStatus}
+                className={`atc-wide flex-1 h-10 rounded-full font-medium text-sm transition-colors duration-200 active:scale-[.98] ${
+                  addStatus === 'added'
                     ? 'bg-[#dfe344] text-[var(--ink)]'
                     : 'bg-[var(--ink)] text-[var(--paper)] hover:bg-[#41e0f5] hover:text-[var(--on-accent)]'
                 } disabled:opacity-40 disabled:cursor-not-allowed`}
               >
-                {added ? '✓ Added to cart' : 'Add to cart'}
+                <AddToCartLabel status={addStatus} idle="Add to cart" />
+                <AddStatusAnnouncer message={addStatusMessage(addStatus, product.title)} />
               </button>
             </div>
 
@@ -349,11 +471,13 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
                   <Link
                     key={p.id}
                     href={`/products/${p.handle}`}
+                    transitionTypes={NAV_FORWARD}
                     className="group relative bg-[var(--surface)] rounded-[16px] p-4 overflow-hidden hover:-translate-y-1 transition-transform duration-300"
                   >
                     <div className="relative h-28 flex items-end justify-center mb-3">
+                      <ProductMorph productId={p.id}>
                       {relatedImage ? (
-                        <Image
+                        <ProductImage
                           src={relatedImage}
                           alt={p.title}
                           width={160}
@@ -376,6 +500,7 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
                           </div>
                         </div>
                       )}
+                      </ProductMorph>
                     </div>
 
                     <h3 className="font-display text-sm leading-tight tracking-tight line-clamp-2 mb-1">{p.title}</h3>
@@ -390,6 +515,7 @@ export default function ProductDetail({ product, related, brandCategory, typeCat
           </section>
         )}
       </div>
+      </PageTransition>
     </>
   )
 }

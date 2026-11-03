@@ -3,6 +3,7 @@ import { siteConfig } from '@/lib/site-config'
 import { ORGANIZATION_ID, SITE_URL, organizationRef } from '@/lib/structured-data'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout'
+import { siteUrl } from '@/lib/site-url'
 
 // Google Merchant Center requires contact details a reviewer can actually see.
 // Two problems this page solves:
@@ -23,6 +24,7 @@ export const metadata: Metadata = {
   title: 'Contact Us — TSE Online',
   description:
     'Phone, WhatsApp, email and physical address for TSE Online — printer cartridge supplier in Kya Sands, Johannesburg. Trading since 1987.',
+  alternates: { canonical: siteUrl('/contact') },
 }
 
 const ADDRESS = siteConfig.address
@@ -68,7 +70,7 @@ export default function ContactPage() {
           >
             <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--muted)] mb-2">Phone</div>
             <div className="font-display text-xl">{siteConfig.phone.displayExt}</div>
-            <div className="text-xs text-[var(--muted)] mt-1">Mon–Fri, 08:00–17:00</div>
+            <div className="text-xs text-[var(--muted)] mt-1">{siteConfig.openingHours.map((h) => `${h.label} ${h.display}`).join(' · ')}</div>
           </a>
 
           <a

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { siteConfig } from '@/lib/site-config'
+import { SITE_HOST, siteUrl } from '@/lib/site-url'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout'
 
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
   title: 'Terms & Conditions — TSE Online',
   description:
     'The terms you agree to when buying from TSE Online: who we are, pricing, payment, delivery, and how disputes are handled.',
+  alternates: { canonical: siteUrl('/legal/terms') },
 }
 
 export default function TermsPage() {
@@ -43,7 +45,7 @@ export default function TermsPage() {
 
         <div className="prose text-[var(--ink-2)] text-[15px]">
           <p>
-            These terms apply when you buy from <strong>tse-cartridges.co.za</strong>. Placing an
+            These terms apply when you buy from <strong>{SITE_HOST}</strong>. Placing an
             order means you accept them.
           </p>
 

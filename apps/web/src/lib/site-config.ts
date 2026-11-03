@@ -26,12 +26,12 @@ export const siteConfig = {
     country: 'South Africa',
     countryCode: 'ZA',
   },
-  // Counter hours, as shown on the contact page.
-  openingHours: {
-    days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-    opens: '08:00',
-    closes: '17:00',
-  },
+  // Counter hours. Split week: Friday closes early. Read by the footer, the
+  // contact page and the JSON-LD, so the three can never disagree.
+  openingHours: [
+    { days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday'], opens: '08:00', closes: '16:30', label: 'Mon–Thu', display: '8am–4:30pm' },
+    { days: ['Friday'], opens: '08:00', closes: '15:00', label: 'Fri', display: '8am–3pm' },
+  ],
   // Sales landline
   phone: {
     display: '011 708 2304',

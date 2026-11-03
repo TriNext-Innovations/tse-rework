@@ -10,7 +10,7 @@
 // Kept apart from the feed route so the rules are unit-testable without
 // standing up a Medusa fetch.
 
-export type CartridgeTypeMeta = 'inkjet' | 'laser' | null
+export type CartridgeTypeMeta = 'inkjet' | 'laser' | 'ink' | null
 
 // Google renders roughly 70 characters before truncating. Everything below is
 // ordered most-searched-first so a clamp drops the least valuable part.
@@ -28,15 +28,18 @@ const SELF_DESCRIBING = /\b(drum|imaging unit|maintenance kit|fuser|waste)\b/i
 // Canon T13) still get the single most valuable search word. "Cartridge" is
 // true of the entire catalogue — the feed already declares one Google category
 // for all of it — where "Toner" or "Ink" would be a guess.
-const TYPE_NOUN: Record<'inkjet' | 'laser', string> = {
+const TYPE_NOUN: Record<'inkjet' | 'laser' | 'ink', string> = {
   laser: 'Toner Cartridge',
   inkjet: 'Ink Cartridge',
+  // Bottled ink for tank printers is not a cartridge; say what it is.
+  ink: 'Refill Ink',
 }
 const FALLBACK_NOUN = 'Cartridge'
 
-const PRODUCT_TYPE_LEAF: Record<'inkjet' | 'laser', string> = {
+const PRODUCT_TYPE_LEAF: Record<'inkjet' | 'laser' | 'ink', string> = {
   laser: 'Laser Toner',
   inkjet: 'Inkjet Ink',
+  ink: 'Refill Ink',
 }
 
 export type MerchantTitleInput = {
@@ -66,6 +69,7 @@ export function typeNounFor(productTitle: string, cartridgeType: CartridgeTypeMe
   // Don't repeat a word the title already has ("... Ink Cartridge" would become
   // "... Ink Cartridge Ink Cartridge" if the catalogue is ever cleaned up).
   if (containsWord(productTitle, 'cartridge')) return null
+  if (cartridgeType === 'ink' && containsWord(productTitle, 'ink')) return null
   return noun
 }
 

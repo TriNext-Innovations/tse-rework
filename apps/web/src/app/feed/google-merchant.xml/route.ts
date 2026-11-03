@@ -1,10 +1,11 @@
 import { htmlToPlainText } from '@/lib/html-text'
+import { SITE_URL } from '@/lib/site-url'
 import { buildMerchantTitle, buildProductType, type CartridgeTypeMeta } from '@/lib/merchant-title'
 import { TYPE_CATEGORY_NAMES as TYPE_CATS } from '@/lib/taxonomy'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
-const SITE = 'https://tse-cartridges.co.za'
+const SITE = SITE_URL
 
 // "Office & School Supplies > Printer Consumables > Toner & Inkjet Cartridges".
 // The whole catalogue is printer consumables, so one category covers it —

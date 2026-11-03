@@ -1,13 +1,17 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { Inter, Fraunces } from 'next/font/google'
 import './globals.css'
+import './motion.css'
 import { cn } from '@/lib/utils'
 import { CartProvider } from '@/contexts/CartContext'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { CookieBanner } from '@/components/CookieBanner'
 import { Analytics } from '@/components/Analytics'
+import { PageLoading } from '@/components/motion'
 import { siteConfig } from '@/lib/site-config'
 import { organizationJsonLd, websiteJsonLd } from '@/lib/structured-data'
+import { SITE_URL } from '@/lib/site-url'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -24,8 +28,10 @@ const fraunces = Fraunces({
 })
 
 const SITE_NAME = siteConfig.company.brandName
+// Kept under ~155 characters: Google truncates longer snippets, and this also
+// feeds og:description and twitter:description (#521).
 const DESCRIPTION =
-  "South Africa's printer cartridge specialist since 1987. Quality generic compatibles for HP, Canon, Epson, Brother, Samsung and more — countrywide courier, with next-day delivery available to JHB & PTA."
+  "Printer cartridge specialist since 1987. Generic compatibles for HP, Canon, Epson, Brother & Samsung, couriered countrywide; next-day to JHB & PTA."
 
 export const metadata: Metadata = {
   title: {
@@ -33,7 +39,7 @@ export const metadata: Metadata = {
     template: '%s | TSE Online',
   },
   description: DESCRIPTION,
-  metadataBase: new URL('https://tse-cartridges.co.za'),
+  metadataBase: new URL(SITE_URL),
   icons: {
     icon: '/icon.png',
     apple: '/apple-icon.png',
@@ -42,7 +48,7 @@ export const metadata: Metadata = {
     type: 'website',
     siteName: SITE_NAME,
     locale: 'en_ZA',
-    url: 'https://tse-cartridges.co.za',
+    url: SITE_URL,
     title: 'TSE Online — Printer Cartridges South Africa',
     description: DESCRIPTION,
   },
@@ -79,6 +85,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
+        {/* useSearchParams inside needs its own Suspense boundary */}
+        <Suspense fallback={null}>
+          <PageLoading />
+        </Suspense>
         <AuthProvider>
           <CartProvider>{children}</CartProvider>
         </AuthProvider>

@@ -1,6 +1,15 @@
+import type { Metadata } from 'next'
 import StorefrontClient, { type HeroProduct } from './StorefrontClient'
+import { SITE_URL } from '@/lib/site-url'
 
 export const dynamic = 'force-dynamic'
+
+// Title, description and OG come from the root layout. The canonical cannot:
+// a layout-level canonical is inherited by every page that doesn't override
+// it, which would point the whole site at the homepage.
+export const metadata: Metadata = {
+  alternates: { canonical: SITE_URL },
+}
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''

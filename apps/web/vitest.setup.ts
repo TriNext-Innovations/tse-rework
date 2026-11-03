@@ -25,7 +25,7 @@ vi.mock('next/image', () => ({
 
 // ── Next.js Link → plain <a> ─────────────────────────────────────────────────
 vi.mock('next/link', () => ({
-  default: ({ children, href, className, 'aria-label': ariaLabel, ...rest }: any) =>
+  default: ({ children, href, className, 'aria-label': ariaLabel, transitionTypes: _types, ...rest }: any) =>
     React.createElement('a', { href, className, 'aria-label': ariaLabel, ...rest }, children),
 }))
 

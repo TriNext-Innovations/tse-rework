@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { flushSync } from 'react-dom'
+import { revealFrom } from '@/lib/motion'
 
 const STORAGE_KEY = 'tse_theme'
 
@@ -23,10 +25,18 @@ export function ThemeToggle() {
     setTheme(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light')
   }, [])
 
-  function toggle() {
+  function toggle(e: React.MouseEvent<HTMLButtonElement>) {
     const next: Theme = theme === 'dark' ? 'light' : 'dark'
-    setTheme(next)
-    applyTheme(next)
+    // The new theme spreads out from the toggle itself, so the change reads
+    // as caused by this button. Keyboard presses have no pointer position and
+    // start from the button's centre.
+    const r = e.currentTarget.getBoundingClientRect()
+    const x = e.clientX || r.left + r.width / 2
+    const y = e.clientY || r.top + r.height / 2
+    revealFrom(x, y, () => {
+      flushSync(() => setTheme(next))
+      applyTheme(next)
+    })
   }
 
   const dark = theme === 'dark'

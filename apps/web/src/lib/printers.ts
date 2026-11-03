@@ -29,6 +29,8 @@ export type PrinterModel = {
 
 export type CompatibleCartridge = {
   sku: string
+  /** Every variant SKU the card stands for; `sku` is the first of them. */
+  skus?: string[]
   title: string
   handle?: string
   product_id: string

@@ -1,3 +1,5 @@
+import { COLLECTION_POINT, STORE_URL } from '../lib/collection-point'
+
 export interface OrderConfirmationData {
   orderNumber: string | number
   orderDate: string
@@ -25,6 +27,8 @@ export interface OrderConfirmationData {
     postalCode?: string
   }
   serviceName: string
+  /** Customer chose "Collect from Kya Sands Warehouse": nothing is couriered. */
+  isCollect?: boolean
 }
 
 function row(label: string, value: string, bold = false): string {
@@ -102,7 +106,9 @@ export function orderConfirmationHtml(d: OrderConfirmationData): string {
                 Order confirmed ✓
               </p>
               <p style="margin:0 0 24px;font-size:15px;color:#6B7280;">
-                Hi ${d.customerName}, thanks for your order. We'll have it packed and ready for collection shortly.
+                Hi ${d.customerName}, thanks for your order. ${d.isCollect
+                  ? "We'll email you as soon as it's packed and ready for you to collect. It will not be couriered."
+                  : "We'll email you when it's packed and again when it's on its way."}
               </p>
 
               <!-- Order meta -->
@@ -147,12 +153,18 @@ export function orderConfirmationHtml(d: OrderConfirmationData): string {
               <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
                 <tr>
                   <td style="width:50%;vertical-align:top;padding-right:16px;">
+                    ${d.isCollect ? `
+                    <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#111827;text-transform:uppercase;letter-spacing:0.5px;">Collect from</p>
+                    <p style="margin:0;font-size:14px;color:#374151;line-height:1.6;">
+                      ${COLLECTION_POINT.lines.join('<br/>')}<br/>
+                      ${COLLECTION_POINT.hours}
+                    </p>` : `
                     <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#111827;text-transform:uppercase;letter-spacing:0.5px;">Delivery address</p>
                     <p style="margin:0;font-size:14px;color:#374151;line-height:1.6;">
                       ${d.shippingAddress.name}<br/>
                       ${d.shippingAddress.line1}<br/>
                       ${d.shippingAddress.line2 ? d.shippingAddress.line2 + '<br/>' : ''}${d.shippingAddress.city}${d.shippingAddress.province ? ', ' + d.shippingAddress.province : ''}${d.shippingAddress.postalCode ? ', ' + d.shippingAddress.postalCode : ''}
-                    </p>
+                    </p>`}
                   </td>
                   <td style="width:50%;vertical-align:top;padding-left:16px;">
                     <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#111827;text-transform:uppercase;letter-spacing:0.5px;">Need help?</p>
@@ -168,7 +180,7 @@ export function orderConfirmationHtml(d: OrderConfirmationData): string {
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center">
-                    <a href="https://tse-cartridges.co.za/account/orders"
+                    <a href="${STORE_URL}/account/orders"
                        style="display:inline-block;background:#dfe344;color:#111827;font-weight:700;font-size:14px;padding:12px 28px;border-radius:6px;text-decoration:none;">
                       View your order
                     </a>

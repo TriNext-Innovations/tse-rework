@@ -1,0 +1,51 @@
+# TSE creative agency — runs beside n8n on the tse-n8n box.
+# Joins n8n's network so workflows reach it at http://tse-agency:8080;
+# publishes 8090 on loopback only, for nginx to expose /agency/media and /agency/review.
+#
+# The box has ~1 GB RAM and already runs n8n: limits below keep the agency
+# under ~400 MB. See docs/OPERATIONS.md › Deploy.
+services:
+  agency-db:
+    image: postgres:16-alpine
+    container_name: tse-agency-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: agency
+      POSTGRES_DB: agency
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    command: >
+      postgres -c shared_buffers=32MB -c work_mem=2MB -c maintenance_work_mem=16MB
+               -c max_connections=20 -c effective_cache_size=96MB
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    mem_limit: 192m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agency"]
+      interval: 30s
+
+  agency:
+    build: .
+    image: tse-agency:latest
+    container_name: tse-agency
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://agency:${POSTGRES_PASSWORD}@agency-db:5432/agency
+      MEDIA_DIR: /data/media
+    volumes:
+      - ./data/media:/data/media
+    ports:
+      - "127.0.0.1:8090:8080"
+    depends_on:
+      agency-db:
+        condition: service_healthy
+    mem_limit: 256m
+    networks:
+      default:
+      n8n:
+        aliases: [tse-agency]
+
+networks:
+  n8n:
+    external: true
+    name: n8n_default

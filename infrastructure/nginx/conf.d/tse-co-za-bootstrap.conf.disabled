@@ -1,0 +1,19 @@
+# HTTP-01 bootstrap ONLY. Disabled until the approved preparation window.
+# Enable before GAM switches the A records. No certificate is required.
+# Remove this enabled file when enabling tse-co-za.conf; never enable both.
+server {
+    listen 80;
+    server_name tse.co.za www.tse.co.za;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+        default_type text/plain;
+        try_files $uri =404;
+    }
+
+    # Do not expose a second checkout over plaintext during bootstrap.
+    location / {
+        add_header Retry-After 300 always;
+        return 503;
+    }
+}

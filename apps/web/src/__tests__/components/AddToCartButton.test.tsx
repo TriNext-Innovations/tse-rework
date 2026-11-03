@@ -64,4 +64,28 @@ describe('AddToCartButton', () => {
     renderButton({ price: null })
     expect(screen.getByRole('button', { name: /Add HP 123 Black to cart/i })).toBeInTheDocument()
   })
+
+  // #498: the button sits inside the card's link. Without preventDefault the
+  // browser followed the link after adding, taking the shopper off the listing.
+  it('does not follow the card link it sits in', () => {
+    render(
+      <CartProvider>
+        <a href="/products/hp-123-black">
+          <AddToCartButton id="prod_1" title="HP 123 Black" sku="HP-123-BK" price={300} />
+        </a>
+      </CartProvider>,
+    )
+    const followed = fireEvent.click(screen.getByRole('button', { name: /Add HP 123 Black to cart/i }))
+    expect(followed).toBe(false)
+  })
+
+  it('shows the added state and announces it once the line is in the cart', async () => {
+    renderButton({ id: 'prod_1', title: 'HP 123 Black' })
+    const btn = screen.getByRole('button', { name: /Add HP 123 Black to cart/i })
+    expect(btn).toHaveAttribute('data-status', 'idle')
+    fireEvent.click(btn)
+    expect(btn).toHaveAttribute('data-status', 'pending')
+    await waitFor(() => expect(btn).toHaveAttribute('data-status', 'added'))
+    expect(screen.getByText('HP 123 Black added to cart')).toBeInTheDocument()
+  })
 })

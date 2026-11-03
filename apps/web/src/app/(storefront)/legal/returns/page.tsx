@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { siteConfig } from '@/lib/site-config'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout'
+import { siteUrl } from '@/lib/site-url'
 
 // Google Merchant Center reviews the storefront, not just the product feed, and
 // the absence of a findable returns policy is the most common reason a Shopping
@@ -17,6 +18,7 @@ export const metadata: Metadata = {
   title: 'Returns & Refunds — TSE Online',
   description:
     'How to return or exchange a cartridge bought from TSE Online: 7-day cooling-off, 6-month guarantee on defective cartridges, and how refunds are paid.',
+  alternates: { canonical: siteUrl('/legal/returns') },
 }
 
 export default function ReturnsPage() {

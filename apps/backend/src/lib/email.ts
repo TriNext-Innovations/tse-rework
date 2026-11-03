@@ -25,13 +25,31 @@ function authHeader(): string {
   return token.startsWith('Zoho-enczapikey') ? token : `Zoho-enczapikey ${token}`
 }
 
-export async function sendEmail(options: {
+type EmailOptions = {
   to: string
   subject: string
   html: string
   replyTo?: string
   cc?: string[]
-}): Promise<void> {
+}
+
+// #528: local/test runs set EMAIL_REDIRECT_TO so no customer or TSE inbox ever
+// receives a test email. Every send goes to that one address instead, with the
+// original recipients kept in the subject so each email is still traceable.
+export function applyEmailRedirect(options: EmailOptions): EmailOptions {
+  const redirect = (process.env.EMAIL_REDIRECT_TO ?? '').trim()
+  if (!redirect) return options
+  const original = [options.to, ...(options.cc ?? [])].join(', ')
+  return {
+    ...options,
+    to: redirect,
+    cc: [],
+    subject: `[LOCAL → ${original}] ${options.subject}`,
+  }
+}
+
+export async function sendEmail(input: EmailOptions): Promise<void> {
+  const options = applyEmailRedirect(input)
   const from = process.env.EMAIL_FROM ?? 'sales@tse-cartridges.co.za'
   const replyTo = options.replyTo ?? process.env.EMAIL_REPLY_TO ?? salesEmail()
   const cc = options.cc?.filter((address) => address !== options.to) ?? []

@@ -18,7 +18,8 @@
 
 import { siteConfig } from './site-config'
 
-export const SITE_URL = 'https://tse-cartridges.co.za'
+export { SITE_URL } from './site-url'
+import { SITE_URL } from './site-url'
 
 /** Stable node id for the business. Reference this — never redefine the entity. */
 export const ORGANIZATION_ID = `${SITE_URL}/#organization`
@@ -82,14 +83,12 @@ export const organizationJsonLd = {
     addressCountry: siteConfig.address.countryCode,
   },
   areaServed: siteConfig.address.countryCode,
-  openingHoursSpecification: [
-    {
-      '@type': 'OpeningHoursSpecification',
-      dayOfWeek: [...siteConfig.openingHours.days],
-      opens: siteConfig.openingHours.opens,
-      closes: siteConfig.openingHours.closes,
-    },
-  ],
+  openingHoursSpecification: siteConfig.openingHours.map((h) => ({
+    '@type': 'OpeningHoursSpecification',
+    dayOfWeek: [...h.days],
+    opens: h.opens,
+    closes: h.closes,
+  })),
   contactPoint: [
     {
       '@type': 'ContactPoint',

@@ -91,6 +91,8 @@ export type CourierGuyOptions = {
   apiKey: string
   /** Override the API base URL (defaults to https://api.shiplogic.com). */
   baseUrl?: string
+  /** Local tests only (#528): book nothing, see FakeCourierGuyClient. */
+  fake?: boolean
   /** Warehouse / collection address goods ship from. */
   collectionAddress: CourierGuyAddress
   /** Contact at the collection address (shown to the driver). */

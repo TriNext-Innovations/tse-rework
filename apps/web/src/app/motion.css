@@ -1,0 +1,353 @@
+/*
+ * ─── MOTION ──────────────────────────────────────────────────────────────────
+ *
+ * One vocabulary for every animation on the storefront. The rule: an
+ * animation has to explain a change of state (an item going into the cart, a
+ * page on its way, the same product arriving on its own page) or it doesn't
+ * ship. Durations and curves live here as tokens so components never invent
+ * their own.
+ *
+ * Colour: TSE's own. Cyan (--cyan, #41e0f5) carries movement and loading;
+ * lime (--lime, #dfe344) confirms something is done; ink carries the rest.
+ *
+ * JS-driven motion (the cart bubble, the theme reveal) lives in lib/motion.ts
+ * and checks prefersReducedMotion() before running. Everything in this file
+ * collapses to a still state under prefers-reduced-motion (bottom block).
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+:root {
+  --dur-press: 120ms;  /* press feedback */
+  --dur-state: 200ms;  /* icon and colour state changes */
+  --dur-enter: 320ms;  /* things arriving */
+  --dur-move: 480ms;   /* things travelling across the page */
+
+  --ease-out: cubic-bezier(.22, 1, .36, 1);  /* the storefront's existing curve */
+  --ease-in: cubic-bezier(.55, 0, 1, .45);
+  --ease-in-out: cubic-bezier(.65, 0, .35, 1);
+  /* Damped spring (ζ 0.65): 7% overshoot, settles at the end of its duration.
+     Sampled into linear() so CSS can use it without a JS spring solver. */
+  --ease-spring: linear(0, 0.041, 0.142, 0.276, 0.421, 0.563, 0.692, 0.803, 0.892, 0.96, 1.009, 1.041, 1.059, 1.067, 1.067, 1.062, 1.054, 1.044, 1.034, 1.025, 1.017, 1.01, 1.005, 1.001, 0.998, 0.996, 0.996, 0.995, 0.996, 0.996, 0.997, 0.997, 1);
+}
+
+/* ─── Loading ─────────────────────────────────────────────────────────────── */
+/* One loading indicator everywhere: the dotted orb (DotOrb), a sphere of dots
+   turning in 3D with a cyan meridian sweeping round it. It only appears when
+   a wait is long enough to notice. */
+.dot-orb { display: block; flex-shrink: 0; }
+
+/* For waits that are often short (a search, a quantity change): the orb only
+   fades in if the answer hasn't come back after 250ms. */
+.orb-delayed { animation: tse-orb-appear 200ms ease 250ms backwards; }
+@keyframes tse-orb-appear { from { opacity: 0; } }
+
+/* A slow page: the orb and a line saying what is loading, in the middle of
+   the screen (PageLoading), while what is about to be replaced steps back. */
+.page-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 240;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.page-loading-stage {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  animation: tse-stage-in 260ms var(--ease-out) both;
+}
+/* A soft pool of page colour behind the orb and its line, so they read
+   cleanly over whatever sits underneath (no card, no border). */
+.page-loading-stage::before {
+  content: '';
+  position: absolute;
+  inset: -80px -110px;
+  z-index: -1;
+  background: radial-gradient(closest-side, var(--paper) 45%, transparent);
+}
+.page-loading-label {
+  font-size: 13px;
+  letter-spacing: .01em;
+  color: var(--ink-2);
+}
+@keyframes tse-stage-in { from { opacity: 0; transform: translateY(6px) scale(.96); } }
+[data-page-content],
+[data-results] { transition: opacity 250ms ease; }
+html[data-navigating="page"] [data-page-content],
+html[data-navigating="results"] [data-results] { opacity: .35; }
+
+/* A slow product photo: the orb in the photo's place (ProductImage). */
+.img-orb {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  animation: tse-orb-appear 200ms ease both;
+}
+
+/* Placeholder blocks while content is on its way (cart, search). */
+.skeleton {
+  background: linear-gradient(90deg, var(--line-2) 25%, var(--line-1) 50%, var(--line-2) 75%);
+  background-size: 300% 100%;
+  animation: tse-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes tse-shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
+
+/* ─── Add to cart: button states ──────────────────────────────────────────── */
+/* The round "+" buttons stack three glyphs and cross-fade between them on
+   data-status: idle (+) → pending (orb) → added (tick draws) → idle. */
+.atc-icon { display: grid; place-items: center; }
+.atc-icon > * {
+  grid-area: 1 / 1;
+  transition: opacity var(--dur-state) var(--ease-out), transform var(--dur-state) var(--ease-out);
+}
+.atc-orb, .atc-check { opacity: 0; transform: scale(.5); }
+[data-status="pending"] .atc-plus,
+[data-status="added"] .atc-plus { opacity: 0; transform: scale(.5) rotate(90deg); }
+[data-status="pending"] .atc-orb { opacity: 1; transform: none; }
+[data-status="added"] .atc-check { opacity: 1; transform: none; }
+[data-status="added"] .atc-check path { stroke-dasharray: 24; animation: tse-check-draw 360ms var(--ease-out) 40ms both; }
+[data-status="error"] { animation: tse-nudge 380ms var(--ease-out); }
+
+/* Wide buttons (product page, hero card): the label swaps to "Adding…" with
+   the orb while the cart call is in flight, then to a drawn tick. */
+.atc-wide { position: relative; overflow: hidden; isolation: isolate; }
+.atc-label,
+.atc-label > span { display: inline-flex; align-items: center; justify-content: center; gap: .5em; }
+.atc-label > span { animation: tse-label-in var(--dur-state) var(--ease-out) both; }
+.atc-label svg path { stroke-dasharray: 24; animation: tse-check-draw 360ms var(--ease-out) 60ms both; }
+
+@keyframes tse-spin { to { transform: rotate(360deg); } }
+@keyframes tse-check-draw { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
+@keyframes tse-nudge {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+@keyframes tse-label-in { from { opacity: 0; transform: translateY(40%); } }
+
+/* ─── Add to cart: the bubble ─────────────────────────────────────────────── */
+/* Once the line is in the cart, a bubble carrying the product's picture pops
+   up on the pressed button and travels an arc to the cart in the navbar
+   (lib/motion.ts), taking the shopper's eye with it. White inside, because
+   the product photos are shot on white; a cyan ring so it reads as TSE. */
+.cart-bubble {
+  position: fixed;
+  z-index: 70;
+  width: 46px;
+  height: 46px;
+  margin: -23px 0 0 -23px;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+.cart-bubble-inner {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 0 0 2px var(--cyan), 0 10px 24px -8px rgba(17, 24, 39, .45);
+}
+.cart-bubble-inner img { width: 72%; height: 72%; object-fit: contain; }
+.cart-bubble-inner.is-blank { background: var(--cyan); }
+
+/* When it arrives, two cyan rings ripple out from the bag (CartButton). */
+.cart-ring {
+  position: absolute;
+  inset: 2px;
+  border-radius: 999px;
+  border: 2px solid var(--cyan);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ─── Rolling numbers ─────────────────────────────────────────────────────── */
+/* Only the digits that changed roll: up when the value grows, down when it
+   shrinks. The outgoing digit is a pseudo-element, so the DOM text is always
+   the current value (screen readers, tests and copy-paste never see a ghost). */
+.roll {
+  display: inline-block;
+  position: relative;
+  overflow: clip;
+  vertical-align: bottom;
+  font-variant-numeric: tabular-nums;
+}
+.roll > span { display: inline-block; }
+.roll::after {
+  content: attr(data-prev);
+  content: attr(data-prev) / '';  /* empty alt text keeps the old digit out of the accessibility tree */
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translateY(-110%);
+}
+.roll[data-dir="up"] > span { animation: tse-roll-in-up var(--dur-enter) var(--ease-out) both; }
+.roll[data-dir="up"]::after { animation: tse-roll-out-up var(--dur-enter) var(--ease-out) both; }
+.roll[data-dir="down"] > span { animation: tse-roll-in-down var(--dur-enter) var(--ease-out) both; }
+.roll[data-dir="down"]::after { animation: tse-roll-out-down var(--dur-enter) var(--ease-out) both; }
+@keyframes tse-roll-in-up { from { transform: translateY(100%); } }
+@keyframes tse-roll-out-up { from { transform: translateY(0); } to { transform: translateY(-110%); } }
+@keyframes tse-roll-in-down { from { transform: translateY(-100%); } }
+@keyframes tse-roll-out-down { from { transform: translateY(0); } to { transform: translateY(110%); } }
+
+/* ─── Arrivals ────────────────────────────────────────────────────────────── */
+/* Content that has just been fetched or opened feeds in from below, a few
+   milliseconds apart. --i is the item index. Fill is backwards-only so hover
+   transforms work once the entrance is done. */
+@keyframes tse-feed-in { from { opacity: 0; transform: translateY(10px); } }
+.feed-in {
+  animation: tse-feed-in var(--dur-enter) var(--ease-out) backwards;
+  animation-delay: calc(min(var(--i, 0), 11) * 35ms);
+}
+
+/* Cart drawer: lines feed in each time it opens, just behind the panel. A
+   line with an update in flight dims and shows the orb over its picture. */
+.cart-drawer[data-open="true"] .cart-line {
+  animation: tse-feed-in var(--dur-enter) var(--ease-out) backwards;
+  animation-delay: calc(90ms + min(var(--i, 0), 8) * 45ms);
+}
+.cart-line { position: relative; }
+.cart-line > * { transition: opacity var(--dur-state) var(--ease-out); }
+.cart-line[data-busy] { pointer-events: none; }
+.cart-line[data-busy] > :not(:first-child) { opacity: .45; }
+
+/* ─── Product page ────────────────────────────────────────────────────────── */
+/* The variant selection is one pill that travels to the picked option. */
+.variant-pill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 999px;
+  background: var(--ink);
+  pointer-events: none;
+  transition: transform 460ms var(--ease-spring), width 460ms var(--ease-spring), height 460ms var(--ease-spring);
+}
+/* A picked thumbnail replaces the main image with a short settle. */
+.gallery-swap { animation: tse-gallery-swap 280ms var(--ease-out) both; }
+@keyframes tse-gallery-swap { from { opacity: 0; transform: scale(.965); } }
+
+/* ─── Homepage ────────────────────────────────────────────────────────────── */
+/* The headline prints in: a cyan and a lime plate start a hair out of
+   register, slide into it, then lift off. The plates are pseudo-elements
+   drawn from data-ink, so the black text is readable from the first frame. */
+.print-register { position: relative; display: inline-block; }
+.print-register::before,
+.print-register::after {
+  content: attr(data-ink);
+  content: attr(data-ink) / '';  /* decorative: kept out of the accessibility tree */
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+  pointer-events: none;
+  mix-blend-mode: var(--grain-blend, multiply);
+  opacity: 0;
+}
+.print-register::before { color: var(--cyan); animation: tse-plate-a 900ms var(--ease-out) 100ms both; }
+.print-register::after { color: var(--lime); animation: tse-plate-b 900ms var(--ease-out) 100ms both; }
+.print-register-late::before,
+.print-register-late::after { animation-delay: 220ms; }
+@keyframes tse-plate-a {
+  0% { opacity: .85; transform: translate(-.035em, -.02em); }
+  55% { opacity: .85; transform: translate(0, 0); }
+  100% { opacity: 0; transform: translate(0, 0); }
+}
+@keyframes tse-plate-b {
+  0% { opacity: .85; transform: translate(.03em, .024em); }
+  55% { opacity: .85; transform: translate(0, 0); }
+  100% { opacity: 0; transform: translate(0, 0); }
+}
+
+/* Printer finder: the match line opens under the form once the typed model is
+   one we have data for. */
+.finder-match {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--dur-enter) var(--ease-out);
+}
+.finder-match[data-open="true"] { grid-template-rows: 1fr; }
+.finder-match > div { min-height: 0; overflow: hidden; }
+.finder-match[data-open="true"] p { animation: tse-feed-in var(--dur-enter) var(--ease-out) backwards; }
+.finder-match-tick path { stroke-dasharray: 24; animation: tse-check-draw 380ms var(--ease-out) 120ms both; }
+
+/* ─── View transitions ────────────────────────────────────────────────────── */
+/* React's <ViewTransition> (App Router) and document.startViewTransition()
+   drive these. Browsers without the API swap instantly. */
+
+/* Clicks during a transition reach the live page instead of the overlay. */
+::view-transition { pointer-events: none; }
+
+/* The same product, grid → product page and back: its image travels. */
+::view-transition-group(.product-morph) {
+  animation-duration: var(--dur-move);
+  animation-timing-function: var(--ease-out);
+}
+::view-transition-old(.product-morph),
+::view-transition-new(.product-morph) { animation-duration: var(--dur-move); }
+
+/* Going deeper (a product) the new page rises into place; coming back, the
+   previous page settles down into it. Old content leaves fast so the two
+   never compete. */
+::view-transition-old(.page-forward),
+::view-transition-old(.page-back) { animation: 140ms var(--ease-in) both tse-fade-out; }
+::view-transition-new(.page-forward) { animation: 300ms var(--ease-out) 80ms both tse-rise-in; }
+::view-transition-new(.page-back) { animation: 300ms var(--ease-out) 80ms both tse-settle-in; }
+@keyframes tse-fade-out { to { opacity: 0; } }
+@keyframes tse-rise-in { from { opacity: 0; transform: translateY(18px); } }
+@keyframes tse-settle-in { from { opacity: 0; transform: translateY(-12px); } }
+
+/* The floating navbar is the fixed point during page transitions. */
+::view-transition-group(site-header) { animation: none; z-index: 100; }
+::view-transition-old(site-header) { display: none; }
+::view-transition-new(site-header) { animation: none; }
+
+/* Cart lines: a removed line folds away; the lines below slide up. */
+::view-transition-old(.cart-line-exit) { animation: 220ms var(--ease-in) both tse-line-out; }
+::view-transition-group(.cart-line-move) {
+  animation-duration: 360ms;
+  animation-timing-function: var(--ease-spring);
+}
+@keyframes tse-line-out { to { opacity: 0; transform: translateX(24px); } }
+
+/* Theme switch: the new theme spreads out from the toggle (clip-path runs from
+   ThemeToggle). The default cross-fade is switched off for that transition. */
+html.theme-reveal::view-transition-old(root),
+html.theme-reveal::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+/* Colour transitions would otherwise be caught half-way in the new snapshot. */
+html.theme-reveal *,
+html.theme-reveal *::before,
+html.theme-reveal *::after { transition: none !important; }
+
+/* ─── Reduced motion ──────────────────────────────────────────────────────── */
+/* Nothing moves. Loading still shows, as a still orb or block, because the
+   shopper still needs to know something is on its way. */
+@media (prefers-reduced-motion: reduce) {
+  .atc-icon > *,
+  .atc-label > span,
+  .atc-label svg path,
+  .roll > span,
+  .roll::after,
+  .feed-in,
+  .cart-drawer .cart-line,
+  .variant-pill,
+  .gallery-swap,
+  .finder-match,
+  .finder-match p,
+  .finder-match-tick path,
+  .skeleton,
+  .orb-delayed,
+  .img-orb,
+  .page-loading-stage,
+  [data-status] { animation: none !important; transition: none !important; }
+  .print-register::before,
+  .print-register::after { display: none; }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) { animation-duration: 0s !important; animation-delay: 0s !important; }
+}

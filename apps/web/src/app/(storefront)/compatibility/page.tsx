@@ -5,6 +5,9 @@ import Image from 'next/image'
 import { Suspense } from 'react'
 import { Logo } from '@/components/layout'
 import { CompatSearch } from './CompatSearch'
+import { ProductSearch } from './ProductSearch'
+import { siteUrl } from '@/lib/site-url'
+import { SkuLine } from '@/components/catalog/SkuLine'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const PUB_KEY  = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
@@ -18,6 +21,7 @@ const BRAND_CHIPS = [
 export const metadata: Metadata = {
   title: 'Find Cartridges for Your Printer — TSE Online',
   description: 'Search by printer model and instantly see compatible generic cartridges. Quality guaranteed.',
+  alternates: { canonical: siteUrl('/compatibility') },
 }
 
 async function searchCompatibility(model: string): Promise<any[]> {
@@ -58,6 +62,12 @@ export default async function CompatibilityPage({ searchParams }: Props) {
   ])
 
   const hasResults = results.length > 0
+  // A card can stand for several colour variants of one cartridge, so the
+  // number of cards is not the number of cartridges a shopper can buy.
+  const purchasable = results.reduce(
+    (n: number, r: any) => n + (Array.isArray(r.skus) ? r.skus.length : 1),
+    0,
+  )
 
   return (
     <div className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
@@ -138,6 +148,11 @@ export default async function CompatibilityPage({ searchParams }: Props) {
               </div>
             </div>
           )}
+
+          {/* Second entry point: the shopper who already knows the cartridge. */}
+          <div className="mt-12 pt-10 border-t border-[var(--line-2)]">
+            <ProductSearch />
+          </div>
         </div>
       </div>
 
@@ -156,7 +171,10 @@ export default async function CompatibilityPage({ searchParams }: Props) {
             {hasResults ? (
               <>
                 <p className="text-sm text-[var(--muted)] mb-6">
-                  {results.length} cartridge{results.length !== 1 ? 's' : ''} compatible with <strong className="text-[var(--ink)]">{model}</strong>
+                  {purchasable} cartridge{purchasable !== 1 ? 's' : ''} compatible with <strong className="text-[var(--ink)]">{model}</strong>
+                  {purchasable !== results.length && (
+                    <> across {results.length} product{results.length !== 1 ? 's' : ''}</>
+                  )}
                 </p>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -197,7 +215,7 @@ export default async function CompatibilityPage({ searchParams }: Props) {
                         </div>
 
                         <h2 className="font-display text-sm leading-tight tracking-tight line-clamp-2 mb-1">{label}</h2>
-                        <div className="text-[10px] text-[var(--muted-2)] mb-3">SKU {r.sku}</div>
+                        <SkuLine sku={r.sku} skus={r.skus} className="text-[10px] text-[var(--muted-2)] mb-3" />
                         <div className="text-[10px] text-[var(--muted)]">{r.printer_brand} · {r.printer_model}</div>
                       </Link>
                     )

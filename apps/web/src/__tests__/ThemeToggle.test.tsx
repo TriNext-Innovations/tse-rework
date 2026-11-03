@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { allowMotion, resetMotion } from './helpers/motion'
 
 beforeEach(() => {
   localStorage.clear()
@@ -38,5 +39,25 @@ describe('ThemeToggle', () => {
     document.documentElement.dataset.theme = 'dark'
     render(<ThemeToggle />)
     expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'true')
+  })
+
+  it('reveals the new theme from the toggle through a view transition when the browser has one', async () => {
+    allowMotion()
+    const startViewTransition = vi.fn((cb: () => void) => {
+      cb()
+      return { ready: Promise.resolve(), finished: Promise.resolve() }
+    })
+    Object.defineProperty(document, 'startViewTransition', { configurable: true, value: startViewTransition })
+    Object.defineProperty(document.documentElement, 'animate', { configurable: true, value: vi.fn() })
+
+    render(<ThemeToggle />)
+    await userEvent.click(screen.getByRole('switch'))
+    expect(startViewTransition).toHaveBeenCalledOnce()
+    expect(document.documentElement.dataset.theme).toBe('dark')
+    expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'true')
+
+    delete (document as { startViewTransition?: unknown }).startViewTransition
+    delete (document.documentElement as { animate?: unknown }).animate
+    resetMotion()
   })
 })

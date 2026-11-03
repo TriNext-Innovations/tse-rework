@@ -1,6 +1,6 @@
+import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { Navbar } from '@/components/layout'
 import { FilterPanel } from './FilterPanel'
 import { SortSelect } from './SortSelect'
@@ -8,6 +8,8 @@ import { MobileFilters } from './MobileFilters'
 import { AddToCartButton } from './AddToCartButton'
 import { TYPE_PARENT, cartridgeTypeLabel, isBrandCategory } from '@/lib/taxonomy'
 import { CATEGORIES } from '@/lib/categories'
+import { siteUrl } from '@/lib/site-url'
+import { NAV_FORWARD, PageTransition, ProductImage, ProductMorph } from '@/components/motion'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
@@ -21,6 +23,16 @@ const PAGE_SIZE = 24
 // matching set in one call and sort/paginate in memory. This lets us sort by
 // price, which the store API's `order` param doesn't support.
 const FETCH_ALL = 400
+const LISTING_FIELDS = [
+  'id',
+  'title',
+  'handle',
+  'metadata',
+  'images.url',
+  'variants.id',
+  'variants.sku',
+  'variants.calculated_price.calculated_amount',
+].join(',')
 
 type SortKey = 'featured' | 'price-asc' | 'price-desc' | 'name-asc' | 'name-desc'
 
@@ -33,10 +45,11 @@ type SearchParams = Promise<{
   q?: string
 }>
 
-// Products are assigned to the brand category (e.g. "HP" under "Laser
-// Cartridges"), never the type category directly — so a type filter resolves to
-// the brand categories under that type. type+brand resolves to the single
-// matching brand-under-type category.
+// Cartridges are assigned to the brand category (e.g. "HP" under "Laser
+// Cartridges"), so a type filter resolves to the brand categories under that
+// type, and type+brand to the single matching brand-under-type category. Refill
+// ink can also sit directly in its "Ink" type category, which is why a
+// brandless type filter includes the type category itself.
 function resolveCategoryIds(
   categories: any[],
   opts: { type?: string; brand?: string; category?: string },
@@ -44,11 +57,16 @@ function resolveCategoryIds(
   if (opts.category) return opts.category.split(',').filter(Boolean)
   const parent = opts.type ? TYPE_PARENT[opts.type] : undefined
   if (!parent && !opts.brand) return []
-  return categories
+  const brands = categories
     .filter((c) => isBrandCategory(c))
     .filter((c) => (opts.brand ? c.name === opts.brand : true))
     .filter((c) => (parent ? c.parent_category?.name === parent : true))
     .map((c) => c.id as string)
+  const typeItself =
+    parent && !opts.brand
+      ? categories.filter((c) => c.name === parent && !c.parent_category).map((c) => c.id as string)
+      : []
+  return [...typeItself, ...brands]
 }
 
 function priceOf(p: any): number {
@@ -124,6 +142,20 @@ async function getCategories(): Promise<any[]> {
   }
 }
 
+// Canonical policy (#492): unfiltered pagination is self-canonical, so page 2+
+// stays indexable and its products stay discoverable. Every filtered, sorted or
+// searched view canonicalises to the plain listing — they are re-orderings of
+// the same catalogue, and no legacy redirect lands on one (categories go to
+// /cartridges/[slug], which has its own canonical).
+export async function generateMetadata({ searchParams }: { searchParams: SearchParams }): Promise<Metadata> {
+  const { category = '', brand = '', type = '', sort = '', page = '1', q = '' } = await searchParams
+  const n = Math.max(1, parseInt(page, 10) || 1)
+  const filtered = Boolean(category || brand || type || sort || q)
+  return {
+    alternates: { canonical: siteUrl(!filtered && n > 1 ? `/products?page=${n}` : '/products') },
+  }
+}
+
 export default async function ProductsPage({ searchParams }: { searchParams: SearchParams }) {
   const { category = '', brand = '', type = '', sort: sortParam = '', page: pageParam = '1', q = '' } = await searchParams
   const page = Math.max(1, parseInt(pageParam, 10) || 1)
@@ -150,21 +182,30 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
     }))
   } else {
     const regionId = await getRegionId()
+    // A filter that matches no category must list nothing, not everything:
+    // without any category_id[] the store API returns the whole catalogue.
+    const filtered = Boolean(type || brand || category)
     const params = new URLSearchParams({ limit: String(FETCH_ALL) })
     if (regionId) params.append('region_id', regionId)
     for (const id of categoryIds) params.append('category_id[]', id)
-    params.append('fields', '+metadata,+categories.id,+categories.name,+categories.handle,+images,+variants.id,+variants.sku,*variants.calculated_price')
+    // Only what the grid renders (#499). The default product fields plus the
+    // full calculated_price object came to 1.6–2.1 MB for the whole catalogue,
+    // over Next's 2 MB data-cache limit, so revalidate never took effect and
+    // every render refetched it. This set is ~140 KB.
+    params.append('fields', LISTING_FIELDS)
 
-    try {
-      const data = await fetch(`${BACKEND}/store/products?${params}`, {
-        headers: { 'x-publishable-api-key': PUB_KEY },
-        next: { revalidate: 60 },
-      }).then((r) => r.json())
-      const all = sortProducts(data.products ?? [], sort)
-      total = all.length
-      products = all.slice(offset, offset + PAGE_SIZE)
-    } catch {
-      // Medusa offline — page renders empty with filters still usable
+    if (!filtered || categoryIds.length > 0) {
+      try {
+        const data = await fetch(`${BACKEND}/store/products?${params}`, {
+          headers: { 'x-publishable-api-key': PUB_KEY },
+          next: { revalidate: 60 },
+        }).then((r) => r.json())
+        const all = sortProducts(data.products ?? [], sort)
+        total = all.length
+        products = all.slice(offset, offset + PAGE_SIZE)
+      } catch {
+        // Medusa offline — page renders empty with filters still usable
+      }
     }
   }
 
@@ -184,7 +225,8 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
 
       <Navbar categories={allCategories} />
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 pt-32 pb-10">
+      <PageTransition>
+      <div data-page-content className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-12 pt-32 pb-10">
         {/* Page heading */}
         <div className="mb-8">
           <h1 className="font-display font-light text-4xl sm:text-5xl tracking-tight leading-[0.95]">
@@ -228,7 +270,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
                 {isSearch ? `No results for "${q}".` : 'No products found.'}
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+              <div data-results className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                 {products.map((p: any, i: number) => {
                   const variant = p.variants?.[0]
                   const sku = variant?.sku ?? '—'
@@ -239,51 +281,61 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
                   const imageUrl = p.images?.[0]?.url
 
                   return (
-                    <Link
+                    <div
                       key={p.id}
-                      href={`/products/${p.handle}`}
-                      className="group relative bg-[var(--surface)] rounded-[16px] p-4 overflow-hidden hover:-translate-y-1 transition-transform duration-300"
+                      data-product-card
+                      style={{ '--i': i } as React.CSSProperties}
+                      className="feed-in group relative bg-[var(--surface)] rounded-[16px] p-4 overflow-hidden hover:-translate-y-1 transition-transform duration-300"
                     >
-                      {/* Product image */}
-                      <div className="relative h-28 flex items-end justify-center mb-3">
-                        {imageUrl ? (
-                          <Image
-                            src={imageUrl}
-                            alt={p.title}
-                            width={180}
-                            height={220}
-                            sizes="180px"
-                            className="h-31 w-auto object-contain"
-                          />
-                        ) : (
-                          <div
-                            className={`w-16 h-24 rounded-[6px] shadow-[0_12px_24px_-12px_rgba(10,10,10,0.35)] relative overflow-hidden ${
-                              i % 4 === 0 ? 'bg-gradient-to-br from-[#0A0A0A] to-[#2A2A2A]' :
-                              i % 4 === 1 ? 'bg-gradient-to-br from-[#41e0f5] to-[#0fb8d4]' :
-                              i % 4 === 2 ? 'bg-gradient-to-br from-[#1a1a2e] to-[#3a3a5c]' :
-                              'bg-gradient-to-br from-[#2d1a0e] to-[#5a3520]'
-                            }`}
-                          >
-                            <div className="absolute top-0 left-0 right-0 h-1.5 bg-white/25" />
-                            <div className="absolute bottom-2 left-2 right-2 flex items-end justify-between">
-                              <span className="font-display text-white text-[9px] leading-none">TSE</span>
-                              <span className="w-2 h-2 rounded-full border border-white/40" />
+                      <Link href={`/products/${p.handle}`} transitionTypes={NAV_FORWARD} className="block">
+                        {/* Product image */}
+                        <div className="relative h-28 flex items-end justify-center mb-3">
+                          <ProductMorph productId={p.id}>
+                          {imageUrl ? (
+                            <ProductImage
+                              src={imageUrl}
+                              alt={p.title}
+                              width={180}
+                              height={220}
+                              sizes="180px"
+                              className="h-31 w-auto object-contain"
+                            />
+                          ) : (
+                            <div
+                              className={`w-16 h-24 rounded-[6px] shadow-[0_12px_24px_-12px_rgba(10,10,10,0.35)] relative overflow-hidden ${
+                                i % 4 === 0 ? 'bg-gradient-to-br from-[#0A0A0A] to-[#2A2A2A]' :
+                                i % 4 === 1 ? 'bg-gradient-to-br from-[#41e0f5] to-[#0fb8d4]' :
+                                i % 4 === 2 ? 'bg-gradient-to-br from-[#1a1a2e] to-[#3a3a5c]' :
+                                'bg-gradient-to-br from-[#2d1a0e] to-[#5a3520]'
+                              }`}
+                            >
+                              <div className="absolute top-0 left-0 right-0 h-1.5 bg-white/25" />
+                              <div className="absolute bottom-2 left-2 right-2 flex items-end justify-between">
+                                <span className="font-display text-white text-[9px] leading-none">TSE</span>
+                                <span className="w-2 h-2 rounded-full border border-white/40" />
+                              </div>
                             </div>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="text-[9px] uppercase tracking-[0.16em] text-[var(--muted)] mb-1">{type}</div>
-                      <h2 className="font-display text-sm leading-tight tracking-tight line-clamp-2 mb-1">{p.title}</h2>
-                      <div className="text-[10px] text-[var(--muted-2)] mb-3">SKU {sku}</div>
-
-                      <div className="flex items-end justify-between">
-                        <div className="font-display text-lg">
-                          {priceZar ? `R${priceZar}` : <span className="text-[var(--muted-2)] text-sm">POA</span>}
+                          )}
+                          </ProductMorph>
                         </div>
+
+                        <div className="text-[9px] uppercase tracking-[0.16em] text-[var(--muted)] mb-1">{type}</div>
+                        <h2 className="font-display text-sm leading-tight tracking-tight line-clamp-2 mb-1">{p.title}</h2>
+                        <div className="text-[10px] text-[var(--muted-2)] mb-3">SKU {sku}</div>
+
+                        <div className="flex items-end justify-between">
+                          <div className="font-display text-lg">
+                            {priceZar ? `R${priceZar}` : <span className="text-[var(--muted-2)] text-sm">POA</span>}
+                          </div>
+                          {/* Keeps the row the height of the add button, which sits outside the link. */}
+                          <span aria-hidden="true" className="w-8 h-8" />
+                        </div>
+                      </Link>
+                      {/* Outside the link: a button inside an <a> follows the href on click (#498). */}
+                      <div className="absolute bottom-4 right-4">
                         <AddToCartButton id={p.id} title={p.title} sku={sku} price={priceZar} variantId={variant?.id} thumbnail={imageUrl} />
                       </div>
-                    </Link>
+                    </div>
                   )
                 })}
               </div>
@@ -343,6 +395,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
           </ul>
         </section>
       </div>
+      </PageTransition>
     </div>
   )
 }

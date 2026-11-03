@@ -6,16 +6,17 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Navbar } from '@/components/layout'
 import { useAuth } from '@/contexts/AuthContext'
 import { siteConfig } from '@/lib/site-config'
+import { safeNextPath, withNext } from '@/lib/next-path'
 
 function LoginContent() {
   const { login } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const passwordReset = searchParams.get('reset') === '1'
-  // Post-login destination (e.g. /checkout). Internal paths only — a value
-  // like "//evil.com" or "https://…" must not become an open redirect.
-  const rawNext = searchParams.get('next') ?? ''
-  const nextPath = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/account/orders'
+  // Post-login destination (e.g. /checkout). Internal paths only — see safeNextPath.
+  const rawNext = searchParams.get('next')
+  const nextPath = safeNextPath(rawNext, '/account/orders')
+  const carriedNext = rawNext ? nextPath : null
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -42,7 +43,7 @@ function LoginContent() {
         </h1>
         <p className="mt-4 text-sm text-[var(--muted)]">
           Don't have an account?{' '}
-          <Link href="/account/register" className="underline underline-offset-4 hover:text-[var(--ink)] transition-colors">
+          <Link href={withNext('/account/register', carriedNext)} className="underline underline-offset-4 hover:text-[var(--ink)] transition-colors">
             Register
           </Link>
         </p>

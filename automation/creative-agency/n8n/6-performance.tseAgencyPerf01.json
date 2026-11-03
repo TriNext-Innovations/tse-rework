@@ -1,0 +1,172 @@
+{
+  "id": "tseAgencyPerf01",
+  "name": "TSE Agency — 6 Performance",
+  "description": "Stage: performance analysis. Metrics feed the weekly report, which feeds the next planning cycle and is summarised in Monday's daily digest.",
+  "active": false,
+  "nodes": [
+    {
+      "id": "fd4d0302-2a59-5e83-90e2-df9851ee6dce",
+      "name": "Run now",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        120
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "b0df85de-5ed9-5ba1-83e5-1eddfd0d432f",
+      "name": "Daily 06:15",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "15 6 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "8c7d38c7-737a-53ed-bb04-8d5a8d153765",
+      "name": "Collect Meta metrics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://tse-agency:8080/v1/metrics/collect",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 300000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_AGENCY_CREDENTIAL_ID",
+          "name": "TSE Agency API"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "ac4d0f03-c803-5780-900f-af2296329f24",
+      "name": "Monday 06:30",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        220
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 6 * * 1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "92501307-5823-5145-9e75-2e29b03371a4",
+      "name": "Weekly report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        220
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://tse-agency:8080/v1/report/weekly",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 600000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_AGENCY_CREDENTIAL_ID",
+          "name": "TSE Agency API"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    }
+  ],
+  "connections": {
+    "Daily 06:15": {
+      "main": [
+        [
+          {
+            "node": "Collect Meta metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Monday 06:30": {
+      "main": [
+        [
+          {
+            "node": "Weekly report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run now": {
+      "main": [
+        [
+          {
+            "node": "Collect Meta metrics",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Weekly report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Africa/Johannesburg",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "tseAgencyAlert01"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

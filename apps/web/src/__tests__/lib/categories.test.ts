@@ -1,5 +1,7 @@
+import { readFileSync, existsSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, it, expect } from 'vitest'
-import { CATEGORIES, categoryBySlug, legacyRedirectMap } from '@/lib/categories'
+import { CATEGORIES, brandPageHref, categoryBySlug, legacyRedirectMap } from '@/lib/categories'
 import { TYPE_CATEGORIES } from '@/lib/taxonomy'
 
 describe('category registry', () => {
@@ -22,7 +24,7 @@ describe('category registry', () => {
   // whose products are all laser. Nothing errors, and it is exactly the kind of
   // mismatch a reviewer skims past.
   it('pairs each entry with a handle for its own cartridge type', () => {
-    const prefix = { laser: 'laser-', inkjet: 'inkjet-' } as const
+    const prefix = { laser: 'laser-', inkjet: 'inkjet-', ink: 'ink-' } as const
     for (const c of CATEGORIES) {
       expect(c.medusaHandle.startsWith(prefix[c.type])).toBe(true)
     }
@@ -73,5 +75,72 @@ describe('legacy redirect map', () => {
       const slug = target.replace('/cartridges/', '')
       expect(categoryBySlug(slug)).toBeDefined()
     }
+  })
+})
+
+// The nginx map in infrastructure/ is what actually serves the cutover 301s;
+// CATEGORIES is what renders the pages. They are produced by different tools,
+// so nothing but this test stops them drifting apart — and the failure mode is
+// silent until the one-shot authority transfer has already been spent.
+// The conf is absent while the cutover redirect map is pulled from main —
+// it duplicated map_hash_max_size against a conf already on the production box
+// and took nginx down on 2026-09-19. These tests re-arm themselves the moment
+// the file returns, so restoring it cannot silently ship without this check.
+const CONF_PATH = join(
+  import.meta.dirname,
+  '../../../../../infrastructure/nginx/conf.d/00-legacy-redirects.conf',
+)
+
+const CONF_PRESENT = existsSync(CONF_PATH)
+
+describe.skipIf(!CONF_PRESENT)('cutover redirect map', () => {
+  // skipIf still evaluates this body during collection, so the read must not
+  // throw when the file is absent.
+  const conf = CONF_PRESENT ? readFileSync(CONF_PATH, 'utf8') : ''
+  const nginxMap = Object.fromEntries(
+    conf
+      .split('\n')
+      .filter((l) => /^\s{4}\//.test(l))
+      .map((l) => l.trim().replace(/;$/, '').split(/\s+/) as [string, string]),
+  )
+
+  it('serves a 301 for every legacy path the category registry claims', () => {
+    for (const [legacyPath, target] of Object.entries(legacyRedirectMap())) {
+      expect(nginxMap, `${legacyPath} is in CATEGORIES but not in the nginx map`).toHaveProperty(
+        legacyPath,
+      )
+      expect(nginxMap[legacyPath], `${legacyPath} redirects somewhere else`).toBe(target)
+    }
+  })
+
+  it('has no duplicate keys — nginx refuses to load a map with one', () => {
+    const keys = conf
+      .split('\n')
+      .filter((l) => /^\s{4}\//.test(l))
+      .map((l) => l.trim().split(/\s+/)[0])
+    expect(new Set(keys).size).toBe(keys.length)
+  })
+
+  it('never points a legacy URL at another legacy URL', () => {
+    for (const target of Object.values(nginxMap)) {
+      expect(target.startsWith('/')).toBe(true)
+      expect(target).not.toMatch(/^\/(product|product-category)\//)
+    }
+  })
+})
+
+describe('brandPageHref', () => {
+  it('sends a brand with one category page straight to it', () => {
+    expect(brandPageHref('Kyocera')).toBe('/cartridges/kyocera-laserjet-cartridges')
+    expect(brandPageHref('Konica Minolta')).toBe('/cartridges/konica-minolta-laserjet-cartridges')
+  })
+
+  it('sends a brand with several category pages to the filtered listing', () => {
+    expect(CATEGORIES.filter((c) => c.brand === 'HP').length).toBeGreaterThan(1)
+    expect(brandPageHref('HP')).toBe('/products?brand=HP')
+  })
+
+  it('falls back to the filtered listing for a brand with no category page', () => {
+    expect(brandPageHref('Dell')).toBe('/products?brand=Dell')
   })
 })

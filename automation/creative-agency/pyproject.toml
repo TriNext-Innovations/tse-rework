@@ -1,0 +1,28 @@
+[project]
+name = "tse-creative-agency"
+version = "0.1.0"
+description = "TSE autonomous creative agency: strategy, copy, art direction, production, QC and Meta publishing"
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic==2.3.0",
+    "httpx>=0.28,<1",
+    "pillow>=11,<14",
+    "psycopg[binary]>=3.2,<4",
+    "pydantic>=2.9,<3",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["agency", "agency.prompts"]
+
+[tool.setuptools.package-data]
+"agency.prompts" = ["*.md"]

@@ -8,6 +8,7 @@ import { CartButton } from '@/components/CartButton'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { useAuth } from '@/contexts/AuthContext'
 import { SearchModal } from '@/components/SearchModal'
+import { ViewTransition } from '@/components/motion'
 import { isBrandCategory } from '@/lib/taxonomy'
 
 type Category = { id: string; name: string }
@@ -184,7 +185,10 @@ const { customer, loading: authLoading } = useAuth()
         @keyframes slideIn { from { transform: translateX(100%) } to { transform: translateX(0) } }
       `}</style>
 
-      {/* ─── FLOATING NAVBAR ─── */}
+      {/* ─── FLOATING NAVBAR ───
+          Named for view transitions so it holds still while page content
+          moves under it (::view-transition-group(site-header) in motion.css). */}
+      <ViewTransition name="site-header">
       <header className="navbar-glass fixed top-4 left-4 right-4 z-40 flex items-center justify-between px-3 sm:px-5 py-2.5">
 
         {/* Logo */}
@@ -249,8 +253,8 @@ const { customer, loading: authLoading } = useAuth()
             )}
           </div>
 
-          <a href="/#finder" className="nav-link">Find by printer</a>
-          <a href="/#delivery" className="nav-link">Delivery</a>
+          <Link href="/#finder" className="nav-link">Find by printer</Link>
+          <Link href="/#delivery" className="nav-link">Delivery</Link>
           <Link href="/b2b" className="nav-link">B2B</Link>
         </nav>
 
@@ -303,6 +307,7 @@ const { customer, loading: authLoading } = useAuth()
           </button>
         </div>
       </header>
+      </ViewTransition>
 
       {/* ─── MOBILE DRAWER ─── */}
       {mobileOpen && (

@@ -134,3 +134,48 @@ function extractMessage(body: string): string | null {
   }
   return null
 }
+
+/**
+ * Stand-in for local order-flow tests (#528, TCG_FAKE=true). The Courier Guy
+ * has no sandbox host, so a real token would book real waybills. This books
+ * nothing: rates come back flat and every shipment gets a LOCAL-* reference,
+ * which keeps the provider's fulfilment path identical to prod.
+ */
+export class FakeCourierGuyClient extends CourierGuyClient {
+  private nextId = 1
+
+  constructor() {
+    super('')
+  }
+
+  override async getRates(): Promise<CourierGuyRatesResponse> {
+    return {
+      rates: [
+        { rate: 150, service_level: { id: 1, code: 'ECO', name: 'Economy' } },
+        { rate: 200, service_level: { id: 2, code: 'OVN', name: 'Overnight' } },
+      ],
+    }
+  }
+
+  override async createShipment(
+    request: CourierGuyShipmentRequest,
+  ): Promise<CourierGuyShipmentResponse> {
+    const id = this.nextId++
+    return {
+      id,
+      short_tracking_reference: `LOCAL${Date.now().toString(36).toUpperCase()}${id}`,
+      status: 'submitted',
+      service_level_code: request.service_level_code,
+    }
+  }
+
+  override async getLabelUrl(): Promise<string | null> {
+    return null
+  }
+
+  override async getTracking(): Promise<Record<string, unknown>> {
+    return {}
+  }
+
+  override async cancelShipment(): Promise<void> {}
+}

@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTransition } from 'react'
+import { announceNavigation } from '@/lib/motion'
 
 const OPTIONS = [
   { value: 'featured', label: 'Featured' },
@@ -22,7 +23,9 @@ export function SortSelect({ className = '' }: { className?: string }) {
     if (v && v !== 'featured') next.set('sort', v)
     else next.delete('sort')
     next.delete('page')
-    startTransition(() => router.push(`/products?${next.toString()}`))
+    const href = `/products?${next.toString()}`
+    announceNavigation(href)
+    startTransition(() => router.push(href))
   }
 
   return (
