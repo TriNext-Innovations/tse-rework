@@ -130,6 +130,17 @@ const STATUS_MAP: Record<string, TrackingStatus> = {
   'on-hold': 'exception',
 }
 
+/**
+ * ShipLogic statuses that are bookkeeping, not progress. `delivery-assigned`
+ * only means a driver has been allocated; the parcel has not moved, so it is
+ * left off the timeline and never changes the stage.
+ */
+const IGNORED_STATUSES = new Set(['delivery-assigned'])
+
+function isIgnoredStatus(raw: unknown): boolean {
+  return typeof raw === 'string' && IGNORED_STATUSES.has(normaliseKey(raw))
+}
+
 function normaliseKey(raw: string): string {
   return raw
     .trim()
@@ -207,7 +218,9 @@ export function parseTracking(payload: unknown): ParsedTracking {
     .map((raw) => {
       const e = asRecord(raw)
       if (!e) return null
-      const status = mapStatus(e.status ?? e.state ?? e.event)
+      const rawStatus = e.status ?? e.state ?? e.event
+      if (isIgnoredStatus(rawStatus)) return null
+      const status = mapStatus(rawStatus)
       return {
         status,
         date: asIsoDate(e.date ?? e.timestamp ?? e.created_at ?? e.time),

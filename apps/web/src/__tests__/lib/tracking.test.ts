@@ -76,6 +76,23 @@ describe('parseTracking', () => {
     ])
   })
 
+  it('leaves delivery-assigned off the timeline and out of the stage', () => {
+    const parsed = parseTracking({
+      shipments: [
+        {
+          status: 'delivery-assigned',
+          tracking_events: [
+            { date: '2026-11-02T12:44:09Z', status: 'collected', message: '' },
+            { date: '2026-11-03T04:21:24Z', status: 'at-destination-hub', message: '' },
+            { date: '2026-11-03T04:21:25Z', status: 'delivery-assigned', message: '' },
+          ],
+        },
+      ],
+    })
+    expect(parsed.status).toBe('in_transit')
+    expect(parsed.events.map((e) => e.status)).toEqual(['collected', 'in_transit'])
+  })
+
   it('accepts a bare shipment object, not just a shipments array', () => {
     const { status } = parseTracking(payload.shipments[0]!)
     expect(status).toBe('in_transit')
