@@ -64,3 +64,15 @@ corner, a ream of fresh paper, a filing cabinet, ink-dark water for an ink cartr
 Leave the text zone (top or bottom 64%) exceptionally calm: an even wall, sky,
 fabric or tabletop with no objects or edges, because three lines of large type
 sit there.
+
+Keep spotlight plates **simple enough that they cannot fail**. The type and the
+support line carry the idea; the plate is only a backdrop:
+- Never printed pages, documents, labels, screens, control panels, indicator
+  lights, keypads or anything with marks that could read as text. Generated
+  "print" turns into legible gibberish and is rejected every time.
+- One plain, instantly recognisable object at most (a wrapped ream of paper, a
+  mug, a desk lamp, a plant, a folded cloth), small, in the non-text third. Or
+  no object at all: just a clean surface, wall and light.
+- Clean, cared-for surfaces: no heavy dust, lint or debris.
+- If the concept's `visual` asks for something on this list, do not shoot it.
+  Shoot the simple version instead.
