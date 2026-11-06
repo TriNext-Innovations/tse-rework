@@ -7,6 +7,7 @@ from .config import Env
 from .db import Database
 from .imagegen import FalClient
 from .llm import ClaudeLLM, LLMError
+from .news import NewsFeed
 from .pipeline import Ctx
 from .storage import Storage
 
@@ -35,4 +36,4 @@ def build_ctx(env: Env | None = None, db: Database | None = None) -> Ctx:
     fal = FalClient(env.fal_key, env.fal_queue_base) if env.fal_key else None
     catalogue = (Catalogue(env.medusa_store_url, env.medusa_publishable_key, env.medusa_region_id)
                  if env.medusa_store_url and env.medusa_publishable_key else None)
-    return Ctx(db=db, env=env, llm=llm, fal=fal, storage=storage, catalogue=catalogue)
+    return Ctx(db=db, env=env, llm=llm, fal=fal, storage=storage, catalogue=catalogue, news=NewsFeed())

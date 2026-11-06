@@ -81,6 +81,16 @@ class FakeLLM:
             return self.script[stage](user, images)
         return getattr(self, f"_{stage}")(user, images)
 
+    def _news_editor(self, user, images):
+        from .schemas import TopicalPick
+        if "boks" not in user.lower():
+            return TopicalPick(suitable=False, reason="[fixture] nothing safe and national", story="", why_big="",
+                               angle="", avoid=[])
+        return TopicalPick(suitable=True, reason="[fixture] test weekend", story="The Springboks play a test this weekend.",
+                           why_big="Half the country will be at a braai watching it.",
+                           angle="Everyone has a game plan for Saturday; the office printer should have one for Monday.",
+                           avoid=["Springboks", "team and player names", "sponsor names"])
+
     def _strategist(self, user, images):
         import re
         spot = {int(m) for m in re.findall(r"- slot_index (\d+):", user)}
@@ -244,3 +254,18 @@ class FakeCatalogue:
     def rename(self, handle: str, title: str) -> None:
         from dataclasses import replace
         self.products[handle] = replace(self.products[handle], title=title)
+
+
+class FakeNews:
+    """Stands in for Google News: a fixed list of headlines, or down."""
+
+    def __init__(self, titles: list[str] | None = None):
+        self.titles = titles if titles is not None else ["Boks v Italy: all eyes on the backline in Turin",
+                                                         "Local election results: counting continues"]
+        self.down = False
+
+    def headlines(self, now, **_):
+        from .news import Headline, NewsError
+        if self.down:
+            raise NewsError("fixture: feeds down")
+        return [Headline("top", t, "Fixture News", now.isoformat()) for t in self.titles]

@@ -122,6 +122,10 @@ def validate_setting(key: str, value: Any) -> None:
             hh, mm = str(t).split(":")
             if not (0 <= int(hh) < 24 and 0 <= int(mm) < 60):
                 raise ValueError(f"bad time {t}")
+    if key == "topical_per_week" and (not isinstance(value, int) or isinstance(value, bool) or not 0 <= value <= 3):
+        raise ValueError("topical_per_week must be a whole number from 0 to 3")
+    if key == "topical_lead_hours" and (not isinstance(value, int) or isinstance(value, bool) or not 12 <= value <= 96):
+        raise ValueError("topical_lead_hours must be a whole number from 12 to 96")
     if key in ("spotlight_gap_min", "spotlight_gap_max") and (not isinstance(value, int) or value < 2):
         raise ValueError(f"{key} must be a whole number of posts, 2 or more")
     if isinstance(default, bool) and not isinstance(value, bool):

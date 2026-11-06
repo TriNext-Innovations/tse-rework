@@ -19,9 +19,15 @@ def queue_status(ctx: Ctx) -> dict:
     now = ctx.now()
     horizon = now + timedelta(days=int(settings["queue_days"]))
     slots = ctx.db.query(
-        """SELECT s.slot_at, s.status, c.status AS creative_status FROM schedule s
+        """SELECT s.slot_at, s.status,
+                  CASE WHEN c.status IS NULL AND a.topical = '{}'::jsonb AND a.status = 'new'
+                            AND s.slot_at > %s + make_interval(hours => %s)
+                       THEN 'approved' ELSE c.status END AS creative_status  -- topical, waiting for its story
+           FROM schedule s
            LEFT JOIN creatives c ON c.id = s.creative_id
-           WHERE s.slot_at > %s AND s.slot_at <= %s ORDER BY s.slot_at""", (now, horizon))
+           LEFT JOIN assignments a ON a.slot_at = s.slot_at
+           WHERE s.slot_at > %s AND s.slot_at <= %s ORDER BY s.slot_at""",
+        (now, int(settings["topical_lead_hours"]), now, horizon))
     expected = int(settings["queue_days"]) * len(settings["publish_times"])
     ready = sum(1 for s in slots if s["creative_status"] == "approved")
     # Days of consecutive coverage from now: the queue's real depth.
@@ -249,7 +255,7 @@ def upcoming(ctx: Ctx, days: int = 14) -> list[dict]:
     return ctx.db.query(
         """SELECT s.slot_at, s.status AS slot_status, c.id AS creative_id, c.status, c.human_approval, c.final_asset,
                   c.caption_facebook, c.caption_instagram, c.layout, c.model, k.headline, k.support_line,
-                  k.territory, a.pillar, a.angle,
+                  k.territory, a.pillar, a.angle, a.topical,
                   (SELECT q.score FROM qc_reviews q WHERE q.creative_id = c.id AND q.kind = 'vision'
                    ORDER BY q.id DESC LIMIT 1) AS vision_score,
                   (SELECT json_agg(json_build_object('platform', p.platform, 'status', p.status, 'permalink', p.permalink))
