@@ -37,17 +37,28 @@ def month_spend(conn: psycopg.Connection, category: str, now: datetime | None = 
     return Decimal(row["total"])
 
 
-def creative_visual_spend(conn: psycopg.Connection, assignment_id: int) -> Decimal:
-    row = conn.execute(
-        """SELECT coalesce(sum(l.amount_usd), 0) AS total FROM spend_ledger l
-           WHERE l.category = 'visual' AND l.ref LIKE %s""",
-        (f"assignment:{assignment_id}:%",),
-    ).fetchone()
+def creative_visual_spend(conn: psycopg.Connection, assignment_id: int, concept_id: int | None = None) -> Decimal:
+    """Image spend of one ad. With `concept_id`, only images of that concept count,
+    so a re-developed ad gets a fresh allowance (#559)."""
+    if concept_id is None:
+        row = conn.execute(
+            """SELECT coalesce(sum(l.amount_usd), 0) AS total FROM spend_ledger l
+               WHERE l.category = 'visual' AND l.ref LIKE %s""",
+            (f"assignment:{assignment_id}:%",),
+        ).fetchone()
+    else:
+        row = conn.execute(
+            """SELECT coalesce(sum(l.amount_usd), 0) AS total FROM spend_ledger l
+               WHERE l.category = 'visual' AND l.ref IN (
+                   SELECT 'assignment:' || %s || ':job:' || j.id FROM generation_jobs j
+                   JOIN creatives c ON c.id = j.creative_id WHERE c.concept_id = %s)""",
+            (assignment_id, concept_id),
+        ).fetchone()
     return Decimal(row["total"])
 
 
 def reserve_visual(conn: psycopg.Connection, *, settings: dict, assignment_id: int, job_ref: str,
-                   provider: str, model: str, amount: float) -> None:
+                   provider: str, model: str, amount: float, concept_id: int | None = None) -> None:
     """Reserve `amount` or raise BudgetExceeded. Call inside a transaction."""
     conn.execute("SELECT pg_advisory_xact_lock(hashtext('agency-budget-visual'))")
     amount_d = Decimal(str(amount))
@@ -56,7 +67,7 @@ def reserve_visual(conn: psycopg.Connection, *, settings: dict, assignment_id: i
     spent = month_spend(conn, "visual")
     if spent + amount_d > monthly:
         raise BudgetExceeded(f"monthly visual budget: spent/reserved ${spent:.2f} + ${amount_d:.3f} > ${monthly:.2f}")
-    post_spent = creative_visual_spend(conn, assignment_id)
+    post_spent = creative_visual_spend(conn, assignment_id, concept_id)
     if post_spent + amount_d > per_post:
         raise BudgetExceeded(f"per-post visual budget: ${post_spent:.3f} + ${amount_d:.3f} > ${per_post:.2f}", scope="post")
     conn.execute(

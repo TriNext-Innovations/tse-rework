@@ -634,8 +634,13 @@ def _produce(ctx: Ctx, a: dict) -> dict:
     cr = _active_creative(ctx, a["id"])
     if cr is None:
         attempts = ctx.db.one("SELECT coalesce(max(attempt), 0) AS n FROM creatives WHERE assignment_id = %s", (a["id"],))["n"]
-        if attempts >= settings["max_production_attempts"]:
-            ctx.log("produce", "alert", f"assignment {a['id']} exhausted {attempts} production attempts",
+        # The cap counts images of the selected concept only, so a re-developed ad starts fresh (#559).
+        tries = ctx.db.one(
+            """SELECT count(*) AS n FROM creatives WHERE concept_id = (
+                   SELECT id FROM concepts WHERE assignment_id = %s AND status = 'selected' ORDER BY id DESC LIMIT 1)""",
+            (a["id"],))["n"]
+        if tries >= settings["max_production_attempts"]:
+            ctx.log("produce", "alert", f"assignment {a['id']} exhausted {tries} production attempts",
                     {"assignment_id": a["id"]})
             release(ctx, a["id"], "failed", "production attempts exhausted")
             return {"status": "failed", "assignment_id": a["id"]}
@@ -723,7 +728,7 @@ def _submit(ctx: Ctx, a: dict, cr: dict, settings: dict) -> str:
                        VALUES (%s, 'fal', %s, %s, %s) RETURNING *""",
                     (cr["id"], model, est, Jsonb(payload))).fetchone()
                 reserve_visual(conn, settings=settings, assignment_id=a["id"], job_ref=f"job:{job['id']}",
-                               provider="fal", model=model, amount=est)
+                               provider="fal", model=model, amount=est, concept_id=cr["concept_id"])
         except BudgetExceeded as exc:
             if exc.scope == "post":
                 # This ad has spent its image allowance: more ticks can't change that.
@@ -928,8 +933,11 @@ def vision_review(ctx: Ctx, a: dict, cr: dict, concept: dict, jpeg: bytes, setti
         f"Intended support line: {concept['support_line'] or '(none)'}\n"
         + (f"Product spotlight: the image must also show the line '{product.eyebrow}' and the "
            f"price '{product.price_label}' exactly, and no product, packaging or printer.\n" if product else "")
-        + f"Concept: {concept['idea']}\nVisual intent: {concept['visual']}\n"
-        f"Facebook caption:\n{cr['caption_facebook']}\n"), images=[Image(jpeg, "image/jpeg")],
+        + (f"Concept: {concept['idea']}\nVisual intent: {concept['visual']}\n" if not product else
+           "The photograph is deliberately a plain, text-free backdrop. Do not judge it against any concept "
+           "or for illustrating the idea; the type carries the ad. Judge only: stray or gibberish text, "
+           "artifacts, any product, packaging or printer in frame, type legibility and overall taste.\n")
+        + f"Facebook caption:\n{cr['caption_facebook']}\n"), images=[Image(jpeg, "image/jpeg")],
         ref=f"assignment:{a['id']}:qc:{cr['attempt']}")
     blockers = [i for i in vision.issues if i.severity in ("blocker", "major")]
     passed = (vision.verdict == "approve" and vision.score >= float(settings["qc_min_vision_score"])
