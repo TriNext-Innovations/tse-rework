@@ -10,7 +10,7 @@ from pathlib import Path
 
 from ..config import BRAND_DIR
 
-PROMPT_VERSION = "2026-11-06.5"
+PROMPT_VERSION = "2026-11-06.6"
 _HERE = Path(__file__).resolve().parent
 
 # Stages that need the full fact sheet; QC and the analyst get it too, so

@@ -565,3 +565,33 @@ def test_dry_run_publishing_raises_no_urgent_alerts(make_ctx, db, clock):
     publisher.publish_due(ctx)
     assert db.one("SELECT count(*) AS n FROM events WHERE level = 'alert'")["n"] > 0
     assert ops.claim_alerts(ctx, urgent_only=True) == []
+
+
+def test_redeveloped_ad_gets_fresh_attempts_and_image_allowance(make_ctx, db, clock):
+    """#559: the attempt cap and per-ad image budget count the selected concept only."""
+    from agency.budget import creative_visual_spend
+
+    ctx = make_ctx()
+    pipeline.ensure_planned(ctx)
+    for _ in range(6):
+        pipeline.cycle(ctx, 8)
+        cr = db.one("SELECT * FROM creatives ORDER BY id LIMIT 1")
+        if cr:
+            break
+    a_id, old_concept = cr["assignment_id"], cr["concept_id"]
+    with db.tx() as conn:
+        assert creative_visual_spend(conn, a_id, old_concept) > 0
+    # re-develop: old concept retired, a new one selected, old images exhaust a cap of 1
+    db.set_setting("max_production_attempts", 1)
+    db.execute("UPDATE creatives SET status = 'rejected' WHERE assignment_id = %s", (a_id,))
+    db.execute("UPDATE concepts SET status = 'rejected' WHERE assignment_id = %s", (a_id,))
+    new = db.one("""INSERT INTO concepts (assignment_id, round, idea, insight, headline, visual, territory, data,
+                                          prompt_version, status)
+                    SELECT assignment_id, round + 1, idea, insight, headline, visual, territory, data, prompt_version,
+                           'selected' FROM concepts WHERE id = %s RETURNING id""", (old_concept,))
+    db.execute("UPDATE assignments SET status = 'concept_ready', locked_at = NULL, locked_by = NULL WHERE id = %s", (a_id,))
+    with db.tx() as conn:
+        assert creative_visual_spend(conn, a_id, new["id"]) == 0
+    out = pipeline._produce(ctx, db.one("SELECT * FROM assignments WHERE id = %s", (a_id,)))
+    assert out["status"] != "failed", out
+    assert db.one("SELECT count(*) AS n FROM creatives WHERE concept_id = %s", (new["id"],))["n"] == 1

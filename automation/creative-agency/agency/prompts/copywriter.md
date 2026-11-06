@@ -88,3 +88,10 @@ captions that name the product, call it compatible, and send people to its page.
 Never write a price or rand amount yourself; never list printer models you were
 not given. Write the different concepts as different reasons to buy (timing,
 cost, reliability, the office that runs on it), not different jokes.
+
+The image behind a spotlight is always a plain, text-free backdrop: a clean
+surface, wall and light, with at most one simple everyday object (a wrapped
+ream of paper, a mug, a desk lamp, a plant). Write `visual` as one of those.
+Never ask for a printer, control panel, warning light, printed page or
+screen. The support line must make complete sense on its own, without the
+picture: no "the light", "this one" or anything that points at the image.
