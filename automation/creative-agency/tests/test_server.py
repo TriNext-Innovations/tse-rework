@@ -128,3 +128,10 @@ def test_non_object_json_body_is_400(server):
     base, ctx, _ = server
     r = httpx.post(f"{base}/v1/settings", headers={"Authorization": f"Bearer {ctx.env.api_token}"}, json=[1, 2])
     assert r.status_code == 400
+
+
+def test_review_page_shows_slots_in_sast(server):
+    base, _, _ = server
+    page = httpx.get(f"{base}/review", headers={"Authorization": BASIC}).text
+    assert "08:00" in page or "20:00" in page
+    assert " 06:00" not in page and " 18:00" not in page  # UTC leaking through
