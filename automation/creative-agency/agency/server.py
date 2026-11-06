@@ -24,7 +24,7 @@ from urllib.parse import parse_qs, urlparse
 
 from . import factcheck, ops, pipeline, publisher
 from .app import build_ctx
-from .config import Env
+from .config import SAST, Env
 from .db import Database
 
 log = logging.getLogger("agency")
@@ -203,7 +203,7 @@ def review_page(ctx) -> str:
     cards = []
     for r in rows:
         if not r["creative_id"]:
-            cards.append(f"<article class='empty'><h3>{r['slot_at']:%a %d %b %H:%M}</h3><p>No approved creative yet "
+            cards.append(f"<article class='empty'><h3>{r['slot_at'].astimezone(SAST):%a %d %b %H:%M}</h3><p>No approved creative yet "
                          f"({html.escape(r['slot_status'])}).</p></article>")
             continue
         img = ctx.storage.url(r["final_asset"]) if r["final_asset"] else ""
@@ -213,7 +213,7 @@ def review_page(ctx) -> str:
         topical = (f"<p class='topical'><b>Topical wink:</b> {html.escape(t['story'])}<br>"
                    f"<i>{html.escape(t.get('angle', ''))}</i></p>" if t.get("story") else "")
         cards.append(f"""<article>
-<h3>{r['slot_at']:%a %d %b %H:%M} · {html.escape(r['pillar'] or '')} · <span class="d {decision.split()[0]}">{decision}</span></h3>
+<h3>{r['slot_at'].astimezone(SAST):%a %d %b %H:%M} · {html.escape(r['pillar'] or '')} · <span class="d {decision.split()[0]}">{decision}</span></h3>
 <img src="{html.escape(img)}" alt="{html.escape(r['headline'] or '')}" loading="lazy">
 {topical}<p class="meta">#{r['creative_id']} · {html.escape(r['territory'] or '')} · {html.escape(r['layout'] or '')} · {html.escape(r['model'] or '')} · vision {r['vision_score']} · {html.escape(pubs)}</p>
 <details><summary>Captions</summary><h4>Facebook</h4><pre>{html.escape(r['caption_facebook'] or '')}</pre>
