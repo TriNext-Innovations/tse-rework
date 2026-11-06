@@ -18,6 +18,10 @@ rare:
   scenes score low.
 - commercial_usefulness: does it move someone closer to buying from TSE?
 - craft: headline length and rhythm, caption quality, spelling, tone.
+- clarity: would an ordinary person scrolling at home, with no office or finance
+  background, get the point in about two seconds? Office, accounting or meeting
+  jargon, a metaphor that needs decoding, or a support line that adds a second
+  riddle instead of the plain point all score low. Clever is good; homework is not.
 
 Also judge:
 - cliche_flags: name any clichés or generic phrasing.
@@ -26,8 +30,8 @@ Also judge:
 - claims: any statement not supported by the listed fact ids is an automatic reject.
 
 Selection:
-- Select the strongest concept only if it scores ≥ 7 on originality, insight and
-  relevance and ≥ 6 everywhere else, with no unsupported claim. Otherwise set
+- Select the strongest concept only if it scores ≥ 7 on originality, insight,
+  relevance and clarity and ≥ 6 everywhere else, with no unsupported claim. Otherwise set
   `selected_index` to -1 and write a `revision_direction` the copywriter can act
   on: what was wrong and which direction to push. Be specific.
 - You may tighten the chosen headline in `headline_edit` (same idea, fewer or

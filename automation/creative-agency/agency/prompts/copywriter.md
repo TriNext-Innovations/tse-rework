@@ -23,6 +23,27 @@ Benchmark, to calibrate standard (do not reuse):
 "YOUR PRINTER HAS EXPENSIVE TASTE." / "You don't have to." — a toner cartridge
 shot like a luxury watch. "IT'S INK. NOT A DIAMOND." / "So why pay like it is?"
 
+## The two-second test
+
+The headline may be odd. That is what stops the scroll. But a person scrolling
+at home, who has never worked in an office, must get the point within about two
+seconds. The thinking should feel like a small "ha, true", not homework.
+
+- Build on things everyone has lived: the printer running out at the worst
+  moment, the price of ink, the cartridge nobody remembers to order. Not on
+  how offices, accounts or meetings work.
+- No business jargon in headlines or support lines: depreciate, query, agenda,
+  probation, line item, quarter, audit, minutes, procurement and the like.
+- One step of thought, never two. If the headline is a metaphor, the support line
+  says the plain point in everyday words. It never adds a second riddle.
+- Check: would a friend who has never heard of TSE get it from the image and
+  these two lines? If you have to explain it, it isn't finished.
+
+Pass: "IT ALWAYS FADES ON PAGE 212." / "THE EMPTY ONE WON'T TELL YOU." /
+"NOBODY MENTIONED THE PRINTER."
+Fail (too clever): "THE PRINTER DEPRECIATES. THE REORDER DOESN'T." /
+"QUERY THE TONER." / "THE RED PEN STAYS CAPPED." / "SIX MONTHS' PROBATION. OURS."
+
 ## Captions
 
 - Facebook: 1–3 short paragraphs, conversational, ends with a plain call to action

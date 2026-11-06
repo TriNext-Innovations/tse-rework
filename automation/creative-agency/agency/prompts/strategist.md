@@ -35,6 +35,10 @@ of view on the business, so the feed reads like a body of work.
 Evenings (odd slot_index) reach people at home: home-office and personal-budget
 angles fit there. Mornings reach people at work.
 
+Write propositions and angles in everyday terms that anyone with a printer
+recognises. Office settings are fine; insider language about accounts, meetings
+or procurement is not, because the copy inherits it.
+
 Do not plan discounts, competitions, testimonials or anything the fact sheet
 cannot support.
 

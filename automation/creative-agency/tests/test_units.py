@@ -122,3 +122,23 @@ def test_spotlight_display_title_and_eyebrow():
     assert p.headline == "Brother TN-3185." and p.eyebrow == "Compatible laser toner" and p.price_label == "R400"
     assert Product("x", "Epson 664 Black", "S", "Epson", "ink", True, 120).eyebrow == "Compatible refill ink"
     assert Product("y", "Kyocera TK-3060", "S", "Kyocera", "laser", True, 1450).price_label == "R1 450"
+
+
+def test_director_approval_needs_clarity(make_ctx, db, clock):
+    """An approved, high-scoring concept still isn't made if an ordinary reader wouldn't get it."""
+    from agency import pipeline
+    from agency.fakes import FakeLLM
+    from agency.schemas import ConceptScore, DirectorReview
+
+    def director(user, images):
+        scores = [ConceptScore(concept_index=i, originality=9, insight=9, memorability=9, relevance=9,
+                               visual_potential=8, commercial_usefulness=8, craft=9, clarity=4, cliche_flags=[],
+                               repetition_concern="", verdict="approve", notes="clever, cryptic") for i in range(3)]
+        return DirectorReview(scores=scores, selected_index=0, selection_reason="clever", revision_direction="Plainer.",
+                              headline_edit="")
+
+    ctx = make_ctx(llm=FakeLLM(db, script={"director": director}))
+    pipeline.ensure_planned(ctx)
+    pipeline.develop(ctx)
+    assert db.one("SELECT count(*) AS n FROM concepts WHERE status = 'selected'")["n"] == 0
+    assert db.one("SELECT count(*) AS n FROM concepts WHERE status = 'rejected'")["n"] == 3

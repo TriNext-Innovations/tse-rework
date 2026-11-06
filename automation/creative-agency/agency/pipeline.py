@@ -36,6 +36,7 @@ from .storage import Storage
 
 LEASE = timedelta(minutes=20)
 JOB_TIMEOUT = timedelta(minutes=30)
+MIN_CLARITY = 7  # the director's clarity score a concept needs to be made
 PILLAR_MIX = {"brand": 5, "product": 3, "educational": 3, "commercial": 3}
 
 
@@ -427,7 +428,8 @@ def _develop_round(ctx: Ctx, a: dict, settings: dict) -> dict:
 
     scores = {s.concept_index: s for s in review.scores}
     ranked = sorted(
-        (i for i, s in scores.items() if s.verdict == "approve" and 0 <= i < len(concepts)),
+        (i for i, s in scores.items()
+         if s.verdict == "approve" and s.clarity >= MIN_CLARITY and 0 <= i < len(concepts)),
         key=lambda i: (i != review.selected_index, -_total(scores[i])),
     )
     history = memory.recent_work(ctx.db, days=120, exclude_assignment=a["id"])
@@ -481,7 +483,7 @@ def _develop_round(ctx: Ctx, a: dict, settings: dict) -> dict:
 
 def _total(s) -> int:
     return (s.originality + s.insight + s.memorability + s.relevance + s.visual_potential
-            + s.commercial_usefulness + s.craft)
+            + s.commercial_usefulness + s.craft + s.clarity)
 
 
 # =============================================================================

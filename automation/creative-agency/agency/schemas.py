@@ -57,6 +57,7 @@ class ConceptScore(BaseModel):
     visual_potential: int
     commercial_usefulness: int
     craft: int
+    clarity: int  # does an ordinary scroller get the point in about two seconds?
     cliche_flags: list[str]
     repetition_concern: str
     verdict: Literal["approve", "reject"]
