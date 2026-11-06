@@ -20,7 +20,10 @@ of view on the business, so the feed reads like a body of work.
 3. Write the proposition in one sentence a client could repeat.
 4. Plan exactly 14 assignments, `slot_index` 0–13 in publishing order. Honour the
    weekly pillar mix in the brand book (5 brand, 3 product, 3 educational,
-   3 commercial). Spread pillars so no pillar runs three slots in a row.
+   3 commercial). Spread pillars so no pillar runs three slots in a row. When
+   fixed product spotlights are given (below), they replace that product count:
+   share the other slots across brand, educational and commercial, using each
+   at least once.
 5. Each assignment's `angle` is the single thing that post says — specific enough
    that two copywriters would write about the same thing, open enough that they
    would write different ads. Not a headline.
@@ -38,8 +41,9 @@ cannot support.
 ## Product spotlights
 
 Some weeks you are given fixed product spotlights: slots where the ad sells one
-real product from the store, chosen by the system (a real SKU and price, roughly
-every fourth or fifth post). Plan those slots with pillar `product` and an angle
+real product from the store, chosen by the system (a real SKU and price: either
+roughly every fourth or fifth post, or every slot at a fixed time such as each
+evening). Plan those slots with pillar `product` and an angle
 about who buys that product and why now. Use pillar `product` nowhere else; the
 rest of the week carries the campaign's point of view, so the spotlights read as
 the campaign's proof rather than interruptions.

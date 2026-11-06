@@ -288,3 +288,64 @@ def test_any_price_form_in_spotlight_copy_is_caught(caption):
     q = QCResult()
     check_spotlight_copy({"title": "Canon 054", "compatible": True}, "", f"Canon 054 compatible. {caption}", "compatible", q)
     assert "spotlight.price_in_copy" in {f.check for f in q.findings}
+
+
+def test_fixed_spotlight_times_make_every_evening_a_product(make_ctx, db, monday):
+    db.set_setting("publish_times", ["08:00", "20:00"])
+    db.set_setting("spotlight_times", ["20:00"])
+    ctx = make_ctx(catalogue=big_store())
+    for w in range(2):
+        assert pipeline.plan_week(ctx, MONDAY + timedelta(days=7 * w))["created"]
+    rows = db.query("SELECT slot_at, pillar, product FROM assignments ORDER BY slot_at")
+    assert len(rows) == 28
+    for r in rows:
+        evening = r["slot_at"].astimezone(SAST).hour == 20
+        assert (r["product"] is not None) == evening and (r["pillar"] == "product") == evening, r
+    handles = [r["product"]["handle"] for r in rows if r["product"]]
+    assert len(handles) == len(set(handles)) == 14
+
+
+def test_validate_plan_accepts_seven_spotlights_with_a_mixed_rest():
+    from agency.schemas import CampaignPlan, PlannedAssignment
+    rest = ["brand", "educational", "commercial", "brand", "brand", "commercial", "brand"]
+    pillars = [rest[i // 2] if i % 2 == 0 else "product" for i in range(14)]
+    plan = CampaignPlan(name="n", proposition="p", insight="i", rationale="r", territories_to_avoid=[],
+                        assignments=[PlannedAssignment(slot_index=i, pillar=p, angle="a", audience="x", fact_ids=[])
+                                     for i, p in enumerate(pillars)])
+    odd = {i for i in range(14) if i % 2}
+    assert pipeline.validate_plan(plan, 14, odd) == []
+    no_edu = plan.model_copy(update={"assignments": [
+        a.model_copy(update={"pillar": "brand"}) if a.pillar == "educational" else a for a in plan.assignments]})
+    assert pipeline.validate_plan(no_edu, 14, odd)
+
+
+def test_switching_on_spotlight_times_backfills_planned_weeks(make_ctx, db, monday):
+    ctx = make_ctx(catalogue=big_store())
+    pipeline.plan_week(ctx, MONDAY)  # random rhythm, two slots a day
+    # what the box did on 28 Oct: one post a day, evening assignments cancelled, their slots deleted
+    evening = "extract(hour FROM slot_at AT TIME ZONE 'Africa/Johannesburg') = 20"
+    db.execute(f"UPDATE assignments SET status = 'cancelled' WHERE {evening}")
+    db.execute(f"DELETE FROM schedule WHERE {evening}")
+    db.set_setting("publish_times", ["08:00"])
+    morning_spots = db.one(f"SELECT count(*) AS n FROM assignments WHERE product IS NOT NULL AND NOT {evening}")["n"]
+    tue = db.one(f"SELECT id FROM assignments WHERE {evening} ORDER BY slot_at OFFSET 1 LIMIT 1")
+    db.execute("""INSERT INTO concepts (assignment_id, round, idea, insight, headline, visual, territory,
+                                        data, prompt_version)
+                  VALUES (%s, 1, 'old idea', 'i', 'OLD', 'v', 'old', '{}', 'test')""", (tue["id"],))
+
+    db.set_setting("publish_times", ["08:00", "20:00"])
+    db.set_setting("spotlight_times", ["20:00"])
+    out = pipeline.ensure_planned(ctx)
+    added = [x for x in out if "spotlights_added" in x][0]["spotlights_added"]
+    assert len(added) == 7  # Mon–Sun evenings of the planned week
+    rows = db.query(f"SELECT * FROM assignments WHERE {evening} AND campaign_id = %s",
+                    (db.one("SELECT id FROM campaigns WHERE week_start = %s", (MONDAY,))["id"],))
+    assert len(rows) == 7 and all(r["pillar"] == "product" and r["product"] and r["status"] == "new"
+                                  and r["attempts"] == 0 for r in rows)
+    assert len({r["product"]["handle"] for r in rows}) == 7
+    assert db.one("SELECT status FROM concepts WHERE assignment_id = %s", (tue["id"],))["status"] == "rejected"
+    assert db.one(f"SELECT count(*) AS n FROM schedule WHERE {evening} AND slot_at < %s",
+                  (datetime(2026, 11, 9, tzinfo=SAST),))["n"] == 7
+    # mornings untouched, and a second run adds nothing
+    assert db.one(f"SELECT count(*) AS n FROM assignments WHERE product IS NOT NULL AND NOT {evening}")["n"] == morning_spots
+    assert not any("spotlights_added" in x for x in pipeline.ensure_planned(ctx))

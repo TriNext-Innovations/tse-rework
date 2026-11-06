@@ -115,6 +115,13 @@ def validate_setting(key: str, value: Any) -> None:
             hh, mm = str(t).split(":")
             if not (0 <= int(hh) < 24 and 0 <= int(mm) < 60):
                 raise ValueError(f"bad time {t}")
+    if key == "spotlight_times":
+        if not isinstance(value, list):
+            raise ValueError("spotlight_times must be a list of HH:MM (empty for the random rhythm)")
+        for t in value:
+            hh, mm = str(t).split(":")
+            if not (0 <= int(hh) < 24 and 0 <= int(mm) < 60):
+                raise ValueError(f"bad time {t}")
     if key in ("spotlight_gap_min", "spotlight_gap_max") and (not isinstance(value, int) or value < 2):
         raise ValueError(f"{key} must be a whole number of posts, 2 or more")
     if isinstance(default, bool) and not isinstance(value, bool):

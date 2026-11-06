@@ -107,9 +107,12 @@ DEFAULT_SETTINGS: dict[str, object] = {
     "video_enabled": False,
     "utm_campaign_prefix": "tse-agency",
     "consecutive_failure_pause": 3,
-    # Product spotlights: one real product every 4–5 posts, at random.
+    # Product spotlights: one real product every 4–5 posts, at random —
+    # unless `spotlight_times` is set, which makes every slot at those times
+    # a spotlight and no other slot one (e.g. ["20:00"]).
     "spotlight_gap_min": 4,
     "spotlight_gap_max": 5,
+    "spotlight_times": [],
 }
 
 # fal.ai models the art director may pick from. Prices verified on
