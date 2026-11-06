@@ -35,6 +35,8 @@ Confident, dry, understated. A raised eyebrow, not a punchline. Short sentences.
 Natural South African English — "R300", "JHB", "the office", no forced slang.
 Write like a sharp agency that respects a busy reader. The joke, when there is one,
 is in the observation, never in puns or exclamation marks.
+Clever, never cryptic: anyone scrolling past should get it in two seconds, so
+the observation comes from everyday life, not office or finance language.
 
 Never: emojis beyond one where it genuinely helps (default none), more than two
 hashtags, "Don't miss out", "Hurry", "Game-changer", "Level up", "Say goodbye to",

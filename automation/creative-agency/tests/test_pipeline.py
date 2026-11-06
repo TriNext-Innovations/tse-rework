@@ -61,12 +61,12 @@ def test_02_director_choice_and_revision_round(make_ctx, db):
         rounds["n"] += 1
         if rounds["n"] == 1:  # first round: nothing good enough
             return DirectorReview(scores=[ConceptScore(concept_index=i, originality=4, insight=5, memorability=4,
-                                  relevance=8, visual_potential=6, commercial_usefulness=5, craft=6, cliche_flags=["generic"],
+                                  relevance=8, visual_potential=6, commercial_usefulness=5, craft=6, clarity=5, cliche_flags=["generic"],
                                   repetition_concern="", verdict="reject", notes="flat") for i in range(3)],
                                   selected_index=-1, selection_reason="none", revision_direction="Find the observation.",
                                   headline_edit="")
         scores = [ConceptScore(concept_index=i, originality=6 + i, insight=8, memorability=7 + i, relevance=9,
-                               visual_potential=8, commercial_usefulness=7, craft=8, cliche_flags=[],
+                               visual_potential=8, commercial_usefulness=7, craft=8, clarity=8, cliche_flags=[],
                                repetition_concern="", verdict="approve", notes="ok") for i in range(3)]
         return DirectorReview(scores=scores, selected_index=2, selection_reason="strongest", revision_direction="",
                               headline_edit="")

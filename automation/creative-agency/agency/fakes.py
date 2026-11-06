@@ -118,7 +118,7 @@ class FakeLLM:
 
     def _director(self, user, images):
         scores = [ConceptScore(concept_index=i, originality=8 - i, insight=8, memorability=8 - i, relevance=9,
-                               visual_potential=8, commercial_usefulness=7, craft=8, cliche_flags=[],
+                               visual_potential=8, commercial_usefulness=7, craft=8, clarity=8, cliche_flags=[],
                                repetition_concern="", verdict="approve", notes="fixture review")
                   for i in range(3)]
         return DirectorReview(scores=scores, selected_index=0, selection_reason="fixture", revision_direction="",
