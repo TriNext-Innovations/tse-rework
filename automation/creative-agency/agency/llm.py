@@ -64,7 +64,7 @@ class ClaudeLLM:
         try:
             response = self.client.beta.messages.parse(
                 model=model,
-                max_tokens=16000,
+                max_tokens=32000,  # high effort on long revision briefs overran 16k
                 system=[{"type": "text", "text": system_prompt(stage),
                          "cache_control": {"type": "ephemeral"}}],
                 messages=[{"role": "user", "content": content}],

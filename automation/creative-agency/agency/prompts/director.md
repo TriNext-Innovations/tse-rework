@@ -40,5 +40,15 @@ Selection:
   relevance and clarity and ≥ 6 everywhere else, with no unsupported claim. Otherwise set
   `selected_index` to -1 and write a `revision_direction` the copywriter can act
   on: what was wrong and which direction to push. Be specific.
+- **PRODUCT SPOTLIGHT** posts are judged differently. The product name and live
+  price are the hero and are fixed, so the job is a clear, true reason to buy
+  that product, in everyday words, with an image that suits it. Do not demand
+  that it carry the campaign's metaphor, and do not demand a bespoke "why now"
+  for the SKU: "it costs a fraction of the original" or "faulty? we replace it"
+  is a perfectly good reason. Select the strongest spotlight concept if it
+  scores ≥ 7 on clarity, relevance and commercial_usefulness, ≥ 6 on
+  originality and craft, ≥ 5 everywhere else, with no unsupported claim.
+  Seven spotlights run every week, so a plain, well-made one beats a clever
+  one that never ships. Keep revision directions for spotlights short.
 - You may tighten the chosen headline in `headline_edit` (same idea, fewer or
   better words). Leave it empty if the headline is right.
