@@ -23,6 +23,12 @@ rare:
   jargon, a metaphor that needs decoding, or a support line that adds a second
   riddle instead of the plain point all score low. Clever is good; homework is not.
 
+For a TOPICAL POST, also check the wink. Reject any concept that only makes
+sense if you know the news, names anyone or anything from the story (people,
+teams, brands, events, slogans), says anything about the story as fact, or
+could read as mocking someone or taking a side. A good one works twice: a
+plain ad for everyone, and a smile for those who know.
+
 Also judge:
 - cliche_flags: name any clichés or generic phrasing.
 - repetition_concern: compare against the creative memory you are shown. If a

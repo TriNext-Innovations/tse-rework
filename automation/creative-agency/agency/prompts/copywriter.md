@@ -68,6 +68,16 @@ Fail (too clever): "THE PRINTER DEPRECIATES. THE REORDER DOESN'T." /
 - `visual` describes a photograph or a typographic layout an art director could
   shoot. No packaging, no logos, no legible text inside the image.
 
+## Topical posts
+
+When the brief says TOPICAL POST, the ad quietly winks at a news story most
+South Africans know this week. People who know the story should smile; people
+who missed it must still see a complete, sensible TSE ad. Allude through the
+situation (the braai, the long weekend, the match everyone watched), never
+through names: no people, teams, brands, events, sponsors, slogans or
+catchphrases. Make no claims about the story and never link TSE to it. The
+two-second test still applies, and the hidden layer is a bonus, not the point.
+
 ## Product spotlights
 
 When the brief says PRODUCT SPOTLIGHT, the ad sells one real product. The image

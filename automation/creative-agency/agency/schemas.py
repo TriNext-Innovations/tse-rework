@@ -72,6 +72,15 @@ class DirectorReview(BaseModel):
     headline_edit: str  # empty unless the director tightened the chosen headline
 
 
+class TopicalPick(BaseModel):
+    suitable: bool
+    reason: str  # why it is (or nothing is) suitable
+    story: str  # the news story in one plain sentence; empty when unsuitable
+    why_big: str
+    angle: str  # the hidden link to printing / TSE
+    avoid: list[str]  # names, phrases and takes the copy must not use
+
+
 class ArtBrief(BaseModel):
     layout: Layout
     text_zone: Literal["top", "bottom"]

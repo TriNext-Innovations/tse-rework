@@ -28,10 +28,11 @@ from .config import IMAGE_MODELS, SAST, Env
 from .db import Database
 from .imagegen import FalClient, GenerationError
 from .llm import LLM, Image, LLMError
+from .news import NewsError, NewsFeed
 from .prompts import PROMPT_VERSION, usable_fact_ids
 from .qc import QCResult, check_asset, check_copy, check_repetition, stale_facts
 from .render import RenderError, render
-from .schemas import ArtBrief, CampaignPlan, ConceptSet, DirectorReview, VisionReview
+from .schemas import ArtBrief, CampaignPlan, ConceptSet, DirectorReview, TopicalPick, VisionReview
 from .storage import Storage
 
 LEASE = timedelta(minutes=20)
@@ -53,6 +54,7 @@ class Ctx:
     poll_interval: float = 4.0
     fetch_page: Callable[[str], str] | None = None  # fact re-verification transport (tests inject)
     catalogue: Catalogue | None = None  # live store; None disables product spotlights
+    news: NewsFeed | None = None  # SA headlines; None makes topical posts ordinary ones
 
     def log(self, stage: str, level: str, message: str, data: dict | None = None, conn=None) -> None:
         self.db.event(stage, level, message, data, run_id=self.run_id, conn=conn)
@@ -89,7 +91,77 @@ def ensure_planned(ctx: Ctx, horizon_days: int = 8) -> list[dict]:
     filled = fill_spotlight_slots(ctx)
     if filled:
         planned.append({"spotlights_added": filled})
+    topical = mark_topical(ctx)
+    if topical:
+        planned.append({"topical_marked": topical})
     return planned
+
+
+def mark_topical(ctx: Ctx) -> list[dict]:
+    """Tag `topical_per_week` posts per planned week as topical. Only posts not
+    yet in development qualify, never a product spotlight, and only far enough
+    ahead that the story can be chosen fresh and still be approved in time."""
+    settings = ctx.db.settings()
+    per_week = int(settings["topical_per_week"])
+    if not per_week:
+        return []
+    earliest = ctx.now() + timedelta(hours=int(settings["topical_lead_hours"]))
+    marked = []
+    for camp in ctx.db.query("SELECT * FROM campaigns WHERE week_start >= %s ORDER BY week_start",
+                             (week_monday(ctx.now().date()),)):
+        have = ctx.db.one("SELECT count(*) AS n FROM assignments WHERE campaign_id = %s AND topical IS NOT NULL",
+                          (camp["id"],))["n"]
+        if have >= per_week:
+            continue
+        eligible = ctx.db.query(
+            """SELECT id, slot_at FROM assignments
+               WHERE campaign_id = %s AND topical IS NULL AND product IS NULL AND status = 'new'
+                 AND locked_at IS NULL AND attempts = 0 AND slot_at > %s ORDER BY slot_at""",
+            (camp["id"], earliest))
+        rng = random.Random(f"topical:{camp['week_start'].isoformat()}")
+        for row in rng.sample(eligible, min(per_week - have, len(eligible))):
+            done = ctx.db.one(
+                """UPDATE assignments SET topical = '{}'::jsonb, updated_at = now()
+                   WHERE id = %s AND topical IS NULL AND status = 'new' AND locked_at IS NULL RETURNING id""",
+                (row["id"],))
+            if done:
+                marked.append({"assignment_id": row["id"], "slot_at": row["slot_at"].isoformat()})
+                ctx.log("plan", "info", f"assignment {row['id']} will be a topical post", {"assignment_id": row["id"]})
+    return marked
+
+
+def research_topical(ctx: Ctx, a: dict) -> dict:
+    """Choose this week's story for a topical post, or record why none fits;
+    with none, the post is made as an ordinary one."""
+    pick: dict
+    if ctx.news is None:
+        pick = {"none": "no news feed configured"}
+    else:
+        try:
+            headlines = ctx.news.headlines(ctx.now())
+        except NewsError as exc:
+            ctx.log("develop", "warn", f"news unreachable; assignment {a['id']} made as an ordinary post: {exc}")
+            headlines = []
+        if not headlines:
+            pick = {"none": "no headlines available"}
+        else:
+            camp = ctx.db.one("SELECT name, proposition FROM campaigns WHERE id = %s", (a["campaign_id"],))
+            used = [r["story"] for r in ctx.db.query(
+                """SELECT topical->>'story' AS story FROM assignments WHERE topical ? 'story' AND id <> %s
+                   ORDER BY slot_at DESC LIMIT 8""", (a["id"],))]
+            listing = "\n".join(f"- [{h.section}] {h.title} ({h.source})" for h in headlines)
+            result = ctx.llm.run("news_editor", TopicalPick, (
+                f"## The post\nPublishes {a['slot_at'].astimezone(SAST):%A %d %B, %H:%M} SAST. Pillar: {a['pillar']}. "
+                f"Angle: {a['angle']}\nThis week's campaign: {camp['name']}: {camp['proposition']}\n\n"
+                + (("## Stories already used (do not repeat)\n" + "\n".join(f"- {u}" for u in used) + "\n\n")
+                   if used else "")
+                + f"## This week's South African headlines\n{listing}\n"), ref=f"assignment:{a['id']}:news")
+            pick = result.model_dump() if result.suitable and result.story.strip() else {"none": result.reason}
+    pick["checked_at"] = ctx.now().isoformat()
+    ctx.db.execute("UPDATE assignments SET topical = %s, updated_at = now() WHERE id = %s", (Jsonb(pick), a["id"]))
+    ctx.log("develop", "info", f"assignment {a['id']} topical: " + (pick.get("story") or f"none ({pick['none']})"),
+            {"assignment_id": a["id"]})
+    return pick
 
 
 def plan_week(ctx: Ctx, week_start: date) -> dict:
@@ -297,7 +369,7 @@ def validate_plan(plan: CampaignPlan, n: int, spotlight_slots: set[int] | None =
 # Claiming work
 # =============================================================================
 
-def claim(ctx: Ctx, statuses: tuple[str, ...], extra_sql: str = "") -> dict | None:
+def claim(ctx: Ctx, statuses: tuple[str, ...], extra_sql: str = "", extra_params: tuple = ()) -> dict | None:
     """Lease the earliest-due assignment in one of `statuses`."""
     with ctx.db.tx() as conn:
         row = conn.execute(
@@ -305,7 +377,7 @@ def claim(ctx: Ctx, statuses: tuple[str, ...], extra_sql: str = "") -> dict | No
                 WHERE status = ANY(%s) AND slot_at > %s
                   AND (locked_at IS NULL OR locked_at < %s) {extra_sql}
                 ORDER BY slot_at LIMIT 1 FOR UPDATE SKIP LOCKED""",
-            (list(statuses), ctx.now(), ctx.now() - LEASE),
+            (list(statuses), ctx.now(), ctx.now() - LEASE, *extra_params),
         ).fetchone()
         if not row:
             return None
@@ -329,11 +401,15 @@ def release(ctx: Ctx, assignment_id: int, status: str | None = None, error: str 
 # =============================================================================
 
 def develop(ctx: Ctx) -> dict:
-    a = claim(ctx, ("new", "developing"))
+    settings = ctx.db.settings()
+    # A topical post waits until its story can be chosen fresh.
+    a = claim(ctx, ("new", "developing"), "AND (topical IS NULL OR topical <> '{}'::jsonb OR slot_at <= %s)",
+              (ctx.now() + timedelta(hours=int(settings["topical_lead_hours"])),))
     if not a:
         return {"status": "idle"}
-    settings = ctx.db.settings()
     try:
+        if a.get("topical") == {}:
+            a["topical"] = research_topical(ctx, a)
         if a["attempts"] >= settings["max_concept_rounds"]:
             ctx.log("develop", "alert", f"assignment {a['id']} exhausted {a['attempts']} concept rounds",
                     {"assignment_id": a["id"]})
@@ -359,6 +435,19 @@ def _assignment_context(ctx: Ctx, a: dict) -> str:
         f"## Assignment\nPillar: {a['pillar']}\nAngle: {a['angle']}\nAudience: {a['audience']}\n"
         f"Publishes: {a['slot_at'].astimezone(SAST):%A %d %B, %H:%M} SAST\n"
         + (_product_context(a["product"]) if a.get("product") else "")
+        + (_topical_context(a["topical"]) if (a.get("topical") or {}).get("story") else "")
+    )
+
+
+def _topical_context(t: dict) -> str:
+    return (
+        "\n## TOPICAL POST — a quiet wink at this week's news\n"
+        f"Story everyone knows: {t['story']}\n"
+        f"Hidden angle: {t['angle']}\n"
+        + (f"Stay away from: {', '.join(t['avoid'])}\n" if t.get("avoid") else "")
+        + "The ad must still make complete sense to someone who missed the story. Never name people, teams, "
+        "brands, events or sponsors, or use their slogans; allude through the situation. No claims about the "
+        "story, no link between TSE and it, no mocking, no sides.\n"
     )
 
 

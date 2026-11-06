@@ -46,7 +46,7 @@ class ClaudeLLM:
         # Effort per stage. Ideas and judgment get high; mechanical stages medium.
         self.effort = effort or {
             "strategist": "high", "copywriter": "high", "director": "high",
-            "art_director": "medium", "qc_vision": "medium", "analyst": "medium",
+            "art_director": "medium", "qc_vision": "medium", "analyst": "medium", "news_editor": "high",
         }
 
     def run(self, stage: str, schema: type[T], user: str, *, images: list[Image] | None = None,

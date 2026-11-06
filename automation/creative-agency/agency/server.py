@@ -209,10 +209,13 @@ def review_page(ctx) -> str:
         img = ctx.storage.url(r["final_asset"]) if r["final_asset"] else ""
         pubs = ", ".join(f"{p['platform']}: {p['status']}" for p in (r["publications"] or [])) or "not yet published"
         decision = r["human_approval"] or "pending review"
+        t = r.get("topical") or {}
+        topical = (f"<p class='topical'><b>Topical wink:</b> {html.escape(t['story'])}<br>"
+                   f"<i>{html.escape(t.get('angle', ''))}</i></p>" if t.get("story") else "")
         cards.append(f"""<article>
 <h3>{r['slot_at']:%a %d %b %H:%M} · {html.escape(r['pillar'] or '')} · <span class="d {decision.split()[0]}">{decision}</span></h3>
 <img src="{html.escape(img)}" alt="{html.escape(r['headline'] or '')}" loading="lazy">
-<p class="meta">#{r['creative_id']} · {html.escape(r['territory'] or '')} · {html.escape(r['layout'] or '')} · {html.escape(r['model'] or '')} · vision {r['vision_score']} · {html.escape(pubs)}</p>
+{topical}<p class="meta">#{r['creative_id']} · {html.escape(r['territory'] or '')} · {html.escape(r['layout'] or '')} · {html.escape(r['model'] or '')} · vision {r['vision_score']} · {html.escape(pubs)}</p>
 <details><summary>Captions</summary><h4>Facebook</h4><pre>{html.escape(r['caption_facebook'] or '')}</pre>
 <h4>Instagram</h4><pre>{html.escape(r['caption_instagram'] or '')}</pre></details>
 <form method="post" action="review/{r['creative_id']}"><input name="note" placeholder="Note (optional)">
@@ -226,6 +229,7 @@ article{{background:#151515;border:1px solid #2a2a2a;border-radius:10px;padding:
 h3{{font-size:15px;margin:0 0 10px}} .meta{{color:#9a9a9a;font-size:13px}} pre{{white-space:pre-wrap;font:13px/1.45 system-ui}}
 .status{{margin:16px 20px 0;padding:12px 16px;border:1px solid #3a3a1a;border-radius:10px;background:#16160c}}
 .status h2{{font-size:14px;margin:0 0 6px;color:#dfe344}} .status ul{{margin:0;padding-left:18px;color:#cfcfcf}}
+.topical{{font-size:13px;color:#cfcfcf;border-left:3px solid #41e0f5;padding-left:8px}}
 .d.approved{{color:#dfe344}} .d.rejected{{color:#f57272}} .d.pending{{color:#41e0f5}} .empty{{opacity:.6}}
 form{{display:flex;gap:8px;flex-wrap:wrap}} input{{flex:1;min-width:120px;background:#0a0a0a;color:#ededed;border:1px solid #333;border-radius:6px;padding:6px}}
 button{{background:#41e0f5;border:0;border-radius:6px;padding:6px 12px;font-weight:600;cursor:pointer}} button[value=rejected]{{background:#333;color:#ededed}}

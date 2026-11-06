@@ -63,6 +63,8 @@ rebuild. Offers and discounts are deliberately impossible until a fact for them 
 | `video_enabled` | false | reserved; video is not built (see DECISIONS) |
 | `spotlight_gap_min` / `spotlight_gap_max` | 4 / 5 | a product spotlight every 4–5 posts, at random |
 | `spotlight_times` | `[]` | e.g. `["20:00"]`: every slot at these times is a spotlight and no other is; the gap settings are then ignored |
+| `topical_per_week` | 0 | how many non-product posts a week wink at a big South African news moment (0–3) |
+| `topical_lead_hours` | 36 | the story is chosen this long before the slot, so it is fresh (12–96) |
 
 ## Product spotlights
 
@@ -80,6 +82,22 @@ were planned before the change: each future slot at a spotlight time gets a prod
 assignment (angle templated from the week's proposition, no strategist call). A
 cancelled assignment at that time is revived and its old concepts retired. Slots at
 other times are left as planned, including any spotlights already there.
+
+## Topical posts
+
+With `topical_per_week` above 0, the daily planning run tags that many posts per
+planned week as topical (never a spotlight, only posts not yet in development, at
+least `topical_lead_hours` ahead). Development leaves them alone until
+`topical_lead_hours` before the slot. The news editor stage then reads Google News
+South Africa (top, nation, sport, entertainment) and picks a story that is big,
+safe (no politics, crime, deaths, disasters, religion, race, scandals) and
+recognisably South African: rugby, braai culture, long weekends, matric, the
+festive rush. It also writes a hidden angle. Bland stories such as weather
+warnings lose to "none". The copywriter writes a wink that works for people who
+missed the news, without naming anyone. If no story fits, or the feeds are down,
+the post is made as an ordinary one. The review page shows the story and angle
+on topical cards. A topical post waiting for its story counts as on track in the
+queue health check.
 
 ## Costs (estimates — measure after the first live week)
 

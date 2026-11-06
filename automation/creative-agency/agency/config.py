@@ -79,6 +79,7 @@ class Env:
                 "art_director": os.environ.get("MODEL_ART_DIRECTOR", default_model),
                 "qc_vision": os.environ.get("MODEL_QC_VISION", default_model),
                 "analyst": os.environ.get("MODEL_ANALYST", default_model),
+                "news_editor": os.environ.get("MODEL_NEWS_EDITOR", default_model),
             },
         )
 
@@ -113,6 +114,10 @@ DEFAULT_SETTINGS: dict[str, object] = {
     "spotlight_gap_min": 4,
     "spotlight_gap_max": 5,
     "spotlight_times": [],
+    # Topical posts: this many non-product posts a week wink at a big news
+    # story. The story is chosen `topical_lead_hours` before the slot.
+    "topical_per_week": 0,
+    "topical_lead_hours": 36,
 }
 
 # fal.ai models the art director may pick from. Prices verified on

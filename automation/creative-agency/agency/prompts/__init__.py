@@ -10,12 +10,12 @@ from pathlib import Path
 
 from ..config import BRAND_DIR
 
-PROMPT_VERSION = "2026-11-06.2"
+PROMPT_VERSION = "2026-11-06.3"
 _HERE = Path(__file__).resolve().parent
 
 # Stages that need the full fact sheet; QC and the analyst get it too, so
 # they can catch a claim the copywriter should not have made.
-_STAGES = {"strategist", "copywriter", "director", "art_director", "qc_vision", "analyst"}
+_STAGES = {"strategist", "copywriter", "director", "art_director", "qc_vision", "analyst", "news_editor"}
 
 
 def facts() -> dict:
