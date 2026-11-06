@@ -62,6 +62,7 @@ rebuild. Offers and discounts are deliberately impossible until a fact for them 
 | `image_model` | `fal-ai/flux-2-pro` | fallback if the art director names an unknown model |
 | `video_enabled` | false | reserved; video is not built (see DECISIONS) |
 | `spotlight_gap_min` / `spotlight_gap_max` | 4 / 5 | a product spotlight every 4–5 posts, at random |
+| `spotlight_times` | `[]` | e.g. `["20:00"]`: every slot at these times is a spotlight and no other is; the gap settings are then ignored |
 
 ## Product spotlights
 
@@ -73,6 +74,12 @@ the image is product-free (TSE has no photography of its own stock). Before publ
 the price is read again: if it changed, the ad is re-rendered with the new price; if the
 product is gone, the slot is held and alerted; if the store is unreachable, it retries.
 Without the store settings, spotlights are simply skipped.
+
+With `spotlight_times` set, the daily 05:30 planning run also back-fills weeks that
+were planned before the change: each future slot at a spotlight time gets a product
+assignment (angle templated from the week's proposition, no strategist call). A
+cancelled assignment at that time is revived and its old concepts retired. Slots at
+other times are left as planned, including any spotlights already there.
 
 ## Costs (estimates — measure after the first live week)
 

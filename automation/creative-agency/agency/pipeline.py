@@ -85,6 +85,9 @@ def ensure_planned(ctx: Ctx, horizon_days: int = 8) -> list[dict]:
         if not ctx.db.one("SELECT id FROM campaigns WHERE week_start = %s", (week,)):
             planned.append(plan_week(ctx, week))
         week += timedelta(days=7)
+    filled = fill_spotlight_slots(ctx)
+    if filled:
+        planned.append({"spotlights_added": filled})
     return planned
 
 
@@ -162,29 +165,95 @@ def plan_spotlights(ctx: Ctx, week_start: date, n: int, settings: dict) -> dict[
     no spotlights this week — planning never blocks on the store."""
     if ctx.catalogue is None:
         return {}
-    gap_min, gap_max = int(settings["spotlight_gap_min"]), int(settings["spotlight_gap_max"])
     week_dt = datetime(week_start.year, week_start.month, week_start.day, tzinfo=SAST)
-    last = ctx.db.one("SELECT max(slot_at) AS at FROM assignments WHERE product IS NOT NULL AND slot_at < %s", (week_dt,))
-    if last and last["at"]:
-        since = ctx.db.one("SELECT count(*) AS n FROM assignments WHERE slot_at > %s AND slot_at < %s",
-                           (last["at"], week_dt))["n"]
-    else:
-        since = gap_min - 1  # first ever: a spotlight lands early in the week
     rng = random.Random(f"spotlights:{week_start.isoformat()}")
-    indexes = spotlight_indexes(n, since, rng, gap_min, gap_max)
+    if settings["spotlight_times"]:
+        fixed = set(settings["spotlight_times"])
+        indexes = [i for i, s in enumerate(slot_times(week_start, settings["publish_times"]))
+                   if f"{s:%H:%M}" in fixed]
+    else:
+        gap_min, gap_max = int(settings["spotlight_gap_min"]), int(settings["spotlight_gap_max"])
+        last = ctx.db.one("SELECT max(slot_at) AS at FROM assignments WHERE product IS NOT NULL AND slot_at < %s",
+                          (week_dt,))
+        if last and last["at"]:
+            since = ctx.db.one("SELECT count(*) AS n FROM assignments WHERE slot_at > %s AND slot_at < %s",
+                               (last["at"], week_dt))["n"]
+        else:
+            since = gap_min - 1  # first ever: a spotlight lands early in the week
+        indexes = spotlight_indexes(n, since, rng, gap_min, gap_max)
     if not indexes:
         return {}
+    return dict(zip(indexes, _pick_products(ctx, len(indexes), rng, week_dt)))
+
+
+def _pick_products(ctx: Ctx, n: int, rng: random.Random, before: datetime) -> list[Product]:
+    """n products to spotlight, avoiding those used in the 8 weeks before
+    `before`; empty when the store is unreachable."""
     recent = ctx.db.query(
         """SELECT product->>'handle' AS handle, product->>'brand' AS brand FROM assignments
-           WHERE product IS NOT NULL AND slot_at > %s ORDER BY slot_at""", (week_dt - timedelta(days=56),))
+           WHERE product IS NOT NULL AND status <> 'cancelled' AND slot_at > %s ORDER BY slot_at""",
+        (before - timedelta(days=56),))
     try:
         candidates = ctx.catalogue.all()
     except CatalogueError as exc:
         ctx.log("plan", "warn", f"store unreachable; no product spotlights this week: {exc}")
-        return {}
-    products = choose_products(candidates, len(indexes), {r["handle"] for r in recent}, rng,
-                               [r["brand"] for r in recent])
-    return dict(zip(indexes, products))
+        return []
+    return choose_products(candidates, n, {r["handle"] for r in recent}, rng, [r["brand"] for r in recent])
+
+
+def fill_spotlight_slots(ctx: Ctx) -> list[dict]:
+    """Give already-planned weeks a spotlight at every future `spotlight_times`
+    slot that has none, so changing the setting takes effect now rather than
+    from the next unplanned week. The angle is templated from the campaign's
+    proposition (no strategist call). A cancelled assignment at that time is
+    revived, because slot_at is unique; its old concepts are retired."""
+    settings = ctx.db.settings()
+    if ctx.catalogue is None or not settings["spotlight_times"]:
+        return []
+    fixed = set(settings["spotlight_times"]) & set(settings["publish_times"])
+    cutoff = ctx.now() + timedelta(hours=2)
+    filled = []
+    for camp in ctx.db.query("SELECT * FROM campaigns WHERE week_start >= %s ORDER BY week_start",
+                             (week_monday(ctx.now().date()),)):
+        slots = [s for s in slot_times(camp["week_start"], settings["publish_times"])
+                 if s > cutoff and f"{s:%H:%M}" in fixed]
+        taken = {r["slot_at"] for r in ctx.db.query(
+            "SELECT slot_at FROM assignments WHERE slot_at = ANY(%s) AND status <> 'cancelled'", (slots,))}
+        open_slots = [s for s in slots if s not in taken]
+        if not open_slots:
+            continue
+        rng = random.Random(f"spotlights:{camp['week_start'].isoformat()}:fill")
+        products = _pick_products(ctx, len(open_slots), rng, ctx.now())
+        with ctx.db.tx() as conn:
+            conn.execute("SELECT pg_advisory_xact_lock(hashtext('agency-plan'))")
+            for slot, p in zip(open_slots, products):
+                angle = (f"Who buys the {p.display_title} and why now; show it as proof of this week's "
+                         f"proposition: {camp['proposition']}")
+                audience = "people who run a printer at the office or at home"
+                product = Jsonb({**p.as_dict(), "fetched_at": ctx.now().isoformat()})
+                row = conn.execute(
+                    """UPDATE assignments SET campaign_id = %s, pillar = 'product', angle = %s, audience = %s,
+                              product = %s, status = 'new', attempts = 0, locked_by = NULL, locked_at = NULL,
+                              last_error = NULL, updated_at = now()
+                       WHERE slot_at = %s AND status = 'cancelled' RETURNING id""",
+                    (camp["id"], angle, audience, product, slot)).fetchone()
+                if row:
+                    conn.execute(
+                        """UPDATE concepts SET status = 'rejected', rejection = coalesce(rejection, %s)
+                           WHERE assignment_id = %s AND status <> 'rejected'""",
+                        ("slot re-planned as a product spotlight", row["id"]))
+                else:
+                    row = conn.execute(
+                        """INSERT INTO assignments (campaign_id, slot_at, pillar, angle, audience, product)
+                           VALUES (%s, %s, 'product', %s, %s, %s) ON CONFLICT (slot_at) DO NOTHING RETURNING id""",
+                        (camp["id"], slot, angle, audience, product)).fetchone()
+                conn.execute("INSERT INTO schedule (slot_at) VALUES (%s) ON CONFLICT DO NOTHING", (slot,))
+                if row:
+                    filled.append({"assignment_id": row["id"], "slot_at": slot.isoformat(),
+                                   "product": f"{p.display_title} ({p.price_label})"})
+            ctx.log("plan", "info", f"added {len(products)} spotlight slots to campaign {camp['id']}",
+                    {"campaign_id": camp["id"]}, conn=conn)
+    return filled
 
 
 def _spotlight_brief(spotlights: dict[int, Product]) -> str:
@@ -214,9 +283,10 @@ def validate_plan(plan: CampaignPlan, n: int, spotlight_slots: set[int] | None =
         if product_slots != spotlight_slots:
             problems.append(f"pillar 'product' must be used exactly at slots {sorted(spotlight_slots)}, "
                             f"got {sorted(product_slots)}")
-        if n == 14 and (counts.get("brand", 0) < 4 or counts.get("educational", 0) < 2
-                        or counts.get("commercial", 0) < 2):
-            problems.append(f"need at least 4 brand, 2 educational, 2 commercial; got {counts}")
+        need = ({"brand": 4, "educational": 2, "commercial": 2} if n - len(spotlight_slots) >= 8
+                else {"brand": 1, "educational": 1, "commercial": 1})
+        if n == 14 and any(counts.get(k, 0) < v for k, v in need.items()):
+            problems.append(f"need at least {need}; got {counts}")
     elif n == 14 and counts != PILLAR_MIX:
         problems.append(f"pillar mix must be {PILLAR_MIX}, got {counts}")
     return problems
