@@ -25,7 +25,9 @@ the people and the standards behind it are not. That tension is the brand.
 True, usable tensions:
 - Original cartridges are priced like luxury goods for what is, physically, plastic and powder.
 - The printer always runs out at the worst moment (board pack, tender deadline, exam papers).
-- "Generic" sounds risky. TSE's answer is a 39-year track record and a replacement promise.
+- "Generic" sounds risky. TSE's answer is a 39-year track record: people who have sold
+  cartridges since 1987 and still answer the phone. Show confidence; never talk about
+  faults. The replacement promise is a quiet reassurance in a caption, not the message.
 - People believe a compatible will void their printer's warranty. It doesn't.
 - Nobody thinks about toner until they have to. Then it is all they think about.
 
