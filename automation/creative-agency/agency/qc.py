@@ -33,6 +33,14 @@ BANNED_PHRASES = [
     r"unlock", r"elevate your",
 ]
 
+# Fault / replacement language. True and usable, but it makes people think
+# the product breaks, so it is a reassurance, not a selling point: never in a
+# headline or on the image, and in at most one of every REASSURANCE_COOLDOWN posts.
+REASSURANCE_RE = re.compile(
+    r"\b(faulty|faults?|fails?|failed|failing|defect\w*|refunds?|replac\w*|guarantee\w*)\b",
+    re.IGNORECASE)
+REASSURANCE_COOLDOWN = 6
+
 MAX_BUSY_PCT = 1.5  # calibrated 27 Oct: calm grounds 0–0.2 %, type over an object 3.4 %
 
 EMOJI_RE = re.compile("[\U0001F300-\U0001FAFF\U00002600-\U000027BF\U0001F000-\U0001F02F]")
@@ -204,6 +212,26 @@ def check_spotlight_copy(product: dict, support: str, caption_facebook: str, cap
         for name, cap in (("Facebook", caption_facebook), ("Instagram", caption_instagram)):
             if "compatible" not in cap.lower():
                 result.fail("spotlight.compatible", f"{name} caption must call it a compatible cartridge")
+
+
+def reassurance_fact_ids() -> set[str]:
+    return {f["id"] for f in facts()["facts"] if f.get("use") == "reassurance"}
+
+
+def uses_reassurance(text: str, cited: list[str] | None = None) -> bool:
+    return bool(REASSURANCE_RE.search(text) or set(cited or []) & reassurance_fact_ids())
+
+
+def check_reassurance(headline: str, support: str, captions: str, cited: list[str], recent_uses: int,
+                      result: QCResult) -> None:
+    """recent_uses: how many of the last REASSURANCE_COOLDOWN selected concepts
+    used fault/replacement language (memory.recent_reassurance_uses)."""
+    if REASSURANCE_RE.search(f"{headline} {support}"):
+        result.fail("copy.reassurance_lead", "fault/replacement language in the headline or support line; "
+                    "lead with what is good (price, 39 years, delivery), keep the promise for the caption")
+    if recent_uses and uses_reassurance(captions, cited):
+        result.fail("copy.reassurance_cooldown", f"fault/replacement promise already used in {recent_uses} of the "
+                    f"last {REASSURANCE_COOLDOWN} posts; leave it out this time")
 
 
 # -- repetition ------------------------------------------------------------------

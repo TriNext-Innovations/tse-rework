@@ -9,7 +9,8 @@ from PIL import Image
 
 from agency import factcheck
 from agency.fakes import synthetic_plate
-from agency.qc import QCResult, check_asset, check_claims, check_copy, check_repetition, similarity
+from agency.qc import (QCResult, check_asset, check_claims, check_copy, check_reassurance, check_repetition,
+                       similarity, uses_reassurance)
 from agency.render import RenderError, render
 
 
@@ -53,6 +54,34 @@ def test_us_spelling_flagged():
     r = QCResult()
     check_copy({"headline": "Pick a color", "support_line": "", "claims": []}, "x", "y", [], r)
     assert "copy.spelling" in {f.check for f in r.findings}
+
+
+def reassurance(headline, support="", captions="", cited=(), recent=0):
+    r = QCResult()
+    check_reassurance(headline, support, captions, list(cited), recent, r)
+    return {f.check for f in r.findings}
+
+
+def test_reassurance_never_leads():
+    assert reassurance("Faulty? We replace it.") == {"copy.reassurance_lead"}
+    assert reassurance("It's ink. Not a diamond.", "Guaranteed to print like the original.") == {"copy.reassurance_lead"}
+    assert reassurance("It's ink. Not a diamond.", "So why pay like it is?") == set()
+
+
+def test_reassurance_cooldown():
+    caption = "Compatible toner. If a cartridge fails, we replace it. {link}"
+    assert reassurance("It's ink. Not a diamond.", captions=caption, recent=0) == set()
+    assert reassurance("It's ink. Not a diamond.", captions=caption, recent=1) == {"copy.reassurance_cooldown"}
+    # a cited reassurance fact counts even if the wording dodges the keywords
+    assert reassurance("It's ink.", captions="We sort it out.", cited=["six-month-faulty-cover"],
+                       recent=2) == {"copy.reassurance_cooldown"}
+    assert reassurance("It's ink.", captions="Since 1987.", cited=["est-1987"], recent=3) == set()
+
+
+def test_uses_reassurance():
+    assert uses_reassurance("6-month cover on faulty cartridges")
+    assert not uses_reassurance("Order by noon, on your desk tomorrow")
+    assert uses_reassurance("anything", ["prints-as-well-as-original"])
 
 
 def test_repetition():

@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 
 from .db import Database
+from .qc import REASSURANCE_COOLDOWN, uses_reassurance
 
 
 def recent_campaigns(db: Database, limit: int = 8) -> list[dict]:
@@ -70,6 +71,24 @@ def search(db: Database, text: str, limit: int = 20) -> list[dict]:
     )
 
 
+def recent_reassurance_uses(db: Database, exclude_assignment: int | None = None,
+                            last: int = REASSURANCE_COOLDOWN) -> int:
+    """How many of the last `last` selected concepts used fault/replacement language."""
+    rows = db.query(
+        """SELECT headline, support_line, claims, data FROM concepts
+           WHERE status = 'selected' AND (%s::bigint IS NULL OR assignment_id <> %s::bigint)
+           ORDER BY created_at DESC LIMIT %s""",
+        (exclude_assignment, exclude_assignment, last),
+    )
+    n = 0
+    for r in rows:
+        d = r["data"] or {}
+        text = " ".join([r["headline"] or "", r["support_line"] or "",
+                         d.get("caption_facebook", ""), d.get("caption_instagram", "")])
+        n += uses_reassurance(text, r["claims"])
+    return n
+
+
 def brief_for_writers(db: Database, exclude_assignment: int | None = None) -> str:
     """The memory block shown to copywriter and director."""
     work = recent_work(db, days=120, exclude_assignment=exclude_assignment)[:40]
@@ -77,6 +96,10 @@ def brief_for_writers(db: Database, exclude_assignment: int | None = None) -> st
     lines += [f"- [{w['created_at']:%Y-%m-%d}] ({w['territory']}) {w['headline']}" for w in work] or ["- none yet"]
     lines += ["", "Territories used in the last 8 weeks:"]
     lines += [f"- {t['territory']}: {t['n']}× (last {t['last_used']})" for t in territory_counts(db)] or ["- none yet"]
+    uses = recent_reassurance_uses(db, exclude_assignment)
+    lines += ["", f"Fault/replacement promise used in {uses} of the last {REASSURANCE_COOLDOWN} posts"
+              + (" — do NOT use it (or any faulty/fails/replace/refund/guarantee wording) this time." if uses
+                 else " — you may use it once, in the caption only, if it genuinely helps.")]
     reasons = rejection_reasons(db)
     if reasons:
         lines += ["", "Recent reasons concepts were rejected:"] + [f"- {r}" for r in reasons]

@@ -30,7 +30,7 @@ from .imagegen import FalClient, GenerationError
 from .llm import LLM, Image, LLMError
 from .news import NewsError, NewsFeed
 from .prompts import PROMPT_VERSION, usable_fact_ids
-from .qc import QCResult, check_asset, check_copy, check_repetition, stale_facts
+from .qc import QCResult, check_asset, check_copy, check_reassurance, check_repetition, stale_facts
 from .render import RenderError, render
 from .schemas import ArtBrief, CampaignPlan, ConceptSet, DirectorReview, TopicalPick, VisionReview
 from .storage import Storage
@@ -522,6 +522,7 @@ def _develop_round(ctx: Ctx, a: dict, settings: dict) -> dict:
         key=lambda i: (i != review.selected_index, -_total(scores[i])),
     )
     history = memory.recent_work(ctx.db, days=120, exclude_assignment=a["id"])
+    reassurance_uses = memory.recent_reassurance_uses(ctx.db, exclude_assignment=a["id"])
     stale = stale_facts(ctx.db)
     chosen = None
     with ctx.db.tx() as conn:
@@ -541,6 +542,8 @@ def _develop_round(ctx: Ctx, a: dict, settings: dict) -> dict:
                 check_copy({"headline": headline, "support_line": c.support_line, "claims": c.claims},
                            c.caption_facebook.replace("{link}", ""), c.caption_instagram, c.hashtags, qc, stale,
                            product=a.get("product"))
+                check_reassurance("" if a.get("product") else headline, c.support_line,
+                                  f"{c.caption_facebook} {c.caption_instagram}", c.claims, reassurance_uses, qc)
                 if not a.get("product"):  # a product's own name is not a repeated idea
                     check_repetition(headline, "", history, qc)
                 if qc.passed:

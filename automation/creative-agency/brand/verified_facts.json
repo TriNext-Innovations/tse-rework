@@ -38,10 +38,12 @@
     {
       "id": "replacement-guarantee",
       "statement": "If a TSE cartridge is faulty, TSE replaces it.",
-      "allowed_phrasings": ["If a cartridge fails, we replace it", "Faulty? We replace it."],
+      "allowed_phrasings": ["If a cartridge fails, we replace it"],
       "source_url": "https://www.tse.co.za/",
       "evidence": "If a cartridge fails, we replace it",
-      "status": "usable"
+      "status": "usable",
+      "use": "reassurance",
+      "rule": "Reassurance, not a selling point: it makes people think the product breaks. Caption only, never the headline, support line or image, and at most one post in six. Lead with what is good instead."
     },
     {
       "id": "six-month-faulty-cover",
@@ -49,7 +51,9 @@
       "allowed_phrasings": ["6-month cover on faulty cartridges"],
       "source_url": "https://www.tse.co.za/delivery",
       "evidence": "Faulty cartridges — 6-month guarantee",
-      "status": "usable"
+      "status": "usable",
+      "use": "reassurance",
+      "rule": "Reassurance, not a selling point: it makes people think the product breaks. Caption only, never the headline, support line or image, and at most one post in six. Lead with what is good instead."
     },
     {
       "id": "overnight-jhb-pta",
@@ -149,7 +153,8 @@
       "source_url": "https://www.tse.co.za/",
       "evidence": "If it doesn't print as well as the original — we replace it",
       "status": "usable",
-      "rule": "Always pair with the replacement promise. Never 'better than the original'."
+      "use": "reassurance",
+      "rule": "Never 'better than the original'. Reassurance, not a selling point: caption only, never the headline, support line or image, and at most one post in six."
     }
   ],
   "never": [

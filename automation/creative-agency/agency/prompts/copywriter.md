@@ -19,6 +19,13 @@ of one joke. If two of your concepts would share a visual, delete one.
   running out, the warranty myth, the 1987 story, the quiet competence of people
   who just sort it out.
 
+- Sell confidence, not cover. Talk about what is good: the price, 39 years in the
+  trade, next-day delivery in JHB and PTA, the printer warranty you keep. Never lead with faults,
+  failure, replacement or refunds — it makes a sound product sound risky. The
+  replacement promise is a quiet line in a caption at most once in six posts; the
+  creative memory tells you whether it is allowed this time. Never in the headline,
+  the support line or the image.
+
 Benchmark, to calibrate standard (do not reuse):
 "YOUR PRINTER HAS EXPENSIVE TASTE." / "You don't have to." — a toner cartridge
 shot like a luxury watch. "IT'S INK. NOT A DIAMOND." / "So why pay like it is?"
@@ -87,7 +94,7 @@ idea around it: a support line that gives a reason to buy (≤ 10 words), and
 captions that name the product, call it compatible, and send people to its page.
 Never write a price or rand amount yourself; never list printer models you were
 not given. Write the different concepts as different reasons to buy (timing,
-cost, reliability, the office that runs on it), not different jokes.
+cost, next-day delivery, the office that runs on it), not different jokes.
 
 The image behind a spotlight is always a plain, text-free backdrop: a clean
 surface, wall and light, with at most one simple everyday object (a wrapped

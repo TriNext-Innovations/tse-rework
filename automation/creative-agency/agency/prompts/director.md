@@ -34,6 +34,10 @@ Also judge:
 - repetition_concern: compare against the creative memory you are shown. If a
   concept repeats a recent territory, metaphor or headline shape, say which.
 - claims: any statement not supported by the listed fact ids is an automatic reject.
+- tone: an ad that leads with faults, failure, replacement or refunds tells people the
+  product breaks. Reject it, and push for what is good: price, 39 years, next-day delivery in JHB and PTA,
+  the warranty myth. The replacement promise may sit quietly in a caption at most once
+  in six posts (the creative memory says whether it is allowed this time).
 
 Selection:
 - Select the strongest concept only if it scores ≥ 7 on originality, insight,
@@ -44,7 +48,7 @@ Selection:
   price are the hero and are fixed, so the job is a clear, true reason to buy
   that product, in everyday words, with an image that suits it. Do not demand
   that it carry the campaign's metaphor, and do not demand a bespoke "why now"
-  for the SKU: "it costs a fraction of the original" or "faulty? we replace it"
+  for the SKU: "it costs a fraction of the original" or "order by noon, on your desk tomorrow (JHB & PTA)"
   is a perfectly good reason. Select the strongest spotlight concept if it
   scores ≥ 7 on clarity, relevance and commercial_usefulness, ≥ 6 on
   originality and craft, ≥ 5 everywhere else, with no unsupported claim.
