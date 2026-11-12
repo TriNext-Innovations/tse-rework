@@ -21,20 +21,25 @@ updates:
       interval: daily
       time: "00:00"
       timezone: Africa/Johannesburg
+    # Groups take patch bumps only, so a group PR is all-patch and can merge
+    # itself; minor bumps arrive one dependency per PR for a human.
     groups:
       medusa:
         patterns:
           - "@medusajs/*"
+        update-types: ["patch"]
       dev-tooling:
         patterns:
           - "turbo"
           - "typescript"
           - "@types/*"
+        update-types: ["patch"]
       next:
         patterns:
           - "next"
           - "react"
           - "react-dom"
+        update-types: ["patch"]
       testing:
         patterns:
           - "vitest"
@@ -42,10 +47,12 @@ updates:
           - "@testing-library/*"
           - "@playwright/*"
           - "playwright"
+        update-types: ["patch"]
       tailwind:
         patterns:
           - "tailwindcss"
           - "@tailwindcss/*"
+        update-types: ["patch"]
     ignore:
       # Runtime is Node 20 (node:20-alpine images) — typings must not lead it.
       - dependency-name: "@types/node"
@@ -70,7 +77,6 @@ updates:
           - "version-update:semver-minor"
     labels:
       - "dependencies"
-      - "automerge"
     # Release branches are retired (2 Nov 2026): updates target main, the default,
     # and a merge to main is a production deploy. deps-nightly-merge.yml merges
     # semver-patch bumps with every check green between 01:00 and 04:00 SAST
@@ -87,7 +93,6 @@ updates:
       timezone: Africa/Johannesburg
     labels:
       - "dependencies"
-      - "automerge"
     # Release branches are retired (2 Nov 2026): updates target main, the default,
     # and a merge to main is a production deploy. deps-nightly-merge.yml merges
     # semver-patch bumps with every check green between 01:00 and 04:00 SAST
