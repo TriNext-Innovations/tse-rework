@@ -5,32 +5,43 @@ How a change gets from a branch to production.
 ## The flow
 
 ```
-feature/*  ──PR──►  main  ──►  production (deploy.yml, scoped to what changed)
+feature/*    ──PR──►  main  ──►  production (deploy.yml, scoped to what changed)
 
-dependabot/*  ──auto-merge──►  release/YYYY-MM  ──human PR──►  main
-                                  (rolling release PR)
+dependabot/* ──PR──►  main      human merge, or deps-nightly-merge.yml for
+                                semver-patch bumps 01:00–04:00 SAST
 ```
 
-- **`main`** is the default branch, the target for every feature and fix PR, and
-  what production runs. Merging a PR is the deploy, and it's always a human action.
-- **`release/YYYY-MM`** batches dependency updates only. Dependabot targets it,
-  its green PRs auto-merge there, and `release-pr.yml` keeps one
-  `release/* → main` PR open with a changelog. Merging that PR ships the batch.
-- **`develop` is retired** (29 Sep 2026). Don't branch from it or target it.
+- **`main`** is the default branch, the target for every PR, and what production
+  runs. Merging a PR is the deploy.
+- **Release branches are retired** (2 Nov 2026), and so is `develop` (29 Sep 2026).
+  `release-pr.yml` only reacts to `release/**` and is inert.
 
-## Nothing deploys itself
+## What may deploy itself — and what may not
 
-There is no automation anywhere that deploys, and none that merges to `main`.
-`deploy.yml` runs on a push to `main` or a manual dispatch, and the only thing
-that pushes to `main` is a person merging the release PR.
+Until 12 Nov 2026 the rule was that no automation merges to `main`. On
+2026-08-29 `release-pr.yml` auto-merged a release it wrongly judged
+Dependabot-only (`git log --no-merges` could not see a human merge commit); it
+deployed unreviewed, failed its health check and rolled back.
 
-This is deliberate. `release-pr.yml` used to auto-merge and dispatch a deploy
-when a release looked Dependabot-only, deciding that with
-`git log --no-merges`. On 2026-08-29 a human merge commit was invisible to that
-check, so the release merged itself and deployed unreviewed. It failed its
-health check and rolled back, but no automation should have been able to make
-that call. Auto-merge now only ever targets a `release/*` branch, so the worst
-it can do is put a dependency bump on a branch nobody has shipped yet.
+On 12 Nov 2026 Ryno changed the rule (trinext-ai-hive#16): dependency updates
+that are **semver-patch only** merge themselves at night, because months-old
+critical advisories (#570) were the larger risk. `deps-nightly-merge.yml` is
+built so the August failure cannot repeat:
+
+- It judges each PR from Dependabot's own `updated-dependencies:` commit metadata
+  — every dependency must be `semver-patch`, none on `DEPS_DENY`
+  (`@medusajs/*`, `next`, `react`) — and every commit must be Dependabot's.
+- Every required check (`DEPS_REQUIRED_CHECKS`) must have passed on the exact
+  head it merges (`--match-head-commit`).
+- One PR per run, 01:00–04:00 SAST, never 02:00–02:45 (the box's reboot window).
+  It dispatches `Deploy to Production`, waits for it, smoke-tests the live
+  URLs, and on any failure opens an issue and a revert PR.
+- It is **off** (dry run, logging what it would merge) until the repo variable
+  `DEPS_AUTOMERGE` is `on` — which waits for full-stack customer-flow E2E (#571),
+  so that a green run means a customer can still buy.
+
+Everything else — features, fixes, minor and major bumps, Medusa — is still a
+human merge.
 
 ## Why features go straight to `main`
 
@@ -52,16 +63,15 @@ changed. Batching now lives in milestones and release notes, not in a branch.
 2. **Merge it.** This deploys, scoped to what changed. Watch the run: it has to
    reach `✓ Deploy complete`, and the public health checks are part of it.
 
-## Dependency releases
+## Dependency updates
 
-0. **Cut the branch** once per cycle: `git checkout -b release/YYYY-MM main`, push
-   it, and update `target-branch` in `.github/dependabot.yml` to match. The
-   rolling release PR opens itself on the first push.
-1. **Triage Dependabot.** Its PRs target the release branch and auto-merge on
-   green. Major-version jumps are labelled `major-bump` and wait for a human.
-2. **Check the release PR.** `release-pr.yml` keeps it current. Confirm the
-   changelog matches what you expect to ship.
-3. **Merge it.** This deploys. The workflow rolls back on a failed health check.
+1. **Dependabot opens PRs daily at 00:00 SAST** against `main`. Patch bumps come
+   grouped; minor bumps come one dependency per PR.
+2. **Patch bumps** merge themselves overnight once `DEPS_AUTOMERGE=on` (see above).
+   Check the Actions tab for the "Nightly dependency merge" run log — it lists
+   every PR it skipped and why.
+3. **Everything else** waits for a human: review, merge, watch the deploy reach
+   `✓ Deploy complete`.
 
 ## Tagging
 

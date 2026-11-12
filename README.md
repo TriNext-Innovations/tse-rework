@@ -163,7 +163,7 @@ docker compose down
 |---|---|
 | `main` | Default branch and production. Protected, CI required; merging deploys |
 | `feat/*`, `fix/*`, `chore/*` | Work branches, PR into `main` |
-| `release/YYYY-MM` | Dependency-update batch; Dependabot auto-merges here |
+| `dependabot/*` | Dependency updates, PR into `main`; patch bumps merge themselves at night once full-stack E2E is in place (see RELEASING.md) |
 
 Every PR targets `main`, and merging it deploys, scoped to what changed. `develop`
 was retired on 29 Sep 2026. See [docs/RELEASING.md](docs/RELEASING.md).

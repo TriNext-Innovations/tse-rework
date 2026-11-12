@@ -1,0 +1,277 @@
+# Nightly dependency merge — canonical copy lives in trinext-ai-hive at
+# profiles/trinext/ops/github/deps-nightly-merge.yml. Copy it into a repo
+# unchanged; tune it per repo with repository variables, never by editing.
+#
+# Decision (Ryno, 12 Nov 2026, trinext-ai-hive#16): dependency PRs merge
+# themselves — semver-patch Dependabot updates, security updates included — at
+# night, only with every check green. Minor/major bumps and the DENY list stay
+# manual.
+#
+# Only Dependabot PRs, deliberately. PRs from the nightly Claude routine
+# (label security-autofix, trinext-ai-hive#17) were in scope, but a review
+# showed "manifest and lockfile only" is not a safe boundary: a version string
+# can be a git URL, tarball or npm: alias, and a lockfile can resolve to any
+# URL or add install scripts. Those PRs wait for a human.
+#
+# OFF until the repo variable DEPS_AUTOMERGE is "on". Ryno's gate: a repo is
+# switched on only once its tests cover the customer flows, so a red check means
+# a broken flow (tse-rework#571, trinext-web#17).
+#
+# Repository variables:
+#   DEPS_AUTOMERGE         "on" to enable. Anything else = dry run.
+#   DEPS_DENY              Python regex over dependency names that never
+#                          auto-merge, e.g. ^(@medusajs/.*|next|react|react-dom)$
+#   DEPS_REQUIRED_CHECKS   comma-separated check names that must each have
+#                          passed (guards against "every job skipped" = green).
+#                          Unset: at least one check must have passed.
+#   DEPS_DEPLOY_WF         name of the deploy workflow (must accept
+#                          workflow_dispatch). Unset: no deploy step.
+#   DEPS_SMOKE_URLS        space-separated URLs that must end in a 2xx after
+#                          following redirects.
+#
+# How a Dependabot PR is judged: from the `updated-dependencies:` metadata in
+# its head commit message — never truncated, one entry per dependency with its
+# update-type — not from the PR body, which Dependabot truncates at 64 KB.
+#
+# Merges with GITHUB_TOKEN don't trigger `on: push` workflows (GitHub's loop
+# guard), so the deploy is dispatched explicitly. One PR per run so a breakage
+# points at exactly one PR. Runs avoid the 02:30 SAST reboot window
+# (profiles/trinext/ops/setup-nightly-reboot.sh).
+
+name: Nightly dependency merge
+
+on:
+  schedule:
+    # Off the hour: on-the-hour crons are the ones GitHub delays most.
+    - cron: "7 23 * * *"   # 01:07 SAST
+    - cron: "7 1 * * *"    # 03:07 SAST
+    - cron: "37 1 * * *"   # 03:37 SAST
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Log what would merge, merge nothing"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: write   # to dispatch the deploy
+  checks: read
+
+concurrency:
+  group: deps-nightly-merge
+  cancel-in-progress: false
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REPO: ${{ github.repository }}
+      BASE: ${{ github.event.repository.default_branch }}
+      ENABLED: ${{ vars.DEPS_AUTOMERGE }}
+      DENY: ${{ vars.DEPS_DENY }}
+      REQUIRED_CHECKS: ${{ vars.DEPS_REQUIRED_CHECKS }}
+      DEPLOY_WF: ${{ vars.DEPS_DEPLOY_WF }}
+      SMOKE_URLS: ${{ vars.DEPS_SMOKE_URLS }}
+      MANUAL_DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+    steps:
+      - name: Pick and merge one eligible PR
+        id: pick
+        shell: python3 {0}
+        run: |
+          import json, os, re, subprocess, sys, time
+          from datetime import datetime, timezone, timedelta
+
+          REPO, BASE = os.environ["REPO"], os.environ["BASE"]
+          OUT = os.environ.get("GITHUB_OUTPUT", os.devnull)
+          dry = not (os.environ.get("ENABLED") == "on" and os.environ.get("MANUAL_DRY_RUN") != "true")
+          if dry:
+              print(f"::notice::Dry run — DEPS_AUTOMERGE is '{os.environ.get('ENABLED') or 'unset'}'. Nothing will be merged.")
+
+          # Merge windows (SAST): 01:00–01:30 and 02:45–04:00. A deploy can take
+          # up to ~25 min, so nothing starts that could still be running at the
+          # 02:30 reboot. Checked now and again right before the merge.
+          def in_window():
+              now = datetime.now(timezone(timedelta(hours=2)))
+              m = now.hour * 60 + now.minute
+              return (60 <= m < 90 or 165 <= m < 240), f"{now:%H:%M}"
+          ok, at = in_window()
+          if not dry and not ok:
+              print(f"::notice::Outside the merge window (now {at} SAST). Not merging.")
+              sys.exit(0)
+
+          try:
+              deny = re.compile(os.environ["DENY"]) if os.environ.get("DENY") else None
+          except re.error as e:
+              sys.exit(f"::error::DEPS_DENY is not a valid regex: {e}")  # fail closed, loudly
+          required = [c.strip() for c in os.environ.get("REQUIRED_CHECKS", "").split(",") if c.strip()]
+
+          def gh(*args):
+              return subprocess.run(["gh", *args], check=True, capture_output=True, text=True).stdout
+
+          def gh_json(*args):
+              return json.loads(gh(*args))
+
+          def judge_dependabot(pr, head_sha):
+              for c in pr["commits"]:
+                  if {a.get("login") for a in c["authors"]} != {"dependabot[bot]"}:
+                      return f"has a commit not authored by Dependabot ({c['oid'][:7]})"
+                  # Author identity comes from the commit email, which anyone can
+                  # set. Dependabot's commits are signed and committed by web-flow.
+                  meta = gh_json("api", f"repos/{REPO}/commits/{c['oid']}")
+                  if not meta["commit"]["verification"]["verified"] or (meta.get("committer") or {}).get("login") != "web-flow":
+                      return f"commit {c['oid'][:7]} is not a verified Dependabot commit"
+              msg = gh("api", f"repos/{REPO}/commits/{head_sha}", "-q", ".commit.message")
+              m = re.search(r"^updated-dependencies:\n(.*?)^\.\.\.", msg, re.S | re.M)
+              if not m:
+                  return "no updated-dependencies metadata in the commit message"
+              entries = re.split(r"^- ", m.group(1), flags=re.M)[1:]
+              if not entries:
+                  return "empty updated-dependencies metadata"
+              for e in entries:
+                  fields = {k: v.strip().strip("'\"") for k, v in re.findall(r"^\s*([a-z-]+):[ \t]*(.*?)\s*$", e, re.M)}
+                  name, version = fields.get("dependency-name", ""), fields.get("dependency-version", "")
+                  if deny and deny.search(name):
+                      return f"touches DENY-listed {name}"
+                  if fields.get("update-type") != "version-update:semver-patch":
+                      return f"{name} is {fields.get('update-type') or 'an unknown update type'}"
+                  if not re.fullmatch(r"v?\d+\.\d+\.\d+", version):
+                      return f"{name} → {version!r} is not a plain x.y.z release"
+              return None
+
+          def judge(n):
+              pr = gh_json("pr", "view", str(n), "-R", REPO, "--json",
+                           "author,baseRefName,isDraft,mergeable,headRefOid,commits,files,changedFiles")
+              if pr["baseRefName"] != BASE: return None, f"not based on {BASE}"
+              if pr["isDraft"]: return None, "draft"
+              if pr["mergeable"] == "UNKNOWN":
+                  # GitHub recomputes this lazily after every push to the base.
+                  time.sleep(30)
+                  pr["mergeable"] = gh_json("pr", "view", str(n), "-R", REPO, "--json", "mergeable")["mergeable"]
+              if pr["mergeable"] != "MERGEABLE": return None, f"not mergeable ({pr['mergeable']})"
+              files = [f["path"] for f in pr["files"]]
+              if len(files) != pr["changedFiles"]:
+                  return None, "file list truncated — too large to judge"
+              if any(p.startswith(".github/workflows/") for p in files):
+                  return None, "changes workflow files (GITHUB_TOKEN cannot merge those; merge by hand)"
+              head = pr["headRefOid"]
+              if pr["author"]["login"] not in ("app/dependabot", "dependabot[bot]", "dependabot"):
+                  return None, "not a Dependabot PR"
+              why = judge_dependabot(pr, head)
+              if why: return None, why
+
+              try:
+                  checks = gh_json("pr", "checks", str(n), "-R", REPO, "--json", "name,bucket")
+              except subprocess.CalledProcessError:
+                  checks = []  # gh exits non-zero when there are no checks at all
+              if not checks: return None, "no CI checks ran — refusing to merge untested"
+              bad = [f"{c['name']}={c['bucket']}" for c in checks if c["bucket"] not in ("pass", "skipping")]
+              if bad: return None, "checks not green: " + ", ".join(bad)
+              passed = {c["name"] for c in checks if c["bucket"] == "pass"}
+              if required:
+                  missing = [c for c in required if c not in passed]
+                  if missing: return None, "required checks did not pass: " + ", ".join(missing)
+              elif not passed:
+                  return None, "every check was skipped — nothing actually tested this PR"
+              return head, None
+
+          # gh errors here must fail the run, not look like a quiet night.
+          prs = gh_json("pr", "list", "-R", REPO, "--state", "open", "--base", BASE,
+                        "--limit", "100", "--json", "number,createdAt")
+          picked = head = None
+          for pr in sorted(prs, key=lambda p: p["createdAt"]):
+              try:
+                  h, why = judge(pr["number"])
+              except Exception as e:  # one odd PR must not block every night
+                  h, why = None, f"could not be judged ({type(e).__name__}: {str(e)[:200]})"
+              if why:
+                  print(f"#{pr['number']} skipped: {why}")
+                  continue
+              picked, head = pr["number"], h
+              break
+
+          if not picked:
+              print("Nothing eligible tonight.")
+              sys.exit(0)
+
+          print(f"#{picked} is eligible at {head[:7]}.")
+          if dry:
+              print(f"::notice::Dry run — would merge #{picked}.")
+              sys.exit(0)
+
+          ok, at = in_window()  # judging can take minutes
+          if not ok:
+              print(f"::notice::Window closed while judging (now {at} SAST). Not merging #{picked}.")
+              sys.exit(0)
+          # --match-head-commit: if anything was pushed since it was judged, refuse.
+          gh("pr", "merge", str(picked), "-R", REPO, "--squash", "--delete-branch", "--match-head-commit", head)
+          with open(OUT, "a") as f:  # first, so the failure path runs even if the lookup below fails
+              f.write(f"merged={picked}\n")
+          sha = gh("pr", "view", str(picked), "-R", REPO, "--json", "mergeCommit", "-q", ".mergeCommit.oid").strip()
+          with open(OUT, "a") as f:
+              f.write(f"sha={sha}\n")
+          print(f"::notice::Merged #{picked} as {sha}")
+
+      - name: Deploy the merge commit
+        if: steps.pick.outputs.merged != '' && env.DEPLOY_WF != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh workflow run "$DEPLOY_WF" -R "$REPO" --ref "$BASE"
+          # The dispatch runs on the tip of BASE, which is the merge commit unless
+          # something else landed in the last seconds — then deploy that instead.
+          tip=$(gh api "repos/$REPO/commits/$BASE" -q .sha)
+          id=""
+          for _ in $(seq 1 20); do
+            sleep 15
+            id=$(gh run list -R "$REPO" --workflow "$DEPLOY_WF" --event workflow_dispatch --commit "$tip" \
+                   --limit 1 --json databaseId -q '.[0].databaseId // empty')
+            [[ -n "$id" ]] && break
+          done
+          [[ -n "$id" ]] || { echo "::error::No '$DEPLOY_WF' run started"; exit 1; }
+          gh run watch "$id" -R "$REPO" --exit-status --interval 30
+
+      - name: Smoke test
+        if: steps.pick.outputs.merged != '' && env.SMOKE_URLS != ''
+        shell: bash
+        run: |
+          set -uo pipefail
+          sleep 30   # let caches and the CDN settle
+          fail=0
+          for u in $SMOKE_URLS; do
+            code=$(curl -sL -o /dev/null -m 20 -w '%{http_code}' "$u")
+            echo "$u → $code"
+            [[ $code =~ ^2 ]] || fail=1
+          done
+          exit $fail
+
+      - name: On failure, open an issue and a revert PR
+        if: (failure() || cancelled()) && steps.pick.outputs.merged != ''
+        shell: bash
+        env:
+          PR: ${{ steps.pick.outputs.merged }}
+          SHA: ${{ steps.pick.outputs.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -uo pipefail
+          # Issue first: if the revert itself fails, someone still hears about it.
+          issue=$(gh issue create -R "$REPO" --title "Nightly dependency merge of #$PR failed after deploy" \
+            --body "Deploy or smoke test failed (or timed out) after auto-merging #$PR ($SHA). Run: $RUN_URL. Production may be degraded — check now.")
+          git init -q . && git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git"
+          git fetch -q --depth 50 origin "$BASE"
+          git checkout -q -b "revert-nightly-$PR" FETCH_HEAD
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git revert --no-edit "$SHA" && git push -q origin "revert-nightly-$PR"; then
+            revert=$(gh pr create -R "$REPO" --base "$BASE" --head "revert-nightly-$PR" \
+              --title "revert: nightly merge of #$PR broke deploy or smoke test" \
+              --body "Reverts #$PR ($SHA). See $issue. Not merged automatically; its CI won't start on its own (PRs opened by GITHUB_TOKEN don't trigger workflows) — close and reopen it to run CI.")
+            gh issue comment "$issue" -R "$REPO" --body "Revert PR: $revert"
+          else
+            gh issue comment "$issue" -R "$REPO" --body "Automatic revert failed — revert $SHA by hand."
+          fi
+          exit 1
