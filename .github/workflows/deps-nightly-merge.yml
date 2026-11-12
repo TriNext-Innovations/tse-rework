@@ -1,0 +1,225 @@
+# Nightly dependency merge — canonical copy lives in trinext-ai-hive at
+# profiles/trinext/ops/github/deps-nightly-merge.yml. Copy it into a repo
+# unchanged; tune it per repo with repository variables, never by editing.
+#
+# Decision (Ryno, 12 Nov 2026, trinext-ai-hive#16): dependency PRs merge
+# themselves — semver-patch Dependabot updates, plus `security-autofix` PRs
+# from the nightly Claude routine that only touch manifests/lockfiles — between
+# 01:00 and 04:00 SAST, only with every check green. Minor/major bumps and the
+# DENY list stay manual.
+#
+# OFF until the repo variable DEPS_AUTOMERGE is "on". Ryno's gate: a repo is
+# switched on only once its tests cover the customer flows, so that a red check
+# means a broken flow (tse-rework#571, trinext-web#17).
+#
+# Repository variables:
+#   DEPS_AUTOMERGE     "on" to enable. Anything else = dry run (logs what it
+#                      would merge, merges nothing).
+#   DEPS_DENY          extended regex over dependency names that must never
+#                      auto-merge, e.g. '^(@medusajs/.*|next|react|react-dom)$'
+#   DEPS_DEPLOY_WF     name of the deploy workflow that runs on push to the
+#                      default branch, e.g. 'Deploy to Production'. Empty = none.
+#   DEPS_SMOKE_URLS    space-separated URLs that must return 2xx/3xx after deploy.
+#
+# The org is on GitHub Free: private repos have no branch protection, so
+# `gh pr merge --auto` would merge immediately without waiting for CI. This
+# workflow therefore checks the PR's checks itself and refuses to merge a PR
+# that has no checks at all.
+#
+# One PR per run, three runs a night, so each merge gets its own deploy and
+# smoke test, and a breakage points at exactly one PR. The 02:30 SAST reboot
+# window (profiles/trinext/ops/setup-nightly-reboot.sh) sits between runs 2
+# and 3.
+
+name: Nightly dependency merge
+
+on:
+  schedule:
+    - cron: "0 23 * * *"   # 01:00 SAST
+    - cron: "45 23 * * *"  # 01:45 SAST
+    - cron: "15 1 * * *"   # 03:15 SAST
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Log what would merge, merge nothing"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: write   # to dispatch the deploy — see "Deploy the merge commit"
+  checks: read
+
+concurrency:
+  group: deps-nightly-merge
+  cancel-in-progress: false
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REPO: ${{ github.repository }}
+      BASE: ${{ github.event.repository.default_branch }}
+      ENABLED: ${{ vars.DEPS_AUTOMERGE }}
+      DENY: ${{ vars.DEPS_DENY }}
+      DEPLOY_WF: ${{ vars.DEPS_DEPLOY_WF }}
+      SMOKE_URLS: ${{ vars.DEPS_SMOKE_URLS }}
+      MANUAL_DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+    steps:
+      - name: Pick and merge one eligible PR
+        id: pick
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          dry=1
+          [[ "$ENABLED" == "on" && "$MANUAL_DRY_RUN" != "true" ]] && dry=0
+          [[ $dry == 1 ]] && echo "::notice::Dry run — DEPS_AUTOMERGE is '${ENABLED:-unset}'. Nothing will be merged."
+
+          # Hard time window, in case the run was queued late or dispatched by hand.
+          hour=$(TZ=Africa/Johannesburg date +%-H)
+          if [[ $dry == 0 && ( $hour -lt 1 || $hour -ge 4 ) ]]; then
+            echo "::notice::Outside the 01:00–04:00 SAST window (now ${hour}h). Not merging."
+            exit 0
+          fi
+
+          # semver core of a version string: strips a leading v and any suffix.
+          core() { sed -E 's/^v//; s/[-+].*$//' <<<"$1"; }
+          is_patch() {  # from to
+            local a b; a=$(core "$1"); b=$(core "$2")
+            [[ "${a%.*}" == "${b%.*}" && "$a" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ && "$b" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          }
+
+          eligible() {  # pr-number → 0 if eligible, prints reason otherwise
+            local n=$1 json author title body labels files names pairs
+            json=$(gh pr view "$n" -R "$REPO" --json author,title,body,labels,baseRefName,isDraft,mergeable,files)
+            author=$(jq -r .author.login <<<"$json")
+            title=$(jq -r .title <<<"$json")
+            body=$(jq -r .body <<<"$json")
+            labels=$(jq -r '[.labels[].name] | join(",")' <<<"$json")
+
+            [[ $(jq -r .baseRefName <<<"$json") == "$BASE" ]] || { echo "not based on $BASE"; return 1; }
+            [[ $(jq -r .isDraft <<<"$json") == false ]] || { echo "draft"; return 1; }
+            [[ $(jq -r .mergeable <<<"$json") == MERGEABLE ]] || { echo "not mergeable (conflict or unknown)"; return 1; }
+
+            if [[ "$author" == "app/dependabot" || "$author" == "dependabot[bot]" ]]; then
+              # Single: "Bumps [name](url) from 1.2.3 to 1.2.4."
+              # Group:  "Updates `name` from 1.2.3 to 1.2.4"
+              names=$(grep -oE '(Bumps \[[^]]+\]|Updates `[^`]+`)' <<<"$body" | sed -E 's/^Bumps \[//; s/\]$//; s/^Updates `//; s/`$//' | sort -u)
+              # Versions only: stop at anything that can't be part of one (HTML, punctuation).
+              pairs=$(grep -oE 'from v?[0-9][0-9A-Za-z.+-]* to v?[0-9][0-9A-Za-z.+-]*' <<<"$title"$'\n'"$body" | sed -E 's/\.$//' | sort -u)
+              [[ -n "$names" && -n "$pairs" ]] || { echo "could not parse dependencies from the PR"; return 1; }
+              if [[ -n "$DENY" ]] && grep -qE "$DENY" <<<"$names"; then
+                echo "touches a DENY-listed dependency: $(grep -E "$DENY" <<<"$names" | tr '\n' ' ')"; return 1
+              fi
+              while read -r _ from _ to; do
+                is_patch "$from" "$to" || { echo "not a patch bump ($from → $to)"; return 1; }
+              done <<<"$pairs"
+            elif [[ ",$labels," == *",security-autofix,"* ]]; then
+              # Routine PRs: allowed only if every changed file is a manifest or lockfile.
+              files=$(jq -r '.files[].path' <<<"$json")
+              if grep -vqE '(^|/)(package\.json|package-lock\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|composer\.(json|lock)|requirements[^/]*\.txt|poetry\.lock|pom\.xml)$' <<<"$files"; then
+                echo "security-autofix PR changes non-dependency files"; return 1
+              fi
+            else
+              echo "not a Dependabot or security-autofix PR"; return 1
+            fi
+
+            # Every check must have finished green, and there must be at least one.
+            local checks
+            checks=$(gh pr checks "$n" -R "$REPO" --json name,bucket 2>/dev/null || echo '[]')
+            # This workflow's own job is not a PR check, so nothing to exclude.
+            [[ $(jq length <<<"$checks") -gt 0 ]] || { echo "no CI checks ran — refusing to merge untested"; return 1; }
+            local notpass
+            notpass=$(jq -r '[.[] | select(.bucket != "pass" and .bucket != "skipping") | "\(.name)=\(.bucket)"] | join(", ")' <<<"$checks")
+            [[ -z "$notpass" ]] || { echo "checks not green: $notpass"; return 1; }
+            return 0
+          }
+
+          picked=""
+          for n in $(gh pr list -R "$REPO" --state open --base "$BASE" --limit 100 --json number,createdAt \
+                       -q 'sort_by(.createdAt) | .[].number'); do
+            if reason=$(eligible "$n"); then
+              picked=$n; break
+            else
+              echo "#$n skipped: $reason"
+            fi
+          done
+
+          if [[ -z "$picked" ]]; then
+            echo "Nothing eligible tonight."
+            exit 0
+          fi
+
+          echo "#$picked is eligible: $(gh pr view "$picked" -R "$REPO" --json title -q .title)"
+          if [[ $dry == 1 ]]; then
+            echo "::notice::Dry run — would merge #$picked."
+            exit 0
+          fi
+
+          gh pr merge "$picked" -R "$REPO" --squash --delete-branch
+          sha=$(gh pr view "$picked" -R "$REPO" --json mergeCommit -q .mergeCommit.oid)
+          echo "merged=$picked" >>"$GITHUB_OUTPUT"
+          echo "sha=$sha" >>"$GITHUB_OUTPUT"
+          echo "::notice::Merged #$picked as $sha"
+
+      - name: Deploy the merge commit
+        # A merge made with GITHUB_TOKEN does not trigger `on: push` workflows
+        # (GitHub's loop guard), so the deploy never starts by itself. It does
+        # honour workflow_dispatch, which both deploy workflows accept.
+        id: deploy
+        if: steps.pick.outputs.merged != '' && env.DEPLOY_WF != ''
+        shell: bash
+        env:
+          SHA: ${{ steps.pick.outputs.sha }}
+        run: |
+          set -euo pipefail
+          gh workflow run "$DEPLOY_WF" -R "$REPO" --ref "$BASE"
+          for _ in $(seq 1 20); do
+            sleep 15
+            id=$(gh run list -R "$REPO" --workflow "$DEPLOY_WF" --event workflow_dispatch --commit "$SHA" \
+                   --limit 1 --json databaseId -q '.[0].databaseId // empty')
+            [[ -n "$id" ]] && break
+          done
+          [[ -n "${id:-}" ]] || { echo "::error::No '$DEPLOY_WF' run started for $SHA"; exit 1; }
+          gh run watch "$id" -R "$REPO" --exit-status --interval 30
+
+      - name: Smoke test
+        if: steps.pick.outputs.merged != '' && env.SMOKE_URLS != ''
+        shell: bash
+        run: |
+          set -uo pipefail
+          sleep 30   # let caches and the CDN settle
+          fail=0
+          for u in $SMOKE_URLS; do
+            code=$(curl -s -o /dev/null -m 20 -w '%{http_code}' "$u")
+            echo "$u → $code"
+            [[ $code =~ ^[23] ]] || fail=1
+          done
+          exit $fail
+
+      - name: On failure, open a revert PR and an issue
+        if: failure() && steps.pick.outputs.merged != ''
+        shell: bash
+        env:
+          PR: ${{ steps.pick.outputs.merged }}
+          SHA: ${{ steps.pick.outputs.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          git init -q . && git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git"
+          git fetch -q --depth 2 origin "$BASE"
+          git checkout -q -b "revert-nightly-$PR" FETCH_HEAD
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git revert --no-edit "$SHA"
+          git push -q origin "revert-nightly-$PR"
+          revert=$(gh pr create -R "$REPO" --base "$BASE" --head "revert-nightly-$PR" \
+            --title "revert: nightly merge of #$PR broke deploy or smoke test" \
+            --body "The nightly dependency merge of #$PR ($SHA) failed its deploy or smoke test: $RUN_URL. Not merged automatically, and its CI will not start on its own (PRs opened by GITHUB_TOKEN don't trigger workflows) — close and reopen it to run CI. Merging it redeploys the previous state — check the live site first.")
+          gh issue create -R "$REPO" --title "Nightly dependency merge of #$PR failed after deploy" \
+            --body "Deploy or smoke test failed after auto-merging #$PR ($SHA). Run: $RUN_URL. Revert PR: $revert. Production may be degraded — check now."

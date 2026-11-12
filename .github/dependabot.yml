@@ -18,9 +18,8 @@ updates:
   - package-ecosystem: npm
     directory: /
     schedule:
-      interval: weekly
-      day: monday
-      time: "06:00"
+      interval: daily
+      time: "00:00"
       timezone: Africa/Johannesburg
     groups:
       medusa:
@@ -72,21 +71,26 @@ updates:
     labels:
       - "dependencies"
       - "automerge"
-    # Release branches are retired (2 Nov 2026): updates target main, the default.
-    # auto-merge.yml only merges PRs based on release/*, so these wait for a human
-    # merge — a merge to main is a production deploy.
+    # Release branches are retired (2 Nov 2026): updates target main, the default,
+    # and a merge to main is a production deploy. deps-nightly-merge.yml merges
+    # semver-patch bumps with every check green between 01:00 and 04:00 SAST
+    # (Ryno, 12 Nov 2026, trinext-ai-hive#16), and only once the repo variable
+    # DEPS_AUTOMERGE is "on" — which waits for full-stack customer-flow E2E (#571).
+    # DEPS_DENY keeps @medusajs/*, next and react manual regardless.
 
   # ── GitHub Actions ───────────────────────────────────────────────────────────
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
-      day: monday
-      time: "06:00"
+      interval: daily
+      time: "00:00"
       timezone: Africa/Johannesburg
     labels:
       - "dependencies"
       - "automerge"
-    # Release branches are retired (2 Nov 2026): updates target main, the default.
-    # auto-merge.yml only merges PRs based on release/*, so these wait for a human
-    # merge — a merge to main is a production deploy.
+    # Release branches are retired (2 Nov 2026): updates target main, the default,
+    # and a merge to main is a production deploy. deps-nightly-merge.yml merges
+    # semver-patch bumps with every check green between 01:00 and 04:00 SAST
+    # (Ryno, 12 Nov 2026, trinext-ai-hive#16), and only once the repo variable
+    # DEPS_AUTOMERGE is "on" — which waits for full-stack customer-flow E2E (#571).
+    # DEPS_DENY keeps @medusajs/*, next and react manual regardless.
