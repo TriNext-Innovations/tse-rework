@@ -3,9 +3,15 @@
 # unchanged; tune it per repo with repository variables, never by editing.
 #
 # Decision (Ryno, 12 Nov 2026, trinext-ai-hive#16): dependency PRs merge
-# themselves — semver-patch Dependabot updates, plus `security-autofix` PRs from
-# the nightly Claude routine that change only dependency versions — at night,
-# only with every check green. Minor/major bumps and the DENY list stay manual.
+# themselves — semver-patch Dependabot updates, security updates included — at
+# night, only with every check green. Minor/major bumps and the DENY list stay
+# manual.
+#
+# Only Dependabot PRs, deliberately. PRs from the nightly Claude routine
+# (label security-autofix, trinext-ai-hive#17) were in scope, but a review
+# showed "manifest and lockfile only" is not a safe boundary: a version string
+# can be a git URL, tarball or npm: alias, and a lockfile can resolve to any
+# URL or add install scripts. Those PRs wait for a human.
 #
 # OFF until the repo variable DEPS_AUTOMERGE is "on". Ryno's gate: a repo is
 # switched on only once its tests cover the customer flows, so a red check means
@@ -18,9 +24,6 @@
 #   DEPS_REQUIRED_CHECKS   comma-separated check names that must each have
 #                          passed (guards against "every job skipped" = green).
 #                          Unset: at least one check must have passed.
-#   DEPS_AUTOFIX_AUTHORS   comma-separated GitHub logins (PR author) and commit
-#                          author logins/emails allowed on security-autofix PRs.
-#                          Unset: such PRs never merge.
 #   DEPS_DEPLOY_WF         name of the deploy workflow (must accept
 #                          workflow_dispatch). Unset: no deploy step.
 #   DEPS_SMOKE_URLS        space-separated URLs that must end in a 2xx after
@@ -39,9 +42,10 @@ name: Nightly dependency merge
 
 on:
   schedule:
-    - cron: "0 23 * * *"   # 01:00 SAST
-    - cron: "0 1 * * *"    # 03:00 SAST
-    - cron: "30 1 * * *"   # 03:30 SAST
+    # Off the hour: on-the-hour crons are the ones GitHub delays most.
+    - cron: "7 23 * * *"   # 01:07 SAST
+    - cron: "7 1 * * *"    # 03:07 SAST
+    - cron: "37 1 * * *"   # 03:37 SAST
   workflow_dispatch:
     inputs:
       dry_run:
@@ -71,7 +75,6 @@ jobs:
       ENABLED: ${{ vars.DEPS_AUTOMERGE }}
       DENY: ${{ vars.DEPS_DENY }}
       REQUIRED_CHECKS: ${{ vars.DEPS_REQUIRED_CHECKS }}
-      AUTOFIX_AUTHORS: ${{ vars.DEPS_AUTOFIX_AUTHORS }}
       DEPLOY_WF: ${{ vars.DEPS_DEPLOY_WF }}
       SMOKE_URLS: ${{ vars.DEPS_SMOKE_URLS }}
       MANUAL_DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
@@ -80,7 +83,7 @@ jobs:
         id: pick
         shell: python3 {0}
         run: |
-          import json, os, re, subprocess, sys
+          import json, os, re, subprocess, sys, time
           from datetime import datetime, timezone, timedelta
 
           REPO, BASE = os.environ["REPO"], os.environ["BASE"]
@@ -89,13 +92,16 @@ jobs:
           if dry:
               print(f"::notice::Dry run — DEPS_AUTOMERGE is '{os.environ.get('ENABLED') or 'unset'}'. Nothing will be merged.")
 
-          # Merge windows (SAST): 01:00–02:00 and 02:45–04:00. Never start a
-          # merge (and so a deploy) that could overlap the 02:30 reboot.
-          now = datetime.now(timezone(timedelta(hours=2)))
-          minutes = now.hour * 60 + now.minute
-          in_window = 60 <= minutes < 120 or 165 <= minutes < 240
-          if not dry and not in_window:
-              print(f"::notice::Outside the merge window (now {now:%H:%M} SAST). Not merging.")
+          # Merge windows (SAST): 01:00–01:30 and 02:45–04:00. A deploy can take
+          # up to ~25 min, so nothing starts that could still be running at the
+          # 02:30 reboot. Checked now and again right before the merge.
+          def in_window():
+              now = datetime.now(timezone(timedelta(hours=2)))
+              m = now.hour * 60 + now.minute
+              return (60 <= m < 90 or 165 <= m < 240), f"{now:%H:%M}"
+          ok, at = in_window()
+          if not dry and not ok:
+              print(f"::notice::Outside the merge window (now {at} SAST). Not merging.")
               sys.exit(0)
 
           try:
@@ -103,7 +109,6 @@ jobs:
           except re.error as e:
               sys.exit(f"::error::DEPS_DENY is not a valid regex: {e}")  # fail closed, loudly
           required = [c.strip() for c in os.environ.get("REQUIRED_CHECKS", "").split(",") if c.strip()]
-          autofix_authors = {a.strip() for a in os.environ.get("AUTOFIX_AUTHORS", "").split(",") if a.strip()}
 
           def gh(*args):
               return subprocess.run(["gh", *args], check=True, capture_output=True, text=True).stdout
@@ -111,42 +116,15 @@ jobs:
           def gh_json(*args):
               return json.loads(gh(*args))
 
-          DEP_FIELDS = ("dependencies", "devDependencies", "optionalDependencies", "peerDependencies", "overrides")
-          LOCKFILE = re.compile(r"(^|/)(package-lock\.json|pnpm-lock\.yaml|Cargo\.lock)$")
-
-          def file_at(path, ref):
-              try:
-                  return json.loads(gh("api", f"repos/{REPO}/contents/{path}?ref={ref}",
-                                       "-H", "Accept: application/vnd.github.raw"))
-              except subprocess.CalledProcessError:
-                  return None
-
-          def dep_maps(pkg):
-              """field:name → spec over every dependency field, pnpm.overrides included."""
-              out = {}
-              for f in DEP_FIELDS:
-                  for k, v in (pkg.get(f) or {}).items():
-                      out[f"{f}:{k}"] = json.dumps(v, sort_keys=True)
-              for k, v in ((pkg.get("pnpm") or {}).get("overrides") or {}).items():
-                  out[f"pnpm.overrides:{k}"] = v
-              return out
-
-          def strip_deps(pkg):
-              pkg = {k: v for k, v in pkg.items() if k not in DEP_FIELDS}
-              if isinstance(pkg.get("pnpm"), dict):
-                  pkg["pnpm"] = {k: v for k, v in pkg["pnpm"].items() if k != "overrides"}
-              return pkg
-
-          def dep_names(key):
-              """Every package name in a dependency key, e.g. "pnpm.overrides:eslint>ajv@<7"
-              → {"eslint", "ajv"}. Over-inclusive on purpose: DENY should catch too much."""
-              spec = key.split(":", 1)[1]
-              return set(re.findall(r"@[a-z0-9._-]+/[a-z0-9._-]+|(?<![@\w.-])[a-z][a-z0-9._-]*", spec, re.I))
-
           def judge_dependabot(pr, head_sha):
               for c in pr["commits"]:
                   if {a.get("login") for a in c["authors"]} != {"dependabot[bot]"}:
                       return f"has a commit not authored by Dependabot ({c['oid'][:7]})"
+                  # Author identity comes from the commit email, which anyone can
+                  # set. Dependabot's commits are signed and committed by web-flow.
+                  meta = gh_json("api", f"repos/{REPO}/commits/{c['oid']}")
+                  if not meta["commit"]["verification"]["verified"] or (meta.get("committer") or {}).get("login") != "web-flow":
+                      return f"commit {c['oid'][:7]} is not a verified Dependabot commit"
               msg = gh("api", f"repos/{REPO}/commits/{head_sha}", "-q", ".commit.message")
               m = re.search(r"^updated-dependencies:\n(.*?)^\.\.\.", msg, re.S | re.M)
               if not m:
@@ -155,7 +133,7 @@ jobs:
               if not entries:
                   return "empty updated-dependencies metadata"
               for e in entries:
-                  fields = dict(re.findall(r"^\s*([a-z-]+):\s*\"?([^\"\n]*?)\"?\s*$", e, re.M))
+                  fields = {k: v.strip().strip("'\"") for k, v in re.findall(r"^\s*([a-z-]+):[ \t]*(.*?)\s*$", e, re.M)}
                   name, version = fields.get("dependency-name", ""), fields.get("dependency-version", "")
                   if deny and deny.search(name):
                       return f"touches DENY-listed {name}"
@@ -165,57 +143,25 @@ jobs:
                       return f"{name} → {version!r} is not a plain x.y.z release"
               return None
 
-          def judge_autofix(pr, files):
-              if pr["author"]["login"] not in autofix_authors:
-                  return f"security-autofix PR by {pr['author']['login']}, not in DEPS_AUTOFIX_AUTHORS"
-              for c in pr["commits"]:
-                  # Identify each author by login, or by email when the email isn't
-                  # linked to an account. The Co-Authored-By: Claude trailer is
-                  # attribution, not a second pusher.
-                  ids = {a.get("login") or a.get("email") for a in c["authors"]}
-                  ids -= {"claude", "noreply@anthropic.com"}
-                  if not ids or not ids <= autofix_authors:
-                      return f"commit {c['oid'][:7]} by {', '.join(sorted(ids)) or 'nobody'}, outside DEPS_AUTOFIX_AUTHORS"
-              for path in files:
-                  if LOCKFILE.search(path):
-                      continue
-                  if not path.endswith("package.json"):
-                      return f"changes {path}, which is neither a package.json nor a lockfile"
-                  base_pkg, head_pkg = file_at(path, BASE), file_at(path, pr["headRefOid"])
-                  if base_pkg is None or head_pkg is None:
-                      return f"{path} is added or removed"
-                  if strip_deps(base_pkg) != strip_deps(head_pkg):
-                      return f"{path} changes more than dependency versions (scripts or config)"
-                  b, h = dep_maps(base_pkg), dep_maps(head_pkg)
-                  for k in sorted(set(b) | set(h)):
-                      if b.get(k) == h.get(k):
-                          continue
-                      if not k.startswith(("overrides:", "pnpm.overrides:")) and (k not in b or k not in h):
-                          return f"{path} adds or removes a dependency ({k})"
-                      hit = sorted(n for n in dep_names(k) if deny and deny.search(n))
-                      if hit:
-                          return f"{path} changes DENY-listed {', '.join(hit)}"
-              return None
-
           def judge(n):
               pr = gh_json("pr", "view", str(n), "-R", REPO, "--json",
-                           "author,labels,baseRefName,isDraft,mergeable,headRefOid,commits,files,changedFiles")
+                           "author,baseRefName,isDraft,mergeable,headRefOid,commits,files,changedFiles")
               if pr["baseRefName"] != BASE: return None, f"not based on {BASE}"
               if pr["isDraft"]: return None, "draft"
-              if pr["mergeable"] != "MERGEABLE": return None, "not mergeable (conflict or not yet computed)"
+              if pr["mergeable"] == "UNKNOWN":
+                  # GitHub recomputes this lazily after every push to the base.
+                  time.sleep(30)
+                  pr["mergeable"] = gh_json("pr", "view", str(n), "-R", REPO, "--json", "mergeable")["mergeable"]
+              if pr["mergeable"] != "MERGEABLE": return None, f"not mergeable ({pr['mergeable']})"
               files = [f["path"] for f in pr["files"]]
               if len(files) != pr["changedFiles"]:
                   return None, "file list truncated — too large to judge"
               if any(p.startswith(".github/workflows/") for p in files):
                   return None, "changes workflow files (GITHUB_TOKEN cannot merge those; merge by hand)"
               head = pr["headRefOid"]
-              labels = {l["name"] for l in pr["labels"]}
-              if pr["author"]["login"] in ("app/dependabot", "dependabot[bot]", "dependabot"):
-                  why = judge_dependabot(pr, head)
-              elif "security-autofix" in labels:
-                  why = judge_autofix(pr, files)
-              else:
-                  why = "not a Dependabot or security-autofix PR"
+              if pr["author"]["login"] not in ("app/dependabot", "dependabot[bot]", "dependabot"):
+                  return None, "not a Dependabot PR"
+              why = judge_dependabot(pr, head)
               if why: return None, why
 
               try:
@@ -238,7 +184,10 @@ jobs:
                         "--limit", "100", "--json", "number,createdAt")
           picked = head = None
           for pr in sorted(prs, key=lambda p: p["createdAt"]):
-              h, why = judge(pr["number"])
+              try:
+                  h, why = judge(pr["number"])
+              except Exception as e:  # one odd PR must not block every night
+                  h, why = None, f"could not be judged ({type(e).__name__}: {str(e)[:200]})"
               if why:
                   print(f"#{pr['number']} skipped: {why}")
                   continue
@@ -254,11 +203,17 @@ jobs:
               print(f"::notice::Dry run — would merge #{picked}.")
               sys.exit(0)
 
+          ok, at = in_window()  # judging can take minutes
+          if not ok:
+              print(f"::notice::Window closed while judging (now {at} SAST). Not merging #{picked}.")
+              sys.exit(0)
           # --match-head-commit: if anything was pushed since it was judged, refuse.
           gh("pr", "merge", str(picked), "-R", REPO, "--squash", "--delete-branch", "--match-head-commit", head)
+          with open(OUT, "a") as f:  # first, so the failure path runs even if the lookup below fails
+              f.write(f"merged={picked}\n")
           sha = gh("pr", "view", str(picked), "-R", REPO, "--json", "mergeCommit", "-q", ".mergeCommit.oid").strip()
           with open(OUT, "a") as f:
-              f.write(f"merged={picked}\nsha={sha}\n")
+              f.write(f"sha={sha}\n")
           print(f"::notice::Merged #{picked} as {sha}")
 
       - name: Deploy the merge commit
@@ -266,13 +221,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          since=$(date -u +%Y-%m-%dT%H:%M:%SZ)
           gh workflow run "$DEPLOY_WF" -R "$REPO" --ref "$BASE"
+          # The dispatch runs on the tip of BASE, which is the merge commit unless
+          # something else landed in the last seconds — then deploy that instead.
+          tip=$(gh api "repos/$REPO/commits/$BASE" -q .sha)
           id=""
           for _ in $(seq 1 20); do
             sleep 15
-            id=$(gh run list -R "$REPO" --workflow "$DEPLOY_WF" --event workflow_dispatch --limit 5 \
-                   --json databaseId,createdAt -q "[.[] | select(.createdAt >= \"$since\")] | last | .databaseId // empty")
+            id=$(gh run list -R "$REPO" --workflow "$DEPLOY_WF" --event workflow_dispatch --commit "$tip" \
+                   --limit 1 --json databaseId -q '.[0].databaseId // empty')
             [[ -n "$id" ]] && break
           done
           [[ -n "$id" ]] || { echo "::error::No '$DEPLOY_WF' run started"; exit 1; }
