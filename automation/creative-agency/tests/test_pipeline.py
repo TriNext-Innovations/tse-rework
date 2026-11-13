@@ -10,6 +10,7 @@ import pytest
 from PIL import Image
 
 from agency import ops, pipeline, publisher
+from agency.config import DEFAULT_SETTINGS
 from agency.budget import month_spend
 from agency.fakes import FIXTURE_CONCEPTS, FakeFal, FakeLLM
 from agency.schemas import ConceptScore, ConceptSet, DirectorReview, VisionIssue, VisionReview
@@ -149,7 +150,8 @@ def test_05_vision_rejection_triggers_bounded_regeneration(make_ctx, db):
         pipeline.cycle(ctx, 8)
     first = db.one("SELECT * FROM assignments ORDER BY slot_at LIMIT 1")
     attempts = db.query("SELECT status FROM creatives WHERE assignment_id = %s", (first["id"],))
-    assert len(attempts) == 3 and all(a["status"] == "rejected" for a in attempts)  # max_production_attempts
+    cap = DEFAULT_SETTINGS["max_production_attempts"]
+    assert len(attempts) == cap and all(a["status"] == "rejected" for a in attempts)
     assert first["status"] == "failed"
     assert db.one("SELECT count(*) AS n FROM schedule WHERE status = 'filled'")["n"] == 0
     assert db.one("SELECT count(*) AS n FROM events WHERE level = 'alert' AND message LIKE '%%production attempts%%'")["n"] >= 1
