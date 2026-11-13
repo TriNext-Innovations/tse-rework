@@ -232,12 +232,14 @@ jobs:
               || { echo "✗ Product listing check failed"; exit 1; }
 
             # Every deploy builds fresh images and layers; unpruned, the root
-            # disk reached 85% in eight weeks (#572). Only dangling images and
-            # build cache older than a week go — tagged tse-rollback-* images and
-            # all volumes stay. Runs after the health checks, never fatal.
-            echo "▶ Pruning dangling images and week-old build cache"
+            # disk reached 85% in eight weeks (#572). Only dangling images go,
+            # and build cache is capped at 8 GB (a by-age filter wasn't enough:
+            # seven deploys in one night added ~20 GB of cache). Tagged
+            # tse-rollback-* images and all volumes stay. After the health
+            # checks, never fatal.
+            echo "▶ Pruning dangling images; capping build cache at 8 GB"
             docker image prune -f >/dev/null 2>&1 || true
-            docker builder prune -f --filter until=168h >/dev/null 2>&1 || true
+            docker builder prune -f --max-used-space 8gb >/dev/null 2>&1 || true
             df -h / | tail -1
 
             echo "✓ Deploy complete"
