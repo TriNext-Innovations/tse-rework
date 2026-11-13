@@ -13,14 +13,18 @@ ROOT=$PWD
 BE=apps/backend/.env
 WEB=apps/web/.env.local
 SECRETS=${TSE_LOCAL_ENV:-$HOME/.config/tse-local/backend.env}
-COMPOSE=(docker compose -p tse-local -f docker-compose.yml -f docker-compose.local.yml)
+# TSE_LOCAL_PROJECT lets scripts/e2e-fullstack.sh run a throwaway stack under
+# its own name (and volumes) without touching a developer's tse-local data.
+PROJECT=${TSE_LOCAL_PROJECT:-tse-local}
+COMPOSE=(docker compose -p "$PROJECT" -f docker-compose.yml -f docker-compose.local.yml)
 MEILI_KEY=local-meili-master-key-0123456789
 
 say() { printf '\n\033[1m▸ %s\033[0m\n' "$*"; }
 setenv() { # setenv FILE KEY VALUE — replace or append
   if grep -q "^$2=" "$1"; then sed -i "s#^$2=.*#$2=$3#" "$1"; else echo "$2=$3" >> "$1"; fi
 }
-node20() { mise exec node@20 -- "$@"; }
+# CI runners have Node 20 on PATH (actions/setup-node) and no mise.
+node20() { if [ -n "${CI:-}" ] || ! command -v mise >/dev/null; then "$@"; else mise exec node@20 -- "$@"; fi; }
 be() { (cd apps/backend && node20 pnpm "$@"); }
 
 # ── Env files ────────────────────────────────────────────────────────────────
@@ -51,7 +55,7 @@ say "Migrations"
 be migrate >/dev/null
 be migrate:tse >/dev/null
 
-PRODUCTS=$(docker exec tse-local-postgres-1 psql -U postgres -d tse_medusa -tAc "select count(*) from product" 2>/dev/null || echo 0)
+PRODUCTS=$(docker exec "$PROJECT-postgres-1" psql -U postgres -d tse_medusa -tAc "select count(*) from product" 2>/dev/null || echo 0)
 if [ "${PRODUCTS// /}" = "0" ]; then
   say "Seeding (first run, a few minutes)"
   be exec medusa exec src/scripts/seed.ts >/dev/null

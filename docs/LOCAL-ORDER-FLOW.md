@@ -54,3 +54,14 @@ fulfilment steps without a PayFast round trip.
   `MEDUSA_BACKEND_URL` and the CORS lists each time.
 - The local Meilisearch gets a 1 GB cap (`docker-compose.local.yml`); prod's
   256 MB gets it OOM-killed on a many-core machine.
+
+## Full-stack E2E (#571)
+
+`scripts/e2e-fullstack.sh` reuses this setup headlessly: a throwaway `tse-e2e`
+compose project (fresh volumes), the seed, throwaway PayFast credentials, the
+mail sink, production builds of backend and storefront, then
+`apps/web/playwright.fullstack.config.ts`. The browser test intercepts the
+PayFast POST and sends PayFast's ITN itself (signed with the throwaway
+passphrase), so a whole order completes without a tunnel. CI runs it as
+`E2E (full stack)`. Locally, stop `tse-local` first (same ports); `KEEP=1`
+leaves the stack up afterwards.

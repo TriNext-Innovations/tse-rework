@@ -56,3 +56,7 @@ pnpm-debug.log*
 
 # Printerland crawl cache (#482) — resumable state, not data of record
 .cache/
+
+# scripts/e2e-fullstack.sh: admin build copied where medusa start serves it
+/apps/backend/public/
+.e2e-logs/
