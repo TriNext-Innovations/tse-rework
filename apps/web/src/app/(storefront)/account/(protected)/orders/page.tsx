@@ -35,11 +35,17 @@ export default function OrdersPage() {
 
   useEffect(() => {
     if (!token || !customer) return
+    // /store/orders is already scoped to the signed-in customer by the bearer
+    // token. Medusa 2.x rejects a `customer_id` param ("Unrecognized fields")
+    // with a 400, which used to render every account as "No orders yet".
     fetch(
-      `${BACKEND}/store/orders?customer_id=${customer.id}&fields=*items,+display_id,+status,+payment_status,+fulfillment_status,+total,+created_at`,
+      `${BACKEND}/store/orders?fields=*items,+display_id,+status,+payment_status,+fulfillment_status,+total,+created_at`,
       { headers: { Authorization: `Bearer ${token}`, 'x-publishable-api-key': PUB_KEY }, cache: 'no-store' },
     )
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`GET /store/orders ${r.status}: ${(await r.text()).slice(0, 200)}`)
+        return r.json()
+      })
       .then((d) => setOrders(d.orders ?? []))
       .catch((err) => {
         // A fetch failure renders as "no orders yet" — report it so an API
