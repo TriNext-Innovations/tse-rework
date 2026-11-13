@@ -26,10 +26,11 @@ the pixels rather than trusting the brief:
 7. Claims: anything stated in the image beyond the given headline and support line
    is a blocker.
 
-`score` (0–10): would an exacting creative director ship this today? 7 is the bar.
+`score` (0–10): would a good creative director ship this today? 6 is the bar —
+a clean, readable, on-brand post passes; reserve "revise" for real problems, not polish.
 
 Verdict:
-- `approve`: no blocker or major issue and score ≥ 7.
+- `approve`: no blocker or major issue and score ≥ 6.
 - `revise`: fixable by regenerating the image or changing the layout.
 - `reject`: the idea does not work visually.
 

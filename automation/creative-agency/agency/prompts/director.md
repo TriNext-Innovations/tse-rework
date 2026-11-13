@@ -40,8 +40,10 @@ Also judge:
   in six posts (the creative memory says whether it is allowed this time).
 
 Selection:
-- Select the strongest concept only if it scores ≥ 7 on originality, insight,
-  relevance and clarity and ≥ 6 everywhere else, with no unsupported claim. Otherwise set
+- Select the strongest concept if it scores ≥ 7 on clarity and relevance and
+  ≥ 6 everywhere else (originality and insight included), with no unsupported
+  claim. A clear, true, well-made post that ships beats a cleverer one that needs
+  another round — reject only when it genuinely misses, not to polish. Otherwise set
   `selected_index` to -1 and write a `revision_direction` the copywriter can act
   on: what was wrong and which direction to push. Be specific.
 - **PRODUCT SPOTLIGHT** posts are judged differently. The product name and live
