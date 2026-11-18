@@ -1,0 +1,504 @@
+sku,brand,model_slug,model_name,new_model
+BRO-TN369-C,Brother,hl-l8350cdw,HL-L8350CDW,true
+BRO-TN369-C,Brother,mfc-l8850,MFC-L8850,true
+BRO-TN369-M,Brother,hl-l8350cdw,HL-L8350CDW,true
+BRO-TN369-M,Brother,mfc-l8850,MFC-L8850,true
+BRO-TN369-Y,Brother,hl-l8350cdw,HL-L8350CDW,true
+BRO-TN369-Y,Brother,mfc-l8850,MFC-L8850,true
+CAN-045-K,Canon,i-sensys-lbp613c,i-SENSYS LBP613C,true
+CAN-045-K,Canon,i-sensys-mf635c,i-SENSYS MF635C,true
+CAN-045-C,Canon,i-sensys-lbp613c,i-SENSYS LBP613C,true
+CAN-045-C,Canon,i-sensys-mf635c,i-SENSYS MF635C,true
+CAN-045-M,Canon,i-sensys-lbp613c,i-SENSYS LBP613C,true
+CAN-045-M,Canon,i-sensys-mf635c,i-SENSYS MF635C,true
+CAN-045-Y,Canon,i-sensys-lbp613c,i-SENSYS LBP613C,true
+CAN-045-Y,Canon,i-sensys-mf635c,i-SENSYS MF635C,true
+CAN-054-K,Canon,i-sensys-lbp621,i-SENSYS LBP621,true
+CAN-054-K,Canon,i-sensys-lbp623cdw,i-SENSYS LBP623Cdw,true
+CAN-054-K,Canon,i-sensys-mf641cw,i-SENSYS MF641Cw,true
+CAN-054-K,Canon,i-sensys-mf643cdw,i-SENSYS MF643Cdw,true
+CAN-054-C,Canon,i-sensys-lbp621,i-SENSYS LBP621,true
+CAN-054-C,Canon,i-sensys-lbp623cdw,i-SENSYS LBP623Cdw,true
+CAN-054-C,Canon,i-sensys-mf641cw,i-SENSYS MF641Cw,true
+CAN-054-C,Canon,i-sensys-mf643cdw,i-SENSYS MF643Cdw,true
+CAN-054-M,Canon,i-sensys-lbp621,i-SENSYS LBP621,true
+CAN-054-M,Canon,i-sensys-lbp623cdw,i-SENSYS LBP623Cdw,true
+CAN-054-M,Canon,i-sensys-mf641cw,i-SENSYS MF641Cw,true
+CAN-054-M,Canon,i-sensys-mf643cdw,i-SENSYS MF643Cdw,true
+CAN-054-Y,Canon,i-sensys-lbp621,i-SENSYS LBP621,true
+CAN-054-Y,Canon,i-sensys-lbp623cdw,i-SENSYS LBP623Cdw,true
+CAN-054-Y,Canon,i-sensys-mf641cw,i-SENSYS MF641Cw,true
+CAN-054-Y,Canon,i-sensys-mf643cdw,i-SENSYS MF643Cdw,true
+CAN-055-K,Canon,i-sensys-lbp663cdw,i-SENSYS LBP663Cdw,true
+CAN-055-K,Canon,i-sensys-lbp664cx,i-SENSYS LBP664Cx,true
+CAN-055-K,Canon,i-sensys-mf744cdw,i-SENSYS MF744Cdw,true
+CAN-055-K,Canon,i-sensys-mf746cx,i-Sensys MF746Cx,true
+CAN-055-C,Canon,i-sensys-lbp663cdw,i-SENSYS LBP663Cdw,true
+CAN-055-C,Canon,i-sensys-lbp664cx,i-SENSYS LBP664Cx,true
+CAN-055-C,Canon,i-sensys-mf744cdw,i-SENSYS MF744Cdw,true
+CAN-055-C,Canon,i-sensys-mf746cx,i-Sensys MF746Cx,true
+CAN-055-M,Canon,i-sensys-lbp663cdw,i-SENSYS LBP663Cdw,true
+CAN-055-M,Canon,i-sensys-lbp664cx,i-SENSYS LBP664Cx,true
+CAN-055-M,Canon,i-sensys-mf744cdw,i-SENSYS MF744Cdw,true
+CAN-055-M,Canon,i-sensys-mf746cx,i-Sensys MF746Cx,true
+CAN-055-Y,Canon,i-sensys-lbp663cdw,i-SENSYS LBP663Cdw,true
+CAN-055-Y,Canon,i-sensys-lbp664cx,i-SENSYS LBP664Cx,true
+CAN-055-Y,Canon,i-sensys-mf744cdw,i-SENSYS MF744Cdw,true
+CAN-055-Y,Canon,i-sensys-mf746cx,i-Sensys MF746Cx,true
+CAN-067-K,Canon,i-sensys-lbp631cw,i-SENSYS LBP631Cw,true
+CAN-067-K,Canon,i-sensys-lbp633cdw,i-SENSYS LBP633Cdw,true
+CAN-067-K,Canon,i-sensys-mf657cdw,i-SENSYS MF657Cdw,true
+CAN-067-C,Canon,i-sensys-lbp631cw,i-SENSYS LBP631Cw,true
+CAN-067-C,Canon,i-sensys-lbp633cdw,i-SENSYS LBP633Cdw,true
+CAN-067-C,Canon,i-sensys-mf657cdw,i-SENSYS MF657Cdw,true
+CAN-067-M,Canon,i-sensys-lbp631cw,i-SENSYS LBP631Cw,true
+CAN-067-M,Canon,i-sensys-lbp633cdw,i-SENSYS LBP633Cdw,true
+CAN-067-M,Canon,i-sensys-mf657cdw,i-SENSYS MF657Cdw,true
+CAN-067-Y,Canon,i-sensys-lbp631cw,i-SENSYS LBP631Cw,true
+CAN-067-Y,Canon,i-sensys-lbp633cdw,i-SENSYS LBP633Cdw,true
+CAN-067-Y,Canon,i-sensys-mf657cdw,i-SENSYS MF657Cdw,true
+BRO-TN469-C,Brother,hl-l8360cdw,HL-L8360CDW,true
+BRO-TN469-C,Brother,mfc-l8690cdw,MFC-L8690CDW,true
+BRO-TN469-C,Brother,mfc-l9570cdw,MFC-L9570CDW,true
+BRO-TN469-M,Brother,hl-l8360cdw,HL-L8360CDW,true
+BRO-TN469-M,Brother,mfc-l8690cdw,MFC-L8690CDW,true
+BRO-TN469-M,Brother,mfc-l9570cdw,MFC-L9570CDW,true
+BRO-TN469-Y,Brother,hl-l8360cdw,HL-L8360CDW,true
+BRO-TN469-Y,Brother,mfc-l8690cdw,MFC-L8690CDW,true
+BRO-TN469-Y,Brother,mfc-l9570cdw,MFC-L9570CDW,true
+BRO-TN277-Y,Brother,hl-l3210cw,HL-L3210CW,true
+BRO-TN277-C,Brother,hl-l3210cw,HL-L3210CW,true
+BRO-TN277-M,Brother,hl-l3210cw,HL-L3210CW,true
+CAN-718-K,Canon,lbp-7210,LBP 7210,true
+CAN-718-K,Canon,lbp-7660,LBP 7660,true
+CAN-718-K,Canon,lbp-7680,LBP 7680,true
+CAN-718-K,Canon,i-sensys-mf8330,i-SENSYS MF8330,true
+CAN-718-K,Canon,i-sensys-mf8340,i-SENSYS MF8340,true
+CAN-718-K,Canon,i-sensys-mf8350,i-SENSYS MF8350,true
+CAN-718-K,Canon,i-sensys-mf8360,i-SENSYS MF8360,true
+CAN-718-K,Canon,i-sensys-mf8380,i-SENSYS MF8380,true
+CAN-718-C,Canon,lbp-7210,LBP 7210,true
+CAN-718-C,Canon,lbp-7660,LBP 7660,true
+CAN-718-C,Canon,lbp-7680,LBP 7680,true
+CAN-718-C,Canon,i-sensys-mf8330,i-SENSYS MF8330,true
+CAN-718-C,Canon,i-sensys-mf8340,i-SENSYS MF8340,true
+CAN-718-C,Canon,i-sensys-mf8350,i-SENSYS MF8350,true
+CAN-718-C,Canon,i-sensys-mf8360,i-SENSYS MF8360,true
+CAN-718-C,Canon,i-sensys-mf8380,i-SENSYS MF8380,true
+CAN-718-M,Canon,lbp-7210,LBP 7210,true
+CAN-718-M,Canon,lbp-7660,LBP 7660,true
+CAN-718-M,Canon,lbp-7680,LBP 7680,true
+CAN-718-M,Canon,i-sensys-mf8330,i-SENSYS MF8330,true
+CAN-718-M,Canon,i-sensys-mf8340,i-SENSYS MF8340,true
+CAN-718-M,Canon,i-sensys-mf8350,i-SENSYS MF8350,true
+CAN-718-M,Canon,i-sensys-mf8360,i-SENSYS MF8360,true
+CAN-718-M,Canon,i-sensys-mf8380,i-SENSYS MF8380,true
+CAN-718-Y,Canon,lbp-7210,LBP 7210,true
+CAN-718-Y,Canon,lbp-7660,LBP 7660,true
+CAN-718-Y,Canon,lbp-7680,LBP 7680,true
+CAN-718-Y,Canon,i-sensys-mf8330,i-SENSYS MF8330,true
+CAN-718-Y,Canon,i-sensys-mf8340,i-SENSYS MF8340,true
+CAN-718-Y,Canon,i-sensys-mf8350,i-SENSYS MF8350,true
+CAN-718-Y,Canon,i-sensys-mf8360,i-SENSYS MF8360,true
+CAN-718-Y,Canon,i-sensys-mf8380,i-SENSYS MF8380,true
+CAN-729-K,Canon,lbp-7010,LBP 7010,true
+CAN-729-K,Canon,lbp-7018,LBP 7018,true
+CAN-729-C,Canon,lbp-7010,LBP 7010,true
+CAN-729-C,Canon,lbp-7018,LBP 7018,true
+CAN-729-M,Canon,lbp-7010,LBP 7010,true
+CAN-729-M,Canon,lbp-7018,LBP 7018,true
+CAN-729-Y,Canon,lbp-7010,LBP 7010,true
+CAN-729-Y,Canon,lbp-7018,LBP 7018,true
+CAN-CLI471XL-C,Canon,mg-5740,MG 5740,false
+CAN-CLI471XL-C,Canon,mg-7740,MG 7740,false
+CAN-CLI471XL-M,Canon,mg-5740,MG 5740,false
+CAN-CLI471XL-M,Canon,mg-7740,MG 7740,false
+CAN-CLI471XL-Y,Canon,mg-5740,MG 5740,false
+CAN-CLI471XL-Y,Canon,mg-7740,MG 7740,false
+BRO-LC3719XL-C,Brother,mfc-j2730dw,MFC-J2730DW,true
+BRO-LC3719XL-Y,Brother,mfc-j2730dw,MFC-J2730DW,true
+BRO-LC3719XL-M,Brother,mfc-j2730dw,MFC-J2730DW,true
+EPS-101-C,Epson,ecotank-its-l4160,Ecotank ITS L4160,true
+EPS-101-C,Epson,its-ecotank-l4150,ITS EcoTank L4150,true
+EPS-101-C,Epson,its-ecotank-l6170,ITS EcoTank L6170,true
+EPS-101-K,Epson,ecotank-its-l4160,Ecotank ITS L4160,true
+EPS-101-K,Epson,its-ecotank-l4150,ITS EcoTank L4150,true
+EPS-101-K,Epson,its-ecotank-l6170,ITS EcoTank L6170,true
+EPS-101-M,Epson,ecotank-its-l4160,Ecotank ITS L4160,true
+EPS-101-M,Epson,its-ecotank-l4150,ITS EcoTank L4150,true
+EPS-101-M,Epson,its-ecotank-l6170,ITS EcoTank L6170,true
+EPS-101-Y,Epson,ecotank-its-l4160,Ecotank ITS L4160,true
+EPS-101-Y,Epson,its-ecotank-l4150,ITS EcoTank L4150,true
+EPS-101-Y,Epson,its-ecotank-l6170,ITS EcoTank L6170,true
+EPS-103-Y,Epson,ecotank-l5190,EcoTank L5190,true
+EPS-103-M,Epson,ecotank-l5190,EcoTank L5190,true
+EPS-103-K,Epson,ecotank-l5190,EcoTank L5190,true
+EPS-103-C,Epson,ecotank-l5190,EcoTank L5190,true
+BRO-TN265-C,Brother,hl3170cdw,HL3170CDW,true
+BRO-TN265-M,Brother,hl3170cdw,HL3170CDW,true
+BRO-TN265-Y,Brother,hl3170cdw,HL3170CDW,true
+BRO-TN348-C,Brother,dcp9270cdn,DCP9270CDN,true
+BRO-TN348-C,Brother,hl4570cdw,HL4570CDW,true
+BRO-TN348-C,Brother,mfc9970cdw,MFC9970CDW,true
+BRO-TN348-Y,Brother,dcp9270cdn,DCP9270CDN,true
+BRO-TN348-Y,Brother,hl4570cdw,HL4570CDW,true
+BRO-TN348-Y,Brother,mfc9970cdw,MFC9970CDW,true
+BRO-TN348-M,Brother,dcp9270cdn,DCP9270CDN,true
+BRO-TN348-M,Brother,hl4570cdw,HL4570CDW,true
+BRO-TN348-M,Brother,mfc9970cdw,MFC9970CDW,true
+BRO-LC472XL-Y,Brother,mfc-j3540dw,MFC-J3540DW,true
+BRO-LC472XL-Y,Brother,mfc-j3940dw,MFC-J3940DW,true
+BRO-LC472XL-M,Brother,mfc-j3540dw,MFC-J3540DW,true
+BRO-LC472XL-M,Brother,mfc-j3940dw,MFC-J3940DW,true
+BRO-LC565XL-C,Brother,mfcj3520,MFCJ3520,false
+BRO-LC565XL-C,Brother,mfcj3720,MFCJ3720,false
+BRO-LC565XL-Y,Brother,mfcj3520,MFCJ3520,false
+BRO-LC565XL-Y,Brother,mfcj3720,MFCJ3720,false
+BRO-LC565XL-M,Brother,mfcj3520,MFCJ3520,false
+BRO-LC565XL-M,Brother,mfcj3720,MFCJ3720,false
+HP-212A-K,HP,colour-laserjet-enterprise-m555x,Colour LaserJet Enterprise M555x,true
+HP-212A-C,HP,colour-laserjet-enterprise-m555x,Colour LaserJet Enterprise M555x,true
+HP-212A-M,HP,colour-laserjet-enterprise-m555x,Colour LaserJet Enterprise M555x,true
+HP-212A-Y,HP,colour-laserjet-enterprise-m555x,Colour LaserJet Enterprise M555x,true
+HP-305XL-K,HP,deskjet-2320,DeskJet 2320,true
+HP-305XL-K,HP,deskjet-2720,DeskJet 2720,true
+HP-305XL-K,HP,deskjet-plus-4120,DeskJet Plus 4120,true
+HP-305XL-CLR,HP,deskjet-2320,DeskJet 2320,true
+HP-305XL-CLR,HP,deskjet-2720,DeskJet 2720,true
+HP-305XL-CLR,HP,deskjet-plus-4120,DeskJet Plus 4120,true
+HP-655-K,HP,3525,3525,false
+HP-655-C,HP,3525,3525,false
+HP-415A-K,HP,color-laserjet-enterprise-mfp-m480,Color LaserJet Enterprise MFP M480,true
+HP-415A-K,HP,color-laserjet-pro-mfp-m479dw,Color LaserJet Pro MFP M479dw,true
+HP-415A-K,HP,colour-laserjet-pro-mfp-m479,Colour LaserJet Pro MFP M479,true
+HP-415A-C,HP,color-laserjet-enterprise-mfp-m480,Color LaserJet Enterprise MFP M480,true
+HP-415A-C,HP,color-laserjet-pro-mfp-m479dw,Color LaserJet Pro MFP M479dw,true
+HP-415A-C,HP,colour-laserjet-pro-mfp-m479,Colour LaserJet Pro MFP M479,true
+HP-415A-M,HP,color-laserjet-enterprise-mfp-m480,Color LaserJet Enterprise MFP M480,true
+HP-415A-M,HP,color-laserjet-pro-mfp-m479dw,Color LaserJet Pro MFP M479dw,true
+HP-415A-M,HP,colour-laserjet-pro-mfp-m479,Colour LaserJet Pro MFP M479,true
+HP-415A-Y,HP,color-laserjet-enterprise-mfp-m480,Color LaserJet Enterprise MFP M480,true
+HP-415A-Y,HP,color-laserjet-pro-mfp-m479dw,Color LaserJet Pro MFP M479dw,true
+HP-415A-Y,HP,colour-laserjet-pro-mfp-m479,Colour LaserJet Pro MFP M479,true
+HP-655-M,HP,3525,3525,false
+HP-655-Y,HP,3525,3525,false
+HP-655A-K,HP,colour-laserjet-enterprise-m653dn,Colour LaserJet Enterprise M653dn,true
+HP-655A-K,HP,colour-laserjet-enterprise-m653x,Colour LaserJet Enterprise M653x,true
+HP-655A-K,HP,laserjet-enterprise-m652,Laserjet Enterprise M652,true
+HP-655A-K,HP,m681,M681,true
+HP-655A-K,HP,m682,M682,true
+HP-655A-C,HP,colour-laserjet-enterprise-m653dn,Colour LaserJet Enterprise M653dn,true
+HP-655A-C,HP,colour-laserjet-enterprise-m653x,Colour LaserJet Enterprise M653x,true
+HP-655A-C,HP,laserjet-enterprise-m652,Laserjet Enterprise M652,true
+HP-655A-C,HP,m681,M681,true
+HP-655A-C,HP,m682,M682,true
+HP-655A-M,HP,colour-laserjet-enterprise-m653dn,Colour LaserJet Enterprise M653dn,true
+HP-655A-M,HP,colour-laserjet-enterprise-m653x,Colour LaserJet Enterprise M653x,true
+HP-655A-M,HP,laserjet-enterprise-m652,Laserjet Enterprise M652,true
+HP-655A-M,HP,m681,M681,true
+HP-655A-M,HP,m682,M682,true
+HP-655A-Y,HP,colour-laserjet-enterprise-m653dn,Colour LaserJet Enterprise M653dn,true
+HP-655A-Y,HP,colour-laserjet-enterprise-m653x,Colour LaserJet Enterprise M653x,true
+HP-655A-Y,HP,laserjet-enterprise-m652,Laserjet Enterprise M652,true
+HP-655A-Y,HP,m681,M681,true
+HP-655A-Y,HP,m682,M682,true
+HP-728-C,HP,830,830,false
+HP-728-M,HP,830,830,false
+HP-728-Y,HP,830,830,false
+HP-953XL-K,HP,officejet-pro-7720,OfficeJet Pro 7720,true
+HP-953XL-K,HP,officejet-pro-7740,OfficeJet Pro 7740,true
+HP-953XL-K,HP,officejet-pro-8710,Officejet Pro 8710,true
+HP-953XL-K,HP,officejet-pro-8715,Officejet Pro 8715,true
+HP-953XL-K,HP,officejet-pro-8720,Officejet Pro 8720,true
+HP-953XL-C,HP,officejet-pro-7720,OfficeJet Pro 7720,true
+HP-953XL-C,HP,officejet-pro-7740,OfficeJet Pro 7740,true
+HP-953XL-C,HP,officejet-pro-8710,Officejet Pro 8710,true
+HP-953XL-C,HP,officejet-pro-8715,Officejet Pro 8715,true
+HP-953XL-C,HP,officejet-pro-8720,Officejet Pro 8720,true
+HP-953XL-M,HP,officejet-pro-7720,OfficeJet Pro 7720,true
+HP-953XL-M,HP,officejet-pro-7740,OfficeJet Pro 7740,true
+HP-953XL-M,HP,officejet-pro-8710,Officejet Pro 8710,true
+HP-953XL-M,HP,officejet-pro-8715,Officejet Pro 8715,true
+HP-953XL-Y,HP,officejet-pro-7720,OfficeJet Pro 7720,true
+HP-953XL-Y,HP,officejet-pro-7740,OfficeJet Pro 7740,true
+HP-953XL-Y,HP,officejet-pro-8710,Officejet Pro 8710,true
+HP-953XL-Y,HP,officejet-pro-8715,Officejet Pro 8715,true
+HP-953XL-Y,HP,officejet-pro-8720,Officejet Pro 8720,true
+PAN-CTL2000H-K,Pantum,cm2200fdw,CM2200FDW,true
+PAN-CTL2000H-K,Pantum,cp2200dw-color-laser-single-function,CP2200DW Color laser single function,true
+PAN-CTL2000H-C,Pantum,cm2200fdw,CM2200FDW,true
+PAN-CTL2000H-C,Pantum,cp2200dw-color-laser-single-function,CP2200DW Color laser single function,true
+PAN-CTL2000H-M,Pantum,cm2200fdw,CM2200FDW,true
+PAN-CTL2000H-M,Pantum,cp2200dw-color-laser-single-function,CP2200DW Color laser single function,true
+PAN-CTL2000H-Y,Pantum,cm2200fdw,CM2200FDW,true
+PAN-CTL2000H-Y,Pantum,cp2200dw-color-laser-single-function,CP2200DW Color laser single function,true
+BRO-TN2280,Brother,7860,7860,false
+BRO-TN2280,Brother,2840,2840,true
+BRO-TN2280,Brother,2940,2940,true
+BRO-TN2280,Brother,dcp7060,DCP7060,true
+BRO-TN2280,Brother,dcp7065,DCP7065,true
+BRO-TN2280,Brother,dcp7070,DCP7070,true
+BRO-TN2280,Brother,hl2240,HL2240,true
+BRO-TN2280,Brother,hl2250,HL2250,true
+BRO-TN2280,Brother,mfc7460,MFC7460,true
+BRO-TN2355,Brother,dcp-l2540dw,DCP-L2540DW,true
+BRO-TN2355,Brother,mfc-l2700,MFC-L2700,true
+CAN-052-K,Canon,lbp212dw,LBP212DW,true
+CAN-052-K,Canon,i-sensys-lbp215x,i-SENSYS LBP215x,true
+CAN-052-K,Canon,i-sensys-mf421dw,i-SENSYS MF421dw,true
+CAN-052-K,Canon,i-sensys-mf426dw,i-SENSYS MF426dw,true
+CAN-052-K,Canon,i-sensys-mf428x,i-SENSYS MF428x,true
+CAN-052-K,Canon,i-sensys-mf429x,i-SENSYS MF429x,true
+BRO-TN2060,Brother,hl2135,HL2135,true
+BRO-TN3467,Brother,hl-l5200,HL-L5200,false
+BRO-TN3467,Brother,hl-6400dw,HL-6400DW,true
+BRO-TN3467,Brother,mfc-l6900dw,MFC-L6900DW,true
+BRO-DR3405,Brother,hl-6400dw,HL-6400DW,true
+BRO-DR3405,Brother,mfc-l6900dw,MFC-L6900DW,true
+BRO-DR2305,Brother,mfc-l2700,MFC-L2700,true
+BRO-DR1000,Brother,mfc-1910w,MFC-1910W,true
+CAN-056,Canon,i-sensys-mf552dw,I-SENSYS MF552DW,true
+CAN-056,Canon,i-sensys-mf553dw,I-SENSYS MF553DW,true
+CAN-056,Canon,i-sensys-lbp325x,i-SENSYS LBP325X,true
+CAN-057,Canon,i-sensys-mf445dw,i-SENSYS MF445dw,true
+CAN-057,Canon,i-sensys-mf446x,i-SENSYS MF446x,true
+CAN-057,Canon,i-sensys-mf449x,i-SENSYS MF449x,true
+CAN-057H,Canon,226,226,false
+CAN-057H,Canon,i-sensys-lbp223,i-SENSYS LBP223,true
+CAN-057H,Canon,i-sensys-lbp228-mono-printer-toner-cartrides,i-SENSYS LBP228 Mono Printer Toner Cartrides,true
+CAN-719-K,Canon,lbp-6650-mono-printer-consumables,LBP 6650 Mono Printer Consumables,true
+CAN-719-K,Canon,lbp-6670,LBP 6670,true
+CAN-719-K,Canon,lbp-6680,LBP 6680,true
+CAN-719-K,Canon,i-sensys-mf5940,i-SENSYS MF5940,true
+CAN-719-K,Canon,i-sensys-mf5980,i-SENSYS MF5980,true
+CAN-726,Canon,lbp-6200,LBP 6200,true
+CAN-728,Canon,4550,4550,false
+CAN-728,Canon,fax-l150,FAX L150,true
+CAN-728,Canon,fax-l170,FAX L170,true
+CAN-728,Canon,i-sensys-laser-fax-l410,i-SENSYS Laser Fax L410,true
+CAN-728,Canon,i-sensys-mf4570,i-SENSYS MF4570,true
+CAN-728,Canon,i-sensys-mf4580,i-SENSYS MF4580,true
+CAN-728,Canon,i-sensys-mf4780,i-SENSYS MF4780,true
+CAN-728,Canon,i-sensys-mf4890,i-SENSYS MF4890,true
+CAN-737,Canon,i-sensys-mf217w,i-SENSYS MF217W,true
+CAN-737,Canon,i-sensys-mf229,i-SENSYS MF229,true
+CAN-CL446XL-CLR,Canon,mg2540,MG2540,true
+CAN-CL446XL-CLR,Canon,mg2940,MG2940,true
+CAN-CL446XL-CLR,Canon,pixma-ts3140,PIXMA TS3140,true
+CAN-CL446XL-CLR,Canon,ip2840,iP2840,true
+CAN-EP27,Canon,mf5650,MF5650,true
+CAN-FX10,Canon,i-sensys-l140,i-SENSYS L140,true
+CAN-FX10,Canon,i-sensys-l160,i-SENSYS L160,true
+CAN-FX10,Canon,i-sensys-mf4010,i-SENSYS MF4010,true
+CAN-FX10,Canon,i-sensys-mf4120,i-SENSYS MF4120,true
+CAN-FX10,Canon,i-sensys-mf4140,i-SENSYS MF4140,true
+CAN-FX10,Canon,i-sensys-mf4150,i-SENSYS MF4150,true
+CAN-FX10,Canon,i-sensys-mf4270,i-SENSYS MF4270,true
+CAN-FX10,Canon,i-sensys-mf4320,i-SENSYS MF4320,true
+CAN-FX10,Canon,i-sensys-mf4330,i-SENSYS MF4330,true
+CAN-FX10,Canon,i-sensys-mf4340,i-SENSYS MF4340,true
+CAN-FX10,Canon,i-sensys-mf4350,i-SENSYS MF4350,true
+CAN-FX10,Canon,i-sensys-mf4370,i-SENSYS MF4370,true
+CAN-FX10,Canon,i-sensys-mf4380,i-SENSYS MF4380,true
+CAN-FX10,Canon,i-sensys-mf4660,i-SENSYS MF4660,true
+CAN-FX10,Canon,i-sensys-mf4690,i-SENSYS MF4690,true
+CAN-PG445XL-K,Canon,mg2540,MG2540,true
+CAN-PG445XL-K,Canon,mg2940,MG2940,true
+CAN-PG445XL-K,Canon,pixma-ts3140,PIXMA TS3140,true
+CAN-PG445XL-K,Canon,ip2840,iP2840,true
+HP-106A,HP,107r,107r,false
+HP-106A,HP,107w,107w,false
+HP-106A,HP,137fnw,137fnw,false
+HP-136A,HP,m236sdw,M236sdw,false
+HP-136X,HP,m211dw,M211dw,false
+HP-136X,HP,m236,M236,false
+HP-147A,HP,laserjet-enterprise-m612,LaserJet Enterprise M612,true
+BRO-TN3350,Brother,dcp8110,DCP8110,true
+BRO-TN3350,Brother,dcp8250,DCP8250,true
+BRO-TN3350,Brother,hl5440,HL5440,true
+BRO-TN3350,Brother,hl5450,HL5450,true
+BRO-TN3350,Brother,hl5470,HL5470,true
+BRO-TN3350,Brother,hl6180,HL6180,true
+BRO-TN3350,Brother,mfc8510,MFC8510,true
+BRO-TN3350,Brother,mfc8520,MFC8520,true
+BRO-TN3350,Brother,mfc8910,MFC8910,true
+BRO-TN3350,Brother,mfc8950,MFC8950,true
+BRO-DR2255,Brother,dcp-7055,DCP-7055,false
+BRO-DR2255,Brother,mfc-7860,MFC 7860,false
+BRO-DR2255,Brother,2840,2840,true
+BRO-DR2255,Brother,2940,2940,true
+BRO-DR2255,Brother,dcp7060,DCP7060,true
+BRO-DR2255,Brother,dcp7065,DCP7065,true
+BRO-DR2255,Brother,dcp7070,DCP7070,true
+BRO-DR2255,Brother,hl2135,HL2135,true
+BRO-DR2255,Brother,hl2240,HL2240,true
+BRO-DR2255,Brother,hl2250,HL2250,true
+BRO-DR2255,Brother,mfc7460,MFC7460,true
+EPS-T6641-K,Epson,its-l3050,ITS L3050,true
+EPS-T6641-K,Epson,its-l3060,ITS L3060,true
+EPS-T6641-K,Epson,l1455,L1455,true
+EPS-T6641-K,Epson,l655,L655,true
+EPS-T6642-C,Epson,its-l3050,ITS L3050,true
+EPS-T6642-C,Epson,its-l3060,ITS L3060,true
+EPS-T6642-C,Epson,l1455,L1455,true
+EPS-T6642-C,Epson,l605,L605,true
+EPS-T6642-C,Epson,l655,L655,true
+EPS-T6643-M,Epson,its-l3050,ITS L3050,true
+EPS-T6643-M,Epson,its-l3060,ITS L3060,true
+EPS-T6643-M,Epson,l1455,L1455,true
+EPS-T6643-M,Epson,l605,L605,true
+EPS-T6643-M,Epson,l655,L655,true
+EPS-T6644-Y,Epson,its-l3050,ITS L3050,true
+EPS-T6644-Y,Epson,its-l3060,ITS L3060,true
+EPS-T6644-Y,Epson,l1455,L1455,true
+EPS-T6644-Y,Epson,l605,L605,true
+EPS-T6644-Y,Epson,l655,L655,true
+HP-151A,HP,laserjet-pro-mfp-4103fdn,LaserJet Pro MFP 4103fdn,true
+HP-151X,HP,pro-4003dn,Pro 4003dn,false
+HP-151X,HP,laserjet-pro-mfp-4103fdn,LaserJet Pro MFP 4103fdn,true
+HP-932XL-K,HP,officejet-7610-wf-e-all-in-one,Officejet 7610 WF e-All In One,false
+HP-CB540A-K,HP,1210,1210,false
+HP-CB540A-K,HP,1510,1510,false
+HP-CB540A-K,HP,deskjet-ink-advantage-1515,Deskjet Ink Advantage 1515,false
+HP-CB540A-K,HP,officejet-1210,Officejet 1210,false
+HP-CB540A-K,HP,1215,1215,true
+HP-CB540A-K,HP,1215-all-in-one,1215 All In One,true
+HP-CB541A-C,HP,1210,1210,false
+HP-CB541A-C,HP,1510,1510,false
+HP-CB541A-C,HP,deskjet-ink-advantage-1515,Deskjet Ink Advantage 1515,false
+HP-CB541A-C,HP,officejet-1210,Officejet 1210,false
+HP-CB541A-C,HP,1215,1215,true
+HP-CB541A-C,HP,1215-all-in-one,1215 All In One,true
+HP-CB542A-Y,HP,1210,1210,false
+HP-CB542A-Y,HP,1510,1510,false
+HP-CB542A-Y,HP,deskjet-ink-advantage-1515,Deskjet Ink Advantage 1515,false
+HP-CB542A-Y,HP,officejet-1210,Officejet 1210,false
+HP-CB542A-Y,HP,1215,1215,true
+HP-CB542A-Y,HP,1215-all-in-one,1215 All In One,true
+HP-CB543A-M,HP,1210,1210,false
+HP-CB543A-M,HP,1510,1510,false
+HP-CB543A-M,HP,deskjet-ink-advantage-1515,Deskjet Ink Advantage 1515,false
+HP-CB543A-M,HP,officejet-1210,Officejet 1210,false
+HP-CB543A-M,HP,1215,1215,true
+HP-CB543A-M,HP,1215-all-in-one,1215 All In One,true
+HP-CC530A-K,HP,2025,2025,true
+HP-CC530A-K,HP,cp2020,CP2020,true
+HP-CC531A-C,HP,2025,2025,true
+HP-CC531A-C,HP,cp2020,CP2020,true
+HP-CC532A-Y,HP,2025,2025,true
+HP-CC532A-Y,HP,cp2020,CP2020,true
+HP-CC533A-M,HP,2025,2025,true
+HP-CC533A-M,HP,cp2020,CP2020,true
+HP-CE250A-K,HP,deskjet-3525,DeskJet 3525,false
+HP-CE251A-C,HP,deskjet-3525,DeskJet 3525,false
+HP-CE252A-Y,HP,deskjet-3525,DeskJet 3525,false
+HP-CE253A-M,HP,deskjet-3525,DeskJet 3525,false
+HP-CE255A,HP,3015,3015,false
+HP-CE255A,HP,p3010,P3010,false
+HP-CE255A,HP,pro-m525,Pro M525,true
+HP-CE255X,HP,pro-m525,Pro M525,true
+HP-CE278A,HP,p1606,P1606,true
+HP-CE285A,HP,1210,1210,false
+HP-CE285A,HP,officejet-1210,Officejet 1210,false
+HP-CE285A,HP,psc-1100,PSC 1100,false
+HP-CE285A,HP,laserjet-pro-m1130,LaserJet Pro M1130,true
+HP-CE310A-K,HP,officejet-100,OfficeJet 100,false
+HP-CE311A-C,HP,officejet-100,OfficeJet 100,false
+HP-CE312A-Y,HP,officejet-100,OfficeJet 100,false
+HP-CE313A-M,HP,officejet-100,OfficeJet 100,false
+HP-CE390A,HP,m601,M601,true
+HP-CE390A,HP,m602,M602,true
+HP-CE390A,HP,m603,M603,true
+HP-CE400A-K,HP,psc-500,PSC 500,false
+HP-CE400A-K,HP,laserjet-color-m570,LaserJet Color M570,true
+HP-CE401A-C,HP,psc-500,PSC 500,false
+HP-CE401A-C,HP,laserjet-color-m570,LaserJet Color M570,true
+HP-CE402A-Y,HP,psc-500,PSC 500,false
+HP-CE402A-Y,HP,laserjet-color-m570,LaserJet Color M570,true
+HP-CE403A-M,HP,psc-500,PSC 500,false
+HP-CE403A-M,HP,laserjet-color-m570,LaserJet Color M570,true
+HP-CE410A-K,HP,475,475,false
+HP-CE411A-C,HP,475,475,false
+HP-CE412A-Y,HP,475,475,false
+HP-CE413A-M,HP,475,475,false
+HP-CE505A,HP,2050,2050,false
+HP-CE505A,HP,deskjet-2050-a,DeskJet 2050 A,false
+HP-CE505A,HP,2035,2035,true
+HP-CE505A,HP,p2030,P2030,true
+HP-CE505X,HP,2050,2050,false
+HP-CE505X,HP,2055,2055,false
+HP-CE505X,HP,deskjet-2050-a,DeskJet 2050 A,false
+HP-CF237A,HP,laserjet-enterprise-m609,LaserJet Enterprise M609,true
+HP-CF237A,HP,laserjet-enterprise-m631,LaserJet Enterprise M631,true
+HP-CF237A,HP,laserjet-enterprise-mfp-m631dn,LaserJet Enterprise MFP M631dn,true
+HP-CF237A,HP,laserjet-enterprise-mfp-m632fht,LaserJet Enterprise MFP M632fht,true
+HP-CF237A,HP,laserjet-enterprise-mfp-m632z,LaserJet Enterprise MFP M632z,true
+HP-CF237A,HP,laserjet-enterprise-mfp-m632h-all-in-one,LaserJet Enterprise MFP m632h All in One,true
+HP-CF259A,HP,428,428,false
+HP-CF259A,HP,430,430,false
+HP-CF281A,HP,laserjet-enterprise-m606,LaserJet Enterprise M606,true
+HP-CF281A,HP,laserjet-enterprise-m630,Laserjet Enterprise M630,true
+HP-CF283A,HP,laserjet-pro-m125nw,LaserJet Pro M125nw,true
+HP-CF283A,HP,laserjet-pro-m201,Laserjet Pro M201,true
+HP-CF287A,HP,m506,M506,true
+HP-CF400A-K,HP,color-laserjet-pro-mfp-m274,Color LaserJet Pro MFP M274,true
+HP-CF401A-C,HP,color-laserjet-pro-mfp-m274,Color LaserJet Pro MFP M274,true
+HP-CF402A-Y,HP,color-laserjet-pro-mfp-m274,Color LaserJet Pro MFP M274,true
+HP-CF403A-M,HP,color-laserjet-pro-mfp-m274,Color LaserJet Pro MFP M274,true
+HP-CF530A-K,HP,color-laserjet-pro-mfp-m181fw,Color LaserJet Pro MFP M181fw,true
+HP-CF531A-C,HP,color-laserjet-pro-mfp-m181fw,Color LaserJet Pro MFP M181fw,true
+HP-CF532A-Y,HP,color-laserjet-pro-mfp-m181fw,Color LaserJet Pro MFP M181fw,true
+HP-CF533A-M,HP,color-laserjet-pro-mfp-m181fw,Color LaserJet Pro MFP M181fw,true
+HP-CF540A-K,HP,color-laserjet-pro-mfp-m280nw,Color LaserJet Pro MFP M280nw,true
+HP-CF540A-K,HP,colour-laserjet-pro-mfp-m281fdw,Colour LaserJet Pro MFP M281FDW,true
+HP-CF541A-C,HP,color-laserjet-pro-mfp-m280nw,Color LaserJet Pro MFP M280nw,true
+HP-CF541A-C,HP,colour-laserjet-pro-mfp-m281fdw,Colour LaserJet Pro MFP M281FDW,true
+HP-CF543A-M,HP,color-laserjet-pro-mfp-m280nw,Color LaserJet Pro MFP M280nw,true
+HP-CF543A-M,HP,colour-laserjet-pro-mfp-m281fdw,Colour LaserJet Pro MFP M281FDW,true
+HP-Q2612A,HP,1010,1010,false
+HP-Q2612A,HP,1015,1015,false
+HP-Q2612A,HP,3015,3015,false
+HP-Q2612A,HP,3050,3050,false
+HP-Q2612A,HP,deskjet-1015,DeskJet 1015,false
+HP-Q2612A,HP,deskjet-ink-advantage-1015,Deskjet Ink Advantage 1015,false
+HP-Q2612A,HP,1012,1012,true
+HP-Q2612A,HP,1022,1022,true
+HP-Q2612A,HP,3020-all-in-one,3020 All In One,true
+HP-Q2612A,HP,3030-all-in-one,3030 All In One,true
+HP-Q2612A,HP,3052-all-in-one,3052 All In One,true
+HP-Q2612A,HP,3055-all-in-one,3055 All In One,true
+HP-Q2612A,HP,m1005,M1005,true
+HP-Q2612A,HP,m1319,M1319,true
+HP-Q2612A,HP,m1319f,M1319f,true
+HP-Q5949A,HP,3390-all-in-one,3390 All In One,true
+HP-Q5949A,HP,3392-all-in-one,3392 All In One,true
+HP-Q5949X,HP,3390-all-in-one,3390 All In One,true
+HP-Q5949X,HP,3392-all-in-one,3392 All In One,true
+HP-Q7551A,HP,3005,3005,true
+HP-Q7553A,HP,2015,2015,true
+HP-Q7553A,HP,p2010,P2010,true
+HP-Q7553X,HP,2015,2015,true
+OKI-B432,OKI,b411,B411,true
+OKI-B432,OKI,b431,B431,true
+OKI-B432,OKI,mb461,MB461,true
+OKI-B432,OKI,mb471,MB471,true
+OKI-B432,OKI,mb491,MB491,true
+OKI-B432,OKI,mb562dnw,MB562dnw,true
+PAN-DL410,Pantum,m7200-series,M7200 Series,false
+PAN-DL410,Pantum,m7300fdw,M7300FDW,true
+PAN-PC310H,Pantum,p3000,P3000,true
+PAN-PC310H,Pantum,p3500dw,P3500DW,true
+RIC-SP311,Ricoh,sp311,SP311,true
+SAM-MLTD116L,Samsung,xpress-m2885fw,Xpress M2885FW,true
+SAM-MLTD205L,Samsung,scx5737-multifunction-printer-consumables,SCX5737 Multifunction Printer Consumables,true
+SAM-MLTD208L,Samsung,scx5635fn,SCX5635FN,true
+SAM-MLTD208L,Samsung,scx5835fn,SCX5835FN,true
+HP-CF542A-Y,HP,color-laserjet-pro-mfp-m280nw,Color LaserJet Pro MFP M280nw,true
+HP-CF542A-Y,HP,colour-laserjet-pro-mfp-m281fdw,Colour LaserJet Pro MFP M281FDW,true
+HP-117A-K,HP,150,150,false
+HP-117A-Y,HP,150,150,false
+HP-117A-C,HP,150,150,false
+HP-117A-M,HP,150,150,false
+BRO-TN1000,Brother,mfc-1910w,MFC-1910W,true
+BRO-LC472XL-C,Brother,mfc-j3540dw,MFC-J3540DW,true
+BRO-LC472XL-C,Brother,mfc-j3940dw,MFC-J3940DW,true
