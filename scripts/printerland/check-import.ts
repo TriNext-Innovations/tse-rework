@@ -4,25 +4,26 @@
  *   npx tsx scripts/printerland/check-import.ts [migration/raw/printerland/<date>-import.csv]
  *
  * Reads the CSV and .cache/printerland/catalog.tsv (the same prod export
- * match.ts used) and checks that the import only adds:
+ * match.ts used) and checks that the import only adds, and adds sense:
  *   - no row renames an existing model (CSV name ≠ our name for that slug)
  *   - no row claims a new model whose slug we already have, or an existing
  *     model whose slug we don't
  *   - no pair we already have, no duplicate pair, no unknown SKU or brand
- * Also warns on new models that share a model number with one of ours (likely
- * the same printer under another name), and prints a sample of 20 rows.
- * Exits 1 if any hard check fails.
+ *   - no printer-type clash: a laser cartridge on a model whose cartridges
+ *     are all inkjet (or the reverse), or a new model given both kinds
+ * Warns on near-duplicates: a new model with the same digit core and
+ * agreeing letter prefix as one of ours or another new one, whatever the
+ * suffix (so M653dn / M653x is listed for a person to judge). Prints a
+ * sample of 20 rows. Exits 1 if any hard check fails.
  */
 
 import { readFileSync, readdirSync } from 'fs'
 import { join } from 'path'
-import { slugify } from './match'
+import { modelTokens, parseCatalog, slugify, tokenFit, type Kind } from './match'
 
 const ROOT = join(import.meta.dirname, '../..')
 const SNAP_DIR = join(ROOT, 'migration/raw/printerland')
 const CATALOG = join(ROOT, '.cache/printerland/catalog.tsv')
-
-const key = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, '')
 
 function parseCsvLine(line: string): string[] {
   const out: string[] = []
@@ -30,50 +31,29 @@ function parseCsvLine(line: string): string[] {
   let q = false
   for (let i = 0; i < line.length; i++) {
     const ch = line[i]
-    if (ch === '"' && q && line[i + 1] === '"') ((cur += '"'), i++)
+    if (ch === '"' && q && line[i + 1] === '"') (cur += '"'), i++
     else if (ch === '"') q = !q
-    else if (ch === ',' && !q) (out.push(cur), (cur = ''))
+    else if (ch === ',' && !q) out.push(cur), (cur = '')
     else cur += ch
   }
   out.push(cur)
   return out.map((f) => f.trim())
 }
 
-function main() {
-  const csvPath =
-    process.argv[2] ??
-    join(
-      SNAP_DIR,
-      readdirSync(SNAP_DIR)
-        .filter((f) => f.endsWith('-import.csv'))
-        .sort()
-        .pop()!,
-    )
+/** Same digit core and agreeing prefix in any model token, suffix aside. */
+const nearDuplicate = (a: string, b: string) => modelTokens(a).some((x) => modelTokens(b).some((y) => tokenFit(x, y, true) !== null))
 
-  const sections: Record<string, string[][]> = {}
-  let cur = ''
-  for (const line of readFileSync(CATALOG, 'utf8').split('\n')) {
-    if (line.startsWith('##')) cur = line.slice(2)
-    else if (line.trim()) (sections[cur] ??= []).push(line.split('\t'))
-  }
-  const skus = new Set((sections.VARIANTS ?? []).map((r) => r[0]!))
-  const brands = new Set((sections.MODELS ?? []).map((r) => slugify(r[0]!)))
-  const modelBySlug = new Map((sections.MODELS ?? []).map(([b, name, slug]) => [`${slugify(b!)}|${slug}`, name!]))
-  const slugByName = new Map((sections.MODELS ?? []).map(([b, name, slug]) => [`${slugify(b!)}|${name}`, slug!]))
-  // Near-duplicates: a new model whose model number (a token with a digit) is
-  // also one of ours, e.g. new "i-SENSYS LBP611C" next to our "LBP611C".
-  const tokens = (name: string) =>
-    name
-      .split(/[\s/]+/)
-      .map(key)
-      .filter((t) => /\d/.test(t))
-  const modelByToken = new Map<string, string>()
-  for (const [b, name] of sections.MODELS ?? []) for (const t of tokens(name!)) modelByToken.set(`${slugify(b!)}|${t}`, name!)
-  const pairs = new Set(
-    (sections.COMPAT ?? []).map(([b, model, sku]) => `${slugify(b!)}|${slugByName.get(`${slugify(b!)}|${model}`)}|${sku}`),
-  )
+export function checkImport(csvText: string, catalogText: string) {
+  const { variants, models, compat, modelKinds } = parseCatalog(catalogText)
+  const skus = new Set(variants.map((v) => v.sku))
+  const kindOf = new Map(variants.map((v) => [v.sku, v.kind]))
+  const brands = new Set(models.map((m) => slugify(m.brand)))
+  const modelBySlug = new Map(models.map((m) => [`${slugify(m.brand)}|${m.slug}`, m.name]))
+  const slugByName = new Map(models.map((m) => [`${slugify(m.brand)}|${m.name}`, m.slug]))
+  const pairs = new Set(compat.map((c) => `${slugify(c.brand)}|${slugByName.get(`${slugify(c.brand)}|${c.model}`)}|${c.sku}`))
+  const kindsOf = (brand: string, name: string) => modelKinds.get(`${brand.toUpperCase().replace(/[^A-Z0-9]/g, '')}|${name}`) ?? new Set<Kind>()
 
-  const lines = readFileSync(csvPath, 'utf8').split('\n').filter(Boolean)
+  const lines = csvText.split('\n').filter(Boolean)
   const header = lines.shift()
   const fail: Record<string, string[]> = {
     'bad header': header === 'sku,brand,model_slug,model_name,new_model' ? [] : [header ?? '(empty)'],
@@ -84,48 +64,54 @@ function main() {
     'duplicate pair in the CSV': [],
     'SKU not in our catalogue': [],
     'brand not in our catalogue': [],
+    'printer type clash (laser vs inkjet)': [],
   }
-  const nearDup: string[] = []
   const seen = new Set<string>()
-  const newModels = new Set<string>()
+  const newModels = new Map<string, { brand: string; name: string; kinds: Set<Kind> }>()
   const rows = lines.map(parseCsvLine)
 
   for (const [sku, brand, slug, name, isNew] of rows as string[][]) {
     const b = slugify(brand!)
     const id = `${b}|${slug}`
     const ours = modelBySlug.get(id)
+    const k = kindOf.get(sku!)
     if (!brands.has(b)) fail['brand not in our catalogue']!.push(`${sku} → ${brand}`)
     if (!skus.has(sku!)) fail['SKU not in our catalogue']!.push(sku!)
     if (isNew === 'true') {
       if (ours !== undefined) fail['new model whose slug already exists']!.push(`${brand} ${name} (ours: ${ours})`)
       else {
-        newModels.add(id)
-        // Same number, or one is the other plus letters only (LBP611 / LBP611C).
-        const twin = tokens(name!)
-          .flatMap((t) => [t, t.replace(/[A-Z]+$/, '')])
-          .map(
-            (t) =>
-              modelByToken.get(`${b}|${t}`) ??
-              [...modelByToken].find(
-                ([k]) => k.startsWith(`${b}|${t}`) && /^[A-Z]+$/.test(k.slice(b.length + 1 + t.length)),
-              )?.[1],
-          )
-          .find(Boolean)
-        if (twin && !nearDup.some((d) => d.startsWith(`${brand} "${name}"`))) nearDup.push(`${brand} "${name}" ~ ours "${twin}"`)
+        const m = newModels.get(id) ?? newModels.set(id, { brand: brand!, name: name!, kinds: new Set() }).get(id)!
+        if (k) m.kinds.add(k)
       }
-    } else {
-      if (ours === undefined) fail['existing model that is not in our catalogue']!.push(`${brand} ${name} (${slug})`)
-      else if (ours !== name) fail['renames an existing model']!.push(`${brand} ${slug}: "${ours}" → "${name}"`)
+    } else if (ours === undefined) fail['existing model that is not in our catalogue']!.push(`${brand} ${name} (${slug})`)
+    else {
+      if (ours !== name) fail['renames an existing model']!.push(`${brand} ${slug}: "${ours}" → "${name}"`)
+      const kinds = kindsOf(brand!, ours)
+      if (k && kinds.size && !kinds.has(k)) fail['printer type clash (laser vs inkjet)']!.push(`${sku} (${k}) → ${brand} ${name} (${[...kinds].join('/')})`)
     }
     if (pairs.has(`${id}|${sku}`)) fail['pair already in cartridge_compat']!.push(`${sku} ↔ ${brand} ${name}`)
     if (seen.has(`${id}|${sku}`)) fail['duplicate pair in the CSV']!.push(`${sku} ↔ ${brand} ${name}`)
     seen.add(`${id}|${sku}`)
   }
+  for (const m of newModels.values())
+    if (m.kinds.size > 1) fail['printer type clash (laser vs inkjet)']!.push(`new ${m.brand} ${m.name} gets laser and inkjet cartridges`)
 
-  const attach = rows.filter((r) => r[4] === 'false').length
+  const nearDup: string[] = []
+  const fresh = [...newModels.values()]
+  for (const [i, m] of fresh.entries()) {
+    for (const o of models) if (slugify(o.brand) === slugify(m.brand) && nearDuplicate(m.name, o.name)) nearDup.push(`${m.brand} "${m.name}" ~ ours "${o.name}"`)
+    for (const o of fresh.slice(i + 1)) if (slugify(o.brand) === slugify(m.brand) && nearDuplicate(m.name, o.name)) nearDup.push(`${m.brand} "${m.name}" ~ new "${o.name}"`)
+  }
+  return { rows, newModels: newModels.size, attach: rows.filter((r) => r[4] === 'false').length, fail, nearDup }
+}
+
+function main() {
+  const csvPath = process.argv[2] ?? join(SNAP_DIR, readdirSync(SNAP_DIR).filter((f) => f.endsWith('-import.csv')).sort().pop()!)
+  const { rows, newModels, attach, fail, nearDup } = checkImport(readFileSync(csvPath, 'utf8'), readFileSync(CATALOG, 'utf8'))
+
   console.log(`CSV: ${csvPath.replace(`${ROOT}/`, '')}`)
   console.log(`Rows (new compat pairs): ${rows.length} — ${attach} on existing models, ${rows.length - attach} on new models`)
-  console.log(`New printer models: ${newModels.size} (created validated=false)`)
+  console.log(`New printer models: ${newModels} (created validated=false)`)
   console.log(`SKUs touched: ${new Set(rows.map((r) => r[0])).size}`)
   let bad = 0
   for (const [check, hits] of Object.entries(fail)) {
@@ -133,15 +119,15 @@ function main() {
     console.log(`${hits.length ? 'FAIL' : 'ok  '} ${check}: ${hits.length}`)
     for (const h of hits.slice(0, 10)) console.log(`       ${h}`)
   }
-  console.log(`warn near-duplicate new models (same model number as one of ours, give or take suffix letters): ${nearDup.length}`)
+  console.log(`warn near-duplicate new models (same digit core and prefix, any suffix): ${nearDup.length}`)
   for (const d of nearDup) console.log(`       ${d}`)
 
   const step = Math.max(1, Math.floor(rows.length / 20))
-  console.log('\nSample (every %dth row):', step)
+  console.log(`\nSample (every ${step}th row):`)
   console.log('sku,brand,model_slug,model_name,new_model')
   for (let i = 0; i < rows.length && i / step < 20; i += step) console.log(rows[i]!.join(','))
 
   process.exit(bad ? 1 : 0)
 }
 
-main()
+if (import.meta.url === `file://${process.argv[1]}`) main()

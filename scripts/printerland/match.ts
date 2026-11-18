@@ -30,7 +30,8 @@ const SNAP_DIR = join(ROOT, 'migration/raw/printerland')
 const CATALOG = join(ROOT, '.cache/printerland/catalog.tsv')
 
 export type PlCartridge = { mpn: string; brand: string; title: string; families: string[]; url: string }
-export type Variant = { sku: string; title: string; brand: string }
+export type Variant = { sku: string; title: string; brand: string; kind?: Kind }
+export type Kind = 'laser' | 'inkjet'
 export type Model = { brand: string; name: string; slug: string }
 
 // ─── Codes and colours ──────────────────────────────────────────────────────
@@ -124,9 +125,12 @@ export function matches(pl: PlCartridge, v: Variant): boolean {
 // ─── Printer families ───────────────────────────────────────────────────────
 
 const TRAILING =
-  /\s+(multifunction|mono|colou?r|laser|inkjet|all-in-one|aio|wide format|photo|fax machines?|fax|printer|printers|series|mfp|copier|scanner|label|dot matrix|ink|a[34](\/a[34])?|\d-in-1)$/i
+  /\s+(multifunction|mono|colou?r|laser|inkjet|all[- ]in[- ]one|aio|wide format|photo|fax machines?|fax|printer|printers|series|mfp|copier|scanner|label|dot matrix|ink|a[34](\/a[34])?|\d-in-1|consumables|toner|toner cartri\w*|cartri\w*|single function)$/i
 
-/** "HP LaserJet Pro M1130 Multifunction Printer" → "LaserJet Pro M1130". */
+/**
+ * "HP LaserJet Pro M1130 Multifunction Printer" → "LaserJet Pro M1130". A
+ * Brother fax family keeps its clue: "Brother 2840 Fax Machine" → "FAX-2840".
+ */
 export function familyName(brand: string, family: string): string {
   let s = family.trim()
   if (s.toLowerCase().startsWith(`${brand.toLowerCase()} `)) s = s.slice(brand.length + 1)
@@ -135,7 +139,15 @@ export function familyName(brand: string, family: string): string {
     prev = s
     s = s.replace(TRAILING, '').trim()
   }
+  if (norm(brand) === 'BROTHER' && /\bfax\b/i.test(family) && /^\d+$/.test(s)) s = `FAX-${s}`
   return s
+}
+
+/** New names follow our catalogue's spelling: "Colour LaserJet", "i-SENSYS". */
+export function houseName(brand: string, name: string): string {
+  if (norm(brand) === 'HP') return name.replace(/\bcolou?r\s+laserjet\b/i, 'Colour LaserJet').replace(/\blaserjet\b/i, 'LaserJet')
+  if (norm(brand) === 'CANON') return name.replace(/\bi-?sensys\b/i, 'i-SENSYS')
+  return name
 }
 
 /**
@@ -144,55 +156,259 @@ export function familyName(brand: string, family: string): string {
  */
 export const isWildcard = (family: string) => /(^|\s)[A-Z-]*\d{1,2}x$/i.test(family.trim())
 
-/** Tokens that look like model numbers: they contain a digit. */
-const modelTokens = (name: string) => name.split(/[\s/]+/).map(norm).filter((t) => /\d/.test(t))
+/** Words that say nothing about which printer line this is. */
+const GENERIC = new Set(['PRO', 'MFP', 'SERIES', 'COLOR', 'COLOUR', 'ENTERPRISE', 'MONO', 'PLUS', 'ALL', 'IN', 'ONE', 'FLOW', 'A'])
 
 /**
- * Is TSE model `name` a member of Printerland series `family`? Same model token,
- * or one token is the other plus letters only — the TSE model is a variant of
- * the series (M1212 → M1212NF) or the TSE model is itself the series and the
- * source names one variant (our LBP611 ← their LBP611C); never more digits
- * (M12 ≠ M1212). Or the series carries a letter prefix the TSE name dropped
- * (M1217 → 1217).
+ * Tokens that look like model numbers: they contain a digit. A short letter
+ * word right before one is its prefix written apart: "LBP 3010" → LBP3010
+ * (so it is not our MF3010), "MG 5740" → MG5740.
  */
-export function inSeries(family: string, name: string): boolean {
-  const fam = modelTokens(family)
-  const ours = modelTokens(name)
-  const hit = (f: string, t: string) =>
-    t === f ||
-    (t.startsWith(f) && /^[A-Z]+$/.test(t.slice(f.length))) ||
-    (f.startsWith(t) && /\d$/.test(t) && /^[A-Z]+$/.test(f.slice(t.length))) ||
-    (/^\d+$/.test(t) && f.replace(/^[A-Z]+/, '') === t)
-  const matched = ours.filter((t) => fam.some((f) => hit(f, t)))
-  if (!matched.length) return false
-  // A bare number is weak evidence: our "OfficeJet 100" is not the source's
-  // "LaserJet Pro 100 Color MFP M175". When only bare numbers matched, our
-  // product line (first word without a digit) must appear in the family.
-  if (matched.every((t) => /^\d+$/.test(t))) {
-    const line = name.split(/[\s/]+/).find((w) => w && !/\d/.test(w))
-    if (line && !norm(family).includes(norm(line))) return false
-  }
-  return true
+export const modelTokens = (name: string) => {
+  const words = name.split(/[\s/]+/).map(norm).filter(Boolean)
+  return words.flatMap((w, i) => {
+    if (!/\d/.test(w)) return []
+    const prev = words[i - 1]
+    return prev && /^[A-Z]{1,4}$/.test(prev) && !GENERIC.has(prev) ? [prev + w] : [w]
+  })
 }
 
-// ─── Main ───────────────────────────────────────────────────────────────────
+/** The printer line a name carries ("LaserJet", "MG", "i-SENSYS"), if any. */
+export function productLine(name: string): string | undefined {
+  return name
+    .split(/[\s/]+/)
+    .map(norm)
+    .find((w) => w.length >= 2 && !/\d/.test(w) && !GENERIC.has(w))
+}
 
-function readCatalog() {
+type Tok = { pre: string; core: string; suf: string }
+/** MFCJ3540DW → { pre: MFCJ, core: 3540, suf: DW }. */
+export const parseToken = (t: string): Tok | undefined => {
+  const m = /^([A-Z]*?)(\d+)([A-Z]*)$/.exec(t)
+  return m ? { pre: m[1]!, core: m[2]!, suf: m[3]! } : undefined
+}
+
+export type Fit = 'strong' | 'weak' | null
+
+/**
+ * Do two model tokens name the same printer (or one its series)? Same digit
+ * core, letter prefixes that agree (equal, or one ends the other: MFCJ / J,
+ * HLL / L), and suffixes where one extends the other (M1212 / M1212NF;
+ * M555X ≠ M555DN). Strong when the prefixes agree; weak when one side has no
+ * prefix at all (our 2035 / their P2035) or both are bare numbers.
+ * `anySuffix` drops the suffix rule (for near-duplicate warnings).
+ */
+export function tokenFit(a: string, b: string, anySuffix = false): Fit {
+  if (a === b) return /^\d+$/.test(a) ? 'weak' : 'strong'
+  const x = parseToken(a)
+  const y = parseToken(b)
+  if (!x || !y || x.core !== y.core) return null
+  if (!anySuffix && !(x.suf.startsWith(y.suf) || y.suf.startsWith(x.suf))) return null
+  if (!x.pre || !y.pre) return 'weak'
+  return x.pre === y.pre || x.pre.endsWith(y.pre) || y.pre.endsWith(x.pre) ? 'strong' : null
+}
+
+/**
+ * How well does TSE model `name` fit source series `family`? The best token
+ * fit; a weak fit becomes strong when our product line appears in the family
+ * and is refused when it doesn't (our "OfficeJet 100" is not "LaserJet Pro 100
+ * Color MFP M175"). A weak fit on a name with no product line ("1210") stays
+ * weak: the caller must back it with printer-type evidence.
+ */
+export function seriesFit(family: string, name: string, anySuffix = false): Fit {
+  const fits = modelTokens(family).flatMap((f) => modelTokens(name).map((t) => tokenFit(f, t, anySuffix)))
+  if (fits.includes('strong')) return 'strong'
+  if (!fits.includes('weak')) return null
+  const line = productLine(name)
+  if (!line) return 'weak'
+  return norm(family).includes(line) ? 'strong' : null
+}
+
+/** Is TSE model `name` a member of source series `family`? */
+export const inSeries = (family: string, name: string) => seriesFit(family, name) !== null
+
+/**
+ * A name too bare to create a printer from: no product line, and no model
+ * token with a two-letter prefix ("2840", "Pro P1100"). HP's one-letter
+ * prefixes (M, P) run across LaserJet lines, so they count as bare for HP.
+ */
+export function isBare(brand: string, name: string): boolean {
+  if (productLine(name)) return false
+  const minPre = norm(brand) === 'HP' ? 2 : 1
+  return !modelTokens(name).some((t) => (parseToken(t)?.pre ?? t.replace(/\d.*/, '')).length >= minPre)
+}
+
+// ─── Catalogue ──────────────────────────────────────────────────────────────
+
+export const kindOf = (cartridgeType: string | undefined): Kind | undefined =>
+  /^laser/i.test(cartridgeType ?? '') ? 'laser' : /^ink/i.test(cartridgeType ?? '') ? 'inkjet' : undefined
+
+export function parseCatalog(text: string) {
   const sections: Record<string, string[][]> = {}
   let cur = ''
-  for (const line of readFileSync(CATALOG, 'utf8').split('\n')) {
+  for (const line of text.split('\n')) {
     if (line.startsWith('##')) cur = line.slice(2)
     else if (line.trim()) (sections[cur] ??= []).push(line.split('\t'))
   }
-  const variants: Variant[] = (sections.VARIANTS ?? []).map(([sku, title, , , brand]) => ({ sku: sku!, title: title!, brand: brand! }))
+  const variants: Variant[] = (sections.VARIANTS ?? []).map(([sku, title, , , brand, type]) => ({
+    sku: sku!,
+    title: title!,
+    brand: brand!,
+    kind: kindOf(type),
+  }))
   const models: Model[] = (sections.MODELS ?? []).map(([brand, name, slug]) => ({ brand: brand!, name: name!, slug: slug! }))
   const compat = (sections.COMPAT ?? []).map(([brand, model, sku, source]) => ({ brand: brand!, model: model!, sku: sku!, source: source! }))
-  return { variants, models, compat }
+  // The printer types already linked to each of our models, from its cartridges.
+  const kindBySku = new Map(variants.map((v) => [v.sku, v.kind]))
+  const modelKinds = new Map<string, Set<Kind>>()
+  for (const c of compat) {
+    const k = kindBySku.get(c.sku)
+    if (k) (modelKinds.get(`${norm(c.brand)}|${c.model}`) ?? modelKinds.set(`${norm(c.brand)}|${c.model}`, new Set()).get(`${norm(c.brand)}|${c.model}`)!).add(k)
+  }
+  return { variants, models, compat, modelKinds }
 }
 
 export const slugify = (t: string) => t.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
 
 const csvCell = (s: string) => (/[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s)
+
+/** Supplier part codes (CNHPSU819A) are left out of anything client-facing. */
+const clean = (title: string) => title.replace(/\bCN[A-Z0-9]{4,}\b/g, '').replace(/\s+-\s*$/, '').replace(/\s+/g, ' ').trim()
+
+// ─── Matching ───────────────────────────────────────────────────────────────
+
+type Candidate = { brand: string; name: string; skus: Set<string>; kinds: Set<Kind> }
+
+/**
+ * Links every matched cartridge's source families to our models, or collects
+ * them as new printers. Pure: takes the parsed catalogue and the hits.
+ */
+export function plan(
+  catalog: ReturnType<typeof parseCatalog>,
+  hitsBySku: Map<string, PlCartridge[]>,
+) {
+  const { variants, models, compat, modelKinds } = catalog
+  const has = new Set(compat.map((c) => `${norm(c.brand)}|${norm(c.model)}|${c.sku}`))
+  const kindsOf = (brand: string, model: string) => modelKinds.get(`${norm(brand)}|${model}`) ?? new Set<Kind>()
+  // A weak (bare-number) fit needs evidence. 'same': the source lists a
+  // cartridge we already link to this model under the very same printer.
+  // 'other': it lists one under a different printer with the same short name
+  // — our "3015" carries CE255X, filed under "HP 3015 Mono Printer", so
+  // Q2612A's "HP 3015 All In One Printer" is another machine. Otherwise the
+  // printer type (laser/inkjet) of our model's cartridges has to agree.
+  const skusOf = new Map<string, string[]>()
+  for (const c of compat) (skusOf.get(`${norm(c.brand)}|${c.model}`) ?? skusOf.set(`${norm(c.brand)}|${c.model}`, []).get(`${norm(c.brand)}|${c.model}`)!).push(c.sku)
+  const sourceEvidence = (brand: string, model: string, fam: string, raws: Set<string>): 'same' | 'other' | undefined => {
+    const theirs = (skusOf.get(`${norm(brand)}|${model}`) ?? []).flatMap((sku) => (hitsBySku.get(sku) ?? []).flatMap((h) => h.families))
+    if (theirs.some((f) => raws.has(f))) return 'same'
+    if (theirs.some((f) => familyName(brand, f) === fam)) return 'other'
+    return undefined
+  }
+
+  const attach = new Map<string, Set<Model>>() // sku → our models
+  const candidates = new Map<string, Candidate>() // brand|name → new printer
+  const wildcards = new Set<string>()
+  const refused: { sku: string; model: string; family: string; why: string }[] = []
+
+  for (const v of variants) {
+    const hits = hitsBySku.get(v.sku)
+    if (!hits) continue
+    const rawOf = new Map<string, Set<string>>()
+    for (const raw of hits.flatMap((h) => h.families)) {
+      const name = familyName(v.brand, raw)
+      ;(rawOf.get(name) ?? rawOf.set(name, new Set()).get(name)!).add(raw)
+    }
+    for (const [fam, raws] of rawOf) {
+      let fits = models
+        .filter((m) => norm(m.brand) === norm(v.brand))
+        .map((m) => ({ m, fit: seriesFit(fam, m.name), kinds: kindsOf(v.brand, m.name), seen: sourceEvidence(v.brand, m.name, fam, raws) }))
+        .filter((x) => x.fit)
+      // A model that carries the family's exact number outranks one that only
+      // fits by a dropped prefix: source "3015" is our 3015, not our P3015.
+      const exact = (n: string) => modelTokens(fam).some((f) => modelTokens(n).includes(f))
+      if (fits.some((x) => exact(x.m.name))) fits = fits.filter((x) => x.fit === 'strong' || exact(x.m.name))
+      const members: Model[] = []
+      for (const { m, fit, kinds, seen } of fits) {
+        const clash = !!(v.kind && kinds.size && !kinds.has(v.kind))
+        if (fit === 'strong' && !clash) members.push(m)
+        else if (fit === 'weak' && !clash && (seen === 'same' || (!seen && v.kind && kinds.has(v.kind)))) members.push(m)
+        else
+          refused.push({
+            sku: v.sku,
+            model: m.name,
+            family: houseName(v.brand, fam),
+            why: clash
+              ? `printer type disagrees (${v.kind} cartridge, ${[...kinds].join('/')} printer)`
+              : seen === 'other'
+                ? 'same number, but the source lists our other cartridges for this printer under a different machine'
+                : 'number matches but nothing confirms the printer type',
+          })
+      }
+      if (members.length) {
+        const set = attach.get(v.sku) ?? attach.set(v.sku, new Set()).get(v.sku)!
+        for (const m of members) set.add(m)
+      } else if (fits.length) {
+        // Looks like one of ours but couldn't be confirmed: never create a twin.
+      } else if (isWildcard(fam)) wildcards.add(`${v.brand} ${fam}`)
+      else if (modelTokens(fam).length) {
+        const name = houseName(v.brand, fam)
+        const c = candidates.get(`${v.brand}|${name}`) ?? candidates.set(`${v.brand}|${name}`, { brand: v.brand, name, skus: new Set(), kinds: new Set() }).get(`${v.brand}|${name}`)!
+        c.skus.add(v.sku)
+        if (v.kind) c.kinds.add(v.kind)
+      }
+    }
+  }
+
+  // New printers that are the same machine (M1319 / M1319f, "MFP M631dn" /
+  // M631) fold into one: union them, then name the group by its best member —
+  // a name with a product line first, then the series (shortest suffix).
+  const list = [...candidates.values()]
+  const parent = list.map((_, i) => i)
+  const root = (i: number): number => (parent[i] === i ? i : (parent[i] = root(parent[i]!)))
+  for (let i = 0; i < list.length; i++)
+    for (let j = i + 1; j < list.length; j++) {
+      const a = list[i]!
+      const b = list[j]!
+      if (norm(a.brand) !== norm(b.brand)) continue
+      const fit = seriesFit(a.name, b.name)
+      const kindsAgree = [...a.kinds].every((k) => !b.kinds.size || b.kinds.has(k))
+      if ((fit === 'strong' || (fit === 'weak' && a.kinds.size && kindsAgree)) && kindsAgree) parent[root(j)] = root(i)
+    }
+  const groups = new Map<number, Candidate[]>()
+  for (let i = 0; i < list.length; i++) (groups.get(root(i)) ?? groups.set(root(i), []).get(root(i))!).push(list[i]!)
+
+  const created = new Map<string, Set<string>>() // sku → new printer names
+  const bare: Candidate[] = []
+  const suffixLen = (n: string) => Math.min(...modelTokens(n).map((t) => parseToken(t)?.suf.length ?? 9))
+  for (const group of groups.values()) {
+    const named = group.filter((c) => !isBare(c.brand, c.name))
+    if (!named.length) {
+      bare.push(...group)
+      continue
+    }
+    const best = named.sort(
+      (a, b) => Number(!productLine(a.name)) - Number(!productLine(b.name)) || suffixLen(a.name) - suffixLen(b.name) || a.name.length - b.name.length,
+    )[0]!
+    for (const c of group) for (const sku of c.skus) (created.get(sku) ?? created.set(sku, new Set()).get(sku)!).add(best.name)
+  }
+
+  const brandOf = new Map(variants.map((v) => [v.sku, v.brand]))
+  const rows = [...hitsBySku.keys()].map((sku) => {
+    const brand = brandOf.get(sku)!
+    const fresh = (names: string[]) => names.filter((n) => !has.has(`${norm(brand)}|${norm(n)}|${sku}`))
+    const ours = [...(attach.get(sku) ?? [])]
+    return {
+      sku,
+      brand,
+      existing: fresh(ours.map((m) => m.name)).sort(),
+      slugs: new Map(ours.map((m) => [m.name, m.slug])),
+      created: [...(created.get(sku) ?? [])].sort(),
+    }
+  })
+  return { rows, wildcards, bare, refused }
+}
+
+// ─── Main ───────────────────────────────────────────────────────────────────
 
 function main() {
   const snapPath =
@@ -200,62 +416,36 @@ function main() {
     join(SNAP_DIR, readdirSync(SNAP_DIR).filter((f) => /^\d{4}-\d{2}-\d{2}\.json$/.test(f)).sort().pop()!)
   if (!existsSync(CATALOG)) throw new Error(`No catalogue at ${CATALOG} — export it first (see catalog.sql)`)
 
-  const { variants, models, compat } = readCatalog()
+  const catalog = parseCatalog(readFileSync(CATALOG, 'utf8'))
+  const { variants, compat } = catalog
   const { ok: snapshot, incomplete, inferred } = usable(
     JSON.parse(readFileSync(snapPath, 'utf8')) as PlCartridge[],
     [...new Set(variants.map((v) => v.brand))],
   )
-  const has = new Set(compat.map((c) => `${norm(c.brand)}|${norm(c.model)}|${c.sku}`))
-  const ourModelsFor = (sku: string) => compat.filter((c) => c.sku === sku)
-  const slugOf = new Map<string, string>()
 
-  type Row = { sku: string; brand: string; existing: string[]; created: string[]; plTitles: string[]; plFamilies: string[] }
-  const rows: Row[] = []
+  const hitsBySku = new Map<string, PlCartridge[]>()
   const unmatched: Variant[] = []
   const ambiguous: string[] = []
-  const wildcards = new Set<string>()
-
   for (const v of variants) {
     const hits = snapshot.filter((p) => matches(p, v))
-    if (!hits.length) {
-      unmatched.push(v)
-      continue
-    }
-    if (new Set(hits.map((h) => mpnCore(h.mpn))).size > 3) {
-      ambiguous.push(`${v.sku} matched ${hits.length} source items (${hits.map((h) => h.mpn).join(', ')}) — skipped`)
-      continue
-    }
-
-    const families = [...new Set(hits.flatMap((h) => h.families.map((f) => familyName(v.brand, f))))]
-    const existing = new Set<string>()
-    const created = new Set<string>()
-    for (const fam of families) {
-      const members = models.filter((m) => norm(m.brand) === norm(v.brand) && inSeries(fam, m.name))
-      if (members.length) for (const m of members) existing.add(m.name), slugOf.set(`${v.brand}|${m.name}`, m.slug)
-      else if (isWildcard(fam)) wildcards.add(`${v.brand} ${fam}`)
-      else if (modelTokens(fam).length) created.add(fam)
-    }
-    const add = (names: Set<string>) => [...names].filter((n) => !has.has(`${norm(v.brand)}|${norm(n)}|${v.sku}`))
-    const row = {
-      sku: v.sku,
-      brand: v.brand,
-      existing: add(existing).sort(),
-      created: add(created).sort(),
-      plTitles: [...new Set(hits.map((h) => h.title))],
-      plFamilies: families,
-    }
-    rows.push(row)
+    if (!hits.length) unmatched.push(v)
+    else if (new Set(hits.map((h) => mpnCore(h.mpn))).size > 3)
+      ambiguous.push(`${v.sku} matched ${hits.length} source items (${[...new Set(hits.map((h) => mpnCore(h.mpn)))].join(', ')}) — skipped`)
+    else hitsBySku.set(v.sku, hits)
   }
+  const { rows, wildcards, bare, refused } = plan(catalog, hitsBySku)
 
   // ── Import CSV: one row per new pair. Existing models carry their real slug,
   // so the importer attaches to them and never renames or recreates one.
   const importRows = rows.filter((r) => r.existing.length || r.created.length)
   const csv = [
     'sku,brand,model_slug,model_name,new_model',
-    ...importRows.flatMap((r) => [
-      ...r.existing.map((n) => [r.sku, r.brand, slugOf.get(`${r.brand}|${n}`)!, n, 'false']),
-      ...r.created.map((n) => [r.sku, r.brand, slugify(n), n, 'true']),
-    ]).map((cells) => cells.map(csvCell).join(',')),
+    ...importRows
+      .flatMap((r) => [
+        ...r.existing.map((n) => [r.sku, r.brand, r.slugs.get(n)!, n, 'false']),
+        ...r.created.map((n) => [r.sku, r.brand, slugify(n), n, 'true']),
+      ])
+      .map((cells) => cells.map(csvCell).join(',')),
   ].join('\n')
   const base = snapPath.replace(/\.json$/, '')
   writeFileSync(`${base}-import.csv`, `${csv}\n`)
@@ -263,58 +453,83 @@ function main() {
   // ── Review report ─────────────────────────────────────────────────────────
   const newPairs = importRows.reduce((n, r) => n + r.existing.length + r.created.length, 0)
   const newModels = new Set(importRows.flatMap((r) => r.created.map((c) => `${r.brand} ${c}`)))
+  const families = new Map([...hitsBySku].map(([sku, hits]) => [sku, hits.flatMap((h) => h.families)]))
   const onlyOurs = rows
-    .map((r) => {
-      const theirs = ourModelsFor(r.sku).filter((c) => !r.plFamilies.some((f) => inSeries(f, c.model)))
-      return { sku: r.sku, models: theirs.map((c) => c.model) }
-    })
+    .map((r) => ({
+      sku: r.sku,
+      models: compat.filter((c) => c.sku === r.sku && !families.get(r.sku)!.some((f) => inSeries(familyName(r.brand, f), c.model))).map((c) => c.model),
+    }))
     .filter((r) => r.models.length)
+
+  const sections: [string, string[]][] = [
+    [
+      'New printers per cartridge',
+      [
+        '| Cartridge | Printers we already list, now linked | New printers (please check) |',
+        '|---|---|---|',
+        ...importRows.map((r) => `| ${r.sku} | ${r.existing.join(', ') || '—'} | ${r.created.join(', ') || '—'} |`),
+      ],
+    ],
+    [
+      'Printers we list that the source doesn’t',
+      [
+        'Not removed. The source lists original cartridges only, and our compatibles often fit more printers. Worth a look where it seems wrong.',
+        '',
+        '| Cartridge | Printers only we list |',
+        '|---|---|',
+        ...onlyOurs.map((r) => `| ${r.sku} | ${r.models.join(', ')} |`),
+      ],
+    ],
+    ['Our cartridges the source has nothing for', [unmatched.map((v) => `${v.sku} (${v.title})`).join(', ') || '—']],
+  ]
+  if (refused.length)
+    sections.push([
+      'Possible links not made — please confirm',
+      [
+        'The model number fits one of our printers, but the printer type disagrees or nothing confirms it, so no link and no new printer was added.',
+        '',
+        '| Cartridge | Our printer | Source printer | Why not |',
+        '|---|---|---|---|',
+        ...refused.map((r) => `| ${r.sku} | ${r.model} | ${r.family} | ${r.why} |`),
+      ],
+    ])
+  if (bare.length)
+    sections.push([
+      'Printers not added — name too short to identify',
+      [
+        'The source names these by number only. Please give each its full name (for example "LaserJet P2035") and we will add it.',
+        '',
+        '| Source name | Cartridges |',
+        '|---|---|',
+        ...bare.map((c) => `| ${c.brand} ${c.name} | ${[...c.skus].join(', ')} |`),
+      ],
+    ])
+  if (wildcards.size)
+    sections.push(['Series names not added as printers', ['The source names these as a range, not one printer, so no printer was created for them.', '', [...wildcards].sort().join(', ')]])
+  if (ambiguous.length) sections.push(['Skipped — matched too many items to be sure', ambiguous.map((a) => `- ${a}`)])
+  if (incomplete.length)
+    sections.push([
+      'Source items left out — page was missing details',
+      incomplete.map(({ item, missing }) => `- ${clean(item.title ?? '?')} (no ${missing.join(', ')})`),
+    ])
 
   const md = [
     `# Printer compatibility check — ${base.split('/').pop()}`,
     '',
     `Source: a supplier site that lists genuine cartridges and the printers they fit. Every cartridge we stock was looked up there.`,
     '',
-    `- **${variants.length}** cartridges in our store, **${rows.length}** found on the source, **${unmatched.length}** not found.`,
+    `- **${variants.length}** cartridges in our store, **${hitsBySku.size}** found on the source, **${unmatched.length}** not found.`,
     `- **${newPairs}** new printer ↔ cartridge links to add, **${newModels.size}** of them printers we don't list yet.`,
-    `- New printers go in **unconfirmed**: please check the list below before they show as confirmed matches.`,
+    `- Everything here goes live on the store as soon as it is imported. Please check the new printers below first.`,
     '',
-    '## 1. New printers per cartridge',
-    '',
-    '| Cartridge | Printers we already list, now linked | New printers (please check) |',
-    '|---|---|---|',
-    ...importRows.map((r) => `| ${r.sku} | ${r.existing.join(', ') || '—'} | ${r.created.join(', ') || '—'} |`),
-    '',
-    '## 2. Printers we list that the source doesn’t',
-    '',
-    'Not removed. The source lists original cartridges only, and our compatibles often fit more printers. Worth a look where it seems wrong.',
-    '',
-    '| Cartridge | Printers only we list |',
-    '|---|---|',
-    ...onlyOurs.map((r) => `| ${r.sku} | ${r.models.join(', ')} |`),
-    '',
-    '## 3. Our cartridges the source has nothing for',
-    '',
-    unmatched.map((v) => `${v.sku} (${v.title})`).join(', ') || '—',
-    '',
-    ...(ambiguous.length ? ['## 4. Skipped — matched too many items to be sure', '', ...ambiguous.map((a) => `- ${a}`), ''] : []),
-    ...(wildcards.size
-      ? ['## 5. Series names not added as printers', '', 'The source names these as a range, not one printer, so no printer was created for them.', '', [...wildcards].sort().join(', '), '']
-      : []),
-    ...(incomplete.length
-      ? [
-          '## 6. Source items left out — page was missing details',
-          '',
-          ...incomplete.map(({ item, missing }) => `- ${item.mpn ?? '?'} ${item.title ?? ''} (no ${missing.join(', ')})`),
-          '',
-        ]
-      : []),
+    ...sections.flatMap(([title, body], i) => [`## ${i + 1}. ${title}`, '', ...body, '']),
   ].join('\n')
   writeFileSync(`${base}-review.md`, md)
 
   if (inferred.length) console.log(`${inferred.length} snapshot items had no brand; taken from the title`)
   if (incomplete.length) console.log(`${incomplete.length} snapshot items skipped for missing fields`)
-  console.log(`${variants.length} variants: ${rows.length} matched, ${unmatched.length} unmatched, ${ambiguous.length} ambiguous`)
+  console.log(`${variants.length} variants: ${hitsBySku.size} matched, ${unmatched.length} unmatched, ${ambiguous.length} ambiguous`)
+  console.log(`${refused.length} possible links refused, ${bare.length} bare-number printers left for a person to name`)
   console.log(`${newPairs} new compat pairs (${newModels.size} new models) → ${base.replace(`${ROOT}/`, '')}-import.csv`)
   console.log(`Review → ${base.replace(`${ROOT}/`, '')}-review.md`)
 }

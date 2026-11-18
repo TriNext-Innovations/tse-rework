@@ -1,6 +1,21 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { familyName, inSeries, isWildcard, matches, mpnCore, splitSku, titleColour, usable, type PlCartridge } from './match'
+import {
+  familyName,
+  houseName,
+  inSeries,
+  isBare,
+  isWildcard,
+  matches,
+  mpnCore,
+  parseCatalog,
+  plan,
+  seriesFit,
+  splitSku,
+  titleColour,
+  usable,
+  type PlCartridge,
+} from './match'
 import { parseProductPage } from './crawl'
 
 const hp85a = {
@@ -117,4 +132,83 @@ test('strips paper-size and n-in-1 tails, and spots series wildcards', () => {
   assert.ok(isWildcard('i-SENSYS MF64x'))
   assert.ok(!isWildcard('i-SENSYS MF428x'))
   assert.ok(!isWildcard('Colour LaserJet Enterprise M555x'))
+})
+
+test('junk tails go, a Brother fax keeps its clue', () => {
+  assert.equal(familyName('Canon', 'Canon i-SENSYS LBP228 Mono Printer Toner Cartrides'), 'i-SENSYS LBP228')
+  assert.equal(familyName('Canon', 'Canon LBP 6650 Mono Printer Consumables'), 'LBP 6650')
+  assert.equal(familyName('Samsung', 'Samsung SCX5737 Multifunction Printer Consumables'), 'SCX5737')
+  assert.equal(familyName('Pantum', 'Pantum CP2200DW Color laser single function'), 'CP2200DW')
+  assert.equal(familyName('HP', 'HP 1215 All In One Printer'), '1215')
+  assert.equal(familyName('Brother', 'Brother 2840 Fax Machine'), 'FAX-2840')
+  assert.equal(houseName('HP', 'Color Laserjet Pro MFP M479dw'), 'Colour LaserJet Pro MFP M479dw')
+  assert.equal(houseName('Canon', 'I-SENSYS MF553DW'), 'i-SENSYS MF553DW')
+})
+
+test('digit cores find our model under another spelling', () => {
+  assert.equal(seriesFit('MFC-J3540DW', 'J3540DW'), 'strong')
+  assert.equal(seriesFit('HL-L8350CDW', 'HL L8350'), 'strong')
+  assert.equal(seriesFit('i-SENSYS MF657Cdw', '657cdw'), 'weak')
+  assert.equal(seriesFit('2035', 'P2035'), 'weak')
+  assert.equal(seriesFit('LBP 3010', 'MF3010'), null)
+  assert.equal(seriesFit('Colour LaserJet Enterprise M555x', 'Enterprise M555dn'), null)
+})
+
+test('bare names are not printers we can create', () => {
+  for (const n of ['2840', '1012', 'M1005', 'Pro P1100', 'Pro M525']) assert.ok(isBare('HP', n), n)
+  assert.ok(!isBare('Brother', 'FAX-2840'))
+  assert.ok(!isBare('Brother', 'HL-L8350CDW'))
+  assert.ok(!isBare('HP', 'LaserJet P2035'))
+  assert.ok(!isBare('OKI', 'B431'))
+})
+
+// A tiny catalogue in catalog.sql's shape: ##VARIANTS sku,title,handle,variant,brand,type
+const catalog = (models: string[], compat: string[][], variants: string[][]) =>
+  parseCatalog(
+    [
+      '##VARIANTS',
+      ...variants.map(([sku, type]) => `${sku}\tt\th\tv\tHP\t${type}`),
+      '##MODELS',
+      ...models.map((m) => `HP\t${m}\t${m.toLowerCase().replace(/[^a-z0-9]+/g, '-')}\tf`),
+      '##COMPAT',
+      ...compat.map(([m, sku]) => `HP\t${m}\t${sku}\tparsed`),
+    ].join('\n'),
+  )
+const hit = (families: string[]): PlCartridge => ({ mpn: 'X', brand: 'HP', title: 't', families, url: 'x' })
+
+test('a laser toner never lands on our inkjet-only bare model', () => {
+  // Our "1210" carries ink cartridges; 125A is a laser toner for the CP1210.
+  const cat = catalog(['1210', 'P2035'], [['1210', 'HP-21XL-K'], ['P2035', 'HP-CE505A']], [
+    ['HP-21XL-K', 'inkjet'],
+    ['HP-CB540A-K', 'laser'],
+    ['HP-CE505A', 'laser'],
+    ['HP-CE505X', 'laser'],
+  ])
+  const { rows, refused } = plan(
+    cat,
+    new Map([
+      ['HP-CB540A-K', [hit(['HP Color LaserJet CP1210 Printer'])]],
+      ['HP-CE505X', [hit(['HP 2035 Printer'])]],
+    ]),
+  )
+  const r = Object.fromEntries(rows.map((x) => [x.sku, x]))
+  assert.deepEqual(r['HP-CB540A-K']!.existing, [])
+  assert.deepEqual(r['HP-CB540A-K']!.created, [], 'no twin of our 1210 either')
+  assert.match(refused[0]!.why, /printer type disagrees/)
+  // A bare source number attaches to our prefixed model when the types agree.
+  assert.deepEqual(r['HP-CE505X']!.existing, ['P2035'])
+})
+
+test('new printers that are one machine fold into one, bare ones wait for a name', () => {
+  const cat = catalog([], [], [['HP-655A-K', 'laser'], ['HP-Q2612A', 'laser']])
+  const { rows, bare } = plan(
+    cat,
+    new Map([
+      ['HP-655A-K', [hit(['HP LaserJet Enterprise M631 Printer', 'HP LaserJet Enterprise MFP M631dn Printer'])]],
+      ['HP-Q2612A', [hit(['HP M1319 Multifunction Printer', 'HP M1319f Mono Multifunction Printer'])]],
+    ]),
+  )
+  assert.deepEqual(rows.find((x) => x.sku === 'HP-655A-K')!.created, ['LaserJet Enterprise M631'])
+  assert.deepEqual(rows.find((x) => x.sku === 'HP-Q2612A')!.created, [])
+  assert.deepEqual(bare.map((b) => b.name).sort(), ['M1319', 'M1319f'])
 })
