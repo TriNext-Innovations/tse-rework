@@ -154,6 +154,8 @@ test('digit cores find our model under another spelling', () => {
   assert.equal(seriesFit('MFC-L9570CDW', 'MFC-9570CDW'), 'strong')
   // Different lines are different printers, whatever the number.
   assert.equal(seriesFit('CP2200DW', 'P2200'), null)
+  assert.equal(seriesFit('EcoTank L6160', 'Eco Tank L6160'), 'strong')
+  assert.equal(seriesFit('FAX L100', 'L100'), 'strong')
   assert.equal(seriesFit('LBP212DW', 'MF212w'), null)
   assert.equal(seriesFit('2035', 'P2035'), 'weak')
   assert.equal(seriesFit('LBP 3010', 'MF3010'), null)
@@ -255,6 +257,8 @@ test('new names follow our catalogue', () => {
   assert.equal(withLine('HP', 'M681', ['HP-655A-C'], new Set(['laser'])), 'Colour LaserJet M681')
   assert.equal(withLine('HP', 'P2030', ['HP-CE505A'], new Set(['laser'])), 'LaserJet P2030')
   assert.equal(withLine('HP', '1022', ['HP-Q2612A'], new Set(['laser'])), '1022')
+  assert.equal(withLine('HP', 'LaserJet Enterprise M652', ['HP-655A-K', 'HP-655A-C'], new Set(['laser'])), 'Colour LaserJet Enterprise M652')
+  assert.equal(withLine('HP', 'LaserJet Enterprise M609', ['HP-CF237A'], new Set(['laser'])), 'LaserJet Enterprise M609')
   assert.equal(houseName('HP', 'LaserJet Color M570'), 'Colour LaserJet M570')
   assert.equal(houseName('Epson', 'ITS EcoTank L4150'), 'EcoTank L4150')
   assert.equal(houseName('Epson', 'Ecotank ITS L4160'), 'EcoTank L4160')

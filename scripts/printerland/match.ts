@@ -168,10 +168,12 @@ export function houseName(brand: string, name: string): string {
  * for CP/CM models and colour toner.
  */
 export function withLine(brand: string, name: string, skus: Iterable<string>, kinds: Set<Kind>): string {
-  if (norm(brand) !== 'HP' || productLine(name) || kinds.has('inkjet')) return name
+  if (norm(brand) !== 'HP' || kinds.has('inkjet')) return name
   const tokens = modelTokens(name)
-  if (!tokens.some((t) => /^[A-Z]+\d/.test(t))) return name
   const colour = tokens.some((t) => /^C[A-Z]\d/.test(t)) || [...skus].some((s) => ['C', 'M', 'Y'].includes(splitSku(s).colour ?? ''))
+  // Already a LaserJet: colour toner makes it a Colour LaserJet (M652 takes 655A).
+  if (/^LaserJet\b/.test(name)) return colour ? `Colour ${name}` : name
+  if (productLine(name) || !tokens.some((t) => /^[A-Z]+\d/.test(t))) return name
   return `${colour ? 'Colour LaserJet' : 'LaserJet'} ${name}`
 }
 
@@ -190,12 +192,14 @@ const GENERIC = new Set(['PRO', 'MFP', 'SERIES', 'COLOR', 'COLOUR', 'ENTERPRISE'
  * (so it is not our MF3010), "MG 5740" → MG5740.
  */
 export const modelTokens = (name: string) => {
-  const raw = name.split(/[\s/]+/).filter(Boolean)
+  // "Eco Tank L6160" is our spelling of EcoTank: one word, not a prefix.
+  const raw = name.replace(/\beco\s+tank\b/gi, 'EcoTank').split(/[\s/]+/).filter(Boolean)
   const words = raw.map(norm)
   return words.flatMap((w, i) => {
     if (!/\d/.test(w)) return []
     const prev = words[i - 1]
-    const out = [prev && /^[A-Z]{1,4}$/.test(prev) && !GENERIC.has(prev) ? prev + w : w]
+    // FAX names a kind of machine, not a line: Canon "FAX L100" is our L100.
+    const out = [prev && /^[A-Z]{1,4}$/.test(prev) && !GENERIC.has(prev) && prev !== 'FAX' ? prev + w : w]
     // "MFC-J3540DW" also reads as "J3540DW": the line written before a hyphen.
     const parts = raw[i]!.split('-')
     const last = norm(parts[parts.length - 1])
