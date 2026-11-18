@@ -6,11 +6,11 @@ import {
   findCartridges,
   findPrinterBySlug,
   printerLabel,
+  printerLede,
   printerSlug,
+  variantCount,
   fetchPrinterModels,
   withPricing,
-  type CompatibleCartridge,
-  type PrinterModel,
 } from '@/lib/printers'
 import { websiteRef } from '@/lib/structured-data'
 import { SITE_URL } from '@/lib/site-url'
@@ -26,18 +26,6 @@ type Props = { params: Promise<{ slug: string }> }
 // image with no backend reachable, so prerendering 903 routes would resolve
 // every one to its empty-result notFound() and ship them as cached 404s.
 
-/**
- * Counted from the cartridges actually listed, never from the model's
- * `cartridge_count`. That field counts SKUs (one per colour) while the lookup
- * returns grouped products — on a 4-colour printer it says 8 where the page
- * shows 2. Rendering it would put a contradiction on the page.
- */
-function lede(printer: PrinterModel, cartridges: CompatibleCartridge[]): string {
-  const n = cartridges.length
-  const noun = n === 1 ? 'cartridge' : 'cartridges'
-  return `${n} generic ${noun} in the TSE range fit the ${printerLabel(printer)}.`
-}
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const printer = await findPrinterBySlug(slug)
@@ -48,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const label = printerLabel(printer)
   const url = `${BASE}/printers/${slug}`
   const title = `${label} cartridges`
-  const description = `${lede(printer, cartridges)} Compatible replacements with SKU and price, delivered across South Africa.`
+  const description = `${printerLede(printer, cartridges)} Compatible replacements with SKU and price, delivered across South Africa.`
   // "with SKU and price" is only true because the cards below are enriched by
   // withPricing(). If that enrichment is ever dropped, this line becomes a
   // claim the page does not honour — change both together.
@@ -97,7 +85,7 @@ export default async function PrinterPage({ params }: Props) {
     '@type': 'CollectionPage',
     name: `${label} cartridges`,
     url,
-    description: lede(printer, cartridges),
+    description: printerLede(printer, cartridges),
     isPartOf: websiteRef,
     mainEntity: {
       '@type': 'ItemList',
@@ -138,7 +126,7 @@ export default async function PrinterPage({ params }: Props) {
             {label} <span className="font-display-italic">cartridges</span>
           </h1>
           <p className="mt-4 text-[15px] leading-relaxed text-[var(--muted)]">
-            {lede(printer, cartridges)}
+            {printerLede(printer, cartridges)}
           </p>
         </header>
 
@@ -177,12 +165,12 @@ export default async function PrinterPage({ params }: Props) {
                   )}
                 </div>
                 <h2 className="font-display text-sm leading-tight tracking-tight line-clamp-2 mb-1">{c.title}</h2>
-                <SkuLine sku={c.sku} skus={c.skus} className="text-[10px] text-[var(--muted-2)] mb-3" />
+                <SkuLine sku={c.sku} skus={c.skus} variants={c.variants} className="text-[10px] text-[var(--muted-2)] mb-3" />
 
                 <div className="flex items-end justify-between">
                   <div className="font-display text-lg">
                     {typeof c.price === 'number'
-                      ? `R${Math.round(c.price)}`
+                      ? <>{c.priceFrom && <span className="text-xs text-[var(--muted)] mr-1">from</span>}R{Math.round(c.price)}</>
                       : <span className="text-[var(--muted-2)] text-sm">POA</span>}
                   </div>
                   {/* Keeps the row the height of the add button, which sits outside the link. */}
@@ -191,14 +179,31 @@ export default async function PrinterPage({ params }: Props) {
               </Link>
               {/* Outside the link: a button inside an <a> follows the href on click (#498). */}
               <div className="absolute bottom-4 right-4">
-                <AddToCartButton
-                  id={c.product_id}
-                  title={c.title}
-                  sku={c.sku}
-                  price={typeof c.price === 'number' ? Math.round(c.price) : null}
-                  variantId={c.variantId ?? undefined}
-                  thumbnail={c.image ?? undefined}
-                />
+                {variantCount(c) > 1 ? (
+                  // A card standing for several colours has no single thing to
+                  // add — quick-add used to put variants[0] in the cart, whatever
+                  // colour that was. Send the shopper to the selector instead.
+                  <Link
+                    href={`/products/${c.handle}`}
+                    transitionTypes={NAV_FORWARD}
+                    aria-label={`Choose which ${c.title} to add`}
+                    data-choose-variant
+                    className="inline-flex items-center justify-center w-8 h-8 rounded-full border border-[var(--line-4)] text-[var(--ink)] group-hover:bg-[#41e0f5] group-hover:border-transparent group-hover:text-[var(--on-accent)] transition-colors duration-200"
+                  >
+                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 6l6 6-6 6" />
+                    </svg>
+                  </Link>
+                ) : (
+                  <AddToCartButton
+                    id={c.product_id}
+                    title={c.title}
+                    sku={c.sku}
+                    price={typeof c.price === 'number' ? Math.round(c.price) : null}
+                    variantId={c.variantId ?? undefined}
+                    thumbnail={c.image ?? undefined}
+                  />
+                )}
               </div>
             </div>
           ))}

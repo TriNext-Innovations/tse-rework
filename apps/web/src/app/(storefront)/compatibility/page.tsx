@@ -8,6 +8,7 @@ import { CompatSearch } from './CompatSearch'
 import { ProductSearch } from './ProductSearch'
 import { siteUrl } from '@/lib/site-url'
 import { SkuLine } from '@/components/catalog/SkuLine'
+import { purchasableCount } from '@/lib/printers'
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000'
 const PUB_KEY  = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? ''
@@ -64,10 +65,7 @@ export default async function CompatibilityPage({ searchParams }: Props) {
   const hasResults = results.length > 0
   // A card can stand for several colour variants of one cartridge, so the
   // number of cards is not the number of cartridges a shopper can buy.
-  const purchasable = results.reduce(
-    (n: number, r: any) => n + (Array.isArray(r.skus) ? r.skus.length : 1),
-    0,
-  )
+  const purchasable = purchasableCount(results)
 
   return (
     <div className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
@@ -215,7 +213,7 @@ export default async function CompatibilityPage({ searchParams }: Props) {
                         </div>
 
                         <h2 className="font-display text-sm leading-tight tracking-tight line-clamp-2 mb-1">{label}</h2>
-                        <SkuLine sku={r.sku} skus={r.skus} className="text-[10px] text-[var(--muted-2)] mb-3" />
+                        <SkuLine sku={r.sku} skus={r.skus} variants={r.variants} className="text-[10px] text-[var(--muted-2)] mb-3" />
                         <div className="text-[10px] text-[var(--muted)]">{r.printer_brand} · {r.printer_model}</div>
                       </Link>
                     )

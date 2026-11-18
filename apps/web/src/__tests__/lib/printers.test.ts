@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { printerSlug, printerLabel, groupByBrand, findCartridges, type PrinterModel } from '@/lib/printers'
+import {
+  printerSlug, printerLabel, groupByBrand, findCartridges, purchasableCount, printerLede, withPricing,
+  type CompatibleCartridge, type PrinterModel,
+} from '@/lib/printers'
 
 const m = (brand: string, model: string, cartridge_count = 1): PrinterModel => ({ brand, model, cartridge_count })
 
@@ -94,5 +97,101 @@ describe('findCartridges', () => {
   it('returns [] rather than throwing when the endpoint fails', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, json: async () => ({}) })))
     expect(await findCartridges('HP', 'CP1025')).toEqual([])
+  })
+})
+
+// HP Photosmart 3210 as it really is: HP 177 K/C/M/Y are variants of one
+// product, Light Cyan and Light Magenta are standalone products.
+const photosmart: CompatibleCartridge[] = [
+  {
+    sku: 'HP-177-K', skus: ['HP-177-K', 'HP-177-C', 'HP-177-M', 'HP-177-Y'],
+    product_id: 'p177', handle: 'hp-177', title: 'HP 177', printer_brand: 'HP', printer_model: 'Photosmart 3210',
+  },
+  {
+    sku: 'HP-177CYANLIGHT', skus: ['HP-177CYANLIGHT'],
+    product_id: 'plc', handle: 'hp-177-lc', title: 'HP 177 Cyan Light', printer_brand: 'HP', printer_model: 'Photosmart 3210',
+  },
+  {
+    sku: 'HP-177MAGENTALIGHT',
+    product_id: 'plm', handle: 'hp-177-lm', title: 'HP 177 Magenta Light', printer_brand: 'HP', printer_model: 'Photosmart 3210',
+  },
+]
+
+describe('purchasableCount (#451)', () => {
+  it('counts cartridges a shopper can buy, not cards', () => {
+    expect(purchasableCount(photosmart)).toBe(6)
+  })
+
+  it('counts a card with no skus list as one', () => {
+    expect(purchasableCount([{ sku: 'A' }])).toBe(1)
+    expect(purchasableCount([])).toBe(0)
+  })
+})
+
+describe('printerLede (#451)', () => {
+  it('says six cartridges across three products for a Photosmart 3210', () => {
+    expect(printerLede({ brand: 'HP', model: 'Photosmart 3210' }, photosmart))
+      .toBe('6 generic cartridges in the TSE range fit the HP Photosmart 3210, across 3 products.')
+  })
+
+  it('does not mention products when every card is one cartridge', () => {
+    expect(printerLede({ brand: 'HP', model: 'LaserJet 1020' }, [{ sku: 'HP-Q2612A' }]))
+      .toBe('1 generic cartridge in the TSE range fit the HP LaserJet 1020.')
+  })
+})
+
+describe('withPricing (#451)', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  function mockProducts(products: unknown[]) {
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => ({
+      ok: true,
+      json: async () => (String(url).includes('/store/regions')
+        ? { regions: [{ id: 'reg_1' }] }
+        : { products }),
+    })))
+  }
+
+  const price = (n: number) => ({ calculated_price: { calculated_amount: n } })
+
+  it('gives a multi-colour card no quick-add variant, and a "from" price when colours differ', async () => {
+    mockProducts([{
+      id: 'p177',
+      variants: [
+        { id: 'v_k', sku: 'HP-177-K', ...price(250) },
+        { id: 'v_c', sku: 'HP-177-C', ...price(180) },
+        { id: 'v_m', sku: 'HP-177-M', ...price(180) },
+        { id: 'v_y', sku: 'HP-177-Y', ...price(180) },
+      ],
+    }])
+    const [card] = await withPricing([photosmart[0]!])
+    // Old code: variantId v_k and price 250 — a one-tap add put black in the
+    // cart for a card that stands for four colours.
+    expect(card!.variantId).toBeNull()
+    expect(card!.price).toBe(180)
+    expect(card!.priceFrom).toBe(true)
+  })
+
+  it('prices and adds the variant the card names, not variants[0]', async () => {
+    mockProducts([{
+      id: 'p2',
+      variants: [
+        { id: 'v_other', sku: 'X-OTHER', ...price(999) },
+        { id: 'v_fit', sku: 'X-FIT', ...price(300) },
+      ],
+    }])
+    const [card] = await withPricing([{
+      sku: 'X-FIT', skus: ['X-FIT'], product_id: 'p2', handle: 'x', title: 'X', printer_brand: 'B', printer_model: 'M',
+    }])
+    expect(card!.variantId).toBe('v_fit')
+    expect(card!.price).toBe(300)
+    expect(card!.priceFrom).toBe(false)
+  })
+
+  it('keeps the single variant of a one-variant product', async () => {
+    mockProducts([{ id: 'plm', variants: [{ id: 'v_lm', sku: 'HP-177MAGENTALIGHT', ...price(200) }] }])
+    const [card] = await withPricing([photosmart[2]!])
+    expect(card!.variantId).toBe('v_lm')
+    expect(card!.price).toBe(200)
   })
 })

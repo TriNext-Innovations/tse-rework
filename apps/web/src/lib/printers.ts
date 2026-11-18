@@ -31,6 +31,8 @@ export type CompatibleCartridge = {
   sku: string
   /** Every variant SKU the card stands for; `sku` is the first of them. */
   skus?: string[]
+  /** The same variants with their titles ("Cyan"), when the endpoint sends them. */
+  variants?: { sku: string; title: string | null }[]
   title: string
   handle?: string
   product_id: string
@@ -39,8 +41,44 @@ export type CompatibleCartridge = {
   thumbnail?: string | null
   /** Filled in by `withPricing()` — the compatibility endpoint has no price. */
   price?: number | null
+  /** True when the card's variants are priced differently and `price` is the lowest. */
+  priceFrom?: boolean
   image?: string | null
+  /**
+   * The one variant a quick-add puts in the cart. Null on a card that stands
+   * for several variants: adding "the first" would silently pick a colour.
+   */
   variantId?: string | null
+}
+
+/** How many SKUs a card stands for — 4 for a collapsed K/C/M/Y card. */
+export function variantCount(c: { sku?: string; skus?: string[] }): number {
+  return Array.isArray(c.skus) && c.skus.length > 0 ? c.skus.length : 1
+}
+
+/**
+ * Cartridges a shopper can buy, as opposed to cards on the page (#451). A
+ * Photosmart 3210 shows three cards — HP 177 (four colours) plus the two Light
+ * colours — and takes six cartridges. Counting cards said "3".
+ */
+export function purchasableCount(cards: { sku?: string; skus?: string[] }[]): number {
+  return cards.reduce((n, c) => n + variantCount(c), 0)
+}
+
+/**
+ * The sentence under a printer page's heading, also its meta description.
+ *
+ * Counts cartridges a shopper can buy (#451), never the model's
+ * `cartridge_count`, and never the cards alone: a Photosmart 3210 shows three
+ * cards and takes six cartridges. When the two differ, both are said.
+ */
+export function printerLede(printer: { brand: string; model: string }, cards: { sku?: string; skus?: string[] }[]): string {
+  const n = purchasableCount(cards)
+  const noun = n === 1 ? 'cartridge' : 'cartridges'
+  const across = n !== cards.length
+    ? `, across ${cards.length} product${cards.length === 1 ? '' : 's'}`
+    : ''
+  return `${n} generic ${noun} in the TSE range fit the ${printerLabel(printer)}${across}.`
 }
 
 /** URL segment for a model. Verified collision-free across all 903 models. */
@@ -163,10 +201,11 @@ export async function withPricing(cartridges: CompatibleCartridge[]): Promise<Co
       next: { revalidate: 300 },
     })
     if (!res.ok) return cartridges
+    type ApiVariant = { id: string; sku?: string | null; calculated_price?: { calculated_amount?: number } | null }
     type ApiProduct = {
       id: string
       images?: { url: string }[]
-      variants?: { id: string; calculated_price?: { calculated_amount?: number } | null }[]
+      variants?: ApiVariant[]
     }
     const d = await res.json()
     const byId = new Map<string, ApiProduct>(
@@ -176,13 +215,23 @@ export async function withPricing(cartridges: CompatibleCartridge[]): Promise<Co
     return cartridges.map((c) => {
       const p = byId.get(c.product_id)
       if (!p) return c
-      const variant = p.variants?.[0]
-      const amount = variant?.calculated_price?.calculated_amount
+      const all = p.variants ?? []
+      const skus = c.skus && c.skus.length > 0 ? c.skus : [c.sku]
+      // Price the variants this card stands for — not variants[0], which can
+      // be a colour that does not even fit this printer.
+      const matched = all.filter((v) => v.sku && skus.includes(v.sku))
+      const priced = (matched.length > 0 ? matched : all.length === 1 ? all : [])
+      const amounts = priced
+        .map((v) => v.calculated_price?.calculated_amount)
+        .filter((a): a is number => typeof a === 'number')
+      const price = amounts.length > 0 ? Math.min(...amounts) : null
+      const single = skus.length === 1 ? priced[0] : undefined
       return {
         ...c,
-        price: typeof amount === 'number' ? amount : null,
+        price,
+        priceFrom: new Set(amounts.map((a) => Math.round(a))).size > 1,
         image: p.images?.[0]?.url ?? c.thumbnail ?? null,
-        variantId: variant?.id ?? null,
+        variantId: single?.id ?? null,
       }
     })
   } catch {
