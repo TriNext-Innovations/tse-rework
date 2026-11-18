@@ -96,6 +96,37 @@ describe('StorefrontClient — hero', () => {
     expect(screen.getByRole('button', { name: /^Add to cart$/ }).closest('[data-reveal]')).toBeNull()
   })
 
+  it('makes the printer finder the hero\'s primary action (#399)', () => {
+    renderStorefront()
+    const hero = document.getElementById('top') as HTMLElement
+    const brand = screen.getByLabelText('Brand')
+    const model = screen.getByLabelText('Printer model')
+    const submit = screen.getByRole('button', { name: /Find cartridges/ })
+    for (const control of [brand, model, submit]) {
+      expect(hero).toContainElement(control)
+      // In the first screen, so never hidden waiting for the scroll reveal (#500)
+      expect(control.closest('[data-reveal]')).toBeNull()
+    }
+    // Nav links to /#finder land on it
+    expect(document.getElementById('finder')).toContainElement(brand)
+    expect(screen.getByRole('search', { name: 'Printer finder' })).toContainElement(submit)
+  })
+
+  it('puts the finder ahead of the Bestseller card, which stays as the secondary slot (#399)', () => {
+    renderStorefront()
+    const finder = document.getElementById('finder') as HTMLElement
+    const bestseller = screen.getByText('Bestseller').closest('article') as HTMLElement
+    expect(document.getElementById('top')).toContainElement(bestseller)
+    // Earlier in the document: first on a phone, where the columns stack
+    expect(finder.compareDocumentPosition(bestseller) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('renders the finder once — the hero reuses it rather than copying it', () => {
+    renderStorefront()
+    expect(document.querySelectorAll('#finder')).toHaveLength(1)
+    expect(screen.getAllByLabelText('Printer model')).toHaveLength(1)
+  })
+
   it('renders the "Est. 1987" badge', () => {
     renderStorefront()
     expect(screen.getAllByText(/Est\. 198[07]/)[0]).toBeInTheDocument()
@@ -417,6 +448,12 @@ describe('StorefrontClient — trending products', () => {
 })
 
 describe('StorefrontClient — bento grid', () => {
+  it('leaves no orphaned "02" on the Delivery card once the finder card (01) moved to the hero (#399)', () => {
+    renderStorefront()
+    const delivery = document.getElementById('delivery') as HTMLElement
+    expect(within(delivery).queryByText('02')).toBeNull()
+  })
+
   it('renders "Why generic" section heading', () => {
     renderStorefront()
     expect(screen.getByText(/Same print/)).toBeInTheDocument()
