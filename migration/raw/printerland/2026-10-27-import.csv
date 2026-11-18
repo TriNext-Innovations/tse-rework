@@ -359,26 +359,18 @@ HP-151X,HP,laserjet-pro-mfp-4103fdn,LaserJet Pro MFP 4103fdn,true
 HP-932XL-K,HP,officejet-7610-wf-e-all-in-one,Officejet 7610 WF e-All In One,false
 HP-CB540A-K,HP,1210,1210,false
 HP-CB540A-K,HP,1510,1510,false
-HP-CB540A-K,HP,deskjet-ink-advantage-1515,Deskjet Ink Advantage 1515,false
-HP-CB540A-K,HP,officejet-1210,Officejet 1210,false
 HP-CB540A-K,HP,1215,1215,true
 HP-CB540A-K,HP,1215-all-in-one,1215 All In One,true
 HP-CB541A-C,HP,1210,1210,false
 HP-CB541A-C,HP,1510,1510,false
-HP-CB541A-C,HP,deskjet-ink-advantage-1515,Deskjet Ink Advantage 1515,false
-HP-CB541A-C,HP,officejet-1210,Officejet 1210,false
 HP-CB541A-C,HP,1215,1215,true
 HP-CB541A-C,HP,1215-all-in-one,1215 All In One,true
 HP-CB542A-Y,HP,1210,1210,false
 HP-CB542A-Y,HP,1510,1510,false
-HP-CB542A-Y,HP,deskjet-ink-advantage-1515,Deskjet Ink Advantage 1515,false
-HP-CB542A-Y,HP,officejet-1210,Officejet 1210,false
 HP-CB542A-Y,HP,1215,1215,true
 HP-CB542A-Y,HP,1215-all-in-one,1215 All In One,true
 HP-CB543A-M,HP,1210,1210,false
 HP-CB543A-M,HP,1510,1510,false
-HP-CB543A-M,HP,deskjet-ink-advantage-1515,Deskjet Ink Advantage 1515,false
-HP-CB543A-M,HP,officejet-1210,Officejet 1210,false
 HP-CB543A-M,HP,1215,1215,true
 HP-CB543A-M,HP,1215-all-in-one,1215 All In One,true
 HP-CC530A-K,HP,2025,2025,true
@@ -389,45 +381,30 @@ HP-CC532A-Y,HP,2025,2025,true
 HP-CC532A-Y,HP,cp2020,CP2020,true
 HP-CC533A-M,HP,2025,2025,true
 HP-CC533A-M,HP,cp2020,CP2020,true
-HP-CE250A-K,HP,deskjet-3525,DeskJet 3525,false
-HP-CE251A-C,HP,deskjet-3525,DeskJet 3525,false
-HP-CE252A-Y,HP,deskjet-3525,DeskJet 3525,false
-HP-CE253A-M,HP,deskjet-3525,DeskJet 3525,false
 HP-CE255A,HP,3015,3015,false
 HP-CE255A,HP,p3010,P3010,false
 HP-CE255A,HP,pro-m525,Pro M525,true
 HP-CE255X,HP,pro-m525,Pro M525,true
 HP-CE278A,HP,p1606,P1606,true
 HP-CE285A,HP,1210,1210,false
-HP-CE285A,HP,officejet-1210,Officejet 1210,false
-HP-CE285A,HP,psc-1100,PSC 1100,false
 HP-CE285A,HP,laserjet-pro-m1130,LaserJet Pro M1130,true
-HP-CE310A-K,HP,officejet-100,OfficeJet 100,false
-HP-CE311A-C,HP,officejet-100,OfficeJet 100,false
-HP-CE312A-Y,HP,officejet-100,OfficeJet 100,false
-HP-CE313A-M,HP,officejet-100,OfficeJet 100,false
+HP-CE285A,HP,pro-p1100,Pro P1100,true
 HP-CE390A,HP,m601,M601,true
 HP-CE390A,HP,m602,M602,true
 HP-CE390A,HP,m603,M603,true
-HP-CE400A-K,HP,psc-500,PSC 500,false
 HP-CE400A-K,HP,laserjet-color-m570,LaserJet Color M570,true
-HP-CE401A-C,HP,psc-500,PSC 500,false
 HP-CE401A-C,HP,laserjet-color-m570,LaserJet Color M570,true
-HP-CE402A-Y,HP,psc-500,PSC 500,false
 HP-CE402A-Y,HP,laserjet-color-m570,LaserJet Color M570,true
-HP-CE403A-M,HP,psc-500,PSC 500,false
 HP-CE403A-M,HP,laserjet-color-m570,LaserJet Color M570,true
 HP-CE410A-K,HP,475,475,false
 HP-CE411A-C,HP,475,475,false
 HP-CE412A-Y,HP,475,475,false
 HP-CE413A-M,HP,475,475,false
 HP-CE505A,HP,2050,2050,false
-HP-CE505A,HP,deskjet-2050-a,DeskJet 2050 A,false
 HP-CE505A,HP,2035,2035,true
 HP-CE505A,HP,p2030,P2030,true
 HP-CE505X,HP,2050,2050,false
 HP-CE505X,HP,2055,2055,false
-HP-CE505X,HP,deskjet-2050-a,DeskJet 2050 A,false
 HP-CF237A,HP,laserjet-enterprise-m609,LaserJet Enterprise M609,true
 HP-CF237A,HP,laserjet-enterprise-m631,LaserJet Enterprise M631,true
 HP-CF237A,HP,laserjet-enterprise-mfp-m631dn,LaserJet Enterprise MFP M631dn,true
@@ -459,8 +436,6 @@ HP-Q2612A,HP,1010,1010,false
 HP-Q2612A,HP,1015,1015,false
 HP-Q2612A,HP,3015,3015,false
 HP-Q2612A,HP,3050,3050,false
-HP-Q2612A,HP,deskjet-1015,DeskJet 1015,false
-HP-Q2612A,HP,deskjet-ink-advantage-1015,Deskjet Ink Advantage 1015,false
 HP-Q2612A,HP,1012,1012,true
 HP-Q2612A,HP,1022,1022,true
 HP-Q2612A,HP,3020-all-in-one,3020 All In One,true
