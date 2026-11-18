@@ -54,6 +54,12 @@ test('series membership: suffix letters yes, more digits no', () => {
   assert.ok(inSeries('LaserJet Pro M275nw', 'M275'))
   assert.ok(!inSeries('i-SENSYS MF6140', 'MF6'))
   assert.ok(!inSeries('Colour LaserJet Enterprise M555x', 'Enterprise M555dn'))
+  // A bare number only counts when our product line agrees.
+  assert.ok(!inSeries('LaserJet Pro 100 Color MFP M175', 'OfficeJet 100'))
+  assert.ok(!inSeries('LaserJet Enterprise 500 color M551', 'PSC 500'))
+  assert.ok(inSeries('Deskjet Ink Advantage 3525', 'DeskJet 3525'))
+  assert.ok(inSeries('PIXMA MG7740', 'MG 7740'))
+  assert.ok(inSeries('LaserJet Pro 400 color M475', '475'))
 })
 
 test('parses a product page', () => {

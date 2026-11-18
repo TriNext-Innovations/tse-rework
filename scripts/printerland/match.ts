@@ -158,15 +158,21 @@ const modelTokens = (name: string) => name.split(/[\s/]+/).map(norm).filter((t) 
 export function inSeries(family: string, name: string): boolean {
   const fam = modelTokens(family)
   const ours = modelTokens(name)
-  return fam.some((f) =>
-    ours.some(
-      (t) =>
-        t === f ||
-        (t.startsWith(f) && /^[A-Z]+$/.test(t.slice(f.length))) ||
-        (f.startsWith(t) && /\d$/.test(t) && /^[A-Z]+$/.test(f.slice(t.length))) ||
-        (/^\d+$/.test(t) && f.replace(/^[A-Z]+/, '') === t),
-    ),
-  )
+  const hit = (f: string, t: string) =>
+    t === f ||
+    (t.startsWith(f) && /^[A-Z]+$/.test(t.slice(f.length))) ||
+    (f.startsWith(t) && /\d$/.test(t) && /^[A-Z]+$/.test(f.slice(t.length))) ||
+    (/^\d+$/.test(t) && f.replace(/^[A-Z]+/, '') === t)
+  const matched = ours.filter((t) => fam.some((f) => hit(f, t)))
+  if (!matched.length) return false
+  // A bare number is weak evidence: our "OfficeJet 100" is not the source's
+  // "LaserJet Pro 100 Color MFP M175". When only bare numbers matched, our
+  // product line (first word without a digit) must appear in the family.
+  if (matched.every((t) => /^\d+$/.test(t))) {
+    const line = name.split(/[\s/]+/).find((w) => w && !/\d/.test(w))
+    if (line && !norm(family).includes(norm(line))) return false
+  }
+  return true
 }
 
 // ─── Main ───────────────────────────────────────────────────────────────────
