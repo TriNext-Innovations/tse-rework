@@ -23,6 +23,8 @@ import { siteUrl } from '@/lib/site-url'
 const TITLE = 'About TSE'
 const DESCRIPTION = `Family-run printer cartridge supplier in Kya Sands, Johannesburg, since ${siteConfig.company.foundedYear}. What generic cartridges are, and where to find us.`
 
+const OG_IMAGE = { url: '/opengraph-image', width: 1200, height: 630 }
+
 export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
@@ -34,11 +36,15 @@ export const metadata: Metadata = {
     url: siteUrl('/about'),
     title: `${TITLE} — ${siteConfig.company.brandName}`,
     description: DESCRIPTION,
+    // A page-level openGraph object replaces the root one, so the sitewide
+    // image from app/opengraph-image.tsx has to be named again here.
+    images: [OG_IMAGE],
   },
   twitter: {
     card: 'summary_large_image',
     title: `${TITLE} — ${siteConfig.company.brandName}`,
     description: DESCRIPTION,
+    images: [OG_IMAGE.url],
   },
 }
 
@@ -59,7 +65,7 @@ const YEAR = siteConfig.company.foundedYear
 
 const FACTS = [
   { value: YEAR, label: 'Supplying printer consumables in South Africa' },
-  { value: ADDRESS.suburb, label: 'Our own premises in Johannesburg — collection is free' },
+  { value: ADDRESS.suburb, label: 'Our premises in Johannesburg — collection is free' },
   { value: 'Family-run', label: 'Supplying offices, schools and print shops' },
 ]
 
@@ -88,7 +94,7 @@ export default function AboutPage() {
           </h1>
           <p className="mt-5 text-[15px] text-[var(--ink-2)] leading-relaxed">
             {siteConfig.company.legalName} has supplied printer consumables in South Africa since {YEAR}.
-            We&apos;re family-run, from our own unit in {ADDRESS.suburb}, Johannesburg — you can walk in and
+            We&apos;re family-run, from our unit in {ADDRESS.suburb}, Johannesburg — you can walk in and
             collect your order, and when you phone, there is a person on the other end.
           </p>
         </div>

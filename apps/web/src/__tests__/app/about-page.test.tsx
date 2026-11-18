@@ -67,6 +67,12 @@ describe('/about (#478)', () => {
     expect(og.url).toMatch(/\/about$/)
     expect(og.title).toMatch(/About/)
     expect(og.siteName).toBe(siteConfig.company.brandName)
+    // Overriding openGraph/twitter drops the inherited share image unless it is restated.
+    const ogImages = (metadata.openGraph as { images?: Array<{ url: string }> }).images
+    expect(ogImages?.[0]?.url).toBe('/opengraph-image')
+    const tw = metadata.twitter as { card?: string; images?: string[] }
+    expect(tw.card).toBe('summary_large_image')
+    expect(tw.images?.[0]).toBe('/opengraph-image')
     expect((metadata.description as string).length).toBeLessThanOrEqual(155)
   })
 
