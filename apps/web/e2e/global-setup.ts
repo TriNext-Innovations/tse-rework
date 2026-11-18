@@ -47,10 +47,58 @@ const PRODUCTS: Product[] = [
   product(6, 'Canon CL-446 Colour', 'canon-cl446', 1, 329),
 ]
 
+// Served only to id[] lookups (printer-page pricing), so the /products grid the
+// other specs count is unchanged. HP 177 as it really is (#451): K/C/M/Y are
+// variants of one product, the Light colours are standalone products.
+const COMPAT_PRODUCTS: Product[] = [
+  {
+    ...product(177, 'HP 177', 'hp-177', 0, 0),
+    variants: [
+      { id: 'variant_177_k', sku: 'HP-177-K', calculated_price: { calculated_amount: 250 } },
+      { id: 'variant_177_c', sku: 'HP-177-C', calculated_price: { calculated_amount: 180 } },
+      { id: 'variant_177_m', sku: 'HP-177-M', calculated_price: { calculated_amount: 180 } },
+      { id: 'variant_177_y', sku: 'HP-177-Y', calculated_price: { calculated_amount: 180 } },
+    ],
+  },
+  {
+    ...product(1771, 'HP 177 Cyan Light', 'hp-177-cyan-light', 0, 0),
+    variants: [{ id: 'variant_177_lc', sku: 'HP-177CYANLIGHT', calculated_price: { calculated_amount: 190 } }],
+  },
+  {
+    ...product(1772, 'HP 177 Magenta Light', 'hp-177-magenta-light', 0, 0),
+    variants: [{ id: 'variant_177_lm', sku: 'HP-177MAGENTALIGHT', calculated_price: { calculated_amount: 190 } }],
+  },
+]
+
 const COMPAT_MODELS = [
   { brand: 'Canon', model: 'PIXMA MX494', cartridge_count: 4 },
   { brand: 'HP', model: 'LaserJet Pro M404dn', cartridge_count: 3 },
+  { brand: 'HP', model: 'Photosmart 3210', cartridge_count: 6 },
 ]
+
+// /store/compatibility for the Photosmart 3210, in the shape collapseByProduct
+// returns: one card for HP 177's four colours, one per Light colour.
+const PHOTOSMART_RESULTS = [
+  {
+    sku: 'HP-177-K',
+    skus: ['HP-177-K', 'HP-177-C', 'HP-177-M', 'HP-177-Y'],
+    variants: [
+      { sku: 'HP-177-K', title: 'Black' },
+      { sku: 'HP-177-C', title: 'Cyan' },
+      { sku: 'HP-177-M', title: 'Magenta' },
+      { sku: 'HP-177-Y', title: 'Yellow' },
+    ],
+    product_id: 'prod_177', title: 'HP 177', handle: 'hp-177', thumbnail: null,
+  },
+  {
+    sku: 'HP-177CYANLIGHT', skus: ['HP-177CYANLIGHT'], variants: [{ sku: 'HP-177CYANLIGHT', title: null }],
+    product_id: 'prod_1771', title: 'HP 177 Cyan Light', handle: 'hp-177-cyan-light', thumbnail: null,
+  },
+  {
+    sku: 'HP-177MAGENTALIGHT', skus: ['HP-177MAGENTALIGHT'], variants: [{ sku: 'HP-177MAGENTALIGHT', title: null }],
+    product_id: 'prod_1772', title: 'HP 177 Magenta Light', handle: 'hp-177-magenta-light', thumbnail: null,
+  },
+].map((r) => ({ ...r, printer_brand: 'HP', printer_model: 'Photosmart 3210' }))
 
 // ── Stateful carts ────────────────────────────────────────────────────────────
 type Line = {
@@ -165,12 +213,16 @@ async function handler(req: IncomingMessage, res: ServerResponse) {
   if (path.includes('/store/compatibility/models')) {
     return send(200, { models: COMPAT_MODELS })
   }
+  if (path.endsWith('/store/compatibility')) {
+    const q = (url.searchParams.get('model') ?? '').toLowerCase().replace(/[^a-z0-9]/g, '')
+    return send(200, { results: q.includes('photosmart3210') ? PHOTOSMART_RESULTS : [] })
+  }
   if (path.includes('/store/products')) {
     let list = PRODUCTS
     const handle = url.searchParams.get('handle')
     if (handle) list = list.filter((p) => p.handle === handle)
     const ids = url.searchParams.getAll('id[]')
-    if (ids.length) list = list.filter((p) => ids.includes(p.id))
+    if (ids.length) list = [...PRODUCTS, ...COMPAT_PRODUCTS].filter((p) => ids.includes(p.id))
     const category = url.searchParams.getAll('category_id[]')
     if (category.length) list = list.filter((p) => p.categories.some((c) => category.includes(c.id)))
     return send(200, { products: list, count: list.length })
@@ -184,8 +236,10 @@ let server: http.Server
 
 export default async function globalSetup() {
   server = http.createServer((req, res) => { void handler(req, res) })
-  await new Promise<void>((resolve) => server.listen(9001, resolve))
-  console.log('Mock Medusa API running on :9001')
+  // Overridable so parallel worktrees can each run the suite; CI uses 9001.
+  const port = Number(process.env.E2E_MOCK_PORT ?? 9001)
+  await new Promise<void>((resolve) => server.listen(port, resolve))
+  console.log(`Mock Medusa API running on :${port}`)
 
   return async () => {
     await new Promise<void>((resolve) => server.close(() => resolve()))
