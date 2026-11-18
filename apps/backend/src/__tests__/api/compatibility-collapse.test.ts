@@ -9,12 +9,12 @@ const product = (id: string, handle: string, title: string) => ({
 // Light colours are standalone products. That mix is what made the finder
 // report "3 cartridges" for a printer that takes six.
 const hp177 = product('prod_177', 'hp-177', 'HP 177')
-const variantMap = new Map([
-  ['HP-177-K', hp177],
-  ['HP-177-C', hp177],
-  ['HP-177-M', hp177],
-  ['HP-177-Y', hp177],
-  ['HP-177CYANLIGHT', product('prod_cl', 'hp-177-cyan-light', 'HP 177 Cyan Light')],
+const variantMap = new Map<string, ReturnType<typeof product> & { variant_title?: string | null }>([
+  ['HP-177-K', { ...hp177, variant_title: 'Black' }],
+  ['HP-177-C', { ...hp177, variant_title: 'Cyan' }],
+  ['HP-177-M', { ...hp177, variant_title: 'Magenta' }],
+  ['HP-177-Y', { ...hp177, variant_title: 'Yellow' }],
+  ['HP-177CYANLIGHT', { ...product('prod_cl', 'hp-177-cyan-light', 'HP 177 Cyan Light'), variant_title: 'Default Title' }],
   ['HP-177MAGENTALIGHT', product('prod_ml', 'hp-177-magenta-light', 'HP 177 Magenta Light')],
 ])
 
@@ -65,9 +65,45 @@ describe('collapseByProduct', () => {
     expect(results.find((r) => r.handle === 'hp-177')!.skus).toHaveLength(4)
   })
 
-  it('keeps the first row order — the card names the sku a shopper hit first', () => {
+  it('names each variant so the storefront can show its colour', () => {
     const { results } = collapseByProduct(rows, variantMap)
-    expect(results.find((r) => r.handle === 'hp-177')!.sku).toBe('HP-177-K')
+    expect(results.find((r) => r.handle === 'hp-177')!.variants).toEqual([
+      { sku: 'HP-177-K', title: 'Black' },
+      { sku: 'HP-177-C', title: 'Cyan' },
+      { sku: 'HP-177-M', title: 'Magenta' },
+      { sku: 'HP-177-Y', title: 'Yellow' },
+    ])
+  })
+
+  it('drops Medusa placeholder variant titles rather than showing "Default Title"', () => {
+    const { results } = collapseByProduct(rows, variantMap)
+    expect(results.find((r) => r.handle === 'hp-177-cyan-light')!.variants)
+      .toEqual([{ sku: 'HP-177CYANLIGHT', title: null }])
+    expect(results.find((r) => r.handle === 'hp-177-magenta-light')!.variants)
+      .toEqual([{ sku: 'HP-177MAGENTALIGHT', title: null }])
+  })
+
+  // The compat SQL has no ORDER BY, so whichever row came first used to name
+  // the card. The order is now the colour order, whatever the rows say.
+  it('orders variants by colour, not by whichever row came back first', () => {
+    const shuffled = ['HP-177-Y', 'HP-177-M', 'HP-177-K', 'HP-177-C']
+      .map((sku) => ({ sku, brand: 'HP', model: 'Photosmart 3210' }))
+    const { results } = collapseByProduct(shuffled, variantMap)
+    expect(results[0]!.skus).toEqual(['HP-177-K', 'HP-177-C', 'HP-177-M', 'HP-177-Y'])
+    expect(results[0]!.sku).toBe('HP-177-K')
+  })
+
+  it('keeps row order for variants it cannot rank', () => {
+    const p = product('prod_x', 'pantum-tl5120', 'Pantum TL5120')
+    const map = new Map([
+      ['PAN-TL5120-X', { ...p, variant_title: 'Extra High Yield' }],
+      ['PAN-TL5120', { ...p, variant_title: 'Standard yield' }],
+    ])
+    const { results } = collapseByProduct(
+      ['PAN-TL5120-X', 'PAN-TL5120'].map((sku) => ({ sku, brand: 'Pantum', model: 'P3010' })),
+      map,
+    )
+    expect(results[0]!.skus).toEqual(['PAN-TL5120-X', 'PAN-TL5120'])
   })
 
   it('returns nothing for no rows', () => {
