@@ -79,19 +79,15 @@ CAN-CLI471XL-Y,Canon,mg-5740,MG 5740,false
 CAN-CLI471XL-Y,Canon,mg-7740,MG 7740,false
 EPS-101-C,Epson,ecotank-l4150,EcoTank L4150,true
 EPS-101-C,Epson,ecotank-l4160,EcoTank L4160,true
-EPS-101-C,Epson,ecotank-l6160,EcoTank L6160,true
 EPS-101-C,Epson,ecotank-l6170,EcoTank L6170,true
 EPS-101-K,Epson,ecotank-l4150,EcoTank L4150,true
 EPS-101-K,Epson,ecotank-l4160,EcoTank L4160,true
-EPS-101-K,Epson,ecotank-l6160,EcoTank L6160,true
 EPS-101-K,Epson,ecotank-l6170,EcoTank L6170,true
 EPS-101-M,Epson,ecotank-l4150,EcoTank L4150,true
 EPS-101-M,Epson,ecotank-l4160,EcoTank L4160,true
-EPS-101-M,Epson,ecotank-l6160,EcoTank L6160,true
 EPS-101-M,Epson,ecotank-l6170,EcoTank L6170,true
 EPS-101-Y,Epson,ecotank-l4150,EcoTank L4150,true
 EPS-101-Y,Epson,ecotank-l4160,EcoTank L4160,true
-EPS-101-Y,Epson,ecotank-l6160,EcoTank L6160,true
 EPS-101-Y,Epson,ecotank-l6170,EcoTank L6170,true
 EPS-103-Y,Epson,ecotank-l5190,EcoTank L5190,true
 EPS-103-M,Epson,ecotank-l5190,EcoTank L5190,true
@@ -128,26 +124,26 @@ HP-415A-M,HP,colour-laserjet-enterprise-mfp-m480,Colour LaserJet Enterprise MFP 
 HP-415A-M,HP,colour-laserjet-pro-mfp-m479,Colour LaserJet Pro MFP M479,true
 HP-415A-Y,HP,colour-laserjet-enterprise-mfp-m480,Colour LaserJet Enterprise MFP M480,true
 HP-415A-Y,HP,colour-laserjet-pro-mfp-m479,Colour LaserJet Pro MFP M479,true
+HP-655A-K,HP,colour-laserjet-enterprise-m652,Colour LaserJet Enterprise M652,true
 HP-655A-K,HP,colour-laserjet-enterprise-m653dn,Colour LaserJet Enterprise M653dn,true
 HP-655A-K,HP,colour-laserjet-enterprise-m653x,Colour LaserJet Enterprise M653x,true
 HP-655A-K,HP,colour-laserjet-m681,Colour LaserJet M681,true
 HP-655A-K,HP,colour-laserjet-m682,Colour LaserJet M682,true
-HP-655A-K,HP,laserjet-enterprise-m652,LaserJet Enterprise M652,true
+HP-655A-C,HP,colour-laserjet-enterprise-m652,Colour LaserJet Enterprise M652,true
 HP-655A-C,HP,colour-laserjet-enterprise-m653dn,Colour LaserJet Enterprise M653dn,true
 HP-655A-C,HP,colour-laserjet-enterprise-m653x,Colour LaserJet Enterprise M653x,true
 HP-655A-C,HP,colour-laserjet-m681,Colour LaserJet M681,true
 HP-655A-C,HP,colour-laserjet-m682,Colour LaserJet M682,true
-HP-655A-C,HP,laserjet-enterprise-m652,LaserJet Enterprise M652,true
+HP-655A-M,HP,colour-laserjet-enterprise-m652,Colour LaserJet Enterprise M652,true
 HP-655A-M,HP,colour-laserjet-enterprise-m653dn,Colour LaserJet Enterprise M653dn,true
 HP-655A-M,HP,colour-laserjet-enterprise-m653x,Colour LaserJet Enterprise M653x,true
 HP-655A-M,HP,colour-laserjet-m681,Colour LaserJet M681,true
 HP-655A-M,HP,colour-laserjet-m682,Colour LaserJet M682,true
-HP-655A-M,HP,laserjet-enterprise-m652,LaserJet Enterprise M652,true
+HP-655A-Y,HP,colour-laserjet-enterprise-m652,Colour LaserJet Enterprise M652,true
 HP-655A-Y,HP,colour-laserjet-enterprise-m653dn,Colour LaserJet Enterprise M653dn,true
 HP-655A-Y,HP,colour-laserjet-enterprise-m653x,Colour LaserJet Enterprise M653x,true
 HP-655A-Y,HP,colour-laserjet-m681,Colour LaserJet M681,true
 HP-655A-Y,HP,colour-laserjet-m682,Colour LaserJet M682,true
-HP-655A-Y,HP,laserjet-enterprise-m652,LaserJet Enterprise M652,true
 HP-953XL-K,HP,officejet-pro-7720,OfficeJet Pro 7720,true
 HP-953XL-K,HP,officejet-pro-7740,OfficeJet Pro 7740,true
 HP-953XL-K,HP,officejet-pro-8710,Officejet Pro 8710,true
@@ -218,8 +214,6 @@ CAN-CL446XL-CLR,Canon,mg2940,MG2940,true
 CAN-CL446XL-CLR,Canon,pixma-ts3140,PIXMA TS3140,true
 CAN-CL446XL-CLR,Canon,ip2840,iP2840,true
 CAN-EP27,Canon,mf5650,MF5650,true
-CAN-FX10,Canon,fax-l100,FAX L100,true
-CAN-FX10,Canon,fax-l120,FAX L120,true
 CAN-FX10,Canon,i-sensys-l140,i-SENSYS L140,true
 CAN-FX10,Canon,i-sensys-l160,i-SENSYS L160,true
 CAN-FX10,Canon,i-sensys-mf4010,i-SENSYS MF4010,true
