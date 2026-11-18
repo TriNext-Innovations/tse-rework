@@ -36,3 +36,9 @@ test('warns on a new model that is ours under another spelling', () => {
   const r = checkImport(csv('HP-CB540A-K,HP,2035,2035,true', 'HP-CB540A-K,HP,m653dn,M653dn,true', 'HP-CB540A-K,HP,m653x,M653x,true'), catalog)
   assert.deepEqual(r.nearDup, ['HP "2035" ~ ours "P2035"', 'HP "M653dn" ~ new "M653x"'])
 })
+
+test('HL-L vs HL is the same Brother model', () => {
+  const cat = catalog.replace('##COMPAT', 'Brother\tHL-8360CDW\thl-8360cdw\tf\n##COMPAT')
+  const r = checkImport(csv('HP-CB540A-K,Brother,hl-l8360cdw,HL-L8360CDW,true'), cat)
+  assert.deepEqual(r.nearDup, ['Brother "HL-L8360CDW" ~ ours "HL-8360CDW"'])
+})

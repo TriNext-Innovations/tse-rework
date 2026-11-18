@@ -115,8 +115,12 @@ export function matches(pl: PlCartridge, v: Variant): boolean {
   if (code.length < 3) return false
   const core = mpnCore(pl.mpn)
   const tokens = new Set((pl.title ?? '').split(/[\s|/,()]+/).map(norm).filter(Boolean))
-  const codeHit = core === code || (colour && core === code + colour[0]) || tokens.has(code)
-  if (!codeHit) return false
+  const partHit = core === code || (colour && core === code + colour[0])
+  // A drum's title names the toners it pairs with ("B412 | B431 | B432 Image
+  // Drum"); that is not our B432 toner. Title words only count drum-to-drum.
+  const drum = (s: string) => /drum|imaging\s*unit|image\s*unit|photo\s*conductor/i.test(s)
+  const titleHit = tokens.has(code) && (!drum(pl.title ?? '') || drum(v.title) || /DRUM|-D[RL]\d/.test(v.sku))
+  if (!partHit && !titleHit) return false
   const plColour = titleColour(pl.title ?? '')
   if (plColour === 'OTHER') return false
   return !colour || !plColour || plColour === colour
@@ -145,9 +149,30 @@ export function familyName(brand: string, family: string): string {
 
 /** New names follow our catalogue's spelling: "Colour LaserJet", "i-SENSYS". */
 export function houseName(brand: string, name: string): string {
-  if (norm(brand) === 'HP') return name.replace(/\bcolou?r\s+laserjet\b/i, 'Colour LaserJet').replace(/\blaserjet\b/i, 'LaserJet')
+  if (norm(brand) === 'HP')
+    return name
+      .replace(/\b(colou?r\s+laserjet|laserjet\s+colou?r)\b/i, 'Colour LaserJet')
+      .replace(/\blaserjet\b/i, 'LaserJet')
   if (norm(brand) === 'CANON') return name.replace(/\bi-?sensys\b/i, 'i-SENSYS')
+  if (norm(brand) === 'EPSON') {
+    // Ours: "EcoTank L3050". The source mixes "ITS L3050", "Ecotank ITS L4160".
+    const n = name.replace(/\bITS\b\s*/i, '').replace(/\becotank\b/i, 'EcoTank').trim()
+    return /^L\d/i.test(n) ? `EcoTank ${n}` : n
+  }
   return name
+}
+
+/**
+ * HP's source names often drop the line ("M681", "CP2020"). A letter-prefixed
+ * laser model is unambiguous: it becomes "LaserJet M681", or "Colour LaserJet"
+ * for CP/CM models and colour toner.
+ */
+export function withLine(brand: string, name: string, skus: Iterable<string>, kinds: Set<Kind>): string {
+  if (norm(brand) !== 'HP' || productLine(name) || kinds.has('inkjet')) return name
+  const tokens = modelTokens(name)
+  if (!tokens.some((t) => /^[A-Z]+\d/.test(t))) return name
+  const colour = tokens.some((t) => /^C[A-Z]\d/.test(t)) || [...skus].some((s) => ['C', 'M', 'Y'].includes(splitSku(s).colour ?? ''))
+  return `${colour ? 'Colour LaserJet' : 'LaserJet'} ${name}`
 }
 
 /**
@@ -165,11 +190,17 @@ const GENERIC = new Set(['PRO', 'MFP', 'SERIES', 'COLOR', 'COLOUR', 'ENTERPRISE'
  * (so it is not our MF3010), "MG 5740" → MG5740.
  */
 export const modelTokens = (name: string) => {
-  const words = name.split(/[\s/]+/).map(norm).filter(Boolean)
+  const raw = name.split(/[\s/]+/).filter(Boolean)
+  const words = raw.map(norm)
   return words.flatMap((w, i) => {
     if (!/\d/.test(w)) return []
     const prev = words[i - 1]
-    return prev && /^[A-Z]{1,4}$/.test(prev) && !GENERIC.has(prev) ? [prev + w] : [w]
+    const out = [prev && /^[A-Z]{1,4}$/.test(prev) && !GENERIC.has(prev) ? prev + w : w]
+    // "MFC-J3540DW" also reads as "J3540DW": the line written before a hyphen.
+    const parts = raw[i]!.split('-')
+    const last = norm(parts[parts.length - 1])
+    if (parts.length > 1 && /\d/.test(last) && parts.slice(0, -1).every((p) => /^[A-Za-z]+$/.test(p)) && !out.includes(last)) out.push(last)
+    return out
   })
 }
 
@@ -188,24 +219,31 @@ export const parseToken = (t: string): Tok | undefined => {
   return m ? { pre: m[1]!, core: m[2]!, suf: m[3]! } : undefined
 }
 
-export type Fit = 'strong' | 'weak' | null
+export type Fit = 'strong' | 'weak' | 'bare' | null
 
 /**
- * Do two model tokens name the same printer (or one its series)? Same digit
- * core, letter prefixes that agree (equal, or one ends the other: MFCJ / J,
- * HLL / L), and suffixes where one extends the other (M1212 / M1212NF;
- * M555X ≠ M555DN). Strong when the prefixes agree; weak when one side has no
- * prefix at all (our 2035 / their P2035) or both are bare numbers.
+ * Does source token `a` name the same printer as our token `b` (or one is the
+ * other's series)? Same digit core; suffixes where one extends the other
+ * (M1212 / M1212NF; M555X ≠ M555DN); and letter prefixes:
+ *   - equal → 'strong'. CP ≠ P and LBP ≠ MF: different lines, no fit.
+ *   - ours is the source's plus one line letter, or the reverse (Brother's
+ *     HL-L8360CDW vs our "HL-8360CDW") → 'strong'.
+ *   - the source dropped the prefix (their 2035 / our P2035) → 'weak'.
+ *   - ours has no prefix (our bare "212") → 'bare': only the source's own
+ *     listing of our other cartridges can confirm it.
  * `anySuffix` drops the suffix rule (for near-duplicate warnings).
  */
 export function tokenFit(a: string, b: string, anySuffix = false): Fit {
-  if (a === b) return /^\d+$/.test(a) ? 'weak' : 'strong'
   const x = parseToken(a)
   const y = parseToken(b)
-  if (!x || !y || x.core !== y.core) return null
-  if (!anySuffix && !(x.suf.startsWith(y.suf) || y.suf.startsWith(x.suf))) return null
-  if (!x.pre || !y.pre) return 'weak'
-  return x.pre === y.pre || x.pre.endsWith(y.pre) || y.pre.endsWith(x.pre) ? 'strong' : null
+  if (a !== b && (!x || !y || x.core !== y.core)) return null
+  if (a !== b && !anySuffix && !(x!.suf.startsWith(y!.suf) || y!.suf.startsWith(x!.suf))) return null
+  const pa = x?.pre ?? a.replace(/\d.*/, '')
+  const pb = y?.pre ?? b.replace(/\d.*/, '')
+  if (!pb) return 'bare'
+  if (!pa) return 'weak'
+  const [short, long] = pa.length <= pb.length ? [pa, pb] : [pb, pa]
+  return pa === pb || (short.length >= 2 && long.length === short.length + 1 && long.startsWith(short)) ? 'strong' : null
 }
 
 /**
@@ -218,9 +256,10 @@ export function tokenFit(a: string, b: string, anySuffix = false): Fit {
 export function seriesFit(family: string, name: string, anySuffix = false): Fit {
   const fits = modelTokens(family).flatMap((f) => modelTokens(name).map((t) => tokenFit(f, t, anySuffix)))
   if (fits.includes('strong')) return 'strong'
-  if (!fits.includes('weak')) return null
+  const best = fits.includes('weak') ? 'weak' : fits.includes('bare') ? 'bare' : null
+  if (!best) return null
   const line = productLine(name)
-  if (!line) return 'weak'
+  if (!line) return best
   return norm(family).includes(line) ? 'strong' : null
 }
 
@@ -315,7 +354,7 @@ export function plan(
     if (!hits) continue
     const rawOf = new Map<string, Set<string>>()
     for (const raw of hits.flatMap((h) => h.families)) {
-      const name = familyName(v.brand, raw)
+      const name = houseName(v.brand, familyName(v.brand, raw))
       ;(rawOf.get(name) ?? rawOf.set(name, new Set()).get(name)!).add(raw)
     }
     for (const [fam, raws] of rawOf) {
@@ -326,22 +365,31 @@ export function plan(
       // A model that carries the family's exact number outranks one that only
       // fits by a dropped prefix: source "3015" is our 3015, not our P3015.
       const exact = (n: string) => modelTokens(fam).some((f) => modelTokens(n).includes(f))
-      if (fits.some((x) => exact(x.m.name))) fits = fits.filter((x) => x.fit === 'strong' || exact(x.m.name))
+      if (fits.some((x) => exact(x.m.name))) {
+        const closer = fits.filter((x) => exact(x.m.name)).map((x) => x.m.name)
+        for (const x of fits)
+          if (x.fit !== 'strong' && !exact(x.m.name))
+            refused.push({ sku: v.sku, model: x.m.name, family: fam, why: `our ${closer.join(', ')} carries the exact number instead` })
+        fits = fits.filter((x) => x.fit === 'strong' || exact(x.m.name))
+      }
       const members: Model[] = []
       for (const { m, fit, kinds, seen } of fits) {
         const clash = !!(v.kind && kinds.size && !kinds.has(v.kind))
         if (fit === 'strong' && !clash) members.push(m)
         else if (fit === 'weak' && !clash && (seen === 'same' || (!seen && v.kind && kinds.has(v.kind)))) members.push(m)
+        else if (fit === 'bare' && !clash && seen === 'same') members.push(m)
         else
           refused.push({
             sku: v.sku,
             model: m.name,
-            family: houseName(v.brand, fam),
+            family: fam,
             why: clash
               ? `printer type disagrees (${v.kind} cartridge, ${[...kinds].join('/')} printer)`
               : seen === 'other'
                 ? 'same number, but the source lists our other cartridges for this printer under a different machine'
-                : 'number matches but nothing confirms the printer type',
+                : fit === 'bare'
+                  ? 'our printer is named by number only, and the source does not list our other cartridges for it under this printer'
+                  : 'number matches but nothing confirms the printer type',
           })
       }
       if (members.length) {
@@ -351,7 +399,7 @@ export function plan(
         // Looks like one of ours but couldn't be confirmed: never create a twin.
       } else if (isWildcard(fam)) wildcards.add(`${v.brand} ${fam}`)
       else if (modelTokens(fam).length) {
-        const name = houseName(v.brand, fam)
+        const name = fam
         const c = candidates.get(`${v.brand}|${name}`) ?? candidates.set(`${v.brand}|${name}`, { brand: v.brand, name, skus: new Set(), kinds: new Set() }).get(`${v.brand}|${name}`)!
         c.skus.add(v.sku)
         if (v.kind) c.kinds.add(v.kind)
@@ -380,7 +428,10 @@ export function plan(
   const created = new Map<string, Set<string>>() // sku → new printer names
   const bare: Candidate[] = []
   const suffixLen = (n: string) => Math.min(...modelTokens(n).map((t) => parseToken(t)?.suf.length ?? 9))
-  for (const group of groups.values()) {
+  for (const raw of groups.values()) {
+    const skus = new Set(raw.flatMap((c) => [...c.skus]))
+    const kinds = new Set(raw.flatMap((c) => [...c.kinds]))
+    const group = raw.map((c) => ({ ...c, name: withLine(c.brand, c.name, skus, kinds) }))
     const named = group.filter((c) => !isBare(c.brand, c.name))
     if (!named.length) {
       bare.push(...group)

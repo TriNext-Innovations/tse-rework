@@ -14,6 +14,7 @@ import {
   splitSku,
   titleColour,
   usable,
+  withLine,
   type PlCartridge,
 } from './match'
 import { parseProductPage } from './crawl'
@@ -148,7 +149,12 @@ test('junk tails go, a Brother fax keeps its clue', () => {
 test('digit cores find our model under another spelling', () => {
   assert.equal(seriesFit('MFC-J3540DW', 'J3540DW'), 'strong')
   assert.equal(seriesFit('HL-L8350CDW', 'HL L8350'), 'strong')
-  assert.equal(seriesFit('i-SENSYS MF657Cdw', '657cdw'), 'weak')
+  assert.equal(seriesFit('i-SENSYS MF657Cdw', '657cdw'), 'bare')
+  assert.equal(seriesFit('HL-L8360CDW', 'HL-8360CDW'), 'strong')
+  assert.equal(seriesFit('MFC-L9570CDW', 'MFC-9570CDW'), 'strong')
+  // Different lines are different printers, whatever the number.
+  assert.equal(seriesFit('CP2200DW', 'P2200'), null)
+  assert.equal(seriesFit('LBP212DW', 'MF212w'), null)
   assert.equal(seriesFit('2035', 'P2035'), 'weak')
   assert.equal(seriesFit('LBP 3010', 'MF3010'), null)
   assert.equal(seriesFit('Colour LaserJet Enterprise M555x', 'Enterprise M555dn'), null)
@@ -209,6 +215,48 @@ test('new printers that are one machine fold into one, bare ones wait for a name
     ]),
   )
   assert.deepEqual(rows.find((x) => x.sku === 'HP-655A-K')!.created, ['LaserJet Enterprise M631'])
-  assert.deepEqual(rows.find((x) => x.sku === 'HP-Q2612A')!.created, [])
-  assert.deepEqual(bare.map((b) => b.name).sort(), ['M1319', 'M1319f'])
+  // HP letter-prefixed names are LaserJets; bare numbers still wait for a name.
+  assert.deepEqual(rows.find((x) => x.sku === 'HP-Q2612A')!.created, ['LaserJet M1319'])
+  assert.deepEqual(bare, [])
+})
+
+test('our bare-number model needs the source to list our own cartridge for it', () => {
+  // Our "212" is the MF212w (carries 737); the source's 052 fits the LBP212dw.
+  const cat = catalog(['212', 'T830', '830'], [['212', 'CAN-737'], ['T830', 'HP-728-K'], ['830', 'HP-233-CLR']], [
+    ['CAN-737', 'laser'],
+    ['CAN-052-K', 'laser'],
+    ['HP-728-C', 'inkjet'],
+  ])
+  const { rows, refused } = plan(
+    cat,
+    new Map([
+      ['CAN-052-K', [hit(['HP LBP212DW Printer'])]],
+      ['CAN-737', [hit(['HP MF212w Printer'])]],
+      ['HP-728-C', [hit(['HP DesignJet T830 Large Format Printer'])]],
+    ]),
+  )
+  assert.deepEqual(rows.find((x) => x.sku === 'CAN-052-K')!.existing, [])
+  assert.ok(refused.some((r) => r.sku === 'CAN-052-K' && r.model === '212'))
+  // 728 goes to our T830; the bare "830" it passed over is still listed.
+  assert.deepEqual(rows.find((x) => x.sku === 'HP-728-C')!.existing, ['T830'])
+  assert.ok(refused.some((r) => r.sku === 'HP-728-C' && r.model === '830'))
+})
+
+test('a drum title naming toners is not a match for the toner', () => {
+  const drum = { mpn: 'CNOKZ44574302', brand: 'OKI', title: 'OKI CNOKZ44574302 B412 | B431 | B432 Image Drum (25000 pages)', families: [], url: 'x' }
+  assert.ok(!matches(drum, { sku: 'OKI-B432', title: 'OKI B432 Toner', brand: 'OKI' }))
+  assert.ok(matches(drum, { sku: 'OKI-B432', title: 'OKI B432 Image Drum', brand: 'OKI' }))
+  const pdl = { mpn: 'PDL410', brand: 'Pantum', title: 'Pantum PDL410 DL-410 Drum Unit For M7100 M7200 Series', families: [], url: 'x' }
+  assert.ok(matches(pdl, { sku: 'PAN-DL410', title: 'Pantum DL410', brand: 'Pantum' }))
+})
+
+test('new names follow our catalogue', () => {
+  assert.equal(withLine('HP', 'CP2020', ['HP-CC530A-K'], new Set(['laser'])), 'Colour LaserJet CP2020')
+  assert.equal(withLine('HP', 'M681', ['HP-655A-C'], new Set(['laser'])), 'Colour LaserJet M681')
+  assert.equal(withLine('HP', 'P2030', ['HP-CE505A'], new Set(['laser'])), 'LaserJet P2030')
+  assert.equal(withLine('HP', '1022', ['HP-Q2612A'], new Set(['laser'])), '1022')
+  assert.equal(houseName('HP', 'LaserJet Color M570'), 'Colour LaserJet M570')
+  assert.equal(houseName('Epson', 'ITS EcoTank L4150'), 'EcoTank L4150')
+  assert.equal(houseName('Epson', 'Ecotank ITS L4160'), 'EcoTank L4160')
+  assert.equal(houseName('Epson', 'ITS L3050'), 'EcoTank L3050')
 })
