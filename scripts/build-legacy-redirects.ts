@@ -169,6 +169,10 @@ const MANUAL: Record<string, string> = {
   '/terms': '/legal/terms',
   '/terms-of-service': '/legal/terms',
   '/contact-us': '/contact',
+  // AWStats, Sep 2026: /about-us/ 40 a month, /about-us 9 — both 404 on the
+  // legacy site. The map normalises the trailing slash, so one key covers both
+  // (#478).
+  '/about-us': '/about',
   '/delivery': '/legal/returns',
   '/warranty': '/legal/returns',
   '/my-account': '/account',
