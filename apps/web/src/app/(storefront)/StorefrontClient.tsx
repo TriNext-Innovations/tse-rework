@@ -247,19 +247,95 @@ export default function StorefrontClient({
               desk tomorrow.
             </p>
 
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <a href="#shop" className="group inline-flex items-center gap-2 bg-[var(--magenta)] text-[var(--on-accent)] hover:opacity-90 transition-opacity duration-200 rounded-full pl-6 pr-2 py-2.5 text-sm font-semibold cursor-pointer shadow-[0_8px_24px_-8px_rgba(238,117,233,0.55)]">
-                Shop cartridges
-                <span className="inline-flex items-center justify-center w-9 h-9 bg-white/20 text-white rounded-full group-hover:rotate-45 transition-transform duration-300">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>
-                </span>
-              </a>
-              <a href="#finder" className="inline-flex items-center gap-2 text-sm font-medium text-[var(--ink)] hover:text-[var(--magenta)] transition-colors cursor-pointer underline underline-offset-[6px] decoration-1">
-                Find by printer model
-              </a>
+            {/* ── Compatibility Finder ──
+                The hero's primary action (#399): "which cartridge fits my
+                printer?" is the question this shop is organised around, so the
+                first thing a visitor can do is answer it. The brand list and
+                datalist are server-rendered from /store/compatibility/models,
+                so nothing here moves when the page hydrates. */}
+            <div id="finder" role="search" aria-label="Printer finder" className="mt-7 sm:mt-8 max-w-2xl scroll-mt-34">
+              <p className="font-display text-xl sm:text-2xl font-light leading-tight tracking-tight text-[var(--ink)]">
+                Tell us your printer. <span className="font-display-italic">We'll do the rest.</span>
+              </p>
+              <div className="mt-3 bg-[var(--surface)] text-[var(--ink)] border border-[var(--line-3)] rounded-2xl p-1.5 flex flex-col sm:flex-row gap-1.5">
+                <div className="grid grid-cols-[minmax(0,5fr)_minmax(0,6fr)] flex-1 min-w-0">
+                  <div className="relative min-w-0">
+                    <label htmlFor="finder-brand" className="block text-[9px] uppercase tracking-[0.2em] text-[var(--muted)] px-3 pt-2.5">Brand</label>
+                    <select
+                      id="finder-brand"
+                      value={finderBrand}
+                      onChange={(e) => setFinderBrand(e.target.value)}
+                      className="w-full bg-transparent pl-3 pr-8 pb-2.5 pt-0.5 text-sm font-medium focus:outline-none appearance-none cursor-pointer"
+                    >
+                      {brands.map((b) => <option key={b}>{b}</option>)}
+                    </select>
+                    <svg className="absolute right-3 bottom-3.5 pointer-events-none" aria-hidden width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m6 9 6 6 6-6"/></svg>
+                  </div>
+                  <div className="relative min-w-0 border-l border-[var(--ink)]/10">
+                    <label htmlFor="finder-model" className="block text-[9px] uppercase tracking-[0.2em] text-[var(--muted)] px-3 pt-2.5">Printer model</label>
+                    <input
+                      id="finder-model"
+                      type="text"
+                      list="finder-models"
+                      placeholder="e.g. P1102, MX494"
+                      value={finderModel}
+                      onChange={(e) => setFinderModel(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && runFinder()}
+                      className="w-full bg-transparent px-3 pb-2.5 pt-0.5 text-sm font-medium focus:outline-none placeholder:text-[var(--muted)]"
+                      autoComplete="off"
+                    />
+                    <datalist id="finder-models">
+                      {(modelsByBrand[finderBrand] ?? []).map((m) => (
+                        <option key={m} value={m} />
+                      ))}
+                    </datalist>
+                  </div>
+                </div>
+                <button
+                  onClick={runFinder}
+                  className="bg-[var(--magenta)] text-[var(--on-accent)] hover:bg-[var(--ink)] hover:text-[var(--paper)] transition-colors duration-300 rounded-xl px-5 py-3 text-sm font-semibold cursor-pointer inline-flex items-center justify-center gap-2 flex-shrink-0"
+                >
+                  Find cartridges
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+              </div>
+
+              {/* Opens under the form as soon as the typed model is one we
+                  have compatibility data for. */}
+              <div className="finder-match" data-open={Boolean(finderMatch)} aria-live="polite">
+                <div>
+                  {finderMatch && (
+                    <p className="flex items-center gap-2 pt-3 text-sm text-[var(--ink-2)]">
+                      <svg className="finder-match-tick" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                        <path d="M4.5 12.5l5 5L19.5 7" />
+                      </svg>
+                      <span>
+                        <RollingNumber value={finderMatch.cartridge_count} className="font-semibold text-[var(--ink)]" />{' '}
+                        {finderMatch.cartridge_count === 1 ? 'cartridge fits' : 'cartridges fit'} the {finderMatch.brand} {finderMatch.model}
+                      </span>
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--muted)] mr-1">Popular:</span>
+                {popularSearches.map((label) => (
+                  <button
+                    key={label}
+                    onClick={() => openPage(`/compatibility?model=${encodeURIComponent(label)}`)}
+                    className="text-xs px-3 py-1.5 border border-[var(--ink)]/15 rounded-full hover:border-[var(--magenta)] hover:text-[var(--magenta)] transition-colors cursor-pointer"
+                  >
+                    {label}
+                  </button>
+                ))}
+                <a href="#shop" className="basis-full sm:basis-auto sm:ml-auto mt-1 sm:mt-0 text-sm font-medium text-[var(--ink)] hover:text-[var(--magenta)] transition-colors cursor-pointer underline underline-offset-[6px] decoration-1">
+                  Shop cartridges
+                </a>
+              </div>
             </div>
 
-            <div className="mt-12 grid grid-cols-3 gap-4 max-w-md">
+            <div className="mt-10 sm:mt-12 grid grid-cols-3 gap-4 max-w-md">
               <div>
                 <div className="font-display text-3xl sm:text-4xl font-light leading-none">39<span className="text-[var(--magenta)]">.</span></div>
                 <div className="text-[11px] uppercase tracking-widest text-[var(--muted)] mt-2">Yrs in business</div>
@@ -276,21 +352,22 @@ export default function StorefrontClient({
           </div>
 
           {/* ── Bestseller ──
-              A white photo plate (the product photography is shot on white, so
-              it sits in the card instead of floating on it), the numbers that
-              matter, and one primary action. */}
+              The secondary slot (#399): a real product and useful proof, but
+              not the only door, so it sits beside the finder (after it on a
+              phone) on a shorter photo plate. A white plate because the product
+              photography is shot on white. */}
           <div className="lg:col-span-5 relative" data-hero-in="late">
-            <article className="relative rounded-[26px] border border-[var(--line-3)] bg-[var(--surface)] p-3 sm:p-3.5 shadow-[0_40px_80px_-48px_rgba(17,24,39,0.55)]">
+            <article className="relative rounded-[26px] border border-[var(--line-3)] bg-[var(--surface)] p-3 sm:p-3.5 shadow-[0_32px_64px_-48px_rgba(17,24,39,0.45)]">
               <Link
                 href={heroHref}
                 transitionTypes={NAV_FORWARD}
-                className="group relative block overflow-hidden rounded-[20px] bg-white aspect-[5/4]"
+                className="group relative block overflow-hidden rounded-[20px] bg-white aspect-[16/10]"
               >
                 <span className="absolute left-4 top-4 z-[1] inline-flex items-center gap-1.5 rounded-full bg-[#111827] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white">
                   <span className="h-1.5 w-1.5 rounded-full bg-[var(--lime)]" aria-hidden /> Bestseller
                 </span>
                 <span aria-hidden className="absolute bottom-[12%] left-1/2 h-5 w-1/2 -translate-x-1/2 rounded-[50%] bg-[#111827]/15 blur-lg" />
-                <div ref={heroImageRef} className="absolute inset-0 flex items-center justify-center p-8 sm:p-10">
+                <div ref={heroImageRef} className="absolute inset-0 flex items-center justify-center p-6 sm:p-8">
                   {heroProduct?.image ? (
                     <HeroMorph productId={heroProduct.id} enabled={heroMorphs}>
                       <ProductImage
@@ -419,97 +496,6 @@ export default function StorefrontClient({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-6 grid-rows-[auto] gap-3 sm:gap-4 auto-rows-[minmax(140px,_auto)]">
-            <article id="finder" data-reveal className="panel-dark bento-card sm:col-span-3 sm:row-span-2 scroll-mt-34 bg-[var(--ink)] text-[var(--paper)] rounded-[24px] p-7 sm:p-10 relative overflow-hidden flex flex-col justify-between min-h-[360px]">
-              <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[var(--glow)] opacity-30 blur-3xl" />
-              <div className="absolute top-7 right-7 text-[10px] uppercase tracking-[0.22em] text-[var(--paper)]/50">Compatibility Finder</div>
-              <div className="relative">
-                <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--magenta)] mb-4">01</div>
-                <p className="font-display font-light text-3xl sm:text-4xl leading-[1.05] tracking-tight">
-                  Tell us your printer.<br />
-                  <span className="font-display-italic text-[var(--magenta)]">We'll do the rest.</span>
-                </p>
-                <p className="mt-4 text-sm text-[var(--paper)]/70 max-w-md">
-                  Brand, model, done. We'll pull every cartridge that fits — black, colour, high-yield — with stock and pricing in one shot.
-                </p>
-              </div>
-
-              <div className="relative mt-8">
-                <div className="bg-[var(--paper)] text-[var(--ink)] rounded-2xl p-2 sm:p-3 flex flex-col gap-2">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <div className="relative">
-                      <label htmlFor="finder-brand" className="block text-[9px] uppercase tracking-[0.2em] text-[var(--muted)] px-3 pt-3">Brand</label>
-                      <select
-                        id="finder-brand"
-                        value={finderBrand}
-                        onChange={(e) => setFinderBrand(e.target.value)}
-                        className="w-full bg-transparent pl-3 pr-8 pb-3 text-sm font-medium focus:outline-none appearance-none cursor-pointer"
-                      >
-                        {brands.map((b) => <option key={b}>{b}</option>)}
-                      </select>
-                      <svg className="absolute right-3 bottom-4 pointer-events-none" aria-hidden width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m6 9 6 6 6-6"/></svg>
-                    </div>
-                    <div className="relative border-t sm:border-t-0 sm:border-l border-[var(--ink)]/10">
-                      <label htmlFor="finder-model" className="block text-[9px] uppercase tracking-[0.2em] text-[var(--muted)] px-3 pt-3">Printer model</label>
-                      <input
-                        id="finder-model"
-                        type="text"
-                        list="finder-models"
-                        placeholder="e.g. P1102, MX494"
-                        value={finderModel}
-                        onChange={(e) => setFinderModel(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && runFinder()}
-                        className="w-full bg-transparent px-3 pb-3 text-sm font-medium focus:outline-none placeholder:text-[var(--muted)]"
-                        autoComplete="off"
-                      />
-                      <datalist id="finder-models">
-                        {(modelsByBrand[finderBrand] ?? []).map((m) => (
-                          <option key={m} value={m} />
-                        ))}
-                      </datalist>
-                    </div>
-                  </div>
-                  <button
-                    onClick={runFinder}
-                    className="bg-[var(--ink)] hover:bg-[var(--magenta)] transition-colors duration-300 text-[var(--paper)] hover:text-[var(--on-accent)] rounded-xl px-4 py-3 text-sm font-medium cursor-pointer inline-flex items-center justify-center gap-2"
-                  >
-                    Find cartridges
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                  </button>
-                </div>
-
-                {/* Opens under the form as soon as the typed model is one we
-                    have compatibility data for. */}
-                <div className="finder-match" data-open={Boolean(finderMatch)} aria-live="polite">
-                  <div>
-                    {finderMatch && (
-                      <p className="flex items-center gap-2 pt-3 text-sm text-[var(--paper)]/85">
-                        <svg className="finder-match-tick" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--lime)" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                          <path d="M4.5 12.5l5 5L19.5 7" />
-                        </svg>
-                        <span>
-                          <RollingNumber value={finderMatch.cartridge_count} className="font-semibold text-[var(--paper)]" />{' '}
-                          {finderMatch.cartridge_count === 1 ? 'cartridge fits' : 'cartridges fit'} the {finderMatch.brand} {finderMatch.model}
-                        </span>
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="mt-4 flex flex-wrap items-center gap-2">
-                  <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--paper)]/50 mr-1">Popular:</span>
-                  {popularSearches.map((label) => (
-                    <button
-                      key={label}
-                      onClick={() => openPage(`/compatibility?model=${encodeURIComponent(label)}`)}
-                      className="text-xs px-3 py-1.5 border border-[var(--paper)]/15 rounded-full hover:border-[var(--magenta)] hover:text-[var(--magenta)] transition-colors cursor-pointer"
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </article>
-
             <article data-reveal className="bento-card sm:col-span-3 bg-[var(--paper-2)] rounded-[24px] p-7 relative overflow-hidden min-h-[180px]">
               <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] mb-2">Est.</div>
               <div className="flex items-baseline gap-3">
