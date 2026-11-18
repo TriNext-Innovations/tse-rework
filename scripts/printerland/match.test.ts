@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { familyName, inSeries, matches, mpnCore, splitSku, titleColour } from './match'
+import { familyName, inSeries, isWildcard, matches, mpnCore, splitSku, titleColour, usable, type PlCartridge } from './match'
 import { parseProductPage } from './crawl'
 
 const hp85a = {
@@ -49,6 +49,11 @@ test('series membership: suffix letters yes, more digits no', () => {
   assert.ok(inSeries('P1102', 'P1102w'))
   assert.ok(!inSeries('M12', 'M1212'))
   assert.ok(!inSeries('P1102', 'P1103'))
+  // Our model is the series, the source names one variant: attach, don't duplicate.
+  assert.ok(inSeries('i-SENSYS LBP611C', 'LBP611'))
+  assert.ok(inSeries('LaserJet Pro M275nw', 'M275'))
+  assert.ok(!inSeries('i-SENSYS MF6140', 'MF6'))
+  assert.ok(!inSeries('Colour LaserJet Enterprise M555x', 'Enterprise M555dn'))
 })
 
 test('parses a product page', () => {
@@ -62,4 +67,48 @@ test('parses a product page', () => {
   assert.equal(r.brand, 'HP')
   assert.deepEqual(r.families, ['HP LaserJet Pro M1130 Multifunction Printer', 'HP LaserJet Pro M1212 & Co Printer'])
   assert.equal(r.worksWith, 'HP LaserJet Pro M1130,M1212 Printers')
+})
+
+// Real shape from the 27 Oct snapshot: 9 Samsung items (CNHPSU*/CNHPSV*) whose
+// pages carry no itemprop="brand", so `brand` is absent. The old matcher
+// called norm(undefined) on them and crashed the whole run.
+const noBrand = {
+  mpn: 'CNHPSU837A',
+  title: 'CNHPSU837A Samsung MLT-D116L High Yield Black Toner Cartridge (3,000 pages)',
+  families: ['Samsung Xpress M2625 Printer', 'Samsung Xpress M2675 Multifunction Printer'],
+  url: 'x',
+} as unknown as PlCartridge
+
+test('an item with no brand never matches and does not throw', () => {
+  assert.doesNotThrow(() => matches(noBrand, { sku: 'SAM-MLTD116L', title: '', brand: 'Samsung' }))
+  assert.ok(!matches(noBrand, { sku: 'SAM-MLTD116L', title: '', brand: 'Samsung' }))
+  assert.ok(!matches(hp85a, { sku: 'HP-CE285A', title: '', brand: undefined as unknown as string }))
+})
+
+test('usable() keeps complete items, takes a brand the title names, reports the rest', () => {
+  const noBrandNoName = { ...noBrand, mpn: 'CNHPSU819A', title: 'CNHPSU819A Black MLT-D111S Toner Cartridge (1,000 pages)' }
+  const noFamilies = { ...hp85a, families: undefined } as unknown as PlCartridge
+  const { ok, incomplete, inferred } = usable([hp85a, noBrand, noBrandNoName, noFamilies], ['HP', 'Samsung', ''])
+  assert.deepEqual(ok, [hp85a, { ...noBrand, brand: 'Samsung' }])
+  assert.equal(inferred.length, 1)
+  assert.deepEqual(
+    incomplete.map((i) => [i.item.mpn, i.missing]),
+    [
+      ['CNHPSU819A', ['brand']],
+      ['CNHPCE285A', ['families']],
+    ],
+  )
+  // With no brand list nothing is guessed.
+  assert.equal(usable([noBrand]).incomplete.length, 1)
+  // The inferred item now matches the TSE cartridge it names.
+  assert.ok(matches(ok[1]!, { sku: 'SAM-MLTD116L', title: '', brand: 'Samsung' }))
+})
+
+test('strips paper-size and n-in-1 tails, and spots series wildcards', () => {
+  assert.equal(familyName('Canon', 'Canon i-SENSYS MF651Cdw A4 3-in-1'), 'i-SENSYS MF651Cdw')
+  assert.equal(familyName('Brother', 'Brother MFC-J3540DW A4/A3 Colour Multifunction Inkjet Printer ink'), 'MFC-J3540DW')
+  assert.ok(isWildcard('LBP61x'))
+  assert.ok(isWildcard('i-SENSYS MF64x'))
+  assert.ok(!isWildcard('i-SENSYS MF428x'))
+  assert.ok(!isWildcard('Colour LaserJet Enterprise M555x'))
 })

@@ -43,7 +43,41 @@ const COLOURS: Record<string, string[]> = {
   CLR: ['tri-colour', 'tri-color', 'tricolour', 'tricolor', 'colour', 'color', 'cmy'],
 }
 
-const norm = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, '')
+// Tolerates a missing field: crawled pages don't always carry every itemprop.
+const norm = (s: string | undefined) => (s ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '')
+
+const REQUIRED = ['mpn', 'brand', 'title', 'families'] as const
+
+/**
+ * Splits a snapshot into items the matcher can use and items missing a field
+ * it needs. In the 27 Oct snapshot 9 Samsung pages had no itemprop="brand".
+ * When the title names exactly one of `brands` as a whole word, that brand is
+ * used ("… Samsung MLT-D116L …"); otherwise the item is reported, not guessed.
+ */
+export function usable(
+  snapshot: PlCartridge[],
+  brands: string[] = [],
+): { ok: PlCartridge[]; incomplete: { item: PlCartridge; missing: string[] }[]; inferred: PlCartridge[] } {
+  const ok: PlCartridge[] = []
+  const incomplete: { item: PlCartridge; missing: string[] }[] = []
+  const inferred: PlCartridge[] = []
+  const present = (v: unknown) => typeof v === 'string' && v.trim() !== ''
+  const escape = (b: string) => b.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  for (const raw of snapshot) {
+    let item = raw
+    if (!present(item.brand) && present(item.title)) {
+      const named = [...new Set(brands.filter(present))].filter((b) => new RegExp(`\\b${escape(b)}\\b`, 'i').test(item.title))
+      if (named.length === 1) {
+        item = { ...item, brand: named[0]! }
+        inferred.push(item)
+      }
+    }
+    const missing = REQUIRED.filter((k) => (k === 'families' ? !Array.isArray(item.families) : !present(item[k])))
+    if (missing.length) incomplete.push({ item, missing })
+    else ok.push(item)
+  }
+  return { ok, incomplete, inferred }
+}
 
 /** HP-CE250A-K → { code: CE250A, colour: K }; HP-CE285A → { code: CE285A }. */
 export function splitSku(sku: string): { code: string; colour?: string } {
@@ -75,14 +109,14 @@ export function titleColour(title: string): string | undefined {
  * the colours must not disagree.
  */
 export function matches(pl: PlCartridge, v: Variant): boolean {
-  if (norm(pl.brand) !== norm(v.brand)) return false
+  if (!norm(pl.brand) || norm(pl.brand) !== norm(v.brand)) return false
   const { code, colour } = splitSku(v.sku)
   if (code.length < 3) return false
   const core = mpnCore(pl.mpn)
-  const tokens = new Set(pl.title.split(/[\s|/,()]+/).map(norm).filter(Boolean))
+  const tokens = new Set((pl.title ?? '').split(/[\s|/,()]+/).map(norm).filter(Boolean))
   const codeHit = core === code || (colour && core === code + colour[0]) || tokens.has(code)
   if (!codeHit) return false
-  const plColour = titleColour(pl.title)
+  const plColour = titleColour(pl.title ?? '')
   if (plColour === 'OTHER') return false
   return !colour || !plColour || plColour === colour
 }
@@ -90,7 +124,7 @@ export function matches(pl: PlCartridge, v: Variant): boolean {
 // ─── Printer families ───────────────────────────────────────────────────────
 
 const TRAILING =
-  /\s+(multifunction|mono|colou?r|laser|inkjet|all-in-one|aio|wide format|photo|fax machine|fax|printer|printers|series|mfp|copier|scanner|label|dot matrix)$/i
+  /\s+(multifunction|mono|colou?r|laser|inkjet|all-in-one|aio|wide format|photo|fax machines?|fax|printer|printers|series|mfp|copier|scanner|label|dot matrix|ink|a[34](\/a[34])?|\d-in-1)$/i
 
 /** "HP LaserJet Pro M1130 Multifunction Printer" → "LaserJet Pro M1130". */
 export function familyName(brand: string, family: string): string {
@@ -104,13 +138,21 @@ export function familyName(brand: string, family: string): string {
   return s
 }
 
+/**
+ * A series wildcard, not a printer: "LBP61x", "MF63x" (one or two digits then
+ * x). Real models with an x suffix have more digits (MF428x, M555x).
+ */
+export const isWildcard = (family: string) => /(^|\s)[A-Z-]*\d{1,2}x$/i.test(family.trim())
+
 /** Tokens that look like model numbers: they contain a digit. */
 const modelTokens = (name: string) => name.split(/[\s/]+/).map(norm).filter((t) => /\d/.test(t))
 
 /**
  * Is TSE model `name` a member of Printerland series `family`? Same model token,
- * or the TSE token is the series token plus letters only (M1212 → M1212NF, not
- * M12 → M1212), or the series carries a letter prefix the TSE name dropped
+ * or one token is the other plus letters only — the TSE model is a variant of
+ * the series (M1212 → M1212NF) or the TSE model is itself the series and the
+ * source names one variant (our LBP611 ← their LBP611C); never more digits
+ * (M12 ≠ M1212). Or the series carries a letter prefix the TSE name dropped
  * (M1217 → 1217).
  */
 export function inSeries(family: string, name: string): boolean {
@@ -121,6 +163,7 @@ export function inSeries(family: string, name: string): boolean {
       (t) =>
         t === f ||
         (t.startsWith(f) && /^[A-Z]+$/.test(t.slice(f.length))) ||
+        (f.startsWith(t) && /\d$/.test(t) && /^[A-Z]+$/.test(f.slice(t.length))) ||
         (/^\d+$/.test(t) && f.replace(/^[A-Z]+/, '') === t),
     ),
   )
@@ -151,8 +194,11 @@ function main() {
     join(SNAP_DIR, readdirSync(SNAP_DIR).filter((f) => /^\d{4}-\d{2}-\d{2}\.json$/.test(f)).sort().pop()!)
   if (!existsSync(CATALOG)) throw new Error(`No catalogue at ${CATALOG} — export it first (see catalog.sql)`)
 
-  const snapshot = JSON.parse(readFileSync(snapPath, 'utf8')) as PlCartridge[]
   const { variants, models, compat } = readCatalog()
+  const { ok: snapshot, incomplete, inferred } = usable(
+    JSON.parse(readFileSync(snapPath, 'utf8')) as PlCartridge[],
+    [...new Set(variants.map((v) => v.brand))],
+  )
   const has = new Set(compat.map((c) => `${norm(c.brand)}|${norm(c.model)}|${c.sku}`))
   const ourModelsFor = (sku: string) => compat.filter((c) => c.sku === sku)
   const slugOf = new Map<string, string>()
@@ -161,6 +207,7 @@ function main() {
   const rows: Row[] = []
   const unmatched: Variant[] = []
   const ambiguous: string[] = []
+  const wildcards = new Set<string>()
 
   for (const v of variants) {
     const hits = snapshot.filter((p) => matches(p, v))
@@ -169,7 +216,7 @@ function main() {
       continue
     }
     if (new Set(hits.map((h) => mpnCore(h.mpn))).size > 3) {
-      ambiguous.push(`${v.sku} matched ${hits.length} Printerland items (${hits.map((h) => h.mpn).join(', ')}) — skipped`)
+      ambiguous.push(`${v.sku} matched ${hits.length} source items (${hits.map((h) => h.mpn).join(', ')}) — skipped`)
       continue
     }
 
@@ -179,6 +226,7 @@ function main() {
     for (const fam of families) {
       const members = models.filter((m) => norm(m.brand) === norm(v.brand) && inSeries(fam, m.name))
       if (members.length) for (const m of members) existing.add(m.name), slugOf.set(`${v.brand}|${m.name}`, m.slug)
+      else if (isWildcard(fam)) wildcards.add(`${v.brand} ${fam}`)
       else if (modelTokens(fam).length) created.add(fam)
     }
     const add = (names: Set<string>) => [...names].filter((n) => !has.has(`${norm(v.brand)}|${norm(n)}|${v.sku}`))
@@ -244,9 +292,22 @@ function main() {
     unmatched.map((v) => `${v.sku} (${v.title})`).join(', ') || '—',
     '',
     ...(ambiguous.length ? ['## 4. Skipped — matched too many items to be sure', '', ...ambiguous.map((a) => `- ${a}`), ''] : []),
+    ...(wildcards.size
+      ? ['## 5. Series names not added as printers', '', 'The source names these as a range, not one printer, so no printer was created for them.', '', [...wildcards].sort().join(', '), '']
+      : []),
+    ...(incomplete.length
+      ? [
+          '## 6. Source items left out — page was missing details',
+          '',
+          ...incomplete.map(({ item, missing }) => `- ${item.mpn ?? '?'} ${item.title ?? ''} (no ${missing.join(', ')})`),
+          '',
+        ]
+      : []),
   ].join('\n')
   writeFileSync(`${base}-review.md`, md)
 
+  if (inferred.length) console.log(`${inferred.length} snapshot items had no brand; taken from the title`)
+  if (incomplete.length) console.log(`${incomplete.length} snapshot items skipped for missing fields`)
   console.log(`${variants.length} variants: ${rows.length} matched, ${unmatched.length} unmatched, ${ambiguous.length} ambiguous`)
   console.log(`${newPairs} new compat pairs (${newModels.size} new models) → ${base.replace(`${ROOT}/`, '')}-import.csv`)
   console.log(`Review → ${base.replace(`${ROOT}/`, '')}-review.md`)
