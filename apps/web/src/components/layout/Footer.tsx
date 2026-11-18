@@ -19,6 +19,7 @@ const SHOP_LINKS = [
 ]
 
 const HELP_LINKS = [
+  { label: 'About TSE', href: '/about' },
   { label: 'Help centre', href: '/help' },
   { label: 'Delivery info', href: '/#delivery' },
   { label: 'Returns & refunds', href: '/legal/returns' },

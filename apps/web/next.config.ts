@@ -76,8 +76,15 @@ const nextConfig: NextConfig = {
   },
   // /faq was a guess visitors made on the legacy site (#479). /help/ needs no
   // rule: Next already 308s a trailing slash to the bare path.
+  //
+  // /about-us is also in the nginx legacy map, which answers first on
+  // www.tse.co.za with a single 301. This rule is the backstop for any request
+  // that reaches Next directly; /about-us/ is 308'd to the bare path first (#478).
   async redirects() {
-    return [{ source: '/faq', destination: '/help', permanent: true }]
+    return [
+      { source: '/faq', destination: '/help', permanent: true },
+      { source: '/about-us', destination: '/about', statusCode: 301 },
+    ]
   },
   images: {
     remotePatterns: [

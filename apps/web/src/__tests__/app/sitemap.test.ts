@@ -41,6 +41,8 @@ describe('sitemap lastmod (#525)', () => {
     expect(at('/legal/terms')?.lastModified).toBeUndefined()
     expect(at('/help')).toBeDefined()
     expect(at('/help')?.lastModified).toBeUndefined()
+    expect(at('/about')).toBeDefined()
+    expect(at('/about')?.lastModified).toBeUndefined()
 
     const now = Date.now()
     for (const e of entries) {

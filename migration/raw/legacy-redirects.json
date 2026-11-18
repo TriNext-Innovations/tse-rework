@@ -5936,6 +5936,13 @@
     "how": "manual rule"
   },
   {
+    "path": "/about-us",
+    "kind": "page",
+    "target": "/about",
+    "tier": "M",
+    "how": "manual rule"
+  },
+  {
     "path": "/delivery",
     "kind": "page",
     "target": "/legal/returns",

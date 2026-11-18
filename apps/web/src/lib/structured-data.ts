@@ -71,7 +71,7 @@ export const organizationJsonLd = {
   // NOTE: this site has said 1987 since launch; the legacy tse.co.za copy says
   // 1992. Unresolved — left as-is rather than silently picking a side. The
   // client has to settle it.
-  foundingDate: '1987',
+  foundingDate: siteConfig.company.foundedYear,
   telephone: siteConfig.phone.e164,
   email: siteConfig.email.sales,
   address: {

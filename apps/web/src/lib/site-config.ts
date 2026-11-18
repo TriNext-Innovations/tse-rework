@@ -14,6 +14,10 @@ export const siteConfig = {
     // `name` on the business entity in structured-data.ts all read from here.
     brandName: 'TSE Online',
     location: 'Kya Sands, Johannesburg',
+    // The year the site has stated since launch (footer, terms, homepage). The
+    // legacy tse.co.za copy says 1992 and the domain itself dates from 1997 —
+    // the client has to settle which is right; change it here when they do.
+    foundedYear: '1987',
   },
   // The trading address, as printed on the contact page. Kept here rather than
   // inline so the visible copy and the JSON-LD can never disagree.
