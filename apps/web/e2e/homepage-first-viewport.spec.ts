@@ -4,9 +4,16 @@ import { test, expect, type Page } from '@playwright/test'
 // printer without scrolling. The finder's controls have to sit inside the
 // first viewport on a laptop and on a phone.
 
+// Real browser viewports, not screen sizes: 390x664 is what Safari leaves an
+// iPhone 13 after its toolbars, and the cookie banner sits on top of whatever
+// is at the bottom on a first visit.
 const VIEWPORTS = [
+  { name: 'iPhone 13 Safari 390x664', width: 390, height: 664 },
+  { name: 'small phone 375x667', width: 375, height: 667 },
+  { name: 'Android 360x740', width: 360, height: 740 },
+  { name: 'laptop 1280x720', width: 1280, height: 720 },
+  { name: 'small laptop 1024x768', width: 1024, height: 768 },
   { name: 'desktop 1440x900', width: 1440, height: 900 },
-  { name: 'mobile 390x844', width: 390, height: 844 },
 ]
 
 // The hero rises in on a short CSS animation (#500). Measure where things
@@ -54,6 +61,9 @@ for (const vp of VIEWPORTS) {
       await settle(page)
       expect(await page.evaluate(() => window.scrollY)).toBe(0)
 
+      // A first visit: the consent banner is up. Waiting for it also means the
+      // page has hydrated, so the coverage check below can't pass early.
+      await expect(page.getByRole('dialog', { name: 'Cookie consent' })).toBeVisible()
       await expect(page.getByLabel('Brand')).toBeVisible()
       await expect(page.getByLabel('Printer model')).toBeVisible()
       await expectInFirstViewport(page, '#finder-brand', vp.height)

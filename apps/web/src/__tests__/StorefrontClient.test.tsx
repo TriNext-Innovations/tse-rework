@@ -443,6 +443,12 @@ describe('StorefrontClient — trending products', () => {
 })
 
 describe('StorefrontClient — bento grid', () => {
+  it('leaves no orphaned "02" on the Delivery card once the finder card (01) moved to the hero (#399)', () => {
+    renderStorefront()
+    const delivery = document.getElementById('delivery') as HTMLElement
+    expect(within(delivery).queryByText('02')).toBeNull()
+  })
+
   it('renders "Why generic" section heading', () => {
     renderStorefront()
     expect(screen.getByText(/Same print/)).toBeInTheDocument()

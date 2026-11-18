@@ -215,7 +215,7 @@ export default function StorefrontClient({
       <PageTransition>
       <div data-page-content>
       {/* ─────────────── HERO ─────────────── */}
-      <section id="top" ref={heroRef} className="relative pt-32 sm:pt-36 pb-16 sm:pb-24 px-4 sm:px-8 lg:px-12 overflow-hidden">
+      <section id="top" ref={heroRef} className="relative pt-28 sm:pt-32 pb-16 sm:pb-24 px-4 sm:px-8 lg:px-12 overflow-hidden">
         <div
           className="pointer-events-none absolute inset-0 transition-opacity duration-500"
           style={{ background: `radial-gradient(420px circle at ${mouse.x}px ${mouse.y}px, rgba(238,117,233,0.12), transparent 60%)` }}
@@ -225,7 +225,7 @@ export default function StorefrontClient({
 
         <div className="relative mx-auto max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-6 items-end">
           <div className="lg:col-span-7" data-hero-in>
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center gap-3 mb-4 sm:mb-6">
               <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-[var(--muted)] font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--magenta)]" /> Est. 1987 · South Africa
               </span>
@@ -233,7 +233,7 @@ export default function StorefrontClient({
             {/* On first paint the cyan and magenta plates of each line start a
                 hair out of register and slide into it, then lift off: the
                 headline prints in. The black text itself is never hidden. */}
-            <h1 className="font-display font-light text-[15vw] sm:text-[clamp(4rem,_1.98rem_+_7.06vw,_7.625rem)] leading-[0.88] tracking-[-0.04em] text-[var(--ink)]">
+            <h1 className="font-display font-light text-[min(15vw,_9vh)] sm:text-[clamp(3.5rem,_min(1.98rem_+_7.06vw,_15vh),_7.625rem)] leading-[0.88] tracking-[-0.04em] text-[var(--ink)]">
               <span className="print-register font-display-italic font-light" data-ink="Generic.">Generic.</span>
               <br />
               <span className="print-register print-register-late relative inline-block" data-ink="Not generic.">
@@ -241,19 +241,13 @@ export default function StorefrontClient({
                 <span className="text-[var(--magenta)]">.</span>
               </span>
             </h1>
-            <p className="mt-8 max-w-xl text-[15px] sm:text-base text-[var(--ink-2)] leading-relaxed">
-              South Africa's printer-cartridge specialist since 1987. We make compatibles that print as well as the
-              original — sometimes better — at a fraction of the price. Order before noon, choose Overnight, and it's on your
-              desk tomorrow.
-            </p>
-
             {/* ── Compatibility Finder ──
                 The hero's primary action (#399): "which cartridge fits my
                 printer?" is the question this shop is organised around, so the
                 first thing a visitor can do is answer it. The brand list and
                 datalist are server-rendered from /store/compatibility/models,
                 so nothing here moves when the page hydrates. */}
-            <div id="finder" role="search" aria-label="Printer finder" className="mt-7 sm:mt-8 max-w-2xl scroll-mt-34">
+            <div id="finder" role="search" aria-label="Printer finder" className="mt-6 sm:mt-8 max-w-2xl scroll-mt-34">
               <p className="font-display text-xl sm:text-2xl font-light leading-tight tracking-tight text-[var(--ink)]">
                 Tell us your printer. <span className="font-display-italic">We'll do the rest.</span>
               </p>
@@ -335,7 +329,13 @@ export default function StorefrontClient({
               </div>
             </div>
 
-            <div className="mt-10 sm:mt-12 grid grid-cols-3 gap-4 max-w-md">
+            <p className="mt-6 sm:mt-8 max-w-xl text-[15px] sm:text-base text-[var(--ink-2)] leading-relaxed">
+              South Africa's printer-cartridge specialist since 1987. We make compatibles that print as well as the
+              original — sometimes better — at a fraction of the price. Order before noon, choose Overnight, and it's on your
+              desk tomorrow.
+            </p>
+
+            <div className="mt-8 sm:mt-10 grid grid-cols-3 gap-4 max-w-md">
               <div>
                 <div className="font-display text-3xl sm:text-4xl font-light leading-none">39<span className="text-[var(--magenta)]">.</span></div>
                 <div className="text-[11px] uppercase tracking-widest text-[var(--muted)] mt-2">Yrs in business</div>
@@ -376,7 +376,7 @@ export default function StorefrontClient({
                         alt={heroProduct.title}
                         width={420}
                         height={340}
-                        priority
+                        loading="eager"
                         sizes="(max-width: 1024px) 70vw, 380px"
                         className="max-h-full max-w-full w-auto h-auto object-contain transition-transform duration-700 ease-[cubic-bezier(.22,1,.36,1)] group-hover:scale-[1.04]"
                       />
@@ -549,10 +549,7 @@ export default function StorefrontClient({
             ))}
 
             <article id="delivery" data-reveal className="bento-card sm:col-span-3 scroll-mt-34 bg-[var(--paper-2)] rounded-[24px] p-7 relative overflow-hidden min-h-[180px]">
-              <div className="flex items-start justify-between">
-                <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">Delivery</div>
-                <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">02</div>
-              </div>
+              <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">Delivery</div>
               <p className="mt-4 font-display font-light text-3xl sm:text-4xl leading-[1.05] tracking-tight">
                 Order by <span className="font-display-italic">noon</span>,<br />
                 in your printer <span className="text-[var(--magenta)]">tomorrow</span>.<br />
