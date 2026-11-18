@@ -101,6 +101,11 @@ describe('StorefrontClient — hero', () => {
     expect(screen.getAllByText(/Est\. 198[07]/)[0]).toBeInTheDocument()
   })
 
+  it('links to /about in one click from the homepage body (#478)', () => {
+    renderStorefront()
+    expect(screen.getByRole('link', { name: /About TSE/ })).toHaveAttribute('href', '/about')
+  })
+
   it('renders key stats (years, brands, price)', () => {
     renderStorefront()
     expect(screen.getAllByText(/39/)[0]).toBeInTheDocument()

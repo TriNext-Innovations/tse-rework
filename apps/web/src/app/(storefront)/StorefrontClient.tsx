@@ -519,6 +519,9 @@ export default function StorefrontClient({
               <p className="mt-3 text-sm text-[var(--ink-2)] max-w-sm">
                 Family-run from Unit 34, Kya Sands Industrial — supplying offices, schools and print shops since 1987.
               </p>
+              <Link href="/about" className="mt-4 inline-block text-sm underline underline-offset-[3px] hover:text-[var(--ink)] text-[var(--ink-2)]">
+                About TSE →
+              </Link>
             </article>
 
             {/* The three things TSE sells, one card each, in the brand's three colours */}
