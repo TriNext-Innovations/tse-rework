@@ -26,9 +26,18 @@ export function ownThumbnail(url: string | null | undefined): string | null {
   }
 }
 
+export type CompatVariant = {
+  sku: string
+  /** The variant's own title — "Cyan", "Tri-Colour" — or null when it has none worth showing. */
+  title: string | null
+}
+
 export type CompatResult = {
+  /** First of `skus`. Kept for older clients; a multi-variant card must not render it alone. */
   sku: string
   skus: string[]
+  /** Every variant the card stands for, in a stable colour order (Black, Cyan, Magenta, Yellow, …). */
+  variants: CompatVariant[]
   printer_brand: string
   printer_model: string
   product_id: string
@@ -37,21 +46,48 @@ export type CompatResult = {
   handle: string
 }
 
+export type CompatProductInfo = {
+  product_id: string
+  title: string
+  thumbnail: string | null
+  handle: string
+  /** Title of the variant this SKU belongs to. */
+  variant_title?: string | null
+}
+
+// Medusa gives single-variant products a placeholder title; it names nothing.
+const PLACEHOLDER_VARIANT_TITLES = new Set(["default title", "default variant", "default"])
+
+// The order a shopper reads a cartridge set in. Anything not listed keeps its
+// row order after these.
+const COLOUR_ORDER = [
+  "black", "photo black", "matte black", "cyan", "magenta", "yellow",
+  "light cyan", "light magenta", "tri-colour", "tri-color", "colour", "color",
+]
+
+function colourRank(title: string | null): number {
+  const i = title ? COLOUR_ORDER.indexOf(title.trim().toLowerCase()) : -1
+  return i === -1 ? COLOUR_ORDER.length : i
+}
+
 /**
  * Collapse compat rows into one card per product.
  *
  * Colour variants of one cartridge share a product, and four near-identical
  * cards would be worse than one. But the surviving card must not present its
  * first SKU as the only one — a shopper after yellow seeing "SKU HP-177-K"
- * concludes we do not stock yellow. `skus` carries every variant the card
- * stands for so the storefront can say so.
+ * concludes we do not stock yellow. `variants` carries every variant the card
+ * stands for, with its title, so the storefront can name the colours (#451).
+ *
+ * The SQL has no ORDER BY, so row order is arbitrary. Variants are sorted into
+ * a stable colour order so `sku` (the first) no longer depends on it.
  *
  * Rows whose SKU resolves to no published product are dropped: a
  * compatibility fact with nothing to sell rendered as a dead link.
  */
 export function collapseByProduct(
   rows: { sku: string; brand: string; model: string }[],
-  variantMap: Map<string, { product_id: string; title: string; thumbnail: string | null; handle: string }>,
+  variantMap: Map<string, CompatProductInfo>,
 ): { results: CompatResult[]; dropped: number } {
   const byProduct = new Map<string, CompatResult>()
   const results: CompatResult[] = []
@@ -63,14 +99,20 @@ export function collapseByProduct(
       dropped++
       continue
     }
+    const raw = product.variant_title?.trim() ?? ""
+    const variant: CompatVariant = {
+      sku:   r.sku,
+      title: raw && !PLACEHOLDER_VARIANT_TITLES.has(raw.toLowerCase()) ? raw : null,
+    }
     const existing = byProduct.get(product.product_id)
     if (existing) {
-      if (!existing.skus.includes(r.sku)) existing.skus.push(r.sku)
+      if (!existing.variants.some((v) => v.sku === r.sku)) existing.variants.push(variant)
       continue
     }
     const entry: CompatResult = {
       sku:           r.sku,
-      skus:          [r.sku],
+      skus:          [],
+      variants:      [variant],
       printer_brand: r.brand,
       printer_model: r.model,
       product_id:    product.product_id,
@@ -80,6 +122,13 @@ export function collapseByProduct(
     }
     byProduct.set(product.product_id, entry)
     results.push(entry)
+  }
+
+  for (const entry of results) {
+    // Array.prototype.sort is stable, so equal ranks keep row order.
+    entry.variants.sort((a, b) => colourRank(a.title) - colourRank(b.title))
+    entry.skus = entry.variants.map((v) => v.sku)
+    entry.sku = entry.skus[0]!
   }
 
   return { results, dropped }
@@ -162,14 +211,13 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const skus = [...new Set(rows.map((r) => r.sku))]
   console.log(`[compat] enriching ${rows.length} results across ${skus.length} SKUs`)
 
-  type ProductInfo = { product_id: string; title: string; thumbnail: string | null; handle: string }
-  const variantMap = new Map<string, ProductInfo>()
+  const variantMap = new Map<string, CompatProductInfo>()
 
   try {
     const productModule = req.scope.resolve(Modules.PRODUCT) as any
     const variants = await productModule.listProductVariants(
       { sku: { $in: skus } },
-      { select: ["id", "sku", "product_id"], take: skus.length }
+      { select: ["id", "sku", "title", "product_id"], take: skus.length }
     )
     if (variants.length) {
       const productIds = [...new Set(variants.map((v: any) => v.product_id as string))]
@@ -200,6 +248,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
             title:      product.title as string,
             thumbnail:  ownThumbnail(imageUrl),
             handle:     product.handle as string,
+            variant_title: (v.title as string | null) ?? null,
           })
         }
       }
